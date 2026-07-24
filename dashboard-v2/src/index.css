@@ -11,13 +11,15 @@
   --radius-2xl: 1.5rem;
   --radius-3xl: 1.75rem;
 
-  --shadow-2xs: 0 1px 2px rgb(20 20 20 / 0.03);
+  /* Tight elevation only — kill-ai-slop flagged the old scale (up to 40px
+     blur / 0.12 opacity) as oversized-drop-shadow slop for a dashboard. */
+  --shadow-2xs: 0 1px 1px rgb(20 20 20 / 0.03);
   --shadow-xs: 0 1px 2px rgb(20 20 20 / 0.04);
-  --shadow-sm: 0 1px 3px rgb(20 20 20 / 0.05);
-  --shadow-md: 0 4px 12px rgb(20 20 20 / 0.06);
-  --shadow-lg: 0 8px 24px rgb(20 20 20 / 0.08);
-  --shadow-xl: 0 12px 32px rgb(20 20 20 / 0.10);
-  --shadow-2xl: 0 16px 40px rgb(20 20 20 / 0.12);
+  --shadow-sm: 0 1px 2px rgb(20 20 20 / 0.05);
+  --shadow-md: 0 2px 6px rgb(20 20 20 / 0.06);
+  --shadow-lg: 0 4px 10px rgb(20 20 20 / 0.07);
+  --shadow-xl: 0 6px 14px rgb(20 20 20 / 0.08);
+  --shadow-2xl: 0 8px 18px rgb(20 20 20 / 0.09);
 }
 
 :root {
@@ -50,9 +52,9 @@
   --radius: 1rem;
   --radius-lg: 1.25rem;
   --radius-xl: 1.5rem;
-  --shadow-sm: 0 1px 3px rgb(20 20 20 / 0.05);
-  --shadow-md: 0 4px 12px rgb(20 20 20 / 0.06);
-  --shadow-lg: 0 8px 24px rgb(20 20 20 / 0.08);
+  --shadow-sm: 0 1px 2px rgb(20 20 20 / 0.05);
+  --shadow-md: 0 2px 6px rgb(20 20 20 / 0.06);
+  --shadow-lg: 0 4px 10px rgb(20 20 20 / 0.07);
 
   /* Chart palette: kept multi-color like Trezo's reference (not single-accent) */
   --chart-orange: #E2711D;
