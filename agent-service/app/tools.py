@@ -1,3 +1,4 @@
+import re
 from dataclasses import dataclass
 from datetime import datetime, timezone, timedelta
 from langchain_core.tools import tool
@@ -21,12 +22,22 @@ def _err(msg: str) -> str:
     return f"error: {msg}"
 
 
+def _clean_text(text: str) -> str:
+    """Model instruction ("never use em dashes") isn't reliably obeyed, so enforce it
+    deterministically here instead of trusting the prompt. Every outgoing message/caption
+    routes through this."""
+    if not text:
+        return text
+    text = text.replace('—', ', ').replace('–', ', ')
+    return re.sub(r' {2,}', ' ', text)
+
+
 def build_tools(ctx: ToolContext) -> list:
     @tool
     async def send_message(text: str, template_id: str | None = None):
         """Send a message to the lead. Use to reply conversationally or follow up."""
         try:
-            await ctx.client.send_message(ctx.lead_id, ctx.channel, text, template_id)
+            await ctx.client.send_message(ctx.lead_id, ctx.channel, _clean_text(text), template_id)
             return _ok("message sent")
         except BackendError as e:
             return _err(str(e))
@@ -331,6 +342,50 @@ def build_tools(ctx: ToolContext) -> list:
         return _ok(f"sent {sent} photo(s) across {len(unit_ids[:3])} unit(s)" + (f" (errors: {'; '.join(errors)})" if errors else ""))
 
     @tool
+    async def send_area_collection(area: str, max_properties: int = 3):
+        """Send a curated collection of photos and brochures for all available properties in an area/locality to the lead over WhatsApp. Use when the lead asks about a neighborhood broadly (e.g. "what do you have in Whitefield") rather than one specific listing. Sends one primary photo plus brochure (if available) per property, for up to 3 properties in that area."""
+        if not (ctx.features and ctx.features.get("properties")):
+            return _err("properties feature is not enabled for this niche")
+        try:
+            results = await ctx.client.search_properties(ctx.tenant_id, {"location": area})
+        except BackendError as e:
+            return _err(str(e))
+        if not results:
+            return _ok(f"no properties found in {area}")
+
+        limit = max(1, min(max_properties, 5))
+        sent = 0
+        errors = []
+        for prop in results[:limit]:
+            try:
+                full = await ctx.client.get_property(prop["id"])
+                caption = _clean_text(f"{full.get('title', 'Property')} | ₹{full.get('price', 'N/A')} | {full.get('location', '')}")
+                images = (full.get("images") or [])[:1]
+                if images:
+                    await ctx.client.send_message(
+                        ctx.lead_id, ctx.channel, caption,
+                        media_url=images[0].get("url"), media_type="image", caption=caption,
+                    )
+                else:
+                    await ctx.client.send_message(ctx.lead_id, ctx.channel, caption)
+                sent += 1
+                if full.get("brochureUrl"):
+                    brochure_caption = _clean_text(f"{full.get('title', 'Property')} brochure")
+                    await ctx.client.send_message(
+                        ctx.lead_id, ctx.channel, brochure_caption,
+                        media_url=full["brochureUrl"], media_type="document", caption=brochure_caption,
+                    )
+                    sent += 1
+            except BackendError as e:
+                errors.append(f"{prop.get('id', '?')}: {e}")
+        if sent == 0:
+            return _err(f"no items sent; errors: {'; '.join(errors) or 'unknown'}")
+        return _ok(
+            f"sent collection for {area}: {sent} item(s) across {len(results[:limit])} propert(y/ies)"
+            + (f" (errors: {'; '.join(errors)})" if errors else "")
+        )
+
+    @tool
     async def search_media_file(query: str):
         """Search uploaded media files (images, brochures, floor plans, documents) by filename or tag. Use when the lead asks about specific visuals, photos, or documents related to a project, property, or unit. Returns matching file names and IDs."""
         try:
@@ -352,7 +407,7 @@ def build_tools(ctx: ToolContext) -> list:
             url = await ctx.client.get_media_download_url(media_id)
             if not url:
                 return _err("could not get download URL for this media file")
-            display_caption = caption or "Here is the file you asked about"
+            display_caption = _clean_text(caption) or "Here is the file you asked about"
             await ctx.client.send_message(
                 ctx.lead_id, ctx.channel, display_caption,
                 media_url=url, media_type="image", caption=display_caption,
@@ -405,6 +460,7 @@ def build_tools(ctx: ToolContext) -> list:
         search_units,
         send_property_photos,
         send_unit_photos,
+        send_area_collection,
         search_media_file,
         send_media_file,
         get_quote,

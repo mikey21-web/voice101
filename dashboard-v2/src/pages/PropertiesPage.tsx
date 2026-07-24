@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback, useRef } from "react";
-import { Plus, Search, Edit2, Trash2, Building2, MapPin, BedDouble, Bath, Maximize, IndianRupee, ToggleLeft, ToggleRight, X, Image as ImageIcon, FileText, Upload } from "lucide-react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { Plus, Search, Edit2, Trash2, Building2, MapPin, BedDouble, Bath, Maximize, IndianRupee, ToggleLeft, ToggleRight, X, Image as ImageIcon, FileText, Upload, LayoutGrid, Layers } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
@@ -30,6 +30,7 @@ export default function PropertiesPage() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState({ propertyType: "", status: "", bedrooms: "" });
+  const [groupByArea, setGroupByArea] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<any>(null);
   const [form, setForm] = useState<any>({
@@ -45,7 +46,7 @@ export default function PropertiesPage() {
   const fetchProperties = useCallback(async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({ page: String(page), limit: "20" });
+      const params = new URLSearchParams({ page: groupByArea ? "1" : String(page), limit: groupByArea ? "200" : "20" });
       if (search) params.set("location", search);
       if (filters.propertyType) params.set("propertyType", filters.propertyType);
       if (filters.status) params.set("status", filters.status);
@@ -55,7 +56,18 @@ export default function PropertiesPage() {
       setTotal(res.meta?.total || 0);
     } catch { toast.error("Failed to load properties"); }
     finally { setLoading(false); }
-  }, [page, search, filters]);
+  }, [page, search, filters, groupByArea]);
+
+  const areaCollections = useMemo(() => {
+    if (!groupByArea) return [];
+    const groups = new Map<string, any[]>();
+    for (const p of properties) {
+      const area = (p.location || "").trim() || "Unspecified area";
+      if (!groups.has(area)) groups.set(area, []);
+      groups.get(area)!.push(p);
+    }
+    return Array.from(groups.entries()).sort((a, b) => b[1].length - a[1].length);
+  }, [groupByArea, properties]);
 
   useEffect(() => { fetchProperties(); }, [fetchProperties]);
 
@@ -190,16 +202,99 @@ export default function PropertiesPage() {
     return `\u20B9${p.toLocaleString()}`;
   };
 
+  const renderCard = (p: any) => (
+    <div
+      key={p.id}
+      onClick={() => { window.location.hash = `/properties/${p.id}`; }}
+      className="rounded-xl border border-[var(--border)] bg-[var(--card)] overflow-hidden group cursor-pointer hover:border-[var(--primary)]/40 transition-colors"
+    >
+      <div className="relative h-44 bg-[var(--muted)]">
+        {p.images?.[0] ? (
+          <img src={resolveMediaUrl(p.images[0].url)} alt={p.title} className="h-full w-full object-cover" />
+        ) : (
+          <div className="h-full w-full flex items-center justify-center">
+            <Building2 className="h-10 w-10 text-[var(--muted-foreground-light)]" />
+          </div>
+        )}
+        <span className={`absolute top-3 left-3 inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${statusColors[p.status] || ""}`}>
+          {p.status?.replace("_", " ")}
+        </span>
+        <button
+          onClick={(e) => { e.stopPropagation(); toggleFeatured(p.id, p.featured); }}
+          title={p.featured ? "Featured" : "Mark as featured"}
+          className="absolute top-3 right-3 h-8 w-8 rounded-full bg-white/90 flex items-center justify-center shadow-sm"
+        >
+          {p.featured ? <ToggleRight className="h-4 w-4 text-[var(--primary)]" /> : <ToggleLeft className="h-4 w-4 text-[var(--muted-foreground)]" />}
+        </button>
+      </div>
+
+      <div className="p-4">
+        <div className="flex items-start justify-between gap-2">
+          <span className="font-semibold text-[var(--foreground)] group-hover:text-[var(--primary)] transition-colors truncate">
+            {p.title}
+          </span>
+          <Badge variant="outline" className="shrink-0">{typeLabels[p.propertyType] || p.propertyType}</Badge>
+        </div>
+
+        {p.location && (
+          <div className="mt-1 flex items-center gap-1 text-xs text-[var(--muted-foreground)]">
+            <MapPin className="h-3 w-3 shrink-0" />
+            <span className="truncate">{p.location}</span>
+          </div>
+        )}
+
+        <div className="mt-3 flex items-center gap-3 text-xs text-[var(--muted-foreground)]">
+          {p.bedrooms != null && <span className="flex items-center gap-1"><BedDouble className="h-3.5 w-3.5" /> {p.bedrooms} Bed</span>}
+          {p.bathrooms != null && <span className="flex items-center gap-1"><Bath className="h-3.5 w-3.5" /> {p.bathrooms} Bath</span>}
+          {p.areaSqft != null && <span className="flex items-center gap-1"><Maximize className="h-3.5 w-3.5" /> {p.areaSqft} sqft</span>}
+        </div>
+
+        <div className="mt-2 flex items-center gap-3 text-xs text-[var(--muted-foreground)]">
+          <span className="flex items-center gap-1"><ImageIcon className="h-3.5 w-3.5" /> {p.images?.length ?? 0} photo{(p.images?.length ?? 0) === 1 ? "" : "s"}</span>
+          <span className={`flex items-center gap-1 ${p.brochureUrl ? "" : "opacity-50"}`}><FileText className="h-3.5 w-3.5" /> {p.brochureUrl ? "Brochure ready" : "No brochure"}</span>
+        </div>
+
+        <div className="mt-4 flex items-center justify-between">
+          <span className="font-mono text-base font-bold text-[var(--foreground)]">{formatPrice(p.price)}</span>
+          <div className="flex gap-1">
+            <button onClick={(e) => { e.stopPropagation(); editProperty(p); }} className="p-1.5 hover:bg-[var(--accent)] rounded-lg"><Edit2 className="h-4 w-4" /></button>
+            <button onClick={(e) => { e.stopPropagation(); handleDelete(p.id); }} className="p-1.5 hover:bg-red-50 rounded-lg text-red-500"><Trash2 className="h-4 w-4" /></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="p-4 lg:p-6 space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-[var(--foreground)]">Properties</h1>
-          <p className="text-sm text-[var(--muted-foreground)]">{total} listings</p>
+          <p className="text-sm text-[var(--muted-foreground)]">
+            {total} listings{groupByArea ? ` across ${areaCollections.length} area${areaCollections.length === 1 ? "" : "s"}` : ""}
+          </p>
         </div>
-        <Button onClick={() => { resetForm(); setEditing(null); setShowForm(true); }}>
-          <Plus className="h-4 w-4 mr-2" /> Add Property
-        </Button>
+        <div className="flex items-center gap-2">
+          <div className="flex rounded-lg border border-[var(--border)] overflow-hidden">
+            <button
+              onClick={() => { setGroupByArea(false); setPage(1); }}
+              title="Flat list"
+              className={`p-2 ${!groupByArea ? "bg-[var(--accent)]" : ""}`}
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => setGroupByArea(true)}
+              title="Preview as area collections (what Mikey can send)"
+              className={`p-2 ${groupByArea ? "bg-[var(--accent)]" : ""}`}
+            >
+              <Layers className="h-4 w-4" />
+            </button>
+          </div>
+          <Button onClick={() => { resetForm(); setEditing(null); setShowForm(true); }}>
+            <Plus className="h-4 w-4 mr-2" /> Add Property
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-3 items-center">
@@ -225,69 +320,31 @@ export default function PropertiesPage() {
         <div className="text-center py-12 text-[var(--muted-foreground)]">Loading...</div>
       ) : properties.length === 0 ? (
         <div className="text-center py-12 text-[var(--muted-foreground)]">No properties found</div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {properties.map((p: any) => (
-            <div
-              key={p.id}
-              onClick={() => { window.location.hash = `/properties/${p.id}`; }}
-              className="rounded-xl border border-[var(--border)] bg-[var(--card)] overflow-hidden group cursor-pointer hover:border-[var(--primary)]/40 transition-colors"
-            >
-              <div className="relative h-44 bg-[var(--muted)]">
-                {p.images?.[0] ? (
-                  <img src={resolveMediaUrl(p.images[0].url)} alt={p.title} className="h-full w-full object-cover" />
-                ) : (
-                  <div className="h-full w-full flex items-center justify-center">
-                    <Building2 className="h-10 w-10 text-[var(--muted-foreground-light)]" />
-                  </div>
-                )}
-                <span className={`absolute top-3 left-3 inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${statusColors[p.status] || ""}`}>
-                  {p.status?.replace("_", " ")}
+      ) : groupByArea ? (
+        <div className="space-y-8">
+          {areaCollections.map(([area, items]) => (
+            <div key={area}>
+              <div className="flex items-center gap-2 mb-3">
+                <MapPin className="h-4 w-4 text-[var(--primary)]" />
+                <h2 className="font-semibold text-[var(--foreground)]">{area}</h2>
+                <Badge variant="outline">{items.length} listing{items.length === 1 ? "" : "s"}</Badge>
+                <span className="text-xs text-[var(--muted-foreground)]">
+                  This is what Mikey sends when a lead asks about {area}
                 </span>
-                <button
-                  onClick={(e) => { e.stopPropagation(); toggleFeatured(p.id, p.featured); }}
-                  title={p.featured ? "Featured" : "Mark as featured"}
-                  className="absolute top-3 right-3 h-8 w-8 rounded-full bg-white/90 flex items-center justify-center shadow-sm"
-                >
-                  {p.featured ? <ToggleRight className="h-4 w-4 text-[var(--primary)]" /> : <ToggleLeft className="h-4 w-4 text-[var(--muted-foreground)]" />}
-                </button>
               </div>
-
-              <div className="p-4">
-                <div className="flex items-start justify-between gap-2">
-                  <span className="font-semibold text-[var(--foreground)] group-hover:text-[var(--primary)] transition-colors truncate">
-                    {p.title}
-                  </span>
-                  <Badge variant="outline" className="shrink-0">{typeLabels[p.propertyType] || p.propertyType}</Badge>
-                </div>
-
-                {p.location && (
-                  <div className="mt-1 flex items-center gap-1 text-xs text-[var(--muted-foreground)]">
-                    <MapPin className="h-3 w-3 shrink-0" />
-                    <span className="truncate">{p.location}</span>
-                  </div>
-                )}
-
-                <div className="mt-3 flex items-center gap-3 text-xs text-[var(--muted-foreground)]">
-                  {p.bedrooms != null && <span className="flex items-center gap-1"><BedDouble className="h-3.5 w-3.5" /> {p.bedrooms} Bed</span>}
-                  {p.bathrooms != null && <span className="flex items-center gap-1"><Bath className="h-3.5 w-3.5" /> {p.bathrooms} Bath</span>}
-                  {p.areaSqft != null && <span className="flex items-center gap-1"><Maximize className="h-3.5 w-3.5" /> {p.areaSqft} sqft</span>}
-                </div>
-
-                <div className="mt-4 flex items-center justify-between">
-                  <span className="font-mono text-base font-bold text-[var(--foreground)]">{formatPrice(p.price)}</span>
-                  <div className="flex gap-1">
-                    <button onClick={(e) => { e.stopPropagation(); editProperty(p); }} className="p-1.5 hover:bg-[var(--accent)] rounded-lg"><Edit2 className="h-4 w-4" /></button>
-                    <button onClick={(e) => { e.stopPropagation(); handleDelete(p.id); }} className="p-1.5 hover:bg-red-50 rounded-lg text-red-500"><Trash2 className="h-4 w-4" /></button>
-                  </div>
-                </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                {items.map((p: any) => renderCard(p))}
               </div>
             </div>
           ))}
         </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {properties.map((p: any) => renderCard(p))}
+        </div>
       )}
 
-      {total > 20 && (
+      {!groupByArea && total > 20 && (
         <div className="flex justify-center gap-2 items-center">
           <Button variant="outline" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>Previous</Button>
           <span className="text-sm text-[var(--muted-foreground)]">Page {page} of {Math.ceil(total / 20)}</span>
