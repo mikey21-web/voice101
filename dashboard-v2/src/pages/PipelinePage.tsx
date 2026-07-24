@@ -5,7 +5,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { api } from "../lib/api";
 import { fetchPipelineDeals, createTask, updateTask, fetchLeadTasks } from "../lib/data";
 import toast from "react-hot-toast";
-import { Plus, CheckCircle2, Circle, Clock, Bot, User, Target, DollarSign, Building2, CalendarDays, ListTodo, X } from "lucide-react";
+import { Plus, CheckCircle2, Circle, Clock, Bot, User, Target, Building2, CalendarDays, ListTodo, X } from "lucide-react";
 
 interface Deal {
   id: string;
@@ -47,46 +47,45 @@ function DealCard({ deal, onOpen }: { deal: Deal; onOpen: (id: string) => void }
   const initials = deal.contact?.name?.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase() || "?";
 
   return (
-    <div className="rounded-lg border border-[var(--border)] bg-[var(--card)] p-3 shadow-sm cursor-pointer hover:shadow-md transition-shadow" onClick={() => onOpen(deal.id)}>
-      <div className="flex items-start justify-between gap-2 mb-2">
+    <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-3.5 shadow-sm cursor-pointer hover:shadow-md hover:border-[var(--primary)]/30 transition-all" onClick={() => onOpen(deal.id)}>
+      <div className="flex items-start justify-between gap-2 mb-1">
         <span className="text-sm font-semibold text-[var(--foreground)] leading-tight line-clamp-2 min-w-0">{deal.contact?.name || "Unknown"}</span>
         <span className="shrink-0 text-[10px] text-[var(--muted-foreground)]">{daysInStage}d</span>
       </div>
 
-      {deal.dealValue && (
-        <div className="flex items-center gap-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400 mb-1.5">
-          <DollarSign className="h-3 w-3" />
-          {(deal.dealValue / 100000).toFixed(1)}L
-        </div>
-      )}
-
       {(deal.interest || deal.unit?.projectName) && (
-        <div className="flex items-center gap-1 text-[11px] text-[var(--muted-foreground)] mb-1.5">
+        <div className="flex items-center gap-1 text-[11px] text-[var(--muted-foreground)] mb-2">
           <Building2 className="h-3 w-3 shrink-0" />
           <span className="truncate">{deal.unit?.projectName || deal.interest}</span>
         </div>
       )}
 
       {deal.budget && (
-        <div className="flex items-center gap-1 text-[11px] text-[var(--muted-foreground)] mb-1.5">
+        <div className="flex items-center gap-1 text-[11px] text-[var(--muted-foreground)] mb-2">
           <Target className="h-3 w-3 shrink-0" />
           <span>{deal.budget}</span>
         </div>
       )}
 
-      <div className="flex items-center gap-2 mb-2">
+      <div className="flex items-center gap-2 mb-3">
         <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${segmentColors[deal.segment] || segmentColors.UNQUALIFIED}`}>{deal.segment}</span>
         {deal.score > 0 && <span className="text-[10px] font-medium text-[var(--muted-foreground)]">{deal.score}pts</span>}
       </div>
 
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1.5">
-          <div className="h-5 w-5 rounded-full bg-[var(--primary)] flex items-center justify-center text-[8px] font-bold text-[var(--primary-foreground)]">{initials}</div>
-          {deal.assignedAgent && <span className="text-[10px] text-[var(--muted-foreground)] truncate max-w-16">{deal.assignedAgent.name}</span>}
+      <div className="flex items-center justify-between pt-2.5 border-t border-[var(--border)]">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <div className="h-6 w-6 rounded-full bg-[var(--primary-light)] flex items-center justify-center text-[9px] font-bold text-[var(--primary)] shrink-0">{initials}</div>
+          {deal.assignedAgent && <span className="text-[10px] text-[var(--muted-foreground)] truncate">{deal.assignedAgent.name}</span>}
         </div>
-        <div className="flex items-center gap-1 text-[10px] text-[var(--muted-foreground)]">
-          <ListTodo className="h-3 w-3" />
-          <span>{deal.taskCount}</span>
+        <div className="flex items-center gap-2 shrink-0">
+          {deal.taskCount > 0 && (
+            <span className="flex items-center gap-1 text-[10px] text-[var(--muted-foreground)]">
+              <ListTodo className="h-3 w-3" />{deal.taskCount}
+            </span>
+          )}
+          {deal.dealValue != null && deal.dealValue > 0 && (
+            <span className="text-xs font-bold text-[var(--foreground)]">₹{(deal.dealValue / 100000).toFixed(1)}L</span>
+          )}
         </div>
       </div>
     </div>
@@ -106,17 +105,21 @@ function DraggableDeal({ deal, onOpen }: { deal: Deal; onOpen: (id: string) => v
 
 function StageColumn({ stage, deals, onOpen }: { stage: any; deals: Deal[]; onOpen: (id: string) => void }) {
   const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({ id: stage.id, data: { type: "stage", stage } });
+  const totalValue = deals.reduce((sum, d) => sum + (d.dealValue || 0), 0);
 
   return (
-    <div ref={setNodeRef} className="flex-shrink-0 w-72 flex flex-col rounded-xl border border-[var(--border)] bg-[var(--muted)]/20 max-h-full" style={{ transform: CSS.Transform.toString(transform), transition }}>
-      <div className="flex items-center justify-between px-3 py-2.5 border-b border-[var(--border)]" {...attributes} {...listeners}>
-        <div className="flex items-center gap-2">
-          <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: stage.color }} />
+    <div ref={setNodeRef} className="flex-shrink-0 w-72 flex flex-col rounded-xl border border-[var(--border)] bg-[var(--card)] max-h-full overflow-hidden" style={{ transform: CSS.Transform.toString(transform), transition }}>
+      <div className="h-1 bg-[var(--primary)]" />
+      <div className="px-3.5 py-3 border-b border-[var(--border)]" {...attributes} {...listeners}>
+        <div className="flex items-center justify-between">
           <span className="text-sm font-semibold text-[var(--foreground)]">{stage.name}</span>
           <span className="text-[11px] font-medium text-[var(--muted-foreground)] bg-[var(--muted)] px-1.5 py-0.5 rounded-full">{deals.length}</span>
         </div>
+        {totalValue > 0 && (
+          <span className="text-xs font-bold text-[var(--primary)] mt-0.5 block">₹{(totalValue / 100000).toFixed(1)}L</span>
+        )}
       </div>
-      <div className="flex-1 overflow-y-auto p-2 space-y-2 min-h-0">
+      <div className="flex-1 overflow-y-auto p-2.5 space-y-2.5 min-h-0 bg-[var(--muted)]/20">
         <SortableContext items={deals.map(l => l.id)} strategy={verticalListSortingStrategy}>
           {deals.map(deal => (<DraggableDeal key={deal.id} deal={deal} onOpen={onOpen} />))}
         </SortableContext>
