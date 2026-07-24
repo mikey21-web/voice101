@@ -70,8 +70,8 @@ export default function CallsPage() {
     <div className="space-y-4 animate-fade-in">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-[var(--foreground)]">Calls</h1>
-        <button onClick={() => setShowPair(true)} className="inline-flex items-center gap-2 rounded-lg bg-[var(--primary)] px-4 py-2 text-sm font-medium text-[var(--primary-foreground)] hover:bg-[var(--primary)]/90 transition-colors">
-          <Smartphone size={16} /> Pair a device
+        <button onClick={() => setShowPair(true)} className="inline-flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--card)] px-4 py-2 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--accent)] transition-colors">
+          <Smartphone size={16} className="text-[var(--primary)]" /> Pair a device
         </button>
       </div>
 
