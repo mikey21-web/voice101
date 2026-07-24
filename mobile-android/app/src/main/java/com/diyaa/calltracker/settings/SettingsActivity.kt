@@ -3,19 +3,24 @@ package com.diyaa.calltracker.settings
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.diyaa.calltracker.data.SecureStorage
+import com.diyaa.calltracker.ui.theme.CallTrackerTheme
 import java.util.Calendar
 
 class SettingsActivity : ComponentActivity() {
@@ -23,11 +28,23 @@ class SettingsActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         val storage = SecureStorage(this)
         setContent {
-            MaterialTheme {
+            CallTrackerTheme {
                 SettingsScreen(storage = storage, onBack = { finish() })
             }
         }
     }
+}
+
+@Composable
+private fun SettingsSectionCard(content: @Composable ColumnScope.() -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(MaterialTheme.colorScheme.surface)
+            .padding(16.dp),
+        content = content,
+    )
 }
 
 // ── Day-of-week labels, ordered Mon–Sun ──────────────────────────────────────
@@ -65,57 +82,63 @@ private fun SettingsScreen(storage: SecureStorage, onBack: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Settings") },
+                title = { Text("Settings", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-                    TextButton(onClick = onBack) { Text("Back") }
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
                 },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface),
             )
         },
+        containerColor = MaterialTheme.colorScheme.background,
     ) { padding ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+                .padding(horizontal = 20.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             // ── Dual SIM section ────────────────────────────────────────────
             item {
                 Spacer(Modifier.height(8.dp))
-                Text("Dual SIM", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Text("Dual SIM", style = MaterialTheme.typography.titleLarge)
             }
 
             item {
-                val options = listOf("sim1" to "SIM 1", "sim2" to "SIM 2", "both" to "Both")
-                var expanded by remember { mutableStateOf(false) }
+                SettingsSectionCard {
+                    val options = listOf("sim1" to "SIM 1", "sim2" to "SIM 2", "both" to "Both")
+                    var expanded by remember { mutableStateOf(false) }
 
-                ExposedDropdownMenuBox(
-                    expanded = expanded,
-                    onExpandedChange = { expanded = !expanded },
-                ) {
-                    OutlinedTextField(
-                        value = options.firstOrNull { it.first == selectedSim }?.second ?: "Both",
-                        onValueChange = {},
-                        readOnly = true,
-                        label = { Text("Active SIM") },
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                        modifier = Modifier
-                            .menuAnchor()
-                            .fillMaxWidth(),
-                    )
-                    ExposedDropdownMenu(
+                    ExposedDropdownMenuBox(
                         expanded = expanded,
-                        onDismissRequest = { expanded = false },
+                        onExpandedChange = { expanded = !expanded },
                     ) {
-                        options.forEach { (key, label) ->
-                            DropdownMenuItem(
-                                text = { Text(label) },
-                                onClick = {
-                                    selectedSim = key
-                                    expanded = false
-                                    persist()
-                                },
-                            )
+                        OutlinedTextField(
+                            value = options.firstOrNull { it.first == selectedSim }?.second ?: "Both",
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("Active SIM") },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                            modifier = Modifier
+                                .menuAnchor()
+                                .fillMaxWidth(),
+                        )
+                        ExposedDropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false },
+                        ) {
+                            options.forEach { (key, label) ->
+                                DropdownMenuItem(
+                                    text = { Text(label) },
+                                    onClick = {
+                                        selectedSim = key
+                                        expanded = false
+                                        persist()
+                                    },
+                                )
+                            }
                         }
                     }
                 }
@@ -123,75 +146,66 @@ private fun SettingsScreen(storage: SecureStorage, onBack: () -> Unit) {
 
             // ── Office Hours section ─────────────────────────────────────────
             item {
-                Spacer(Modifier.height(16.dp))
-                Text("Office Hours", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Text("Office Hours", style = MaterialTheme.typography.titleLarge)
             }
 
             item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text("Work days only")
-                    Switch(
-                        checked = ohEnabled,
-                        onCheckedChange = {
-                            ohEnabled = it
-                            persist()
-                        },
-                    )
-                }
-            }
-
-            if (ohEnabled) {
-                // Start time
-                item {
-                    OutlinedTextField(
-                        value = ohStart,
-                        onValueChange = {},
-                        readOnly = true,
-                        label = { Text("Start time") },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { showStartPicker = true },
-                    )
-                }
-
-                // End time
-                item {
-                    OutlinedTextField(
-                        value = ohEnd,
-                        onValueChange = {},
-                        readOnly = true,
-                        label = { Text("End time") },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { showEndPicker = true },
-                    )
-                }
-
-                // Day-of-week toggles
-                item {
-                    Text("Active days", fontWeight = FontWeight.Medium, modifier = Modifier.padding(top = 8.dp))
-                }
-
-                item {
+                SettingsSectionCard {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        for (i in 0..6) {
-                            val mask = 1 shl i
-                            val checked = (ohDays and mask) != 0
-                            FilterChip(
-                                selected = checked,
-                                onClick = {
-                                    ohDays = if (checked) ohDays and mask.inv() else ohDays or mask
-                                    persist()
-                                },
-                                label = { Text(DAY_LABELS[i], fontSize = 12.sp) },
-                            )
+                        Text("Work days only", style = MaterialTheme.typography.bodyLarge)
+                        Switch(
+                            checked = ohEnabled,
+                            onCheckedChange = {
+                                ohEnabled = it
+                                persist()
+                            },
+                        )
+                    }
+
+                    if (ohEnabled) {
+                        Spacer(Modifier.height(12.dp))
+                        OutlinedTextField(
+                            value = ohStart,
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("Start time") },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { showStartPicker = true },
+                        )
+
+                        Spacer(Modifier.height(8.dp))
+                        OutlinedTextField(
+                            value = ohEnd,
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("End time") },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { showEndPicker = true },
+                        )
+
+                        Text("Active days", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 14.dp, bottom = 8.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceEvenly,
+                        ) {
+                            for (i in 0..6) {
+                                val mask = 1 shl i
+                                val checked = (ohDays and mask) != 0
+                                FilterChip(
+                                    selected = checked,
+                                    onClick = {
+                                        ohDays = if (checked) ohDays and mask.inv() else ohDays or mask
+                                        persist()
+                                    },
+                                    label = { Text(DAY_LABELS[i], fontSize = 12.sp) },
+                                )
+                            }
                         }
                     }
                 }

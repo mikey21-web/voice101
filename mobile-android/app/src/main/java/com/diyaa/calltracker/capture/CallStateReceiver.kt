@@ -107,16 +107,14 @@ class CallStateReceiver : BroadcastReceiver() {
                                     context = context,
                                     afterEpochMs = startMs,
                                 )
-                                if (recordingPath != null) {
-                                    storage.nativeRecorderAvailable = true
-                                    storage.nativeRecorderMisses = 0
-                                } else if (nativeAvailable == true) {
-                                    // Consecutive miss — increment toward the threshold
-                                    storage.nativeRecorderMisses = storage.nativeRecorderMisses + 1
-                                    if (storage.nativeRecorderMisses >= SecureStorage.NATIVE_RECORDER_FAIL_THRESHOLD) {
-                                        storage.nativeRecorderAvailable = false
-                                    }
-                                }
+                                val next = NativeRecorderState.next(
+                                    current = nativeAvailable,
+                                    misses = storage.nativeRecorderMisses,
+                                    found = recordingPath != null,
+                                    threshold = SecureStorage.NATIVE_RECORDER_FAIL_THRESHOLD,
+                                )
+                                storage.nativeRecorderAvailable = next.available
+                                storage.nativeRecorderMisses = next.misses
                             }
 
                             // Fallback: direct VOICE_CALL capture if native recorder not found
