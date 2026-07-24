@@ -11,6 +11,8 @@ import type { Lead } from '../lib/types';
 import CustomFieldsSection from '../components/CustomFieldsSection';
 import LeadPaymentMilestones from '../components/LeadPaymentMilestones';
 import PreVisitBrief from '../components/PreVisitBrief';
+import { Dialog } from '../components/ui/dialog';
+import { Button } from '../components/ui/button';
 
 const statusStyles: Record<string, string> = {
   NEW: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
@@ -420,7 +422,7 @@ export default function LeadsPage() {
                       <motion.tr
                         ref={highlightId === l.id ? highlightRef : undefined}
                         onClick={() => handleExpand(l.id)}
-                        animate={highlightId === l.id ? { backgroundColor: ['rgba(99,102,241,0.25)', 'rgba(99,102,241,0)', 'rgba(99,102,241,0.25)', 'rgba(99,102,241,0)'] } : undefined}
+                        animate={highlightId === l.id ? { backgroundColor: ['rgba(193,85,44,0.18)', 'rgba(193,85,44,0)', 'rgba(193,85,44,0.18)', 'rgba(193,85,44,0)'] } : undefined}
                         transition={highlightId === l.id ? { duration: 2.4, times: [0, 0.33, 0.66, 1] } : undefined}
                         className="border-b border-[var(--border)] hover:bg-[var(--muted)]/50 cursor-pointer transition-colors">
                         <td className="px-4 py-3">
@@ -697,69 +699,61 @@ export default function LeadsPage() {
       )}
       {briefLeadId && <PreVisitBrief leadId={briefLeadId} onClose={() => setBriefLeadId(null)} />}
 
-      {showAddLead && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setShowAddLead(false)}>
-          <div className="bg-[var(--card)] rounded-xl shadow-2xl w-full max-w-md p-6 space-y-3 overflow-y-auto" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-lg font-bold text-[var(--foreground)]">Add Lead</h2>
-                <p className="text-xs text-[var(--muted-foreground)] mt-0.5">For leads that came from outside Mikey — a walk-in, a referral, a call you took yourself.</p>
-              </div>
-              <button onClick={() => setShowAddLead(false)}><X className="h-5 w-5" /></button>
-            </div>
-            <input
-              value={addLeadForm.name} onChange={e => setAddLeadForm(f => ({ ...f, name: e.target.value }))}
-              placeholder="Full name" autoFocus
-              className="w-full h-10 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20"
-            />
-            <div className="grid grid-cols-2 gap-3">
-              <input
-                value={addLeadForm.phone} onChange={e => setAddLeadForm(f => ({ ...f, phone: e.target.value }))}
-                placeholder="Phone"
-                className="h-10 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20"
-              />
-              <input
-                value={addLeadForm.email} onChange={e => setAddLeadForm(f => ({ ...f, email: e.target.value }))}
-                placeholder="Email"
-                className="h-10 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20"
-              />
-            </div>
-            <select
-              value={addLeadForm.source} onChange={e => setAddLeadForm(f => ({ ...f, source: e.target.value }))}
-              className="w-full h-10 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20"
-            >
-              <option value="MANUAL">Manual entry</option>
-              <option value="REFERRAL">Referral</option>
-            </select>
-            <div className="grid grid-cols-2 gap-3">
-              <input
-                value={addLeadForm.interest} onChange={e => setAddLeadForm(f => ({ ...f, interest: e.target.value }))}
-                placeholder="Interest (e.g. 3BHK)"
-                className="h-10 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20"
-              />
-              <input
-                value={addLeadForm.budget} onChange={e => setAddLeadForm(f => ({ ...f, budget: e.target.value }))}
-                placeholder="Budget"
-                className="h-10 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20"
-              />
-            </div>
-            <textarea
-              value={addLeadForm.message} onChange={e => setAddLeadForm(f => ({ ...f, message: e.target.value }))}
-              placeholder="Notes (optional)" rows={2}
-              className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20 resize-none"
-            />
-            <div className="flex justify-end gap-2 pt-1">
-              <button onClick={() => setShowAddLead(false)} className="h-9 px-4 rounded-lg border border-[var(--border)] text-sm text-[var(--foreground)] hover:bg-[var(--accent)]">Cancel</button>
-              <button
-                onClick={submitAddLead} disabled={addingLead}
-                className="h-9 px-5 rounded-lg bg-[var(--primary)] text-white text-sm font-medium hover:opacity-90 disabled:opacity-50"
-              >
-                {addingLead ? 'Adding...' : 'Add Lead'}
-              </button>
-            </div>
-          </div>
+      <Dialog
+        open={showAddLead}
+        onClose={() => setShowAddLead(false)}
+        title="Add Lead"
+        description="For leads that came from outside Mikey — a walk-in, a referral, a call you took yourself."
+        maxWidth="max-w-md"
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setShowAddLead(false)}>Cancel</Button>
+            <Button onClick={submitAddLead} loading={addingLead}>Add Lead</Button>
+          </>
+        }
+      >
+        <input
+          value={addLeadForm.name} onChange={e => setAddLeadForm(f => ({ ...f, name: e.target.value }))}
+          placeholder="Full name" autoFocus
+          className="w-full h-10 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20"
+        />
+        <div className="grid grid-cols-2 gap-3">
+          <input
+            value={addLeadForm.phone} onChange={e => setAddLeadForm(f => ({ ...f, phone: e.target.value }))}
+            placeholder="Phone"
+            className="h-10 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20"
+          />
+          <input
+            value={addLeadForm.email} onChange={e => setAddLeadForm(f => ({ ...f, email: e.target.value }))}
+            placeholder="Email"
+            className="h-10 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20"
+          />
         </div>
-      )}
+        <select
+          value={addLeadForm.source} onChange={e => setAddLeadForm(f => ({ ...f, source: e.target.value }))}
+          className="w-full h-10 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20"
+        >
+          <option value="MANUAL">Manual entry</option>
+          <option value="REFERRAL">Referral</option>
+        </select>
+        <div className="grid grid-cols-2 gap-3">
+          <input
+            value={addLeadForm.interest} onChange={e => setAddLeadForm(f => ({ ...f, interest: e.target.value }))}
+            placeholder="Interest (e.g. 3BHK)"
+            className="h-10 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20"
+          />
+          <input
+            value={addLeadForm.budget} onChange={e => setAddLeadForm(f => ({ ...f, budget: e.target.value }))}
+            placeholder="Budget"
+            className="h-10 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20"
+          />
+        </div>
+        <textarea
+          value={addLeadForm.message} onChange={e => setAddLeadForm(f => ({ ...f, message: e.target.value }))}
+          placeholder="Notes (optional)" rows={2}
+          className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20 resize-none"
+        />
+      </Dialog>
     </div>
   );
 }
