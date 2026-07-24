@@ -76,4 +76,7 @@ export class CreatePropertyDto {
   @IsOptional()
   @IsArray()
   images?: { url: string; caption?: string; isPrimary?: boolean }[];
+
+  @IsOptional()
+  metadata?: Record<string, unknown>;
 }
