@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { setToken, clearToken, getToken, api, setRefreshToken } from './api';
 import { reset as posthogReset } from './posthog';
 
@@ -11,13 +11,17 @@ export interface AuthUser {
 }
 
 export function useAuth() {
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
+  // Read any cached session synchronously on the initial render — if this
+  // instead lived in a useEffect, the first render would see `user: null`
+  // (isLoggedIn: false) before the effect had a chance to run, and any
+  // code gating on isLoggedIn on that first render (e.g. redirecting to
+  // the login page) would fire incorrectly even for an already-logged-in
+  // user.
+  const [user, setUser] = useState<AuthUser | null>(() => {
     const cached = sessionStorage.getItem('user');
-    if (cached) setUser(JSON.parse(cached));
-  }, []);
+    return cached ? JSON.parse(cached) : null;
+  });
+  const [loading, setLoading] = useState(false);
 
   async function login(email: string, password: string) {
     setLoading(true);

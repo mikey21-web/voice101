@@ -2,6 +2,7 @@ import { useState, useEffect, lazy, Suspense, useCallback } from "react";
 import { Toaster } from "react-hot-toast";
 import { HashRouter, Routes, Route } from "react-router-dom";
 import { useAuth } from "./lib/useAuth";
+import { getToken } from "./lib/api";
 import { capture, identify, reset as posthogReset } from "./lib/posthog";
 import { AppProvider } from "./context/AppContext";
 import { BrandingProvider } from "./lib/useBranding";
@@ -396,6 +397,12 @@ export default function App() {
         </BrandingProvider>
       );
     }
+    // A token exists but hasn't been validated yet (e.g. sessionStorage's
+    // cached user was cleared by closing the tab, but the localStorage
+    // token survived) — the fetchProfile() call kicked off on mount is
+    // still in flight. Redirecting here would kick out a valid session
+    // before it even had a chance to prove itself; wait instead.
+    if (getToken()) return null;
     window.location.href = '/login.html';
     return null;
   }
