@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { fetchLeads, getLeadTimeline } from '../lib/data';
 import { consumePendingFilter, PENDING_FILTER_APPLIED_EVENT } from '../lib/pendingSearch';
@@ -298,12 +299,20 @@ export default function LeadsPage() {
           <h1 className="text-xl font-bold text-[var(--foreground)]">{labelPlural}</h1>
           <p className="text-sm text-[var(--muted-foreground)] mt-0.5">{meta.total} total {labelPlural.toLowerCase()}</p>
         </div>
-        <button
-          onClick={() => setShowAddLead(true)}
-          className="inline-flex items-center gap-1.5 h-9 px-4 rounded-lg bg-[var(--primary)] text-white text-sm font-medium hover:opacity-90 transition-opacity"
-        >
-          <Plus size={15} /> Add {label.charAt(0).toUpperCase() + label.slice(1)}
-        </button>
+        <div className="flex items-center gap-2">
+          <Link
+            to="/import"
+            className="inline-flex items-center gap-1.5 h-9 px-4 rounded-lg border border-[var(--border)] text-sm font-medium text-[var(--foreground)] hover:bg-[var(--accent)] transition-colors"
+          >
+            Import
+          </Link>
+          <button
+            onClick={() => setShowAddLead(true)}
+            className="inline-flex items-center gap-1.5 h-9 px-4 rounded-lg bg-[var(--primary)] text-white text-sm font-medium hover:opacity-90 transition-opacity"
+          >
+            <Plus size={15} /> Add {label.charAt(0).toUpperCase() + label.slice(1)}
+          </button>
+        </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
