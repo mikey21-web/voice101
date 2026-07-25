@@ -5,6 +5,8 @@ import { Plus, MapPin, Check, X, CalendarClock, UserCheck, LogOut } from "lucide
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/ui/table";
 import { Badge } from "../components/ui/badge";
+import { createPortal } from "react-dom";
+import { Dialog } from "../components/ui/dialog";
 
 const statusVariant: Record<string, "default" | "success" | "secondary" | "destructive" | "warning"> = {
   SCHEDULED: "default",
@@ -263,7 +265,7 @@ function CreateVisitModal({ onClose, onCreated }: { onClose: () => void; onCreat
     setSaving(false);
   };
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" onClick={onClose}>
       <form onSubmit={handleSubmit} className="w-full max-w-md rounded-xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-lg" onClick={e => e.stopPropagation()}>
         <h2 className="text-lg font-bold text-[var(--foreground)] mb-4">Schedule a site visit</h2>
@@ -336,7 +338,8 @@ function CreateVisitModal({ onClose, onCreated }: { onClose: () => void; onCreat
           </button>
         </div>
       </form>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -365,37 +368,41 @@ function OutcomeModal({ visit, onClose, onDone }: { visit: any; onClose: () => v
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" onClick={onClose}>
-      <div className="w-full max-w-md rounded-xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-lg" onClick={e => e.stopPropagation()}>
-        <h2 className="text-lg font-bold text-[var(--foreground)] mb-4">Visit outcome</h2>
-        <div className="space-y-3">
-          <label className="flex items-center gap-2 text-sm text-[var(--foreground)]">
-            <input type="checkbox" checked={attended} onChange={e => setAttended(e.target.checked)} /> Buyer attended
-          </label>
-          <textarea
-            placeholder="Notes / objections raised"
-            value={notes}
-            onChange={e => setNotes(e.target.value)}
-            className="w-full h-20 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20"
-          />
-          <div>
-            <label className="text-xs text-[var(--muted-foreground)]">Next follow-up (optional)</label>
-            <input
-              type="datetime-local"
-              value={nextActionAt}
-              onChange={e => setNextActionAt(e.target.value)}
-              className="w-full h-9 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20"
-            />
-          </div>
-        </div>
-        <div className="flex justify-end gap-2 mt-4">
+    <Dialog
+      open
+      onClose={onClose}
+      title="Visit outcome"
+      maxWidth="max-w-md"
+      footer={
+        <>
           <button onClick={onClose} className="h-9 px-4 rounded-lg border border-[var(--border)] text-sm text-[var(--foreground)] hover:bg-[var(--accent)]">Cancel</button>
           <button onClick={submit} disabled={saving} className="h-9 px-4 rounded-lg bg-[var(--primary)] text-white text-sm font-medium hover:opacity-90 disabled:opacity-50">
             {saving ? "Saving..." : "Save outcome"}
           </button>
+        </>
+      }
+    >
+      <div className="space-y-3">
+        <label className="flex items-center gap-2 text-sm text-[var(--foreground)]">
+          <input type="checkbox" checked={attended} onChange={e => setAttended(e.target.checked)} /> Buyer attended
+        </label>
+        <textarea
+          placeholder="Notes / objections raised"
+          value={notes}
+          onChange={e => setNotes(e.target.value)}
+          className="w-full h-20 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20"
+        />
+        <div>
+          <label className="text-xs text-[var(--muted-foreground)]">Next follow-up (optional)</label>
+          <input
+            type="datetime-local"
+            value={nextActionAt}
+            onChange={e => setNextActionAt(e.target.value)}
+            className="w-full h-9 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20"
+          />
         </div>
       </div>
-    </div>
+    </Dialog>
   );
 }
 
@@ -416,23 +423,27 @@ function NoShowModal({ visit, onClose, onDone }: { visit: any; onClose: () => vo
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" onClick={onClose}>
-      <div className="w-full max-w-md rounded-xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-lg" onClick={e => e.stopPropagation()}>
-        <h2 className="text-lg font-bold text-[var(--foreground)] mb-4">Mark as no-show</h2>
-        <textarea
-          placeholder="Reason (optional)"
-          value={reason}
-          onChange={e => setReason(e.target.value)}
-          className="w-full h-20 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20"
-        />
-        <div className="flex justify-end gap-2 mt-4">
+    <Dialog
+      open
+      onClose={onClose}
+      title="Mark as no-show"
+      maxWidth="max-w-md"
+      footer={
+        <>
           <button onClick={onClose} className="h-9 px-4 rounded-lg border border-[var(--border)] text-sm text-[var(--foreground)] hover:bg-[var(--accent)]">Cancel</button>
           <button onClick={submit} disabled={saving} className="h-9 px-4 rounded-lg bg-red-600 text-white text-sm font-medium hover:opacity-90 disabled:opacity-50">
             {saving ? "Saving..." : "Confirm no-show"}
           </button>
-        </div>
-      </div>
-    </div>
+        </>
+      }
+    >
+      <textarea
+        placeholder="Reason (optional)"
+        value={reason}
+        onChange={e => setReason(e.target.value)}
+        className="w-full h-20 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20"
+      />
+    </Dialog>
   );
 }
 
@@ -458,31 +469,35 @@ function RescheduleModal({ visit, onClose, onDone }: { visit: any; onClose: () =
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" onClick={onClose}>
-      <div className="w-full max-w-md rounded-xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-lg" onClick={e => e.stopPropagation()}>
-        <h2 className="text-lg font-bold text-[var(--foreground)] mb-4">Reschedule visit</h2>
-        <div className="space-y-3">
-          <input
-            type="datetime-local"
-            value={startAt}
-            onChange={e => setStartAt(e.target.value)}
-            className="w-full h-9 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20"
-          />
-          <textarea
-            placeholder="Reason (optional)"
-            value={reason}
-            onChange={e => setReason(e.target.value)}
-            className="w-full h-16 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20"
-          />
-        </div>
-        <div className="flex justify-end gap-2 mt-4">
+    <Dialog
+      open
+      onClose={onClose}
+      title="Reschedule visit"
+      maxWidth="max-w-md"
+      footer={
+        <>
           <button onClick={onClose} className="h-9 px-4 rounded-lg border border-[var(--border)] text-sm text-[var(--foreground)] hover:bg-[var(--accent)]">Cancel</button>
           <button onClick={submit} disabled={saving} className="h-9 px-4 rounded-lg bg-[var(--primary)] text-white text-sm font-medium hover:opacity-90 disabled:opacity-50">
             {saving ? "Saving..." : "Reschedule"}
           </button>
-        </div>
+        </>
+      }
+    >
+      <div className="space-y-3">
+        <input
+          type="datetime-local"
+          value={startAt}
+          onChange={e => setStartAt(e.target.value)}
+          className="w-full h-9 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20"
+        />
+        <textarea
+          placeholder="Reason (optional)"
+          value={reason}
+          onChange={e => setReason(e.target.value)}
+          className="w-full h-16 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20"
+        />
       </div>
-    </div>
+    </Dialog>
   );
 }
 

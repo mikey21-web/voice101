@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { api } from "../lib/api";
 import toast from "react-hot-toast";
+import { Dialog } from "../components/ui/dialog";
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
-import { BarChart3, PieChart as PieChartIcon, TrendingUp, Save, Play, Plus, X, Edit3, Trash2, Share2, RefreshCw } from "lucide-react";
+import { BarChart3, PieChart as PieChartIcon, TrendingUp, Save, Play, Plus, Edit3, Trash2, Share2, RefreshCw } from "lucide-react";
 
 const ENTITIES = ["lead", "conversion", "ticket", "revenue", "property", "project", "unit"] as const;
 const METRICS: Record<string, string[]> = {
@@ -239,76 +240,69 @@ export default function ReportsPage() {
 
       {/* Save Modal */}
       {showSave && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" onClick={() => setShowSave(false)}>
-          <div className="bg-[var(--card)] rounded-xl border border-[var(--border)] shadow-xl w-full max-w-sm mx-4 overflow-y-auto" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border)]">
-              <h3 className="text-sm font-semibold text-[var(--foreground)]">Save Report</h3>
-              <button onClick={() => setShowSave(false)} className="p-1 rounded-md text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--accent)] transition-colors cursor-pointer"><X size={16} /></button>
-            </div>
-            <div className="p-5 space-y-4">
-              <input value={reportName} onChange={e => setReportName(e.target.value)} placeholder="Report name" autoFocus
-                className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/50" />
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" checked={reportShared} onChange={e => setReportShared(e.target.checked)}
-                  className="w-4 h-4 rounded border-[var(--border)] text-[var(--primary)] focus:ring-[var(--primary)]/30" />
-                <span className="text-sm text-[var(--foreground)]">Share with team</span>
-              </label>
-            </div>
-            <div className="flex justify-end gap-2 px-5 py-4 border-t border-[var(--border)]">
+        <Dialog
+          open
+          onClose={() => setShowSave(false)}
+          title="Save Report"
+          maxWidth="max-w-sm"
+          footer={
+            <>
               <button onClick={() => setShowSave(false)}
                 className="px-4 py-2 rounded-lg text-sm font-medium text-[var(--foreground)] border border-[var(--border)] bg-[var(--card)] hover:bg-[var(--accent)] transition-colors cursor-pointer">Cancel</button>
               <button onClick={handleSave}
                 className="px-4 py-2 rounded-lg text-sm font-medium bg-[var(--primary)] text-[var(--primary-foreground)] hover:bg-[var(--primary)]/90 transition-colors cursor-pointer">Save</button>
-            </div>
-          </div>
-        </div>
+            </>
+          }
+        >
+          <input value={reportName} onChange={e => setReportName(e.target.value)} placeholder="Report name" autoFocus
+            className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/50" />
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" checked={reportShared} onChange={e => setReportShared(e.target.checked)}
+              className="w-4 h-4 rounded border-[var(--border)] text-[var(--primary)] focus:ring-[var(--primary)]/30" />
+            <span className="text-sm text-[var(--foreground)]">Share with team</span>
+          </label>
+        </Dialog>
       )}
 
       {/* Saved Reports Modal */}
       {showSaved && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" onClick={() => setShowSaved(false)}>
-          <div className="bg-[var(--card)] rounded-xl border border-[var(--border)] shadow-xl w-full max-w-lg mx-4 max-h-[70vh] flex flex-col overflow-y-auto" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border)]">
-              <h3 className="text-sm font-semibold text-[var(--foreground)]">Saved Reports</h3>
-              <button onClick={() => setShowSaved(false)} className="p-1 rounded-md text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--accent)] transition-colors cursor-pointer"><X size={16} /></button>
-            </div>
-            <div className="flex-1 overflow-y-auto p-4 space-y-2">
-              {loading && (
-                <div className="flex items-center justify-center py-8">
-                  <RefreshCw size={20} className="animate-spin text-[var(--muted-foreground)]" />
+        <Dialog open onClose={() => setShowSaved(false)} title="Saved Reports" maxWidth="max-w-lg">
+          <div className="max-h-[55vh] overflow-y-auto space-y-2">
+            {loading && (
+              <div className="flex items-center justify-center py-8">
+                <RefreshCw size={20} className="animate-spin text-[var(--muted-foreground)]" />
+              </div>
+            )}
+            {error && (
+              <div className="flex items-center justify-center py-4 px-4 bg-red-50 dark:bg-red-900/20 rounded-lg text-sm text-red-600 dark:text-red-400">
+                {error}
+              </div>
+            )}
+            {!loading && !error && saved.length === 0 ? (
+              <p className="text-sm text-[var(--muted-foreground)] text-center py-8">No saved reports yet. Build and save one!</p>
+            ) : !loading && !error && saved.map((r: any) => (
+              <div key={r.id} className="flex items-center justify-between rounded-lg border border-[var(--border)] bg-[var(--background)] px-4 py-3">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-[var(--foreground)] truncate">{r.name}</p>
+                  <p className="text-xs text-[var(--muted-foreground)]">
+                    {r.entity.charAt(0).toUpperCase() + r.entity.slice(1)} · {r.owner?.name || 'Unknown'}
+                    {r.isShared && ' · Shared'}
+                  </p>
                 </div>
-              )}
-              {error && (
-                <div className="flex items-center justify-center py-4 px-4 bg-red-50 dark:bg-red-900/20 rounded-lg text-sm text-red-600 dark:text-red-400">
-                  {error}
+                <div className="flex items-center gap-1 ml-3">
+                  <button onClick={() => handleLoad(r)}
+                    className="p-1.5 rounded-md text-[var(--muted-foreground)] hover:text-[var(--primary)] hover:bg-[var(--primary-light)] transition-colors cursor-pointer" title="Load">
+                    <Play size={14} />
+                  </button>
+                  <button onClick={() => handleDelete(r.id)}
+                    className="p-1.5 rounded-md text-[var(--muted-foreground)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors cursor-pointer" title="Delete">
+                    <Trash2 size={14} />
+                  </button>
                 </div>
-              )}
-              {!loading && !error && saved.length === 0 ? (
-                <p className="text-sm text-[var(--muted-foreground)] text-center py-8">No saved reports yet. Build and save one!</p>
-              ) : !loading && !error && saved.map((r: any) => (
-                <div key={r.id} className="flex items-center justify-between rounded-lg border border-[var(--border)] bg-[var(--background)] px-4 py-3">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-[var(--foreground)] truncate">{r.name}</p>
-                    <p className="text-xs text-[var(--muted-foreground)]">
-                      {r.entity.charAt(0).toUpperCase() + r.entity.slice(1)} · {r.owner?.name || 'Unknown'}
-                      {r.isShared && ' · Shared'}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-1 ml-3">
-                    <button onClick={() => handleLoad(r)}
-                      className="p-1.5 rounded-md text-[var(--muted-foreground)] hover:text-[var(--primary)] hover:bg-[var(--primary-light)] transition-colors cursor-pointer" title="Load">
-                      <Play size={14} />
-                    </button>
-                    <button onClick={() => handleDelete(r.id)}
-                      className="p-1.5 rounded-md text-[var(--muted-foreground)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors cursor-pointer" title="Delete">
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
-        </div>
+        </Dialog>
       )}
     </div>
   );
