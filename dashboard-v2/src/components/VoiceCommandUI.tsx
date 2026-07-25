@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Mic, MicOff, Sparkles } from 'lucide-react';
+import { Mic, MicOff, Sparkles, Ear, EarOff } from 'lucide-react';
 import { setPendingFilter } from '../lib/pendingSearch';
 import { api, apiUpload } from '../lib/api';
+import { useVoiceInput } from '../lib/useVoiceInput';
 
 const PAGE_MAP: Record<string, string> = {
   leads: '/leads', contacts: '/contacts', tickets: '/tickets',
@@ -115,6 +116,9 @@ export default function VoiceCommandUI() {
   const maxTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const rafRef = useRef<number>(0);
 
+  const [wakeWordOn, setWakeWordOn] = useState(() => localStorage.getItem('mikeyWakeWordOn') === 'true');
+  const wakeWord = useVoiceInput();
+
   useEffect(() => {
     const hasWhisperPath = !!(navigator.mediaDevices?.getUserMedia && (window as any).MediaRecorder);
     const Ctor = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -168,8 +172,12 @@ export default function VoiceCommandUI() {
       }
     }).catch(() => {
       setResult(`${transcriptLine}\n→ I didn't understand that. Try 'show me leads' or 'go to qr'.`);
-    }).finally(() => { setMode('idle'); setListening(false); });
-  }, []);
+    }).finally(() => {
+      setMode('idle');
+      setListening(false);
+      if (wakeWordOn) wakeWord.start();
+    });
+  }, [wakeWordOn, wakeWord]);
 
   const startBrowserRecognition = useCallback(() => {
     const Ctor = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -183,11 +191,11 @@ export default function VoiceCommandUI() {
     r.onstart = () => { setListening(true); setMode('listening'); };
     r.onresult = (e: any) => handleTranscript(e.results[e.results.length - 1][0].transcript);
     r.onerror = () => { setResult('Microphone error. Check permissions.'); };
-    r.onend = () => { setListening(false); setMode('idle'); };
+    r.onend = () => { setListening(false); setMode('idle'); if (wakeWordOn) wakeWord.start(); };
 
     recognitionRef.current = r;
     try { r.start(); } catch { setResult('Failed to start microphone.'); }
-  }, [handleTranscript]);
+  }, [handleTranscript, wakeWordOn, wakeWord]);
 
   // Press-to-talk + Whisper: a clean start/stop recording is transcribed
   // server-side, which catches full sentences the browser's live recognizer
@@ -297,9 +305,36 @@ export default function VoiceCommandUI() {
   }, [handleTranscript]);
 
   const startListening = useCallback(() => {
+    if (wakeWordOn) wakeWord.stop();
     if (whisperMode) startWhisperRecording();
     else startBrowserRecognition();
-  }, [whisperMode, startWhisperRecording, startBrowserRecognition]);
+  }, [whisperMode, startWhisperRecording, startBrowserRecognition, wakeWordOn, wakeWord]);
+
+  // "Okay Mikey" hands-free mode: runs a background SpeechRecognition
+  // listener (useVoiceInput) that only reacts after hearing the wake phrase,
+  // feeding whatever comes after it into the same handleTranscript pipeline
+  // press-to-talk uses. Toggled separately since it's opt-in (always-on mic).
+  const toggleWakeWord = useCallback(() => {
+    setWakeWordOn(prev => {
+      const next = !prev;
+      localStorage.setItem('mikeyWakeWordOn', String(next));
+      if (next) wakeWord.start(); else wakeWord.stop();
+      return next;
+    });
+  }, [wakeWord]);
+
+  useEffect(() => {
+    if (wakeWordOn) wakeWord.start();
+    return () => { wakeWord.stop(); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!wakeWord.transcript) return;
+    const text = wakeWord.transcript;
+    wakeWord.clearTranscript();
+    handleTranscript(text);
+  }, [wakeWord.transcript, handleTranscript, wakeWord]);
 
   const stopListening = useCallback(() => {
     // Whisper path: leave listening/mode alone here — recorder.onstop owns
@@ -314,7 +349,8 @@ export default function VoiceCommandUI() {
     recognitionRef.current = null;
     setListening(false);
     setMode('idle');
-  }, []);
+    if (wakeWordOn) wakeWord.start();
+  }, [wakeWordOn, wakeWord]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -390,6 +426,15 @@ export default function VoiceCommandUI() {
         title="Activate Mikey Voice (Ctrl+H)"
       >
         <Mic size={18} />
+      </button>
+      <button
+        onClick={toggleWakeWord}
+        className={`fixed bottom-20 right-20 z-[9999] w-9 h-9 rounded-full shadow-lg flex items-center justify-center border transition-all duration-200 [body.overlay-open_&]:hidden ${
+          wakeWordOn ? 'bg-[var(--primary)] text-white border-transparent' : 'bg-[var(--card)] text-[var(--muted-foreground)] border-[var(--border)] hover:bg-[var(--accent)]'
+        }`}
+        title={wakeWordOn ? '"Okay Mikey" listening is on — click to turn off' : 'Turn on hands-free "Okay Mikey" listening'}
+      >
+        {wakeWordOn ? <Ear size={15} /> : <EarOff size={15} />}
       </button>
       <div className="fixed bottom-[5.5rem] right-6 z-[9999] text-[10px] text-[var(--muted-foreground)] opacity-50 text-right [body.overlay-open_&]:hidden">
         <kbd className="px-1 py-0.5 rounded bg-[var(--accent)] font-mono">Ctrl+H</kbd>

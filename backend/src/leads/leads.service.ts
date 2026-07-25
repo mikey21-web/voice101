@@ -240,18 +240,22 @@ export class LeadsService {
           include: { _count: { select: { assignedLeads: true } } },
         });
         agents.sort((a, b) => a._count.assignedLeads - b._count.assignedLeads);
-        let assignToId: string | null = agents[0]?.id ?? null;
-        if (!assignToId) {
-          const manager = await this.prisma.user.findFirst({
+        let assignTo: (typeof agents)[number] | null = agents[0] ?? null;
+        if (!assignTo) {
+          assignTo = await this.prisma.user.findFirst({
             where: { tenantId: lead.tenantId, role: 'MANAGER', active: true },
-          });
-          assignToId = manager?.id ?? null;
+          }) as any;
         }
-        if (assignToId) {
-          await this.prisma.lead.update({ where: { id: lead.id }, data: { assignedAgentId: assignToId } });
-          lead.assignedAgentId = assignToId;
-          await this.notifications.create({ tenantId: lead.tenantId, userId: assignToId, type: 'lead_assigned', title: 'New lead assigned', body: 'New lead assigned to you', link: '/leads' });
-          this.realtimeGateway.emitToUser(assignToId, 'lead.assigned', { leadId: lead.id, assignedAgentId: assignToId });
+        if (assignTo) {
+          await this.prisma.lead.update({ where: { id: lead.id }, data: { assignedAgentId: assignTo.id } });
+          lead.assignedAgentId = assignTo.id;
+          const contactName = (await this.prisma.contact.findUnique({ where: { id: lead.contactId }, select: { name: true } }))?.name || 'A new lead';
+          await this.notifications.create({
+            tenantId: lead.tenantId, userId: assignTo.id, type: 'lead_assigned',
+            title: 'New lead assigned', body: `${contactName} was just assigned to you`, link: '/leads',
+            whatsappTo: assignTo.phone || undefined,
+          });
+          this.realtimeGateway.emitToUser(assignTo.id, 'lead.assigned', { leadId: lead.id, assignedAgentId: assignTo.id });
         }
       } catch {}
     }
@@ -376,7 +380,8 @@ export class LeadsService {
       if (!lead) throw new NotFoundException('Lead not found');
 
       try {
-        return await this.prisma.$transaction(async (tx) => {
+        const oldSegment = lead.segment;
+        const result = await this.prisma.$transaction(async (tx) => {
           const rules = await tx.scoringRule.findMany({ where: { active: true } });
           let totalScore = lead.score || 0;
           for (const rule of rules) {
@@ -395,6 +400,13 @@ export class LeadsService {
           await this.events.emit({ type: 'lead.scored', leadId: id, entityType: 'lead', entityId: id, payload: { oldScore, newScore: totalScore, segment }, createdById: userId });
           return tx.lead.update({ where: { id, version: lead.version }, data: { score: totalScore, segment, version: { increment: 1 } } });
         }, { isolationLevel: 'Serializable' });
+
+        // Owners want to know the moment a lead turns HOT, not on a cron sweep that
+        // (per audit) never actually fires since leads are auto-assigned before scoring.
+        if (result.segment === 'HOT' && oldSegment !== 'HOT') {
+          this.notifyOwnersOfHotLead(result).catch((e: any) => this.logger.warn(`Hot-lead notify failed for ${id}: ${e.message}`));
+        }
+        return result;
       } catch (err) {
         const retryable = err instanceof Prisma.PrismaClientKnownRequestError && (err.code === 'P2034' || err.code === 'P2025');
         if (!retryable || attempt === 3) throw err;
@@ -417,12 +429,14 @@ export class LeadsService {
     await this.auditLogs.log('lead_assigned', 'Lead', id, userId, { agentId });
     await this.events.emit({ type: 'lead.assigned', leadId: id, entityType: 'lead', entityId: id, payload: { agentId }, createdById: userId });
     if (agentId) {
+      const agent = await this.prisma.user.findUnique({ where: { id: agentId }, select: { phone: true } });
       await this.notifications.create({
         tenantId: updated.tenantId,
         userId: agentId,
         type: 'lead_assigned',
         title: 'New lead assigned to you',
         link: '/leads',
+        whatsappTo: agent?.phone || undefined,
       });
     }
     return updated;
@@ -433,6 +447,22 @@ export class LeadsService {
     const lead = await this.prisma.lead.update({ where: { id }, data: { status: 'SPAM', segment: 'UNQUALIFIED', score: -100 } });
     await this.auditLogs.log('lead_marked_spam', 'Lead', id, userId);
     return lead;
+  }
+
+  private async notifyOwnersOfHotLead(lead: { id: string; tenantId: string; contactId: string }): Promise<void> {
+    const [contact, owners] = await Promise.all([
+      this.prisma.contact.findUnique({ where: { id: lead.contactId }, select: { name: true, phone: true } }),
+      this.prisma.user.findMany({ where: { tenantId: lead.tenantId, role: { in: ['OWNER', 'ADMIN'] }, active: true }, select: { id: true, phone: true } }),
+    ]);
+    const title = 'Hot lead just came in';
+    const body = `${contact?.name || 'A lead'} (${contact?.phone || 'no phone'}) just scored HOT.`;
+    for (const owner of owners) {
+      await this.notifications.create({
+        tenantId: lead.tenantId, userId: owner.id, type: 'lead_hot',
+        title, body, link: `/leads/${lead.id}`,
+        whatsappTo: owner.phone || undefined,
+      });
+    }
   }
 
   private determineSegment(score: number) {

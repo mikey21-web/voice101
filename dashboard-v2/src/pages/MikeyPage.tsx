@@ -116,24 +116,49 @@ export default function MikeyPage() {
     } catch (e: any) { toast.error(e.message || 'Could not undo this action'); }
   };
 
+  const [defining, setDefining] = useState(false);
+
   const handleDefineOutcome = async () => {
-    if (!goalInput.trim()) return;
+    if (!goalInput.trim() || defining) return;
+    setDefining(true);
     try {
-      await api('/mikey/outcome', {
+      // The run itself (several chained LLM calls) can take 60-90s — the endpoint
+      // returns as soon as the outcome is defined and the run has started in the
+      // background, so we poll for progress instead of awaiting the whole chain.
+      await api('/copilot/outcomes', {
         method: 'POST',
         body: JSON.stringify({
-          tenantId: 'default',
           goal: goalInput.trim(),
           metric: 'conversion_rate',
           target: 30,
           current: 20,
         }),
       });
-      toast.success('Outcome defined!');
+      toast.success('Jarvis is on it — running the steps now');
       setGoalInput('');
+      setActiveTab('outcomes');
       fetchAll();
+
+      let polls = 0;
+      const interval = setInterval(() => {
+        polls += 1;
+        fetchAll();
+        if (polls >= 20) clearInterval(interval); // ~80s of polling, then stop
+      }, 4000);
     } catch (e: any) {
       toast.error(e.message);
+    } finally {
+      setDefining(false);
+    }
+  };
+
+  const cancelOutcome = async (id: string) => {
+    try {
+      await api(`/copilot/outcomes/${id}/cancel`, { method: 'POST' });
+      toast.success('Outcome cancelled');
+      fetchAll();
+    } catch (e: any) {
+      toast.error(e.message || 'Failed to cancel outcome');
     }
   };
 
@@ -234,9 +259,9 @@ export default function MikeyPage() {
                 className="flex-1 px-4 py-2.5 rounded-lg border border-[var(--border)] bg-[var(--background)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
                 onKeyDown={e => e.key === 'Enter' && handleDefineOutcome()}
               />
-              <button onClick={handleDefineOutcome} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[var(--primary)] text-white text-sm font-medium hover:opacity-90 transition-opacity">
-                <Send className="w-4 h-4" />
-                Define
+              <button onClick={handleDefineOutcome} disabled={defining} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[var(--primary)] text-white text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50">
+                {defining ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                {defining ? 'Running...' : 'Define'}
               </button>
             </div>
           </div>
@@ -514,31 +539,50 @@ export default function MikeyPage() {
           )}
           {outcomes.map((o: any) => (
             <div key={o.id} className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-semibold">{o.goal}</h3>
-                <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
-                  o.status === 'active' ? 'bg-blue-500/10 text-blue-600' :
-                  o.status === 'completed' ? 'bg-green-500/10 text-green-600' :
-                  'bg-red-500/10 text-red-600'
-                }`}>
-                  {o.status}
-                </span>
+              <div className="flex items-center justify-between mb-3 gap-3">
+                <h3 className="font-semibold min-w-0 truncate">{o.goal}</h3>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className={`text-xs px-2.5 py-1 rounded-full font-medium capitalize ${
+                    o.status === 'active' ? 'bg-blue-500/10 text-blue-600' :
+                    o.status === 'awaiting_approval' ? 'bg-amber-500/10 text-amber-600' :
+                    o.status === 'completed' ? 'bg-green-500/10 text-green-600' :
+                    o.status === 'cancelled' ? 'bg-[var(--muted)] text-[var(--muted-foreground)]' :
+                    'bg-red-500/10 text-red-600'
+                  }`}>
+                    {o.status.replace(/_/g, ' ')}
+                  </span>
+                  {(o.status === 'active' || o.status === 'awaiting_approval') && (
+                    <button onClick={() => cancelOutcome(o.id)} className="text-xs px-2.5 py-1 rounded-full border border-[var(--border)] text-[var(--muted-foreground)] hover:bg-[var(--accent)] transition-colors">
+                      Cancel
+                    </button>
+                  )}
+                </div>
               </div>
               <p className="text-sm text-[var(--muted-foreground)] mb-3">
                 {o.metric} — target: {o.target} (current: {o.current})
               </p>
+              {o.status === 'awaiting_approval' && (
+                <div className="mb-3 text-xs px-3 py-2 rounded-lg bg-amber-500/10 text-amber-600 flex items-center justify-between gap-2">
+                  <span>Paused on a step that needs your approval (payment or proposal action).</span>
+                  <a href="#/copilot" className="font-medium underline shrink-0">Review in Copilot</a>
+                </div>
+              )}
               <div className="space-y-2">
                 {(o.steps || []).map((s: any) => (
                   <div key={s.id} className="flex items-center gap-3 p-2 rounded-lg bg-[var(--background)]">
-                    <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
+                    <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${
                       s.status === 'completed' ? 'bg-green-500/20 text-green-600' :
                       s.status === 'failed' ? 'bg-red-500/20 text-red-600' :
+                      s.status === 'in_progress' ? 'bg-blue-500/20 text-blue-600' :
                       'bg-[var(--muted)] text-[var(--muted-foreground)]'
                     }`}>
-                      {s.status === 'completed' ? '✓' : s.status === 'failed' ? '✗' : String(o.steps.indexOf(s) + 1)}
+                      {s.status === 'completed' ? '✓' : s.status === 'failed' ? '✗' : s.status === 'in_progress' ? <RefreshCw className="w-3 h-3 animate-spin" /> : String(o.steps.indexOf(s) + 1)}
                     </div>
-                    <span className="text-sm flex-1">{s.description}</span>
-                    <span className="text-xs text-[var(--muted-foreground)] capitalize">{s.status}</span>
+                    <div className="flex-1 min-w-0">
+                      <span className="text-sm">{s.description}</span>
+                      {s.result && <p className="text-xs text-[var(--muted-foreground)] mt-0.5 truncate">{s.result}</p>}
+                    </div>
+                    <span className="text-xs text-[var(--muted-foreground)] capitalize shrink-0">{s.status.replace(/_/g, ' ')}</span>
                   </div>
                 ))}
               </div>

@@ -112,7 +112,14 @@ export class CopilotService {
       .trim();
   }
 
-  async chat(userId: string, userRole: string, tenantId: string, message: string, conversationId?: string) {
+  async chat(
+    userId: string,
+    userRole: string,
+    tenantId: string,
+    message: string,
+    conversationId?: string,
+    outcomeCtx?: { outcomeId: string; stepId: string },
+  ) {
     const agentServiceUrl = this.config.get<string>('AGENT_SERVICE_URL') || 'http://agent-service:8000';
     const agentInboundKey = this.config.get<string>('AGENT_INBOUND_KEY') || '';
 
@@ -217,7 +224,7 @@ export class CopilotService {
         });
         await this.prisma.approvalRequest.update({
           where: { id: approval.id },
-          data: { policySnapshot: { tool: a.tool, args: a.args, userId } },
+          data: { policySnapshot: { tool: a.tool, args: a.args, userId, ...(outcomeCtx || {}) } },
         });
         actions.push({ ...a, status: 'pending', requiresConfirmation: true, pendingActionId: approval.id });
       } else {
@@ -230,6 +237,33 @@ export class CopilotService {
     });
 
     return { conversationId: conversation.id, reply, actions };
+  }
+
+  /** Cartesia TTS for a Mikey reply, base64-encoded so the frontend can play it
+   * without needing a separate authenticated static-audio route. */
+  async speak(text: string): Promise<{ audioBase64: string; mimeType: string }> {
+    const apiKey = this.config.get<string>('CARTESIA_API_KEY');
+    if (!apiKey) throw new BadRequestException('CARTESIA_API_KEY not configured');
+    const clean = (text || '').replace(/[#*`]/g, '').slice(0, 1000);
+    if (!clean.trim()) return { audioBase64: '', mimeType: 'audio/mpeg' };
+
+    const res = await fetchWithTimeout('https://api.cartesia.ai/tts/bytes', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Cartesia-Version': '2026-03-01',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model_id: 'sonic-3',
+        transcript: clean,
+        voice: { mode: 'id', id: this.config.get<string>('COPILOT_VOICE_ID') || 'db6b0ed5-d5d3-463d-ae85-518a07d3c2b4' },
+        output_format: { container: 'mp3', bit_rate: 128000, sample_rate: 44100 },
+      }),
+    });
+    if (!res.ok) throw new BadRequestException(`Cartesia TTS ${res.status}: ${await res.text()}`);
+    const buf = Buffer.from(await res.arrayBuffer());
+    return { audioBase64: buf.toString('base64'), mimeType: 'audio/mpeg' };
   }
 
   async confirmAction(userId: string, userRole: string, pendingActionId: string) {
@@ -329,7 +363,113 @@ export class CopilotService {
         throw new Error(`Unknown tool: ${tool}`);
     }
 
+    const outcomeId = snapshot?.outcomeId;
+    const stepId = snapshot?.stepId;
+    if (outcomeId && stepId) {
+      await this.outcomeEngine.updateStep(outcomeId, approval.tenantId, stepId, {
+        status: 'completed',
+        result: typeof result === 'string' ? result : JSON.stringify(result),
+      });
+      await this.outcomeEngine.setStatus(outcomeId, 'active');
+      // Don't block the confirm response on the rest of the chain — it may hit
+      // another approval gate further down and could take a while either way.
+      this.runOutcome(outcomeId, userId, userRole, approval.tenantId).catch(err =>
+        this.logger.error(`Resuming outcome ${outcomeId} after approval failed: ${err.message}`),
+      );
+    }
+
     return { status: 'success', result, tool, args };
+  }
+
+  /** Runs a Jarvis outcome's steps one at a time through the same chat()
+   * tool-call pipeline a typed/spoken message goes through, so payment and
+   * proposal actions still stop at the existing approval gate. Stops at the
+   * first step that needs confirmation or the first failure; confirmAction()
+   * resumes the chain once the gated step is approved. */
+  async runOutcome(outcomeId: string, userId: string, userRole: string, tenantId: string) {
+    let outcome = await this.outcomeEngine.getOutcome(outcomeId, tenantId);
+    if (outcome.status !== 'active') return outcome;
+
+    let conversationId = outcome.conversationId ?? undefined;
+
+    // Hard cap so a bad decomposition (or a tool that keeps "succeeding" without
+    // ever satisfying nextPendingStep) can't loop forever inside one request.
+    let exhaustedCap = true;
+    for (let i = 0; i < 25; i++) {
+      const step = this.outcomeEngine.nextPendingStep(outcome);
+      if (!step) {
+        await this.outcomeEngine.setStatus(outcomeId, 'completed');
+        exhaustedCap = false;
+        break;
+      }
+
+      await this.outcomeEngine.updateStep(outcomeId, tenantId, step.id, { status: 'in_progress' });
+
+      let chatResult: any;
+      try {
+        chatResult = await this.chat(userId, userRole, tenantId, step.description, conversationId, { outcomeId, stepId: step.id });
+      } catch (err: any) {
+        await this.outcomeEngine.updateStep(outcomeId, tenantId, step.id, { status: 'failed', result: err.message });
+        await this.outcomeEngine.setStatus(outcomeId, 'failed');
+        exhaustedCap = false;
+        break;
+      }
+
+      if (!conversationId && chatResult.conversationId) {
+        conversationId = chatResult.conversationId as string;
+        await this.outcomeEngine.setConversationId(outcomeId, conversationId);
+      }
+
+      const pending = (chatResult.actions || []).some((a: any) => a.requiresConfirmation);
+      if (pending) {
+        await this.outcomeEngine.updateStep(outcomeId, tenantId, step.id, { result: chatResult.reply });
+        await this.outcomeEngine.setStatus(outcomeId, 'awaiting_approval');
+        exhaustedCap = false;
+        break;
+      }
+
+      await this.outcomeEngine.updateStep(outcomeId, tenantId, step.id, { status: 'completed', result: chatResult.reply });
+      outcome = await this.outcomeEngine.getOutcome(outcomeId, tenantId);
+    }
+
+    // Ran all 25 iterations without completing, failing, or hitting an approval
+    // gate — surface it instead of leaving the outcome silently "active" forever.
+    if (exhaustedCap) {
+      await this.outcomeEngine.setStatus(outcomeId, 'failed');
+    }
+
+    return this.outcomeEngine.getOutcome(outcomeId, tenantId);
+  }
+
+  /** Defines a new Jarvis outcome and kicks off its steps in the background.
+   * Runs can take 60-80s+ chaining several LLM calls — returning immediately
+   * instead of awaiting the whole chain avoids client/proxy timeouts killing
+   * the connection on a run that's actually still succeeding server-side.
+   * The frontend polls getOutcome/listOutcomes to watch progress. */
+  async startOutcome(
+    userId: string,
+    userRole: string,
+    tenantId: string,
+    params: { goal: string; metric: string; target: number; current: number },
+  ) {
+    const outcome = await this.outcomeEngine.defineOutcome({ tenantId, userId, ...params });
+    this.runOutcome(outcome.id, userId, userRole, tenantId).catch(err =>
+      this.logger.error(`Outcome ${outcome.id} run failed: ${err.message}`),
+    );
+    return outcome;
+  }
+
+  async listOutcomes(userId: string, tenantId: string) {
+    return this.outcomeEngine.listOutcomes(tenantId, userId);
+  }
+
+  async getOutcome(id: string, tenantId: string) {
+    return this.outcomeEngine.getOutcome(id, tenantId);
+  }
+
+  async cancelOutcome(id: string, userId: string, tenantId: string) {
+    await this.outcomeEngine.cancelOutcome(id, tenantId, userId);
+    return { status: 'cancelled' };
   }
 
   async getConversations(userId: string) {

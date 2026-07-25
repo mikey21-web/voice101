@@ -34,7 +34,13 @@ export class WebhooksService {
     if (existing) return { status: 'duplicate', result: existing.processedResult };
 
     const contact = await this.contactsService.findOrCreate({ name: payload.name, email: payload.email, phone: payload.phone, whatsapp: payload.whatsapp, company: payload.company }, req);
-    const lead = await this.leadsService.create({ contactId: contact.id, source: 'FORM', message: payload.message, interest: payload.interest, metadata: payload });
+    if (payload.language) {
+      await this.prisma.contact.update({
+        where: { id: contact.id },
+        data: { metadata: { ...(contact.metadata as object || {}), language: payload.language } },
+      }).catch(() => {});
+    }
+    const lead = await this.leadsService.create({ contactId: contact.id, source: 'FORM', message: payload.message, interest: payload.interest, budget: payload.budget, metadata: payload });
     const result = { contact, lead };
     await this.prisma.webhookEvent.create({ data: { provider, eventType: 'form_submit', idempotencyKey: key, rawPayload: payload, processedResult: result } });
     await this.auditLogs.log('webhook_processed', 'WebhookEvent', key, undefined, { provider, eventType: 'form_submit' });
@@ -543,6 +549,104 @@ export class WebhooksService {
       data: { provider: 'wasender', eventType: event, idempotencyKey: key, rawPayload: payload, processedResult: result },
     });
     this.metrics.incrementCounter('webhooks_processed_total', { provider: 'wasender', status: 'success' });
+    return { data: result };
+  }
+
+  // ─── OpenWA (self-hosted WhatsApp gateway) ─────────────────────────
+  async handleOpenwaWebhook(payload: any) {
+    const event = payload?.event;
+    if (!event) return { status: 'ignored', reason: 'no event type' };
+
+    const key = this.idempotencyKey(['openwa', event, payload.idempotencyKey || payload.data?.id || this.payloadHash(payload)]);
+    const existing = await this.prisma.webhookEvent.findUnique({ where: { idempotencyKey: key } });
+    if (existing) return { status: 'duplicate', result: existing.processedResult };
+
+    if (event === 'message.ack' || event === 'message.failed') {
+      const providerMsgId = payload.data?.messageId || payload.data?.id;
+      const deliveryStatus = payload.data?.status || 'pending';
+
+      if (providerMsgId) {
+        const updated = await this.prisma.conversationMessage.updateMany({
+          where: { providerMessageId: providerMsgId },
+          data: { deliveryStatus, metadata: { openwaEvent: event } as any },
+        });
+        if (updated.count > 0) {
+          const msg = await this.prisma.conversationMessage.findFirst({
+            where: { providerMessageId: providerMsgId },
+            select: { leadId: true },
+          });
+          if (msg) this.timeline.recordDeliveryUpdated(msg.leadId, 'WhatsApp', deliveryStatus).catch(() => {});
+        }
+      }
+
+      const result = { event, providerMessageId: providerMsgId, deliveryStatus };
+      await this.prisma.webhookEvent.create({
+        data: { provider: 'openwa', eventType: event, idempotencyKey: key, rawPayload: payload, processedResult: result },
+      });
+      this.metrics.incrementCounter('webhooks_processed_total', { provider: 'openwa', status: 'success' });
+      return { data: result };
+    }
+
+    if (event === 'message.received') {
+      const msg = payload.data;
+      if (!msg) return { status: 'ignored', reason: 'no message data' };
+
+      const fromNumber = String(msg.from || '').replace(/[^0-9]/g, '').replace(/^91/, '');
+      const msgId: string = msg.id || '';
+      const text: string = msg.body || '';
+
+      const contactName = msg.contact?.name || msg.contact?.pushname || `WhatsApp User ${fromNumber.slice(-4)}`;
+      const contact = await this.contactsService.findOrCreate({
+        name: contactName,
+        phone: fromNumber,
+        whatsapp: fromNumber,
+      });
+
+      const existingLead = await this.prisma.lead.findFirst({
+        where: { contactId: contact.id, status: { notIn: ['LOST', 'CONVERTED', 'SPAM'] } },
+        orderBy: { createdAt: 'desc' },
+      });
+
+      const lead = existingLead || await this.leadsService.create({
+        contactId: contact.id,
+        source: 'WHATSAPP',
+        message: text,
+        metadata: { from: fromNumber, timestamp: Date.now(), msgId, provider: 'openwa' },
+      });
+
+      const stopPattern = /^\s*(stop|unsubscribe|cancel|opt.?out)\s*$/i;
+      if (text && stopPattern.test(text.trim())) {
+        await this.prisma.contact.update({
+          where: { id: contact.id },
+          data: { consentStatus: 'opted_out', optedOutAt: new Date() },
+        });
+        await this.prisma.consentEvent.create({
+          data: { contactId: contact.id, channel: 'WHATSAPP', action: 'opt_out', source: 'openwa_webhook' },
+        });
+      }
+
+      await this.conversationsService.create({
+        text, channel: 'WHATSAPP', direction: 'INBOUND', providerMessageId: msgId,
+        leadId: lead.id, contactId: contact.id,
+        metadata: { from: fromNumber, timestamp: Date.now(), provider: 'openwa' },
+      });
+
+      const result = { contact, lead, providerMessageId: msgId };
+      await this.prisma.webhookEvent.create({
+        data: { provider: 'openwa', eventType: event, idempotencyKey: key, rawPayload: payload, processedResult: result },
+      });
+
+      this.agentClient.trigger(lead.id, msgId || key, 'WHATSAPP', text, lead.tenantId || contact.tenantId);
+      this.metrics.incrementCounter('webhooks_processed_total', { provider: 'openwa', status: 'success' });
+      return { data: result };
+    }
+
+    // ── catch-all — audit unknown/uninteresting events (session.*, group.*, etc.) ──
+    const result = { received: true, event };
+    await this.prisma.webhookEvent.create({
+      data: { provider: 'openwa', eventType: event, idempotencyKey: key, rawPayload: payload, processedResult: result },
+    });
+    this.metrics.incrementCounter('webhooks_processed_total', { provider: 'openwa', status: 'success' });
     return { data: result };
   }
 

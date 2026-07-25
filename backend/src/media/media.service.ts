@@ -123,7 +123,11 @@ export class MediaService {
       return { data: { url: signed, fileName: file.originalName, mimeType: file.mimeType, signed: true } };
     }
     await this.auditLogs.log('media_downloaded', 'MediaFile', id, userId);
-    return { data: { url: file.publicUrl, fileName: file.originalName, mimeType: file.mimeType } };
+    // publicUrl is stored relative (/uploads/xyz); external providers (Telegram, WhatsApp)
+    // need an absolute, internet-reachable URL to fetch the file.
+    const base = this.config.get<string>('PUBLIC_URL', '');
+    const url = file.publicUrl.startsWith('http') ? file.publicUrl : `${base}${file.publicUrl}`;
+    return { data: { url, fileName: file.originalName, mimeType: file.mimeType } };
   }
 
   // --- Collections ---
@@ -181,12 +185,16 @@ export class MediaService {
 
   // --- AI search for Mikey ---
   async aiSearch(q: string, projectId?: string) {
+    // The AI passes free-text queries like "Kompally 2BHK brochure"; match on any
+    // individual word rather than requiring the whole phrase to hit one field.
+    const words = q.split(/\s+/).map(w => w.trim()).filter(Boolean);
+    const terms = words.length ? words : [q];
     const where: any = {
-      OR: [
-        { originalName: { contains: q, mode: 'insensitive' } },
-        { tags: { hasSome: [q] } },
-        { fileName: { contains: q, mode: 'insensitive' } },
-      ],
+      OR: terms.flatMap(term => [
+        { originalName: { contains: term, mode: 'insensitive' } },
+        { tags: { hasSome: [term.toLowerCase()] } },
+        { fileName: { contains: term, mode: 'insensitive' } },
+      ]),
     };
     if (projectId) where.projectId = projectId;
     return this.prisma.mediaFile.findMany({

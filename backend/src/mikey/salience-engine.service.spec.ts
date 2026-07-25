@@ -5,6 +5,8 @@ import { ConversationsService } from '../conversations/conversations.service';
 import { EventsService } from '../events/events.service';
 import { AutonomyGuardrailsService } from './autonomy-guardrails.service';
 import { AutonomousActionService } from './autonomous-action.service';
+import { ApprovalsService } from '../approvals/approvals.service';
+import { MemoryService } from './memory.service';
 
 describe('SalienceEngineService', () => {
   let service: SalienceEngineService;
@@ -39,6 +41,8 @@ describe('SalienceEngineService', () => {
         { provide: EventsService, useValue: { emit: jest.fn().mockResolvedValue(undefined) } },
         { provide: AutonomyGuardrailsService, useValue: guardrails },
         { provide: AutonomousActionService, useValue: actions },
+        { provide: ApprovalsService, useValue: { request: jest.fn(), decide: jest.fn() } },
+        { provide: MemoryService, useValue: { recallRecent: jest.fn().mockResolvedValue([]) } },
       ],
     }).compile();
 

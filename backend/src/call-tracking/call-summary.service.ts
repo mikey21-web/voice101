@@ -35,9 +35,17 @@ export class CallSummaryService {
       const buf = fs.readFileSync(filePath);
       return await this.moonshine.transcribe(buf);
     } catch (e: any) {
-      this.logger.warn(`Moonshine failed (${e.message}), falling back to Whisper`);
+      this.logger.warn(`Moonshine failed (${e.message}), falling back to Sarvam`);
     }
-    if (!this.openaiClient) throw new Error('OPENAI_API_KEY not configured');
+    const sarvamApiKey = this.config.get<string>('SARVAM_API_KEY');
+    if (sarvamApiKey) {
+      try {
+        return await this.transcribeWithSarvam(filePath, sarvamApiKey);
+      } catch (e: any) {
+        this.logger.warn(`Sarvam STT failed (${e.message}), falling back to Whisper`);
+      }
+    }
+    if (!this.openaiClient) throw new Error('Neither SARVAM_API_KEY nor OPENAI_API_KEY configured');
     const transcription = await this.openaiClient.audio.transcriptions.create({
       file: fs.createReadStream(filePath),
       model: 'whisper-1',
@@ -45,10 +53,27 @@ export class CallSummaryService {
     return transcription.text;
   }
 
+  private async transcribeWithSarvam(filePath: string, apiKey: string): Promise<string> {
+    const form = new FormData();
+    form.append('file', new Blob([fs.readFileSync(filePath)]), 'audio.webm');
+    form.append('model', 'saaras:v3');
+    form.append('mode', 'transcribe');
+    form.append('language_code', 'unknown');
+
+    const res = await fetch('https://api.sarvam.ai/speech-to-text', {
+      method: 'POST',
+      headers: { 'api-subscription-key': apiKey },
+      body: form,
+    });
+    if (!res.ok) throw new Error(`Sarvam STT ${res.status}: ${await res.text()}`);
+    const data = (await res.json()) as { transcript?: string };
+    return data.transcript || '';
+  }
+
   async summarize(transcript: string): Promise<string> {
     if (!this.deepseekClient) throw new Error('DEEPSEEK_API_KEY not configured');
     const response = await this.deepseekClient.chat.completions.create({
-      model: 'deepseek-chat',
+      model: this.config.get<string>('AGENT_MODEL') || 'deepseek-v4-flash',
       messages: [
         {
           role: 'system',

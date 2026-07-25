@@ -10,6 +10,7 @@ import { ChannelPartnerClaimsService } from '../channel-partner-claims/channel-p
 import { TicketsService } from '../tickets/tickets.service';
 import { AutonomousActionService } from './autonomous-action.service';
 import { AutonomyGuardrailsService } from './autonomy-guardrails.service';
+import { ApprovalsService } from '../approvals/approvals.service';
 
 describe('JarvisToolsService', () => {
   let service: JarvisToolsService;
@@ -33,6 +34,7 @@ describe('JarvisToolsService', () => {
         { provide: DocumentsService, useValue: { generateDemandLetter: jest.fn() } },
         { provide: ChannelPartnerClaimsService, useValue: { registerClaim: jest.fn() } },
         { provide: TicketsService, useValue: { create: jest.fn() } },
+        { provide: ApprovalsService, useValue: { request: jest.fn(), decide: jest.fn() } },
         { provide: AutonomousActionService, useValue: autonomousActions },
         { provide: AutonomyGuardrailsService, useValue: guardrails },
       ],

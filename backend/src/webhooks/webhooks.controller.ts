@@ -12,7 +12,7 @@ import { Public } from '../auth/public.decorator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
-import { FormWebhookDto, WhatsAppWebhookDto, GenericWebhookDto, TelegramWebhookDto, SocialWebhookDto, VoiceIncomingWebhookDto, VoiceStatusWebhookDto, CreateOutboundWebhookDto, UpdateOutboundWebhookDto, WasenderWebhookDto } from './dto/webhook.dto';
+import { FormWebhookDto, WhatsAppWebhookDto, GenericWebhookDto, TelegramWebhookDto, SocialWebhookDto, VoiceIncomingWebhookDto, VoiceStatusWebhookDto, CreateOutboundWebhookDto, UpdateOutboundWebhookDto, WasenderWebhookDto, OpenwaWebhookDto } from './dto/webhook.dto';
 import * as crypto from 'crypto';
 
 @ApiTags('Webhooks')
@@ -282,6 +282,25 @@ export class WebhooksController {
       }
     }
     return this.service.handleWasenderWebhook(d, req);
+  }
+
+  @Public()
+  @Post('openwa') @HttpCode(200) @Throttle({ default: { limit: 300, ttl: 60000 } })
+  @ApiOperation({ summary: 'Receive OpenWA webhook (self-hosted WhatsApp gateway)' })
+  async openwaWebhook(
+    @Body() d: OpenwaWebhookDto,
+    @Headers('x-openwa-signature') signature?: string,
+    @Req() req?: RawBodyRequest<Request>,
+  ) {
+    const secret = this.configService.get<string>('OPENWA_WEBHOOK_SECRET');
+    if (secret) {
+      const rawBody = req?.rawBody ?? Buffer.from(JSON.stringify(d));
+      const computed = crypto.createHmac('sha256', secret).update(rawBody).digest('hex');
+      if (!signature || computed !== signature) {
+        throw new UnauthorizedException('Invalid OpenWA webhook signature');
+      }
+    }
+    return this.service.handleOpenwaWebhook(d);
   }
 
   // ─── Outbound webhook subscriptions ────────────────────────────────

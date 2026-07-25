@@ -56,6 +56,45 @@ export class CopilotController {
     return this.service.confirmAction(req.user.sub, req.user.role, dto.pendingActionId);
   }
 
+  /** Speaks a Mikey reply out loud via Cartesia TTS, returned as base64 mp3
+   * so the frontend can play it without a separate authenticated audio route. */
+  @Post('speak')
+  @Roles('OWNER', 'ADMIN', 'MANAGER', 'SALES_AGENT', 'SUPPORT_AGENT', 'VIEWER')
+  @ApiOperation({ summary: 'Synthesize speech for a Mikey reply' })
+  speak(@Body() dto: { text: string }) {
+    return this.service.speak(dto.text);
+  }
+
+  /** Jarvis: decompose a goal into steps and start chaining tool calls through
+   * the copilot pipeline, stopping only at approval-gated (payment/proposal) steps. */
+  @Post('outcomes')
+  @Roles('OWNER', 'ADMIN', 'MANAGER')
+  @ApiOperation({ summary: 'Define a Jarvis outcome and start running it' })
+  startOutcome(@Body() dto: { goal: string; metric: string; target: number; current: number }, @Req() req) {
+    return this.service.startOutcome(req.user.sub, req.user.role, req.user.tenantId || 'default-tenant', dto);
+  }
+
+  @Get('outcomes')
+  @Roles('OWNER', 'ADMIN', 'MANAGER', 'SALES_AGENT', 'SUPPORT_AGENT', 'VIEWER')
+  @ApiOperation({ summary: 'List Jarvis outcomes for the current user' })
+  listOutcomes(@Req() req) {
+    return this.service.listOutcomes(req.user.sub, req.user.tenantId || 'default-tenant');
+  }
+
+  @Get('outcomes/:id')
+  @Roles('OWNER', 'ADMIN', 'MANAGER', 'SALES_AGENT', 'SUPPORT_AGENT', 'VIEWER')
+  @ApiOperation({ summary: 'Get a Jarvis outcome and its step progress' })
+  getOutcome(@Param('id') id: string, @Req() req) {
+    return this.service.getOutcome(id, req.user.tenantId || 'default-tenant');
+  }
+
+  @Post('outcomes/:id/cancel')
+  @Roles('OWNER', 'ADMIN', 'MANAGER')
+  @ApiOperation({ summary: 'Cancel a running Jarvis outcome' })
+  cancelOutcome(@Param('id') id: string, @Req() req) {
+    return this.service.cancelOutcome(id, req.user.sub, req.user.tenantId || 'default-tenant');
+  }
+
   @Get('conversations')
   @Roles('OWNER', 'ADMIN', 'MANAGER', 'SALES_AGENT', 'SUPPORT_AGENT', 'VIEWER')
   @ApiOperation({ summary: 'List copilot conversations for the current user' })

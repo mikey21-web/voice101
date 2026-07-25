@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Param, Query, Body, Logger, UseGuards, HttpCode } from '@nestjs/common';
+import { Controller, Post, Get, Param, Query, Body, Logger, UseGuards, HttpCode, Req } from '@nestjs/common';
 import { ApiOperation } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
@@ -92,25 +92,25 @@ export class MikeyController {
   }
 
   @Post('outcome')
-  async defineOutcome(@Body() params: { tenantId: string; goal: string; metric: string; target: number; current: number }) {
-    return this.outcomes.defineOutcome(params);
+  async defineOutcome(@Body() params: { goal: string; metric: string; target: number; current: number }, @Req() req) {
+    return this.outcomes.defineOutcome({ ...params, tenantId: req.user.tenantId || 'default-tenant', userId: req.user.sub });
   }
 
   @Get('outcomes')
   @Roles('OWNER', 'ADMIN', 'MANAGER')
-  async listOutcomes() {
-    return this.outcomes.listOutcomes();
+  async listOutcomes(@Req() req) {
+    return this.outcomes.listOutcomes(req.user.tenantId || 'default-tenant');
   }
 
   @Get('outcomes/:id')
   @Roles('OWNER', 'ADMIN', 'MANAGER')
-  async getOutcome(@Param('id') id: string) {
-    return this.outcomes.getOutcome(id);
+  async getOutcome(@Param('id') id: string, @Req() req) {
+    return this.outcomes.getOutcome(id, req.user.tenantId || 'default-tenant');
   }
 
   @Post('outcomes/:id/step/:stepId')
-  async updateStep(@Param('id') id: string, @Param('stepId') stepId: string, @Body() body: { status: string; result?: string }) {
-    return this.outcomes.updateStep(id, stepId, body.status as any, body.result);
+  async updateStep(@Param('id') id: string, @Param('stepId') stepId: string, @Body() body: { status: string; result?: string }, @Req() req) {
+    return this.outcomes.updateStep(id, req.user.tenantId || 'default-tenant', stepId, { status: body.status as any, result: body.result });
   }
 
   @Get('actions')
@@ -149,8 +149,8 @@ export class MikeyController {
   }
 
   @Get('status')
-  async getStatus() {
-    const outcomes = await this.outcomes.listOutcomes();
+  async getStatus(@Req() req) {
+    const outcomes = await this.outcomes.listOutcomes(req.user.tenantId || 'default-tenant');
     const active = outcomes.filter(o => o.status === 'active');
     const completed = outcomes.filter(o => o.status === 'completed');
     return {

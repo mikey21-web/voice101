@@ -1,6 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { TwilioSmsAdapter } from '../shared/adapters/sms.adapter';
+import { WhatsAppCloudAdapter } from '../shared/adapters/messaging.adapter';
+import { NormalizationService } from '../shared/normalization.service';
 
 export type NotificationType =
   | 'lead_assigned'
@@ -29,6 +31,8 @@ export class NotificationsService {
   constructor(
     private prisma: PrismaService,
     private smsAdapter: TwilioSmsAdapter,
+    private whatsAppAdapter: WhatsAppCloudAdapter,
+    private normalization: NormalizationService,
   ) {}
 
   async create(opts: {
@@ -38,6 +42,7 @@ export class NotificationsService {
     title: string;
     body?: string;
     link?: string;
+    whatsappTo?: string;
   }) {
     const prefField = PREF_FIELD_BY_TYPE[opts.type];
     if (opts.userId && prefField) {
@@ -60,6 +65,11 @@ export class NotificationsService {
       this.sendSmsAlert(opts.title).catch(err => this.logger.error(`Failed to send SMS alert: ${err.message}`));
     }
 
+    if (opts.whatsappTo) {
+      const text = opts.body ? `${opts.title}\n${opts.body}` : opts.title;
+      this.sendWhatsAppAlert(opts.whatsappTo, text).catch(err => this.logger.error(`Failed to send WhatsApp alert: ${err.message}`));
+    }
+
     return notification;
   }
 
@@ -68,6 +78,12 @@ export class NotificationsService {
     if (!settings?.notificationPhone) return;
     const result = await this.smsAdapter.send(settings.notificationPhone, title);
     if (!result.success) this.logger.error(`SMS alert failed: ${result.error}`);
+  }
+
+  private async sendWhatsAppAlert(phone: string, text: string) {
+    const to = this.normalization.normalizePhone(phone).replace(/^\+/, '');
+    const result = await this.whatsAppAdapter.sendMessage(to, text, {});
+    if (!result.success) this.logger.error(`WhatsApp alert to ${phone} failed: ${result.error}`);
   }
 
   async findForUser(userId: string, opts: { unreadOnly?: boolean; limit?: number } = {}) {

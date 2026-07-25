@@ -22,6 +22,30 @@ USE_CHECKPOINTING = os.environ.get("MIKEY_USE_CHECKPOINTING", "true").lower() ==
 DATABASE_URL = os.environ.get("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/virtual-assistant")
 
 
+async def _build_checkpointer():
+    """Best-effort Postgres checkpointer. Returns None (in-memory-only run) if
+    Postgres is unreachable or setup fails — logged as an error, not a warning,
+    since silently losing durability shouldn't look like a routine fallback."""
+    if not USE_CHECKPOINTING:
+        return None
+    try:
+        from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
+        from psycopg_pool import AsyncConnectionPool
+        # autocommit=True is required: checkpointer.setup() runs CREATE INDEX
+        # CONCURRENTLY, which Postgres refuses to run inside a transaction block.
+        pool = AsyncConnectionPool(DATABASE_URL, min_size=1, max_size=4, kwargs={"autocommit": True}, open=False)
+        await pool.open()
+        await pool.wait()
+        checkpointer = AsyncPostgresSaver(pool)
+        await checkpointer.setup()
+        await checkpointer.aget_tuple({"configurable": {"thread_id": "probe"}})
+        logger.info("checkpointer_enabled", db_url=DATABASE_URL.split("@")[-1] if "@" in DATABASE_URL else "local")
+        return checkpointer
+    except Exception as e:
+        logger.error("checkpointer_failed_fallback_to_none", error=str(e), error_type=type(e).__name__)
+        return None
+
+
 async def execute_run(settings: Settings, req: AgentRunRequest) -> str:
     run_id = req.triggerId or str(_uuid.uuid4())
     started_at = utc_now_iso()
@@ -43,20 +67,7 @@ async def execute_run(settings: Settings, req: AgentRunRequest) -> str:
 
     try:
         if USE_SUPERVISOR:
-            checkpointer = None
-            if USE_CHECKPOINTING:
-                try:
-                    from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
-                    from psycopg_pool import AsyncConnectionPool
-                    pool = AsyncConnectionPool(DATABASE_URL, min_size=1, max_size=4)
-                    await pool.wait()
-                    checkpointer = AsyncPostgresSaver(pool)
-                    await checkpointer.setup()
-                    await checkpointer.aget_tuple({"configurable": {"thread_id": "probe"}})
-                    logger.info("checkpointer_enabled", db_url=DATABASE_URL.split("@")[-1] if "@" in DATABASE_URL else "local")
-                except Exception as e:
-                    logger.warning("checkpointer_failed_fallback_to_none", error=str(e), error_type=type(e).__name__)
-                    checkpointer = None
+            checkpointer = await _build_checkpointer()
 
             graph = build_supervisor(
                 settings=settings,
@@ -156,11 +167,14 @@ async def execute_run_and_get_response(settings: Settings, req: AgentRunRequest)
 
     try:
         if USE_SUPERVISOR:
+            checkpointer = await _build_checkpointer()
+
             graph = build_supervisor(
                 settings=settings,
                 client=client,
                 tenant_id=req.tenantId,
                 memory=memory,
+                checkpointer=checkpointer,
             )
 
             initial_state: SharedMikeyState = {

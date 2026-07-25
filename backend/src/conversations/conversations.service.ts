@@ -7,6 +7,7 @@ import { WhatsAppCloudAdapter, TelegramBotAdapter } from '../shared/adapters/mes
 import { EmailAdapter } from '../shared/adapters/email.adapter';
 import { ConfigService } from '@nestjs/config';
 import { FailuresService } from '../failures/failures.service';
+import { NormalizationService } from '../shared/normalization.service';
 
 @Injectable()
 export class ConversationsService {
@@ -22,6 +23,7 @@ export class ConversationsService {
     private config: ConfigService,
     private failures: FailuresService,
     private emailAdapter: EmailAdapter,
+    private normalization: NormalizationService,
   ) {}
 
   findAll(query: any = {}) {
@@ -122,8 +124,11 @@ export class ConversationsService {
         this.logger.warn(`Cannot dispatch WhatsApp for message ${msg.id}: contact has no phone/whatsapp`);
         return;
       }
-      const to: string = lead.contact.whatsapp || lead.contact.phone || '';
-      if (!to) return;
+      const rawTo: string = lead.contact.whatsapp || lead.contact.phone || '';
+      if (!rawTo) return;
+      // Stored contact numbers are country-code-stripped (see webhook ingestion); restore
+      // full E.164 before handing to any provider, or the send targets a nonexistent WhatsApp ID.
+      const to: string = this.normalization.normalizePhone(rawTo).replace(/^\+/, '');
 
       // Check 24h window: find the latest inbound WhatsApp message for this lead
       const lastInbound = await this.prisma.conversationMessage.findFirst({
@@ -176,8 +181,12 @@ export class ConversationsService {
       }
       const chatId: string = lead.contact.whatsapp || lead.contact.phone || '';
       if (!chatId) return;
+      const telegramMeta = (msg.metadata || {}) as { mediaUrl?: string; mediaType?: string; caption?: string };
       const result = await this.telegramAdapter.sendMessage(chatId, text, {
         botToken: this.config.get<string>('TELEGRAM_BOT_TOKEN'),
+        mediaUrl: telegramMeta.mediaUrl,
+        mediaType: telegramMeta.mediaType,
+        caption: telegramMeta.caption,
       });
       if (result.success) {
         await this.prisma.conversationMessage.update({

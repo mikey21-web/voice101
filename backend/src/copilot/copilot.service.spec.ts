@@ -43,7 +43,14 @@ describe('CopilotService', () => {
 
   const mockConversation = { id: 'conv-1', messages: [] };
 
+  // In-memory approvalRequest store so approvals.request()/prisma.approvalRequest.*
+  // compose the same way they do against the real DB (create then read/update by id).
+  let approvalStore: Map<string, any>;
+  let approvalSeq: number;
+
   beforeEach(async () => {
+    approvalStore = new Map();
+    approvalSeq = 0;
     prisma = {
       copilotConversation: {
         findUnique: jest.fn().mockResolvedValue(null),
@@ -51,6 +58,14 @@ describe('CopilotService', () => {
       },
       copilotMessage: { create: jest.fn().mockResolvedValue({}), count: jest.fn().mockResolvedValue(0) },
       businessSettings: { findFirst: jest.fn().mockResolvedValue(null) },
+      approvalRequest: {
+        findUnique: jest.fn(({ where: { id } }: any) => Promise.resolve(approvalStore.get(id) ?? null)),
+        update: jest.fn(({ where: { id }, data }: any) => {
+          const updated = { ...approvalStore.get(id), ...data };
+          approvalStore.set(id, updated);
+          return Promise.resolve(updated);
+        }),
+      },
     };
     conversationsService = { create: jest.fn().mockResolvedValue({}) };
     featureFlags = { isEnabledDefault: jest.fn().mockResolvedValue(true) };
@@ -76,7 +91,22 @@ describe('CopilotService', () => {
         { provide: MikeyService, useValue: { runAutonomousAction: jest.fn() } },
         { provide: OutcomeEngineService, useValue: { defineOutcome: jest.fn() } },
         { provide: MemoryService, useValue: { recallRecent: jest.fn().mockResolvedValue([]) } },
-        { provide: ApprovalsService, useValue: { request: jest.fn(), decide: jest.fn() } },
+        {
+          provide: ApprovalsService,
+          useValue: {
+            request: jest.fn((tenantId: string, data: any) => {
+              const id = `pa_${++approvalSeq}`;
+              const approval = { id, tenantId, status: 'PENDING', ...data };
+              approvalStore.set(id, approval);
+              return Promise.resolve(approval);
+            }),
+            decide: jest.fn((tenantId: string, id: string, decision: string) => {
+              const updated = { ...approvalStore.get(id), status: decision === 'APPROVED' ? 'APPROVED' : 'REJECTED' };
+              approvalStore.set(id, updated);
+              return Promise.resolve(updated);
+            }),
+          },
+        },
       ],
     }).compile();
 

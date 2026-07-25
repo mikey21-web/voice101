@@ -56,6 +56,7 @@ model Tenant {
   tickets                      Ticket[]
   knowledgeArticles            KnowledgeArticle[]
   copilotConversations         CopilotConversation[]
+  jarvisOutcomes                JarvisOutcome[]
   savedReports                 SavedReport[]
   callLogs                     CallLog[]
   notifications                Notification[]
@@ -581,6 +582,7 @@ model User {
   ticketComments                  TicketComment[]
   knowledgeArticles               KnowledgeArticle[]
   copilotConversations            CopilotConversation[]
+  jarvisOutcomes                  JarvisOutcome[]
   savedReports                    SavedReport[]
   callLogs                        CallLog[]
   notifications                   Notification[]
@@ -2909,6 +2911,32 @@ model CopilotMessage {
 
   @@index([conversationId])
   @@map("copilot_messages")
+}
+
+// A "Jarvis" outcome: a goal decomposed into an ordered list of steps that
+// run one at a time through the copilot's existing tool-call + approval-gate
+// pipeline. `steps` is a JSON array (see OutcomeStep in outcome-engine.service.ts)
+// rather than a child table — steps are never queried independently of their
+// parent outcome, so a relational table would just be joins for no benefit.
+model JarvisOutcome {
+  id             String   @id @default(uuid())
+  tenantId       String   @map("tenant_id")
+  tenant         Tenant   @relation(fields: [tenantId], references: [id])
+  userId         String
+  user           User     @relation(fields: [userId], references: [id])
+  conversationId String?
+  goal           String
+  metric         String
+  target         Float
+  current        Float
+  status         String   @default("active") // active | awaiting_approval | completed | failed | cancelled
+  steps          Json
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([tenantId, status])
+  @@index([userId])
+  @@map("jarvis_outcomes")
 }
 
 // === FEATURE FLAGS ===

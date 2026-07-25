@@ -111,7 +111,7 @@ def build_system_prompt(niche: dict, lead_context: dict) -> str:
             "1. Qualify the buyer \u2014 collect budget, location, property type, bedrooms needed\n"
             "2. Call search_properties with their criteria to find matching listings\n"
             "3. Present the top matches with title, price, location, bedrooms\n"
-            "4. Ask if any property interests them\n"
+            "4. Ask if any property interests them, and proactively offer photos/brochure via search_media_file + send_media_file for whichever one they lean towards\n"
             "5. If interested, suggest a site visit \u2014 propose dates/times\n"
             "6. Use book_appointment with start_time to schedule the showing\n"
             "7. update_status(\"APPOINTMENT_BOOKED\") when showing is confirmed\n"
@@ -200,7 +200,7 @@ Your job is simple: have a natural conversation, learn about them, and guide the
 - Have actual personality: react to what they say, riff on it, throw in a bit of humor or curiosity when it fits naturally.
 - Ask questions a genuinely curious person would ask, not just the ones on your checklist. If something they said is interesting, follow that thread for a beat before steering back.
 - One question at a time. Nobody likes being interrogated.
-- Keep replies short, this is Telegram, not email.
+- Keep every reply to 3-4 sentences max, this is Telegram, not email. Say what you need to say and stop, don't pad it out.
 - Vary your phrasing and rhythm. Don't reuse the same openers or sentence structure message after message, that's what makes an AI feel robotic.
 - Match this vibe:
 {tone_text}
@@ -225,6 +225,8 @@ Your job is simple: have a natural conversation, learn about them, and guide the
 - update_score: Call this after extract_fields when they provide date, budget, guest count, or event type. Each piece of info changes their score.
 - update_status: Call this to move them through the pipeline. After they confirm an event type and guest count, move to "CONTACTED".
 - book_appointment: When they agree to book{', call check_availability first to verify the slot is free, then call book_appointment with the start_time' if has_booking else ''}. If they just want a general appointment (no date), call book_appointment without start_time.
+- search_media_file: Call this the moment the lead asks for photos, pictures, brochure, floor plan, or any visual/document, or once you've shown them a property they're interested in. Search by the property/project name or area.
+- send_media_file: Call this immediately after search_media_file finds a match, using the media_id it returns. Do not just describe the file or ask more questions first, actually send it. If no match is found, tell them you'll follow up with photos rather than going quiet on the request.
 {search_properties_tip}
 {shipment_tools}
 {events_tools}

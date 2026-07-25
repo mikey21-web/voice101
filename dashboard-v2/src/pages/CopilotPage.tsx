@@ -3,7 +3,7 @@ import { api } from "../lib/api";
 import { runUIActions, confirmPendingAction } from "../lib/copilotActions";
 import MarkdownMessage from "../components/MarkdownMessage";
 import toast from "react-hot-toast";
-import { Send, MessageCircle, Loader2, AlertTriangle, CircleCheck, Circle, Wrench, Plus, MessageSquare, Trash2, Menu, X } from "lucide-react";
+import { Send, MessageCircle, Loader2, AlertTriangle, CircleCheck, Circle, Wrench, Plus, MessageSquare, Trash2, Menu, X, Volume2, VolumeX } from "lucide-react";
 
 interface Action {
   tool: string; args: any; status: string; result?: string; requiresConfirmation?: boolean; pendingActionId?: string;
@@ -25,7 +25,32 @@ export default function CopilotPage() {
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [voiceOn, setVoiceOn] = useState(() => localStorage.getItem("mikeyVoiceOn") === "true");
   const bottomRef = useRef<HTMLDivElement>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const toggleVoice = () => {
+    setVoiceOn(prev => {
+      const next = !prev;
+      localStorage.setItem("mikeyVoiceOn", String(next));
+      if (!next) audioRef.current?.pause();
+      return next;
+    });
+  };
+
+  const speak = async (text: string) => {
+    if (!voiceOn || !text.trim()) return;
+    try {
+      const res = await api("/copilot/speak", { method: "POST", body: JSON.stringify({ text }) });
+      if (!res.audioBase64) return;
+      const audio = new Audio(`data:${res.mimeType};base64,${res.audioBase64}`);
+      audioRef.current?.pause();
+      audioRef.current = audio;
+      audio.play().catch(() => {});
+    } catch {
+      // Voice is a nice-to-have — never block the text reply on TTS failing.
+    }
+  };
 
   const loadConvs = async () => {
     try {
@@ -75,6 +100,7 @@ export default function CopilotPage() {
       };
       setMessages(prev => [...prev, assistantMsg]);
       runUIActions(res.actions);
+      speak(res.reply);
     } catch (err: any) {
       toast.error(err.message || "Failed to get response");
       setMessages(prev => prev.filter(m => m.id !== userMsg.id));
@@ -148,7 +174,14 @@ export default function CopilotPage() {
             <Menu size={18} />
           </button>
           <MessageCircle size={18} className="text-[var(--primary)] shrink-0" />
-          <span className="text-sm font-semibold text-[var(--foreground)]">Copilot</span>
+          <span className="text-sm font-semibold text-[var(--foreground)]">Mikey</span>
+          <button
+            onClick={toggleVoice}
+            title={voiceOn ? "Voice replies on — click to mute" : "Voice replies off — click to unmute"}
+            className={`ml-auto p-1.5 rounded-md transition-colors ${voiceOn ? "text-[var(--primary)] bg-[var(--primary-light)]" : "text-[var(--muted-foreground)] hover:bg-[var(--accent)]"}`}
+          >
+            {voiceOn ? <Volume2 size={16} /> : <VolumeX size={16} />}
+          </button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -157,7 +190,7 @@ export default function CopilotPage() {
           ) : messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center text-[var(--muted-foreground)]">
               <MessageCircle size={48} className="mb-3 opacity-30" />
-              <p className="text-sm font-medium">Ask the CRM Copilot anything</p>
+              <p className="text-sm font-medium">Ask Mikey anything</p>
               <p className="text-xs mt-1">e.g. "show me my hot leads" or "create a ticket for lead #5"</p>
             </div>
           ) : (

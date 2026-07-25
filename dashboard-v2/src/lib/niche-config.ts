@@ -1,3 +1,5 @@
+import { getToken } from "./api";
+
 export type NicheConfig = {
   businessName: string;
   primaryColor: string;
@@ -215,8 +217,10 @@ export function onConfigChange(fn: () => void): () => void {
 
 export async function initNicheConfig(): Promise<void> {
   const subdomainNiche = detectNicheFromHost();
+  const token = getToken();
+  if (!token) return; // not logged in yet — subdomain-based default already applied
   try {
-    const res = await fetch("/api/business-settings");
+    const res = await fetch("/api/business-settings", { headers: { Authorization: `Bearer ${token}` } });
     if (!res.ok) throw new Error("Failed to fetch settings");
     const settings = await res.json();
     if (!subdomainNiche) {

@@ -11,7 +11,12 @@ export class FormWebhookDto {
   @ApiPropertyOptional() @IsString() @IsOptional() name?: string;
   @ApiPropertyOptional() @IsEmail() @IsOptional() email?: string;
   @ApiPropertyOptional() @IsString() @IsOptional() phone?: string;
+  @ApiPropertyOptional() @IsString() @IsOptional() whatsapp?: string;
   @ApiPropertyOptional() @IsString() @IsOptional() message?: string;
+  @ApiPropertyOptional() @IsString() @IsOptional() interest?: string;
+  @ApiPropertyOptional() @IsString() @IsOptional() budget?: string;
+  @ApiPropertyOptional({ description: 'ISO 639-1 language code for voice/WhatsApp follow-up, e.g. te for Telugu' })
+  @IsString() @IsOptional() language?: string;
   @ApiPropertyOptional() @IsString() @IsOptional() campaignId?: string;
   @ApiPropertyOptional() @IsString() @IsOptional() formId?: string;
   @ApiPropertyOptional() @IsObject() @IsOptional() metadata?: Record<string, unknown>;
@@ -112,4 +117,30 @@ export class WasenderWebhookDto {
   @ApiPropertyOptional({ description: 'Event timestamp' })
   @IsOptional()
   timestamp?: number;
+}
+
+export class OpenwaWebhookDto {
+  @ApiProperty({ description: 'Event type (e.g. message.received, message.ack)' })
+  @IsString()
+  event!: string;
+
+  @ApiPropertyOptional({ description: 'OpenWA session ID' })
+  @IsOptional()
+  @IsString()
+  sessionId?: string;
+
+  @ApiPropertyOptional({ description: 'Idempotency key for at-least-once delivery' })
+  @IsOptional()
+  @IsString()
+  idempotencyKey?: string;
+
+  @ApiPropertyOptional({ description: 'Event payload data' })
+  @IsOptional()
+  @IsObject()
+  data?: Record<string, any>;
+
+  @ApiPropertyOptional({ description: 'Event dispatch timestamp (ISO-8601)' })
+  @IsOptional()
+  @IsString()
+  timestamp?: string;
 }

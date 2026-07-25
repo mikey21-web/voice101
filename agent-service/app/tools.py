@@ -404,13 +404,23 @@ def build_tools(ctx: ToolContext) -> list:
     async def send_media_file(media_id: str, caption: str = ""):
         """Send a specific media file (image, brochure, floor plan, etc.) to the lead over WhatsApp. Use after search_media_file finds the matching file. Provide the media_id from the search results and an optional caption. Sends the image with the caption."""
         try:
-            url = await ctx.client.get_media_download_url(media_id)
+            media = await ctx.client.get_media_download_url(media_id)
+            url = media.get("url")
             if not url:
                 return _err("could not get download URL for this media file")
+            mime = media.get("mimeType") or ""
+            if mime.startswith("image/"):
+                media_type = "image"
+            elif mime.startswith("video/"):
+                media_type = "video"
+            elif mime.startswith("audio/"):
+                media_type = "audio"
+            else:
+                media_type = "document"
             display_caption = _clean_text(caption) or "Here is the file you asked about"
             await ctx.client.send_message(
                 ctx.lead_id, ctx.channel, display_caption,
-                media_url=url, media_type="image", caption=display_caption,
+                media_url=url, media_type=media_type, caption=display_caption,
             )
             return _ok(f"sent media file to lead")
         except BackendError as e:

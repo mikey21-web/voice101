@@ -71,11 +71,11 @@ export class TeamInvitesService {
       <p><a href="${acceptUrl}">${acceptUrl}</a></p>
       <p>This link expires in ${INVITE_TTL_DAYS} days.</p>
     `;
-    try {
-      await this.email.send(invite.email, "You're invited to join the workspace", html);
-    } catch {
+    const result = await this.email.send(invite.email, "You're invited to join the workspace", html);
+    if (!result.success) {
       // Invite record still exists even if the email fails to send — an
       // OWNER can use "Resend" from the Members & access table.
+      throw new BadRequestException(`Invite created but email failed to send: ${result.error}`);
     }
   }
 
