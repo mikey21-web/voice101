@@ -16,10 +16,8 @@ import { MikeyBanner, showMikeyToast } from "./components/mikey";
 import { SocketProvider, useSocket } from "./hooks";
 import { FeatureGuard } from "./components/FeatureGuard";
 import { initNicheConfig } from "./lib/niche-config";
-import { LoginPage } from "./pages/LoginPage";
 import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
 import { ResetPasswordPage } from "./pages/ResetPasswordPage";
-import LandingPage from "./pages/LandingPage";
 import { Skeleton } from "./components/ui/skeleton";
 import OverviewPage from "./pages/OverviewPage";
 import LeadsPage from "./pages/LeadsPage";
@@ -289,7 +287,7 @@ function MikeyConnectedToast() {
 }
 
 export default function App() {
-  const { user, login, logout, fetchProfile, isLoggedIn } = useAuth();
+  const { user, fetchProfile, isLoggedIn } = useAuth();
   const [page, setPage] = useState("Overview");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -328,12 +326,6 @@ export default function App() {
   const navigate = (path: string) => {
     window.location.hash = path;
     setPage(getPageKey(path));
-  };
-
-  const handleLogin = async (email: string, password: string) => {
-    await login(email, password);
-    await initNicheConfig();
-    window.location.hash = '/';
   };
 
   // Public microsite route — must be checked before the isLoggedIn gate below,
@@ -386,19 +378,26 @@ export default function App() {
     );
   }
 
+  // Landing and login are static pages (index.html / login.html) served
+  // directly by Caddy at the domain root, outside this SPA. If someone
+  // lands here without a session — e.g. an expired token inside
+  // /dashboard/* — send them back to the real static login page rather
+  // than rendering a React copy of it.
   if (!isLoggedIn) {
-    return (
-      <BrandingProvider>
-        <HashRouter>
-          <Routes>
-            <Route path="/login" element={<LoginPage onLogin={handleLogin} />} />
-            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-            <Route path="/reset-password" element={<ResetPasswordPage />} />
-            <Route path="*" element={<LandingPage onLogin={() => { window.location.hash = '/login'; }} />} />
-          </Routes>
-        </HashRouter>
-      </BrandingProvider>
-    );
+    if (publicRoute === '/forgot-password' || publicRoute === '/reset-password') {
+      return (
+        <BrandingProvider>
+          <HashRouter>
+            <Routes>
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
+            </Routes>
+          </HashRouter>
+        </BrandingProvider>
+      );
+    }
+    window.location.href = '/login.html';
+    return null;
   }
 
   const PageComponent = pageRoutes[page] || PageComponents[page];

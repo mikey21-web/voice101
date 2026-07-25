@@ -5,10 +5,18 @@ realestate.deploysafe.in {
 		output file /var/log/caddy/realestate-access.log
 		format json
 	}
-	reverse_proxy localhost:4001
+	root * /opt/lead-automation-demo
 	handle_path /api/* {
 		reverse_proxy localhost:4002
 	}
+	redir /dashboard /dashboard/
+	handle_path /dashboard/* {
+		reverse_proxy localhost:4001
+	}
+	handle /assets/* {
+		reverse_proxy localhost:4001
+	}
+	file_server
 }
 
 hospitality.deploysafe.in {
