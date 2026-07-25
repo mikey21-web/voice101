@@ -6,6 +6,7 @@ import { Phone, PhoneIncoming, PhoneOutgoing, PhoneMissed, Smartphone, Plus, Che
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/ui/table";
 import { Badge } from "../components/ui/badge";
+import { Dialog } from "../components/ui/dialog";
 
 const sourceVariant: Record<string, "default" | "success" | "secondary"> = {
   SIM: "default",
@@ -360,41 +361,36 @@ function PairDeviceModal({ onClose }: { onClose: () => void }) {
   }, [pairing]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" onClick={onClose}>
-      <div className="w-full max-w-md rounded-xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-lg overflow-y-auto" onClick={e => e.stopPropagation()}>
-        <h2 className="text-lg font-bold text-[var(--foreground)] mb-1">Pair a device</h2>
-        <p className="text-sm text-[var(--muted-foreground)] mb-4">Generate a code, then enter it in the mobile app to start syncing calls.</p>
-
-        {!pairing ? (
-          <div className="space-y-4">
-            <input
-              value={name}
-              onChange={e => setName(e.target.value)}
-              placeholder="Device label (e.g. Sarah's phone)"
-              className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/50"
-            />
-            <div className="flex justify-end gap-2">
-              <button onClick={onClose} className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--accent)] transition-colors">Cancel</button>
-              <button onClick={generate} disabled={loading} className="inline-flex items-center gap-2 rounded-lg bg-[var(--primary)] px-4 py-2 text-sm font-medium text-[var(--primary-foreground)] hover:bg-[var(--primary)]/90 disabled:opacity-50 transition-colors">
-                <Plus size={16} /> Generate code
-              </button>
-            </div>
+    <Dialog open onClose={onClose} title="Pair a device" description="Generate a code, then enter it in the mobile app to start syncing calls.">
+      {!pairing ? (
+        <div className="space-y-4">
+          <input
+            value={name}
+            onChange={e => setName(e.target.value)}
+            placeholder="Device label (e.g. Sarah's phone)"
+            className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/50"
+          />
+          <div className="flex justify-end gap-2">
+            <button onClick={onClose} className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--accent)] transition-colors">Cancel</button>
+            <button onClick={generate} disabled={loading} className="inline-flex items-center gap-2 rounded-lg bg-[var(--primary)] px-4 py-2 text-sm font-medium text-[var(--primary-foreground)] hover:bg-[var(--primary)]/90 disabled:opacity-50 transition-colors">
+              <Plus size={16} /> Generate code
+            </button>
           </div>
-        ) : (
-          <div className="space-y-4 text-center">
-            <div className="rounded-lg bg-[var(--muted)] py-6">
-              <div className="text-4xl font-bold tracking-[0.3em] text-[var(--foreground)]">{pairing.pairingCode}</div>
-            </div>
-            <p className="text-xs text-[var(--muted-foreground)]">
-              {secondsLeft > 0 ? `Expires in ${Math.floor(secondsLeft / 60)}:${(secondsLeft % 60).toString().padStart(2, "0")}` : "Code expired — generate a new one"}
-            </p>
-            <div className="flex justify-end gap-2">
-              <button onClick={() => setPairing(null)} className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--accent)] transition-colors">New code</button>
-              <button onClick={onClose} className="rounded-lg bg-[var(--primary)] px-4 py-2 text-sm font-medium text-[var(--primary-foreground)] hover:bg-[var(--primary)]/90 transition-colors">Done</button>
-            </div>
+        </div>
+      ) : (
+        <div className="space-y-4 text-center">
+          <div className="rounded-lg bg-[var(--muted)] py-6">
+            <div className="text-4xl font-bold tracking-[0.3em] text-[var(--foreground)]">{pairing.pairingCode}</div>
           </div>
-        )}
-      </div>
-    </div>
+          <p className="text-xs text-[var(--muted-foreground)]">
+            {secondsLeft > 0 ? `Expires in ${Math.floor(secondsLeft / 60)}:${(secondsLeft % 60).toString().padStart(2, "0")}` : "Code expired — generate a new one"}
+          </p>
+          <div className="flex justify-end gap-2">
+            <button onClick={() => setPairing(null)} className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--accent)] transition-colors">New code</button>
+            <button onClick={onClose} className="rounded-lg bg-[var(--primary)] px-4 py-2 text-sm font-medium text-[var(--primary-foreground)] hover:bg-[var(--primary)]/90 transition-colors">Done</button>
+          </div>
+        </div>
+      )}
+    </Dialog>
   );
 }
