@@ -55,17 +55,17 @@ interface DailyBrief {
 const STATS = [
   { icon: Building2, label: "Total Listings", value: "428", delta: "+12.4%", timeframe: "vs last month", positive: true },
   { icon: TrendingUp, label: "Active Deals", value: "86", delta: "+8.1%", timeframe: "vs last month", positive: true },
-  { icon: DollarSign, label: "Revenue MTD", value: "$2.84M", delta: "+18.6%", timeframe: "vs last month", positive: true },
+  { icon: DollarSign, label: "Revenue MTD", value: "₹2.4Cr", delta: "+18.6%", timeframe: "vs last month", positive: true },
   { icon: Users, label: "Pending Inquiries", value: "34", delta: "-4.2%", timeframe: "vs last month", positive: false },
 ];
 
 const SALES_DATA = [
-  { month: "Jan", sales: 1850000, rentals: 420000 },
-  { month: "Feb", sales: 2200000, rentals: 380000 },
-  { month: "Mar", sales: 1950000, rentals: 510000 },
-  { month: "Apr", sales: 2800000, rentals: 460000 },
-  { month: "May", sales: 2450000, rentals: 530000 },
-  { month: "Jun", sales: 3100000, rentals: 490000 },
+  { month: "Jan", sales: 14500000, rentals: 3500000 },
+  { month: "Feb", sales: 18000000, rentals: 3200000 },
+  { month: "Mar", sales: 16000000, rentals: 4200000 },
+  { month: "Apr", sales: 23500000, rentals: 3800000 },
+  { month: "May", sales: 20000000, rentals: 4400000 },
+  { month: "Jun", sales: 26000000, rentals: 4100000 },
 ];
 
 const LISTING_MIX = [
@@ -76,10 +76,14 @@ const LISTING_MIX = [
 ];
 
 const PROPERTIES = [
-  { id: 1, title: "245 Skyline Drive", price: "$1,250,000", type: "Modern Villa", beds: 4, baths: 3, sqft: 3200, agent: "Sarah Chen", agentInitials: "SC", status: "For Sale" },
-  { id: 2, title: "78 Harbor View", price: "$875,000", type: "Waterfront Condo", beds: 3, baths: 2, sqft: 2100, agent: "Michael Torres", agentInitials: "MT", status: "For Sale" },
-  { id: 3, title: "1500 Maple Avenue", price: "$2,100,000", type: "Luxury Estate", beds: 6, baths: 4, sqft: 5800, agent: "Emily Watson", agentInitials: "EW", status: "Featured" },
-  { id: 4, title: "42 Oakwood Lane", price: "$550,000", type: "Cozy Cottage", beds: 2, baths: 1, sqft: 1200, agent: "David Kim", agentInitials: "DK", status: "New" },
+  { id: 1, title: "Palm Grove Villa, Whitefield", price: "₹1.05Cr", type: "Modern Villa", beds: 4, baths: 3, sqft: 3200, agent: "Priya Sharma", agentInitials: "PS", status: "For Sale" },
+  { id: 2, title: "Sea Breeze Tower, Marine Drive", price: "₹72L", type: "Waterfront Apartment", beds: 3, baths: 2, sqft: 2100, agent: "Arun Mehta", agentInitials: "AM", status: "For Sale" },
+  { id: 3, title: "Emerald Estate, DLF Phase 5", price: "₹1.75Cr", type: "Luxury Villa", beds: 6, baths: 4, sqft: 5800, agent: "Neha Kapoor", agentInitials: "NK", status: "Featured" },
+  { id: 4, title: "Garden Residency, Banjara Hills", price: "₹45L", type: "Cozy Cottage", beds: 2, baths: 1, sqft: 1200, agent: "Rahul Verma", agentInitials: "RV", status: "New" },
+  { id: 5, title: "Lakeview Apartments, Powai", price: "₹85L", type: "Premium Condo", beds: 3, baths: 2, sqft: 1850, agent: "Priya Sharma", agentInitials: "PS", status: "For Sale" },
+  { id: 6, title: "Golden Tulip, Sector 62 Noida", price: "₹1.2Cr", type: "Penthouse", beds: 4, baths: 3, sqft: 2800, agent: "Arun Mehta", agentInitials: "AM", status: "Featured" },
+  { id: 7, title: "Sanskriti Residency, Electronic City", price: "₹32L", type: "Studio Apartment", beds: 1, baths: 1, sqft: 650, agent: "Rahul Verma", agentInitials: "RV", status: "New" },
+  { id: 8, title: "Riverside Enclave, Koregaon Park", price: "₹2.1Cr", type: "Independent House", beds: 5, baths: 4, sqft: 4500, agent: "Neha Kapoor", agentInitials: "NK", status: "For Sale" },
 ];
 
 const PROPERTY_IMAGES: Record<number, string> = {
@@ -87,21 +91,27 @@ const PROPERTY_IMAGES: Record<number, string> = {
   2: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=400&h=280&fit=crop",
   3: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=400&h=280&fit=crop",
   4: "https://images.unsplash.com/photo-1600566753086-00f18f6bae82?w=400&h=280&fit=crop",
+  5: "https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?w=400&h=280&fit=crop",
+  6: "https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=400&h=280&fit=crop",
+  7: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=280&fit=crop",
+  8: "https://images.unsplash.com/photo-1605276374104-dee2a0ed3cd6?w=400&h=280&fit=crop",
 };
 
 const DEALS = [
-  { property: "245 Skyline Drive", buyer: "John & Lisa Anderson", amount: "$1,250,000", status: "Closing", date: "2026-07-28" },
-  { property: "78 Harbor View", buyer: "Robert Martinez", amount: "$875,000", status: "Under Contract", date: "2026-07-25" },
-  { property: "1500 Maple Avenue", buyer: "The Thompson Family Trust", amount: "$2,100,000", status: "Negotiation", date: "2026-07-22" },
-  { property: "180 River Road", buyer: "Jennifer Walsh", amount: "$720,000", status: "Under Contract", date: "2026-07-20" },
-  { property: "55 Park Avenue #12B", buyer: "David & Karen Lee", amount: "$1,850,000", status: "Closing", date: "2026-07-18" },
+  { property: "Palm Grove Villa, Whitefield", buyer: "Suresh & Anita Reddy", amount: "₹1.05Cr", status: "Closing", date: "2026-07-28" },
+  { property: "Sea Breeze Tower, Marine Drive", buyer: "Vikram Patel", amount: "₹72L", status: "Under Contract", date: "2026-07-25" },
+  { property: "Emerald Estate, DLF Phase 5", buyer: "The Chopra Family Trust", amount: "₹1.75Cr", status: "Negotiation", date: "2026-07-22" },
+  { property: "Lakeview Apartments, Powai", buyer: "Deepa Iyer", amount: "₹85L", status: "Under Contract", date: "2026-07-20" },
+  { property: "Riverside Enclave, Koregaon Park", buyer: "Arvind & Meera Nair", amount: "₹2.1Cr", status: "Closing", date: "2026-07-18" },
+  { property: "Golden Tulip, Sector 62 Noida", buyer: "Rajesh Gupta", amount: "₹1.2Cr", status: "Negotiation", date: "2026-07-15" },
 ];
 
 const AGENTS = [
-  { name: "Sarah Chen", initials: "SC", role: "Senior Agent", listings: 18, volume: "$8.2M", closed: 12, color: "bg-emerald-500" },
-  { name: "Michael Torres", initials: "MT", role: "Luxury Specialist", listings: 14, volume: "$5.8M", closed: 9, color: "bg-blue-500" },
-  { name: "Emily Watson", initials: "EW", role: "Commercial Lead", listings: 12, volume: "$6.4M", closed: 10, color: "bg-amber-500" },
-  { name: "David Kim", initials: "DK", role: "Residential Agent", listings: 9, volume: "$3.9M", closed: 7, color: "bg-violet-500" },
+  { name: "Priya Sharma", initials: "PS", role: "Senior Agent", listings: 24, volume: "₹6.8Cr", closed: 18, color: "bg-emerald-500" },
+  { name: "Arun Mehta", initials: "AM", role: "Luxury Specialist", listings: 18, volume: "₹4.8Cr", closed: 14, color: "bg-blue-500" },
+  { name: "Neha Kapoor", initials: "NK", role: "Commercial Lead", listings: 15, volume: "₹5.3Cr", closed: 12, color: "bg-amber-500" },
+  { name: "Rahul Verma", initials: "RV", role: "Residential Agent", listings: 11, volume: "₹3.2Cr", closed: 9, color: "bg-violet-500" },
+  { name: "Kavita Joshi", initials: "KJ", role: "Luxury Rentals", listings: 9, volume: "₹2.1Cr", closed: 7, color: "bg-pink-500" },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -134,11 +144,6 @@ const daysAgo = (n: number) => {
   return `${n} days ago`;
 };
 
-const formatUSD = (n: number) => {
-  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000) return `$${(n / 1_000).toFixed(0)}K`;
-  return `$${n}`;
-};
 
 function buildBriefSpeech(brief: DailyBrief, firstName: string): string {
   const s = brief.summary;
@@ -1038,8 +1043,13 @@ export default function OverviewPage() {
           </a>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {PROPERTIES.map((p, i) => (
+          {PROPERTIES.slice(0, 4).map((p, i) => (
             <PropertyCard key={p.id} property={p} index={i} />
+          ))}
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+          {PROPERTIES.slice(4).map((p, i) => (
+            <PropertyCard key={p.id} property={p} index={i + 4} />
           ))}
         </div>
       </div>
