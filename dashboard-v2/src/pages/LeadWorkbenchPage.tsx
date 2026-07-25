@@ -9,6 +9,7 @@ import LeadPaymentMilestones from '../components/LeadPaymentMilestones';
 import PreVisitBrief from '../components/PreVisitBrief';
 import ProjectPicker from '../components/ProjectPicker';
 import UnitPicker from '../components/UnitPicker';
+import { Dialog } from '../components/ui/dialog';
 import type { Lead } from '../lib/types';
 
 const statusStyles: Record<string, string> = {
@@ -793,33 +794,32 @@ export default function LeadWorkbenchPage() {
       {briefLeadId && <PreVisitBrief leadId={briefLeadId} onClose={() => setBriefLeadId(null)} />}
 
       {/* WhatsApp Composer with Jarvis Draft */}
-      {showWhatsApp && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setShowWhatsApp(false)}>
-          <div className="bg-[var(--card)] rounded-xl shadow-2xl w-full max-w-md p-6 space-y-3" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold text-[var(--foreground)]">Send WhatsApp</h2>
-              <button onClick={() => setShowWhatsApp(false)}><X size={18} /></button>
-            </div>
-            <p className="text-xs text-[var(--muted-foreground)]">To: {lead.contact?.phone}</p>
-            <textarea value={whatsAppText} onChange={e => setWhatsAppText(e.target.value)} rows={3} autoFocus
-              placeholder="Type your message..."
-              className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20 resize-none" />
-            <div className="flex justify-between gap-2">
-              <button onClick={handleDraftReply} disabled={draftingReply}
-                className="inline-flex items-center gap-1.5 h-9 px-4 rounded-lg border border-purple-300 bg-purple-50 text-purple-700 text-sm font-medium hover:bg-purple-100 disabled:opacity-50 dark:border-purple-800/30 dark:bg-purple-900/20 dark:text-purple-400 dark:hover:bg-purple-900/30 transition-all">
-                <Sparkles size={13} /> {draftingReply ? 'Drafting...' : 'Draft with Jarvis'}
+      <Dialog
+        open={showWhatsApp}
+        onClose={() => setShowWhatsApp(false)}
+        title="Send WhatsApp"
+        description={`To: ${lead.contact?.phone}`}
+        maxWidth="max-w-md"
+        footer={
+          <div className="w-full flex justify-between gap-2">
+            <button onClick={handleDraftReply} disabled={draftingReply}
+              className="inline-flex items-center gap-1.5 h-9 px-4 rounded-lg border border-purple-300 bg-purple-50 text-purple-700 text-sm font-medium hover:bg-purple-100 disabled:opacity-50 dark:border-purple-800/30 dark:bg-purple-900/20 dark:text-purple-400 dark:hover:bg-purple-900/30 transition-all">
+              <Sparkles size={13} /> {draftingReply ? 'Drafting...' : 'Draft with Jarvis'}
+            </button>
+            <div className="flex gap-2">
+              <button onClick={() => setShowWhatsApp(false)} className="h-9 px-4 rounded-lg border border-[var(--border)] text-sm text-[var(--foreground)]">Cancel</button>
+              <button onClick={handleSendWhatsApp} disabled={sendingWA || !whatsAppText.trim()}
+                className="inline-flex items-center gap-1.5 h-9 px-5 rounded-lg bg-[var(--primary)] text-white text-sm font-medium hover:opacity-90 disabled:opacity-50">
+                <Send size={13} /> {sendingWA ? 'Sending...' : 'Send'}
               </button>
-              <div className="flex gap-2">
-                <button onClick={() => setShowWhatsApp(false)} className="h-9 px-4 rounded-lg border border-[var(--border)] text-sm text-[var(--foreground)]">Cancel</button>
-                <button onClick={handleSendWhatsApp} disabled={sendingWA || !whatsAppText.trim()}
-                  className="inline-flex items-center gap-1.5 h-9 px-5 rounded-lg bg-[var(--primary)] text-white text-sm font-medium hover:opacity-90 disabled:opacity-50">
-                  <Send size={13} /> {sendingWA ? 'Sending...' : 'Send'}
-                </button>
-              </div>
             </div>
           </div>
-        </div>
-      )}
+        }
+      >
+        <textarea value={whatsAppText} onChange={e => setWhatsAppText(e.target.value)} rows={3} autoFocus
+          placeholder="Type your message..."
+          className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20 resize-none" />
+      </Dialog>
 
       {/* Schedule Visit */}
       {showVisitForm && <VisitFormModal lead={lead} visitForm={visitForm} setVisitForm={setVisitForm} onClose={() => setShowVisitForm(false)} onSubmit={handleCreateVisit} creating={creatingVisit} />}
@@ -834,31 +834,28 @@ export default function LeadWorkbenchPage() {
       {showBookingForm && <BookingFormModal lead={lead} form={bookingForm} setForm={setBookingForm} onClose={() => setShowBookingForm(false)} onSubmit={handleProceedToBooking} creating={creatingBooking} existingBookings={existingBookings} />}
 
       {/* Quick Book from Approved Cost Sheet */}
-      {showApprovedCS && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setShowApprovedCS(false)}>
-          <div className="bg-[var(--card)] rounded-xl shadow-2xl w-full max-w-md p-6 space-y-3" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold text-[var(--foreground)]">Quick Book from Approved Cost Sheet</h2>
-              <button onClick={() => setShowApprovedCS(false)}><X size={18} /></button>
+      <Dialog
+        open={showApprovedCS}
+        onClose={() => setShowApprovedCS(false)}
+        title="Quick Book from Approved Cost Sheet"
+        description="These cost sheets are approved and ready for booking."
+        maxWidth="max-w-md"
+      >
+        <div className="space-y-2">
+          {approvedCostSheets.map((cs: any) => (
+            <div key={cs.id} className="flex items-center justify-between p-3 rounded-lg border border-green-200 bg-green-50 dark:border-green-800/30 dark:bg-green-900/10">
+              <div>
+                <p className="text-sm font-medium text-[var(--foreground)]">{cs.project?.name || 'Project'} — {cs.unit?.unitNumber || 'Unit'}</p>
+                <p className="text-xs text-[var(--muted-foreground)]">Approved · {cs.totalPaise ? `₹${(Number(cs.totalPaise) / 100).toLocaleString()}` : ''}</p>
+              </div>
+              <button onClick={() => handleQuickBookFromApproved(cs)} disabled={creatingBooking}
+                className="inline-flex items-center gap-1.5 h-8 px-4 rounded-lg bg-green-600 text-white text-xs font-medium hover:bg-green-700 disabled:opacity-50 transition-colors">
+                {creatingBooking ? 'Booking...' : 'Book Now'}
+              </button>
             </div>
-            <p className="text-xs text-[var(--muted-foreground)]">These cost sheets are approved and ready for booking.</p>
-            <div className="space-y-2">
-              {approvedCostSheets.map((cs: any) => (
-                <div key={cs.id} className="flex items-center justify-between p-3 rounded-lg border border-green-200 bg-green-50 dark:border-green-800/30 dark:bg-green-900/10">
-                  <div>
-                    <p className="text-sm font-medium text-[var(--foreground)]">{cs.project?.name || 'Project'} — {cs.unit?.unitNumber || 'Unit'}</p>
-                    <p className="text-xs text-[var(--muted-foreground)]">Approved · {cs.totalPaise ? `₹${(Number(cs.totalPaise) / 100).toLocaleString()}` : ''}</p>
-                  </div>
-                  <button onClick={() => handleQuickBookFromApproved(cs)} disabled={creatingBooking}
-                    className="inline-flex items-center gap-1.5 h-8 px-4 rounded-lg bg-green-600 text-white text-xs font-medium hover:bg-green-700 disabled:opacity-50 transition-colors">
-                    {creatingBooking ? 'Booking...' : 'Book Now'}
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
+          ))}
         </div>
-      )}
+      </Dialog>
     </div>
   );
 }
@@ -867,12 +864,22 @@ export default function LeadWorkbenchPage() {
 
 function VisitFormModal({ lead, visitForm, setVisitForm, onClose, onSubmit, creating }: any) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
-      <div className="bg-[var(--card)] rounded-xl shadow-2xl w-full max-w-md p-6 space-y-3" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold text-[var(--foreground)]">Schedule Site Visit</h2>
-          <button onClick={onClose}><X size={18} /></button>
-        </div>
+    <Dialog
+      open
+      onClose={onClose}
+      title="Schedule Site Visit"
+      maxWidth="max-w-md"
+      footer={
+        <>
+          <button onClick={onClose} className="h-9 px-4 rounded-lg border border-[var(--border)] text-sm text-[var(--foreground)]">Cancel</button>
+          <button onClick={onSubmit} disabled={creating}
+            className="h-9 px-5 rounded-lg bg-[var(--primary)] text-white text-sm font-medium hover:opacity-90 disabled:opacity-50">
+            {creating ? 'Scheduling...' : 'Schedule'}
+          </button>
+        </>
+      }
+    >
+      <div className="space-y-3">
         <div>
           <label className="text-xs font-medium text-[var(--muted-foreground)] mb-1 block">Project</label>
           <ProjectPicker value={visitForm.projectId} onChange={(id: string, name: string) => setVisitForm((f: any) => ({ ...f, projectId: id, projectName: name }))} />
@@ -882,26 +889,29 @@ function VisitFormModal({ lead, visitForm, setVisitForm, onClose, onSubmit, crea
           <input value={visitForm.startAt} onChange={e => setVisitForm((f: any) => ({ ...f, startAt: e.target.value }))} type="datetime-local"
             className="w-full h-10 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 text-sm" />
         </div>
-        <div className="flex justify-end gap-2">
-          <button onClick={onClose} className="h-9 px-4 rounded-lg border border-[var(--border)] text-sm text-[var(--foreground)]">Cancel</button>
-          <button onClick={onSubmit} disabled={creating}
-            className="h-9 px-5 rounded-lg bg-[var(--primary)] text-white text-sm font-medium hover:opacity-90 disabled:opacity-50">
-            {creating ? 'Scheduling...' : 'Schedule'}
-          </button>
-        </div>
       </div>
-    </div>
+    </Dialog>
   );
 }
 
 function CostSheetFormModal({ lead, form, setForm, onClose, onSubmit, creating }: any) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
-      <div className="bg-[var(--card)] rounded-xl shadow-2xl w-full max-w-md p-6 space-y-3" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold text-[var(--foreground)]">Create Cost Sheet</h2>
-          <button onClick={onClose}><X size={18} /></button>
-        </div>
+    <Dialog
+      open
+      onClose={onClose}
+      title="Create Cost Sheet"
+      maxWidth="max-w-md"
+      footer={
+        <>
+          <button onClick={onClose} className="h-9 px-4 rounded-lg border border-[var(--border)] text-sm text-[var(--foreground)]">Cancel</button>
+          <button onClick={onSubmit} disabled={creating}
+            className="h-9 px-5 rounded-lg bg-[var(--primary)] text-white text-sm font-medium hover:opacity-90 disabled:opacity-50">
+            {creating ? 'Creating...' : 'Create'}
+          </button>
+        </>
+      }
+    >
+      <div className="space-y-3">
         <div>
           <label className="text-xs font-medium text-[var(--muted-foreground)] mb-1 block">Project</label>
           <ProjectPicker value={form.projectId} onChange={(id: string, name: string) => setForm((f: any) => ({ ...f, projectId: id, projectName: name, unitId: '', unitLabel: '' }))} />
@@ -910,27 +920,30 @@ function CostSheetFormModal({ lead, form, setForm, onClose, onSubmit, creating }
           <label className="text-xs font-medium text-[var(--muted-foreground)] mb-1 block">Unit</label>
           <UnitPicker value={form.unitId} onChange={(id: string, label: string) => setForm((f: any) => ({ ...f, unitId: id, unitLabel: label }))} projectId={form.projectId} />
         </div>
-        <div className="flex justify-end gap-2">
-          <button onClick={onClose} className="h-9 px-4 rounded-lg border border-[var(--border)] text-sm text-[var(--foreground)]">Cancel</button>
-          <button onClick={onSubmit} disabled={creating}
-            className="h-9 px-5 rounded-lg bg-[var(--primary)] text-white text-sm font-medium hover:opacity-90 disabled:opacity-50">
-            {creating ? 'Creating...' : 'Create'}
-          </button>
-        </div>
       </div>
-    </div>
+    </Dialog>
   );
 }
 
 function HoldUnitModal({ lead, form, setForm, onClose, onSubmit, creating }: any) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
-      <div className="bg-[var(--card)] rounded-xl shadow-2xl w-full max-w-md p-6 space-y-3" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold text-[var(--foreground)]">Hold Unit</h2>
-          <button onClick={onClose}><X size={18} /></button>
-        </div>
-        <p className="text-xs text-[var(--muted-foreground)]">Reserve a unit for {lead?.contact?.name || 'this lead'} — blocks other sales</p>
+    <Dialog
+      open
+      onClose={onClose}
+      title="Hold Unit"
+      description={`Reserve a unit for ${lead?.contact?.name || 'this lead'} — blocks other sales`}
+      maxWidth="max-w-md"
+      footer={
+        <>
+          <button onClick={onClose} className="h-9 px-4 rounded-lg border border-[var(--border)] text-sm text-[var(--foreground)]">Cancel</button>
+          <button onClick={onSubmit} disabled={creating || !form.unitId}
+            className="h-9 px-5 rounded-lg bg-amber-600 text-white text-sm font-medium hover:opacity-90 disabled:opacity-50">
+            {creating ? 'Holding...' : 'Hold Unit'}
+          </button>
+        </>
+      }
+    >
+      <div className="space-y-3">
         <div>
           <label className="text-xs font-medium text-[var(--muted-foreground)] mb-1 block">Project</label>
           <ProjectPicker value={form.projectId} onChange={(id: string, name: string) => setForm((f: any) => ({ ...f, projectId: id, projectName: name, unitId: '', unitLabel: '' }))} />
@@ -951,27 +964,30 @@ function HoldUnitModal({ lead, form, setForm, onClose, onSubmit, creating }: any
             <option value={168}>7 days</option>
           </select>
         </div>
-        <div className="flex justify-end gap-2">
-          <button onClick={onClose} className="h-9 px-4 rounded-lg border border-[var(--border)] text-sm text-[var(--foreground)]">Cancel</button>
-          <button onClick={onSubmit} disabled={creating || !form.unitId}
-            className="h-9 px-5 rounded-lg bg-amber-600 text-white text-sm font-medium hover:opacity-90 disabled:opacity-50">
-            {creating ? 'Holding...' : 'Hold Unit'}
-          </button>
-        </div>
       </div>
-    </div>
+    </Dialog>
   );
 }
 
 function BookingFormModal({ lead, form, setForm, onClose, onSubmit, creating, existingBookings }: any) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
-      <div className="bg-[var(--card)] rounded-xl shadow-2xl w-full max-w-md p-6 space-y-3" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold text-[var(--foreground)]">Proceed to Booking</h2>
-          <button onClick={onClose}><X size={18} /></button>
-        </div>
-        <p className="text-xs text-[var(--muted-foreground)]">Create a booking for {lead?.contact?.name || 'this lead'}</p>
+    <Dialog
+      open
+      onClose={onClose}
+      title="Proceed to Booking"
+      description={`Create a booking for ${lead?.contact?.name || 'this lead'}`}
+      maxWidth="max-w-md"
+      footer={
+        <>
+          <button onClick={onClose} className="h-9 px-4 rounded-lg border border-[var(--border)] text-sm text-[var(--foreground)]">Cancel</button>
+          <button onClick={onSubmit} disabled={creating || !form.unitId}
+            className="h-9 px-5 rounded-lg bg-green-600 text-white text-sm font-medium hover:opacity-90 disabled:opacity-50">
+            {creating ? 'Creating...' : 'Create Booking'}
+          </button>
+        </>
+      }
+    >
+      <div className="space-y-3">
         {existingBookings.length > 0 && (
           <div className="px-3 py-2 rounded-lg bg-blue-50 border border-blue-200 text-blue-800 text-xs dark:bg-blue-900/20 dark:border-blue-800/30 dark:text-blue-400">
             {existingBookings.length} existing booking{existingBookings.length > 1 ? 's' : ''} found for this lead
@@ -991,14 +1007,7 @@ function BookingFormModal({ lead, form, setForm, onClose, onSubmit, creating, ex
           <label className="text-xs font-medium text-[var(--muted-foreground)] mb-1 block">Unit</label>
           <UnitPicker value={form.unitId} onChange={(id: string, label: string) => setForm((f: any) => ({ ...f, unitId: id, unitLabel: label }))} projectId={form.projectId} />
         </div>
-        <div className="flex justify-end gap-2">
-          <button onClick={onClose} className="h-9 px-4 rounded-lg border border-[var(--border)] text-sm text-[var(--foreground)]">Cancel</button>
-          <button onClick={onSubmit} disabled={creating || !form.unitId}
-            className="h-9 px-5 rounded-lg bg-green-600 text-white text-sm font-medium hover:opacity-90 disabled:opacity-50">
-            {creating ? 'Creating...' : 'Create Booking'}
-          </button>
-        </div>
       </div>
-    </div>
+    </Dialog>
   );
 }

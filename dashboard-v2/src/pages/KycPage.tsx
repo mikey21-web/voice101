@@ -4,6 +4,7 @@ import toast from "react-hot-toast";
 import { Plus, Upload, Check, X, FileText } from "lucide-react";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/ui/table";
 import { Badge } from "../components/ui/badge";
+import { Dialog } from "../components/ui/dialog";
 
 const DOC_TYPES = [
   "PAN", "AADHAAR_OFFLINE_XML", "ADDRESS_PROOF", "PHOTO", "SALARY_PROOF",
@@ -205,22 +206,26 @@ function RequestDocumentModal({ onClose, onDone }: { onClose: () => void; onDone
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" onClick={onClose}>
-      <div className="w-full max-w-md rounded-xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-lg" onClick={e => e.stopPropagation()}>
-        <h2 className="text-lg font-bold text-[var(--foreground)] mb-4">Request a document</h2>
-        <div className="space-y-3">
-          <input placeholder="Lead ID" value={leadId} onChange={e => setLeadId(e.target.value)} className="w-full h-9 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)]" />
-          <select value={type} onChange={e => setType(e.target.value)} className="w-full h-9 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)]">
-            {DOC_TYPES.map(t => <option key={t} value={t}>{t.replace(/_/g, " ")}</option>)}
-          </select>
-        </div>
-        <div className="flex justify-end gap-2 mt-4">
+    <Dialog
+      open
+      onClose={onClose}
+      title="Request a document"
+      maxWidth="max-w-md"
+      footer={
+        <>
           <button onClick={onClose} className="h-9 px-4 rounded-lg border border-[var(--border)] text-sm text-[var(--foreground)] hover:bg-[var(--accent)]">Cancel</button>
           <button onClick={submit} disabled={saving} className="h-9 px-4 rounded-lg bg-[var(--primary)] text-white text-sm font-medium hover:opacity-90 disabled:opacity-50">
             {saving ? "Requesting..." : "Request"}
           </button>
-        </div>
+        </>
+      }
+    >
+      <div className="space-y-3">
+        <input placeholder="Lead ID" value={leadId} onChange={e => setLeadId(e.target.value)} className="w-full h-9 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)]" />
+        <select value={type} onChange={e => setType(e.target.value)} className="w-full h-9 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)]">
+          {DOC_TYPES.map(t => <option key={t} value={t}>{t.replace(/_/g, " ")}</option>)}
+        </select>
       </div>
-    </div>
+    </Dialog>
   );
 }
