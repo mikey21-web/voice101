@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { api } from "../lib/api";
 import toast from "react-hot-toast";
+import { Dialog } from "../components/ui/dialog";
 import { Plus, Pencil, Trash2, GripVertical, X, Check, ChevronUp, ChevronDown, ToggleLeft, ToggleRight } from "lucide-react";
 
 const TARGETS = ["CONTACT", "LEAD", "TICKET"] as const;
@@ -302,54 +303,55 @@ function FieldForm({ target, initial, onClose, onSaved }: { target: string; init
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" onClick={onClose}>
-      <div className="bg-[var(--card)] rounded-xl border border-[var(--border)] shadow-xl w-full max-w-md mx-4 overflow-y-auto" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border)]">
-          <h3 className="text-sm font-semibold text-[var(--foreground)]">{initial ? "Edit Field" : "New Custom Field"}</h3>
-          <button onClick={onClose} className="p-1 rounded-md text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--accent)] transition-colors cursor-pointer"><X size={16} /></button>
-        </div>
-        <div className="p-5 space-y-4">
-          <div>
-            <label className="text-xs font-medium text-[var(--muted-foreground)]">Field Name</label>
-            <input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Industry" autoFocus
-              className="w-full mt-1 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/50" />
-          </div>
-          <div>
-            <label className="text-xs font-medium text-[var(--muted-foreground)]">Field Key</label>
-            <input value={key} onChange={e => setKey(e.target.value)} placeholder="e.g. industry" disabled={!!initial}
-              className="w-full mt-1 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/50 disabled:opacity-50" />
-          </div>
-          {!initial && (
-            <div>
-              <label className="text-xs font-medium text-[var(--muted-foreground)]">Type</label>
-              <select value={type} onChange={e => setType(e.target.value)}
-                className="w-full mt-1 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/50">
-                {FIELD_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-              </select>
-            </div>
-          )}
-          {type === "DROPDOWN" && (
-            <div>
-              <label className="text-xs font-medium text-[var(--muted-foreground)]">Options (one per line)</label>
-              <textarea value={options} onChange={e => setOptions(e.target.value)} rows={4}
-                className="w-full mt-1 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/50" />
-            </div>
-          )}
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" checked={required} onChange={e => setRequired(e.target.checked)}
-              className="w-4 h-4 rounded border-[var(--border)] text-[var(--primary)] focus:ring-[var(--primary)]/30" />
-            <span className="text-sm text-[var(--foreground)]">Required field</span>
-          </label>
-        </div>
-        <div className="flex justify-end gap-2 px-5 py-4 border-t border-[var(--border)]">
+    <Dialog
+      open
+      onClose={onClose}
+      title={initial ? "Edit Field" : "New Custom Field"}
+      maxWidth="max-w-md"
+      footer={
+        <>
           <button onClick={onClose}
             className="px-4 py-2 rounded-lg text-sm font-medium text-[var(--foreground)] border border-[var(--border)] bg-[var(--card)] hover:bg-[var(--accent)] transition-colors cursor-pointer">Cancel</button>
           <button onClick={handleSave} disabled={saving}
             className="px-4 py-2 rounded-lg text-sm font-medium bg-[var(--primary)] text-[var(--primary-foreground)] hover:bg-[var(--primary)]/90 disabled:opacity-50 transition-colors cursor-pointer">
             {saving ? "Saving..." : initial ? "Update" : "Create"}
           </button>
+        </>
+      }
+    >
+      <div className="space-y-4">
+        <div>
+          <label className="text-xs font-medium text-[var(--muted-foreground)]">Field Name</label>
+          <input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Industry" autoFocus
+            className="w-full mt-1 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/50" />
         </div>
+        <div>
+          <label className="text-xs font-medium text-[var(--muted-foreground)]">Field Key</label>
+          <input value={key} onChange={e => setKey(e.target.value)} placeholder="e.g. industry" disabled={!!initial}
+            className="w-full mt-1 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/50 disabled:opacity-50" />
+        </div>
+        {!initial && (
+          <div>
+            <label className="text-xs font-medium text-[var(--muted-foreground)]">Type</label>
+            <select value={type} onChange={e => setType(e.target.value)}
+              className="w-full mt-1 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/50">
+              {FIELD_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
+          </div>
+        )}
+        {type === "DROPDOWN" && (
+          <div>
+            <label className="text-xs font-medium text-[var(--muted-foreground)]">Options (one per line)</label>
+            <textarea value={options} onChange={e => setOptions(e.target.value)} rows={4}
+              className="w-full mt-1 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/50" />
+          </div>
+        )}
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input type="checkbox" checked={required} onChange={e => setRequired(e.target.checked)}
+            className="w-4 h-4 rounded border-[var(--border)] text-[var(--primary)] focus:ring-[var(--primary)]/30" />
+          <span className="text-sm text-[var(--foreground)]">Required field</span>
+        </label>
       </div>
-    </div>
+    </Dialog>
   );
 }

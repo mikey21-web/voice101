@@ -4,6 +4,7 @@ import { api } from "../lib/api";
 import { consumePendingFilter, PENDING_FILTER_APPLIED_EVENT } from "../lib/pendingSearch";
 import toast from "react-hot-toast";
 import { Plus, Search, MessageSquare, Clock, AlertCircle } from "lucide-react";
+import { createPortal } from "react-dom";
 
 const statusColors: Record<string, string> = {
   OPEN: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
@@ -151,7 +152,7 @@ function CreateTicketModal({ onClose, onCreated }: { onClose: () => void; onCrea
     }
   };
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" onClick={onClose}>
       <div className="w-full max-w-lg rounded-xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-lg overflow-y-auto" onClick={e => e.stopPropagation()}>
         <h2 className="text-lg font-bold text-[var(--foreground)] mb-4">New Ticket</h2>
@@ -167,7 +168,8 @@ function CreateTicketModal({ onClose, onCreated }: { onClose: () => void; onCrea
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -201,7 +203,7 @@ function TicketDetailModal({ ticket, onClose, onUpdated }: { ticket: any; onClos
 
   const comments = detail.comments || ticket.comments || [];
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" onClick={onClose}>
       <div className="w-full max-w-2xl h-[80vh] rounded-xl border border-[var(--border)] bg-[var(--card)] shadow-lg flex flex-col overflow-y-auto" onClick={e => e.stopPropagation()}>
         <div className="flex items-start justify-between border-b border-[var(--border)] px-6 py-4">
@@ -261,6 +263,7 @@ function TicketDetailModal({ ticket, onClose, onUpdated }: { ticket: any; onClos
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

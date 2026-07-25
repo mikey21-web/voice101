@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { fetchWebhooks, testWebhook } from '../lib/data';
 import { api } from '../lib/api';
-import { Webhook, CheckCircle, XCircle, Clock, TestTube, ExternalLink, Shield, Plus, Pencil, Trash2, X } from 'lucide-react';
+import { Webhook, CheckCircle, XCircle, Clock, TestTube, ExternalLink, Shield, Plus, Pencil, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { Dialog } from '../components/ui/dialog';
 
 interface CustomWebhook {
   id: string;
@@ -316,13 +317,13 @@ export default function WebhookPage() {
 
       {/* ---- Delete Confirmation ---- */}
       {deleteTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" onClick={() => setDeleteTarget(null)}>
-          <div className="w-full max-w-sm rounded-xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-lg overflow-y-auto" onClick={e => e.stopPropagation()}>
-            <h3 className="text-lg font-bold text-[var(--foreground)] mb-2">Delete Webhook</h3>
-            <p className="text-sm text-[var(--muted-foreground)] mb-4">
-              Are you sure you want to delete <strong className="text-[var(--foreground)]">{deleteTarget.name}</strong>? This action cannot be undone.
-            </p>
-            <div className="flex justify-end gap-2">
+        <Dialog
+          open
+          onClose={() => setDeleteTarget(null)}
+          title="Delete Webhook"
+          maxWidth="max-w-sm"
+          footer={
+            <>
               <button
                 onClick={() => setDeleteTarget(null)}
                 className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--accent)] transition-colors"
@@ -335,9 +336,13 @@ export default function WebhookPage() {
               >
                 Delete
               </button>
-            </div>
-          </div>
-        </div>
+            </>
+          }
+        >
+          <p className="text-sm text-[var(--muted-foreground)]">
+            Are you sure you want to delete <strong className="text-[var(--foreground)]">{deleteTarget.name}</strong>? This action cannot be undone.
+          </p>
+        </Dialog>
       )}
     </div>
   );
@@ -404,17 +409,29 @@ function CustomWebhookModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" onClick={onClose}>
-      <div className="w-full max-w-lg rounded-xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-lg overflow-y-auto" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold text-[var(--foreground)]">
-            {webhook ? 'Edit Webhook' : 'Add Webhook'}
-          </h3>
-          <button onClick={onClose} className="rounded-md p-1 text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--accent)] transition-colors">
-            <X size={16} />
+    <Dialog
+      open
+      onClose={onClose}
+      title={webhook ? 'Edit Webhook' : 'Add Webhook'}
+      maxWidth="max-w-lg"
+      footer={
+        <>
+          <button
+            onClick={onClose}
+            className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--accent)] transition-colors"
+          >
+            Cancel
           </button>
-        </div>
-
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--primary)] px-4 py-2 text-sm font-medium text-[var(--primary-foreground)] hover:bg-[var(--primary)]/90 disabled:opacity-50 transition-colors"
+          >
+            {saving ? 'Saving...' : webhook ? 'Save Changes' : 'Create Webhook'}
+          </button>
+        </>
+      }
+    >
         <div className="space-y-4">
           {/* Name */}
           <div>
@@ -476,23 +493,6 @@ function CustomWebhookModal({
             />
           </div>
         </div>
-
-        <div className="flex justify-end gap-2 mt-6">
-          <button
-            onClick={onClose}
-            className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--accent)] transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--primary)] px-4 py-2 text-sm font-medium text-[var(--primary-foreground)] hover:bg-[var(--primary)]/90 disabled:opacity-50 transition-colors"
-          >
-            {saving ? 'Saving...' : webhook ? 'Save Changes' : 'Create Webhook'}
-          </button>
-        </div>
-      </div>
-    </div>
+    </Dialog>
   );
 }

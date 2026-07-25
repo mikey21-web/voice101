@@ -3,6 +3,7 @@ import { fetchLeads, fetchVoiceCampaigns, createVoiceCampaign, pauseVoiceCampaig
 import type { Lead } from '../lib/types';
 import { Megaphone, Plus, Pause, Play, RefreshCw, Phone, X, ChevronRight, ChevronLeft, Check, Download, Upload, FileText } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { createPortal } from 'react-dom';
 
 interface CsvContact { phone: string; name?: string; }
 
@@ -34,10 +35,7 @@ function downloadCsvTemplate() {
   URL.revokeObjectURL(url);
 }
 
-const LANGUAGES = [
-  { code: 'en', label: 'English' },
-  { code: 'te', label: 'తెలుగు (Telugu)' },
-];
+const LANG = 'te';
 
 const STEPS = ['Details', 'Contacts', 'Settings', 'Review'];
 
@@ -52,7 +50,7 @@ export default function VoiceCampaignsPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [step, setStep] = useState(0);
   const [name, setName] = useState('');
-  const [lang, setLang] = useState('en');
+  const lang = LANG;
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [creating, setCreating] = useState(false);
   const [contactMode, setContactMode] = useState<'leads' | 'csv'>('leads');
@@ -81,7 +79,7 @@ export default function VoiceCampaignsPage() {
   useEffect(() => { load(); }, []);
 
   const openModal = () => {
-    setStep(0); setName(''); setLang('en'); setSelected(new Set());
+    setStep(0); setName(''); setSelected(new Set());
     setConcurrency(1); setRetry(DEFAULT_RETRY); setCallingHoursEnabled(false); setCallingHoursStart('09:00'); setCallingHoursEnd('19:00');
     setContactMode('leads'); setCsvContacts([]); setCsvFileName(''); setCsvError(null);
     setModalOpen(true);
@@ -224,7 +222,7 @@ export default function VoiceCampaignsPage() {
         )}
       </div>
 
-      {modalOpen && (
+      {modalOpen && createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setModalOpen(false)}>
           <div className="w-full max-w-lg rounded-xl bg-[var(--card)] border border-[var(--border)] shadow-xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-start justify-between p-5 border-b border-[var(--border)]">
@@ -267,16 +265,6 @@ export default function VoiceCampaignsPage() {
                       autoFocus
                       className="w-full h-9 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20"
                     />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-[var(--muted-foreground)] mb-1">Language</label>
-                    <select
-                      value={lang}
-                      onChange={(e) => setLang(e.target.value)}
-                      className="w-full h-9 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)]"
-                    >
-                      {LANGUAGES.map((l) => <option key={l.code} value={l.code}>{l.label}</option>)}
-                    </select>
                   </div>
                 </div>
               )}
@@ -426,10 +414,6 @@ export default function VoiceCampaignsPage() {
                     <span className="font-medium text-[var(--foreground)]">{name}</span>
                   </div>
                   <div className="flex items-center justify-between text-sm py-1.5 border-b border-[var(--border)]">
-                    <span className="text-[var(--muted-foreground)]">Language</span>
-                    <span className="font-medium text-[var(--foreground)]">{LANGUAGES.find((l) => l.code === lang)?.label}</span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm py-1.5 border-b border-[var(--border)]">
                     <span className="text-[var(--muted-foreground)]">Contacts to call</span>
                     <span className="font-medium text-[var(--foreground)]">{contactMode === 'leads' ? selected.size : csvContacts.length}{contactMode === 'csv' ? ' (from CSV)' : ''}</span>
                   </div>
@@ -480,7 +464,8 @@ export default function VoiceCampaignsPage() {
               )}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
