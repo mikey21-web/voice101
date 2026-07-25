@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
-import { Plus, Search, Edit2, Trash2, X, TrendingUp, Users } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, TrendingUp, Users } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { api, resolveMediaUrl } from "../lib/api";
 import toast from "react-hot-toast";
+import { Dialog } from "../components/ui/dialog";
 
 const statusColors: Record<string, string> = {
   ACTIVE: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
@@ -148,40 +149,34 @@ export default function ChannelPartnersPage() {
       )}
 
       {performanceFor && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => { setPerformanceFor(null); setPerformance(null); }}>
-          <div className="bg-[var(--card)] rounded-xl shadow-2xl w-full max-w-md p-6 space-y-4 overflow-y-auto" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold">{performance?.name || "Performance"}</h2>
-              <button onClick={() => { setPerformanceFor(null); setPerformance(null); }}><X className="h-5 w-5" /></button>
-            </div>
-            {!performance ? (
-              <div className="text-sm text-[var(--muted-foreground)]">Loading...</div>
-            ) : (
-              <div className="grid grid-cols-2 gap-4">
-                <div className="rounded-lg border border-[var(--border)] p-3">
-                  <div className="text-xs text-[var(--muted-foreground)] uppercase">Leads Sourced</div>
-                  <div className="text-xl font-bold">{performance.totalLeads}</div>
-                </div>
-                <div className="rounded-lg border border-[var(--border)] p-3">
-                  <div className="text-xs text-[var(--muted-foreground)] uppercase">Converted</div>
-                  <div className="text-xl font-bold">{performance.convertedLeads}</div>
-                </div>
-                <div className="rounded-lg border border-[var(--border)] p-3">
-                  <div className="text-xs text-[var(--muted-foreground)] uppercase">Conversion Rate</div>
-                  <div className="text-xl font-bold">{(performance.conversionRate * 100).toFixed(1)}%</div>
-                </div>
-                <div className="rounded-lg border border-[var(--border)] p-3">
-                  <div className="text-xs text-[var(--muted-foreground)] uppercase">Deal Value</div>
-                  <div className="text-xl font-bold">{formatMoney(performance.convertedValue)}</div>
-                </div>
-                <div className="col-span-2 rounded-lg border border-[var(--primary)]/30 bg-[var(--primary)]/5 p-3">
-                  <div className="text-xs text-[var(--muted-foreground)] uppercase">Commission Owed ({performance.commissionRate}%)</div>
-                  <div className="text-2xl font-bold text-[var(--primary)]">{formatMoney(performance.commissionOwed)}</div>
-                </div>
+        <Dialog open onClose={() => { setPerformanceFor(null); setPerformance(null); }} title={performance?.name || "Performance"} maxWidth="max-w-md">
+          {!performance ? (
+            <div className="text-sm text-[var(--muted-foreground)]">Loading...</div>
+          ) : (
+            <div className="grid grid-cols-2 gap-4">
+              <div className="rounded-lg border border-[var(--border)] p-3">
+                <div className="text-xs text-[var(--muted-foreground)] uppercase">Leads Sourced</div>
+                <div className="text-xl font-bold">{performance.totalLeads}</div>
               </div>
-            )}
-          </div>
-        </div>
+              <div className="rounded-lg border border-[var(--border)] p-3">
+                <div className="text-xs text-[var(--muted-foreground)] uppercase">Converted</div>
+                <div className="text-xl font-bold">{performance.convertedLeads}</div>
+              </div>
+              <div className="rounded-lg border border-[var(--border)] p-3">
+                <div className="text-xs text-[var(--muted-foreground)] uppercase">Conversion Rate</div>
+                <div className="text-xl font-bold">{(performance.conversionRate * 100).toFixed(1)}%</div>
+              </div>
+              <div className="rounded-lg border border-[var(--border)] p-3">
+                <div className="text-xs text-[var(--muted-foreground)] uppercase">Deal Value</div>
+                <div className="text-xl font-bold">{formatMoney(performance.convertedValue)}</div>
+              </div>
+              <div className="col-span-2 rounded-lg border border-[var(--primary)]/30 bg-[var(--primary)]/5 p-3">
+                <div className="text-xs text-[var(--muted-foreground)] uppercase">Commission Owed ({performance.commissionRate}%)</div>
+                <div className="text-2xl font-bold text-[var(--primary)]">{formatMoney(performance.commissionOwed)}</div>
+              </div>
+            </div>
+          )}
+        </Dialog>
       )}
     </div>
   );

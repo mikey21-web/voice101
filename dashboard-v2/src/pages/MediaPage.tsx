@@ -9,6 +9,8 @@ import {
   Upload, Trash2, Download, Image, FileText, Video, Music, Search, FolderPlus, Folder, Plus, X, Tag, ExternalLink, LayoutGrid, ChevronLeft
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { createPortal } from 'react-dom';
+import { Dialog } from '../components/ui/dialog';
 
 const typeIcons: Record<string, any> = { image: Image, video: Video, audio: Music, document: FileText };
 
@@ -208,7 +210,7 @@ export default function MediaPage() {
       </div>
 
       {/* Preview Modal */}
-      {preview && previewFile && (
+      {preview && previewFile && createPortal(
         <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4" onClick={() => { setPreview(null); setPreviewFile(null); }}>
           <div className="relative max-w-5xl max-h-[90vh] w-full bg-[var(--card)] rounded-xl overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)]">
@@ -254,83 +256,74 @@ export default function MediaPage() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Upload Modal */}
       {showUploadModal && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={() => setShowUploadModal(false)}>
-          <div className="w-full max-w-md bg-[var(--card)] rounded-xl p-6 space-y-4" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-[var(--foreground)]">Upload File</h2>
-              <button onClick={() => setShowUploadModal(false)} className="w-7 h-7 rounded-lg hover:bg-[var(--accent)] flex items-center justify-center text-[var(--muted-foreground)]"><X size={16} /></button>
+        <Dialog open onClose={() => setShowUploadModal(false)} title="Upload File" maxWidth="max-w-md">
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs font-medium text-[var(--foreground)] mb-1 block">Category</label>
+              <select value={uploadMeta.category} onChange={e => setUploadMeta(p => ({ ...p, category: e.target.value }))} className="w-full h-9 px-3 rounded-lg border border-[var(--border)] bg-[var(--card)] text-sm text-[var(--foreground)]">
+                <option value="OTHER">Other</option>
+                <option value="BROCHURE">Brochure</option>
+                <option value="CATALOG">Catalog</option>
+                <option value="PROPOSAL">Proposal</option>
+                <option value="CAMPAIGN_ASSET">Campaign Asset</option>
+                <option value="LEAD_ATTACHMENT">Lead Attachment</option>
+              </select>
             </div>
-            <div className="space-y-3">
-              <div>
-                <label className="text-xs font-medium text-[var(--foreground)] mb-1 block">Category</label>
-                <select value={uploadMeta.category} onChange={e => setUploadMeta(p => ({ ...p, category: e.target.value }))} className="w-full h-9 px-3 rounded-lg border border-[var(--border)] bg-[var(--card)] text-sm text-[var(--foreground)]">
-                  <option value="OTHER">Other</option>
-                  <option value="BROCHURE">Brochure</option>
-                  <option value="CATALOG">Catalog</option>
-                  <option value="PROPOSAL">Proposal</option>
-                  <option value="CAMPAIGN_ASSET">Campaign Asset</option>
-                  <option value="LEAD_ATTACHMENT">Lead Attachment</option>
-                </select>
-              </div>
-              <div>
-                <label className="text-xs font-medium text-[var(--foreground)] mb-1 block">Tags (comma separated)</label>
-                <input value={uploadMeta.tags} onChange={e => setUploadMeta(p => ({ ...p, tags: e.target.value }))} placeholder="e.g. project-alpha, villa, interior" className="w-full h-9 px-3 rounded-lg border border-[var(--border)] bg-[var(--card)] text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)]" />
-              </div>
-              <div>
-                <label className="text-xs font-medium text-[var(--foreground)] mb-1 block">Project ID (optional)</label>
-                <input value={uploadMeta.projectId} onChange={e => setUploadMeta(p => ({ ...p, projectId: e.target.value }))} placeholder="Link to a project" className="w-full h-9 px-3 rounded-lg border border-[var(--border)] bg-[var(--card)] text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)]" />
-              </div>
+            <div>
+              <label className="text-xs font-medium text-[var(--foreground)] mb-1 block">Tags (comma separated)</label>
+              <input value={uploadMeta.tags} onChange={e => setUploadMeta(p => ({ ...p, tags: e.target.value }))} placeholder="e.g. project-alpha, villa, interior" className="w-full h-9 px-3 rounded-lg border border-[var(--border)] bg-[var(--card)] text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)]" />
             </div>
-            <div className="flex gap-2 pt-2">
-              <button onClick={() => fileRef.current?.click()} disabled={uploading} className="flex-1 h-10 rounded-lg bg-[var(--primary)] text-white text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50">
-                {uploading ? 'Uploading...' : 'Select & Upload'}
-              </button>
+            <div>
+              <label className="text-xs font-medium text-[var(--foreground)] mb-1 block">Project ID (optional)</label>
+              <input value={uploadMeta.projectId} onChange={e => setUploadMeta(p => ({ ...p, projectId: e.target.value }))} placeholder="Link to a project" className="w-full h-9 px-3 rounded-lg border border-[var(--border)] bg-[var(--card)] text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)]" />
             </div>
-            <input ref={fileRef} type="file" className="hidden" onChange={handleUpload} />
           </div>
-        </div>
+          <div className="flex gap-2 pt-2">
+            <button onClick={() => fileRef.current?.click()} disabled={uploading} className="flex-1 h-10 rounded-lg bg-[var(--primary)] text-white text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50">
+              {uploading ? 'Uploading...' : 'Select & Upload'}
+            </button>
+          </div>
+          <input ref={fileRef} type="file" className="hidden" onChange={handleUpload} />
+        </Dialog>
       )}
 
       {/* Collection Picker */}
       {showCollectionPicker && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={() => setShowCollectionPicker(null)}>
-          <div className="w-80 bg-[var(--card)] rounded-xl p-4 space-y-3" onClick={e => e.stopPropagation()}>
-            <h3 className="text-sm font-semibold text-[var(--foreground)]">Add to Collection</h3>
-            {collections.length === 0 && <p className="text-xs text-[var(--muted-foreground)]">No collections yet. Create one first.</p>}
-            <div className="space-y-1 max-h-48 overflow-y-auto">
-              {collections.map(c => (
-                <button
-                  key={c.id}
-                  onClick={async () => { await addMediaToCollection(c.id, showCollectionPicker!); toast.success(`Added to ${c.name}`); setShowCollectionPicker(null); refresh(); }}
-                  className="w-full text-left px-3 py-2 rounded-lg text-sm text-[var(--foreground)] hover:bg-[var(--accent)] transition-colors flex items-center gap-2"
-                >
-                  <Folder size={14} className="text-[var(--muted-foreground)]" />
-                  {c.name}
-                </button>
-              ))}
-              <button onClick={() => { setShowCollectionPicker(null); setShowCollectionModal(true); }} className="w-full text-left px-3 py-2 rounded-lg text-sm text-[var(--primary)] hover:bg-[var(--primary)]/10 transition-colors flex items-center gap-2">
-                <Plus size={14} /> New Collection
+        <Dialog open onClose={() => setShowCollectionPicker(null)} title="Add to Collection" maxWidth="max-w-xs">
+          {collections.length === 0 && <p className="text-xs text-[var(--muted-foreground)]">No collections yet. Create one first.</p>}
+          <div className="space-y-1 max-h-48 overflow-y-auto">
+            {collections.map(c => (
+              <button
+                key={c.id}
+                onClick={async () => { await addMediaToCollection(c.id, showCollectionPicker!); toast.success(`Added to ${c.name}`); setShowCollectionPicker(null); refresh(); }}
+                className="w-full text-left px-3 py-2 rounded-lg text-sm text-[var(--foreground)] hover:bg-[var(--accent)] transition-colors flex items-center gap-2"
+              >
+                <Folder size={14} className="text-[var(--muted-foreground)]" />
+                {c.name}
               </button>
-            </div>
+            ))}
+            <button onClick={() => { setShowCollectionPicker(null); setShowCollectionModal(true); }} className="w-full text-left px-3 py-2 rounded-lg text-sm text-[var(--primary)] hover:bg-[var(--primary)]/10 transition-colors flex items-center gap-2">
+              <Plus size={14} /> New Collection
+            </button>
           </div>
-        </div>
+        </Dialog>
       )}
 
       {/* Create Collection Modal */}
       {showCollectionModal && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={() => setShowCollectionModal(false)}>
-          <div className="w-full max-w-sm bg-[var(--card)] rounded-xl p-5 space-y-4" onClick={e => e.stopPropagation()}>
-            <h2 className="text-lg font-semibold text-[var(--foreground)]">New Collection</h2>
-            <div className="space-y-3">
-              <input value={newCollection.name} onChange={e => setNewCollection(p => ({ ...p, name: e.target.value }))} placeholder="Collection name" className="w-full h-9 px-3 rounded-lg border border-[var(--border)] bg-[var(--card)] text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)]" />
-              <input value={newCollection.description} onChange={e => setNewCollection(p => ({ ...p, description: e.target.value }))} placeholder="Description (optional)" className="w-full h-9 px-3 rounded-lg border border-[var(--border)] bg-[var(--card)] text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)]" />
-            </div>
-            <div className="flex gap-2">
+        <Dialog
+          open
+          onClose={() => setShowCollectionModal(false)}
+          title="New Collection"
+          maxWidth="max-w-sm"
+          footer={
+            <>
               <button onClick={() => setShowCollectionModal(false)} className="flex-1 h-9 rounded-lg border border-[var(--border)] text-sm text-[var(--foreground)] hover:bg-[var(--accent)] transition-colors">Cancel</button>
               <button
                 onClick={async () => {
@@ -345,28 +338,26 @@ export default function MediaPage() {
               >
                 Create
               </button>
-            </div>
+            </>
+          }
+        >
+          <div className="space-y-3">
+            <input value={newCollection.name} onChange={e => setNewCollection(p => ({ ...p, name: e.target.value }))} placeholder="Collection name" className="w-full h-9 px-3 rounded-lg border border-[var(--border)] bg-[var(--card)] text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)]" />
+            <input value={newCollection.description} onChange={e => setNewCollection(p => ({ ...p, description: e.target.value }))} placeholder="Description (optional)" className="w-full h-9 px-3 rounded-lg border border-[var(--border)] bg-[var(--card)] text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)]" />
           </div>
-        </div>
+        </Dialog>
       )}
 
       {/* Edit Media Modal */}
       {showEditModal && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={() => setShowEditModal(null)}>
-          <div className="w-full max-w-sm bg-[var(--card)] rounded-xl p-5 space-y-4" onClick={e => e.stopPropagation()}>
-            <h2 className="text-lg font-semibold text-[var(--foreground)]">Edit Media</h2>
-            <p className="text-xs text-[var(--muted-foreground)] truncate">{showEditModal.originalName}</p>
-            <div className="space-y-3">
-              <div>
-                <label className="text-xs font-medium text-[var(--foreground)] mb-1 block">Tags</label>
-                <input value={editMeta.tags} onChange={e => setEditMeta(p => ({ ...p, tags: e.target.value }))} placeholder="comma separated" className="w-full h-9 px-3 rounded-lg border border-[var(--border)] bg-[var(--card)] text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)]" />
-              </div>
-              <div>
-                <label className="text-xs font-medium text-[var(--foreground)] mb-1 block">Project ID</label>
-                <input value={editMeta.projectId} onChange={e => setEditMeta(p => ({ ...p, projectId: e.target.value }))} placeholder="Link to project" className="w-full h-9 px-3 rounded-lg border border-[var(--border)] bg-[var(--card)] text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)]" />
-              </div>
-            </div>
-            <div className="flex gap-2">
+        <Dialog
+          open
+          onClose={() => setShowEditModal(null)}
+          title="Edit Media"
+          description={showEditModal.originalName}
+          maxWidth="max-w-sm"
+          footer={
+            <>
               <button onClick={() => setShowEditModal(null)} className="flex-1 h-9 rounded-lg border border-[var(--border)] text-sm text-[var(--foreground)] hover:bg-[var(--accent)] transition-colors">Cancel</button>
               <button
                 onClick={async () => {
@@ -383,9 +374,20 @@ export default function MediaPage() {
               >
                 Save
               </button>
+            </>
+          }
+        >
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs font-medium text-[var(--foreground)] mb-1 block">Tags</label>
+              <input value={editMeta.tags} onChange={e => setEditMeta(p => ({ ...p, tags: e.target.value }))} placeholder="comma separated" className="w-full h-9 px-3 rounded-lg border border-[var(--border)] bg-[var(--card)] text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)]" />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-[var(--foreground)] mb-1 block">Project ID</label>
+              <input value={editMeta.projectId} onChange={e => setEditMeta(p => ({ ...p, projectId: e.target.value }))} placeholder="Link to project" className="w-full h-9 px-3 rounded-lg border border-[var(--border)] bg-[var(--card)] text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)]" />
             </div>
           </div>
-        </div>
+        </Dialog>
       )}
     </div>
   );
