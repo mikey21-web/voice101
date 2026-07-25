@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { api } from "../lib/api";
 import toast from "react-hot-toast";
 import { Plus, FileText, Send, Check, X, GitCompare, ArrowRightCircle } from "lucide-react";
@@ -6,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/ui/table";
 import { Badge } from "../components/ui/badge";
 import BookingWizardModal from "../components/BookingWizardModal";
+import { Dialog } from "../components/ui/dialog";
 
 const statusVariant: Record<string, "default" | "success" | "secondary" | "destructive" | "warning"> = {
   DRAFT: "secondary",
@@ -168,44 +170,48 @@ function CreateCostSheetModal({ onClose, onCreated }: { onClose: () => void; onC
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" onClick={onClose}>
-      <div className="w-full max-w-md rounded-xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-lg" onClick={e => e.stopPropagation()}>
-        <h2 className="text-lg font-bold text-[var(--foreground)] mb-4">New cost sheet</h2>
-        <div className="space-y-3">
-          <div>
-            <input
-              placeholder="Search buyer by name/phone/email"
-              value={leadId ? leadOptions.find(l => l.id === leadId)?.contact?.name || leadQuery : leadQuery}
-              onChange={e => { setLeadQuery(e.target.value); setLeadId(""); }}
-              className="w-full h-9 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20"
-            />
-            {leadOptions.length > 0 && !leadId && (
-              <div className="mt-1 rounded-lg border border-[var(--border)] bg-[var(--card)] max-h-40 overflow-auto">
-                {leadOptions.map(l => (
-                  <button type="button" key={l.id} onClick={() => { setLeadId(l.id); setLeadOptions([]); }} className="w-full text-left px-3 py-2 text-sm hover:bg-[var(--accent)] text-[var(--foreground)]">
-                    {l.contact?.name || l.contact?.phone || l.id}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-          <select value={projectId} onChange={e => { setProjectId(e.target.value); setUnitId(""); }} className="w-full h-9 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)]">
-            <option value="">Select project</option>
-            {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-          </select>
-          <select value={unitId} onChange={e => setUnitId(e.target.value)} className="w-full h-9 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)]" disabled={!units.length}>
-            <option value="">{units.length ? "Select unit" : "Choose a project first"}</option>
-            {units.map((u: any) => <option key={u.id} value={u.id}>{u.unitNumber}</option>)}
-          </select>
-        </div>
-        <div className="flex justify-end gap-2 mt-4">
+    <Dialog
+      open
+      onClose={onClose}
+      title="New cost sheet"
+      maxWidth="max-w-md"
+      footer={
+        <>
           <button onClick={onClose} className="h-9 px-4 rounded-lg border border-[var(--border)] text-sm text-[var(--foreground)] hover:bg-[var(--accent)]">Cancel</button>
           <button onClick={submit} disabled={saving} className="h-9 px-4 rounded-lg bg-[var(--primary)] text-white text-sm font-medium hover:opacity-90 disabled:opacity-50">
             {saving ? "Creating..." : "Create draft"}
           </button>
+        </>
+      }
+    >
+      <div className="space-y-3">
+        <div>
+          <input
+            placeholder="Search buyer by name/phone/email"
+            value={leadId ? leadOptions.find(l => l.id === leadId)?.contact?.name || leadQuery : leadQuery}
+            onChange={e => { setLeadQuery(e.target.value); setLeadId(""); }}
+            className="w-full h-9 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20"
+          />
+          {leadOptions.length > 0 && !leadId && (
+            <div className="mt-1 rounded-lg border border-[var(--border)] bg-[var(--card)] max-h-40 overflow-auto">
+              {leadOptions.map(l => (
+                <button type="button" key={l.id} onClick={() => { setLeadId(l.id); setLeadOptions([]); }} className="w-full text-left px-3 py-2 text-sm hover:bg-[var(--accent)] text-[var(--foreground)]">
+                  {l.contact?.name || l.contact?.phone || l.id}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
+        <select value={projectId} onChange={e => { setProjectId(e.target.value); setUnitId(""); }} className="w-full h-9 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)]">
+          <option value="">Select project</option>
+          {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+        </select>
+        <select value={unitId} onChange={e => setUnitId(e.target.value)} className="w-full h-9 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)]" disabled={!units.length}>
+          <option value="">{units.length ? "Select unit" : "Choose a project first"}</option>
+          {units.map((u: any) => <option key={u.id} value={u.id}>{u.unitNumber}</option>)}
+        </select>
       </div>
-    </div>
+    </Dialog>
   );
 }
 
@@ -279,7 +285,7 @@ function CostSheetDrawer({ sheet, onClose, onChanged, onStartBooking }: { sheet:
     setCompareLoading(false);
   };
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex justify-end bg-black/30" onClick={onClose}>
       <div className="w-full max-w-lg h-full bg-[var(--card)] border-l border-[var(--border)] p-6 overflow-y-auto" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
@@ -382,6 +388,7 @@ function CostSheetDrawer({ sheet, onClose, onChanged, onStartBooking }: { sheet:
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

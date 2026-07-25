@@ -16,6 +16,7 @@ import CampaignTimeline from '../components/campaigns/CampaignTimeline';
 import CampaignLeadChart from '../components/campaigns/CampaignLeadChart';
 import CampaignSourceBreakdown from '../components/campaigns/CampaignSourceBreakdown';
 import CampaignBudgetBar from '../components/campaigns/CampaignBudgetBar';
+import { Dialog } from '../components/ui/dialog';
 
 function getCampaignId() {
   const hash = window.location.hash.replace('#', '');
@@ -720,55 +721,39 @@ export default function CampaignDetailPage() {
               </div>
 
               {/* Delete Confirmation Modal */}
-              {showDeleteModal && (
-                <div
-                  className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-                  onClick={() => setShowDeleteModal(false)}
-                  role="presentation"
-                >
-                  <div
-                    role="dialog"
-                    aria-modal="true"
-                    className="w-full max-w-md rounded-xl border border-[var(--border)] bg-[var(--card)] shadow-lg overflow-y-auto"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <div className="p-6">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center shrink-0">
-                          <AlertTriangle size={20} className="text-red-600 dark:text-red-400" />
-                        </div>
-                        <div>
-                          <h3 className="text-base font-bold text-[var(--foreground)]">Delete Campaign</h3>
-                          <p className="text-sm text-[var(--muted-foreground)]">This action cannot be undone.</p>
-                        </div>
-                      </div>
-                      <p className="text-sm text-[var(--foreground)] mb-2">
-                        Are you sure you want to delete <strong>{campaign.name}</strong>?
-                      </p>
-                      <p className="text-xs text-[var(--muted-foreground)] mb-6">
-                        All leads, creatives, and performance data associated with this campaign will be permanently removed.
-                      </p>
-                      <div className="flex items-center justify-end gap-3">
-                        <button
-                          onClick={() => setShowDeleteModal(false)}
-                          disabled={deleting}
-                          className="inline-flex items-center gap-1.5 h-9 px-4 rounded-lg border border-[var(--border)] text-sm font-medium text-[var(--foreground)] hover:bg-[var(--accent)] disabled:opacity-50 transition-colors"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          onClick={handleDelete}
-                          disabled={deleting}
-                          className="inline-flex items-center gap-1.5 h-9 px-4 rounded-lg bg-red-600 text-white text-sm font-medium hover:bg-red-700 disabled:opacity-50 transition-colors"
-                        >
-                          {deleting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
-                          {deleting ? 'Deleting...' : 'Delete Campaign'}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
+              <Dialog
+                open={showDeleteModal}
+                onClose={() => setShowDeleteModal(false)}
+                title="Delete Campaign"
+                description="This action cannot be undone."
+                maxWidth="max-w-md"
+                footer={
+                  <>
+                    <button
+                      onClick={() => setShowDeleteModal(false)}
+                      disabled={deleting}
+                      className="inline-flex items-center gap-1.5 h-9 px-4 rounded-lg border border-[var(--border)] text-sm font-medium text-[var(--foreground)] hover:bg-[var(--accent)] disabled:opacity-50 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleDelete}
+                      disabled={deleting}
+                      className="inline-flex items-center gap-1.5 h-9 px-4 rounded-lg bg-red-600 text-white text-sm font-medium hover:bg-red-700 disabled:opacity-50 transition-colors"
+                    >
+                      {deleting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
+                      {deleting ? 'Deleting...' : 'Delete Campaign'}
+                    </button>
+                  </>
+                }
+              >
+                <p className="text-sm text-[var(--foreground)] mb-2">
+                  Are you sure you want to delete <strong>{campaign.name}</strong>?
+                </p>
+                <p className="text-xs text-[var(--muted-foreground)]">
+                  All leads, creatives, and performance data associated with this campaign will be permanently removed.
+                </p>
+              </Dialog>
             </>
           )}
         </div>

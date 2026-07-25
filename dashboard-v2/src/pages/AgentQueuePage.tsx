@@ -3,6 +3,7 @@ import { fetchTasks, fetchAgentStatus, fetchAgentStats, updateTask } from '../li
 import { api } from '../lib/api';
 import toast from 'react-hot-toast';
 import { CheckCircle, Circle, Phone, User, AlertTriangle, Clock, ListChecks, BarChart3, MessageSquare, ChevronRight, Send, X, Search, Calendar } from 'lucide-react';
+import { Dialog } from '../components/ui/dialog';
 
 type Tab = 'today' | 'leads' | 'activity';
 
@@ -404,27 +405,26 @@ export default function AgentQueuePage() {
         </div>
       </div>
 
-      {showWAComposer && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setShowWAComposer(false)}>
-          <div className="bg-[var(--card)] rounded-xl shadow-2xl w-full max-w-md p-6 space-y-3" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold text-[var(--foreground)]">Send WhatsApp</h2>
-              <button onClick={() => setShowWAComposer(false)}><X size={18} /></button>
-            </div>
-            <p className="text-xs text-[var(--muted-foreground)]">To: {waPhone}</p>
-            <textarea value={waText} onChange={e => setWaText(e.target.value)} rows={3} autoFocus
-              placeholder="Type your message..."
-              className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20 resize-none" />
-            <div className="flex justify-end gap-2">
-              <button onClick={() => setShowWAComposer(false)} className="h-9 px-4 rounded-lg border border-[var(--border)] text-sm text-[var(--foreground)]">Cancel</button>
-              <button onClick={handleSendWA} disabled={sendingWA || !waText.trim()}
-                className="inline-flex items-center gap-1.5 h-9 px-5 rounded-lg bg-[var(--primary)] text-white text-sm font-medium hover:opacity-90 disabled:opacity-50">
-                <Send size={13} /> {sendingWA ? 'Sending...' : 'Send'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Dialog
+        open={showWAComposer}
+        onClose={() => setShowWAComposer(false)}
+        title="Send WhatsApp"
+        description={`To: ${waPhone}`}
+        maxWidth="max-w-md"
+        footer={
+          <>
+            <button onClick={() => setShowWAComposer(false)} className="h-9 px-4 rounded-lg border border-[var(--border)] text-sm text-[var(--foreground)]">Cancel</button>
+            <button onClick={handleSendWA} disabled={sendingWA || !waText.trim()}
+              className="inline-flex items-center gap-1.5 h-9 px-5 rounded-lg bg-[var(--primary)] text-white text-sm font-medium hover:opacity-90 disabled:opacity-50">
+              <Send size={13} /> {sendingWA ? 'Sending...' : 'Send'}
+            </button>
+          </>
+        }
+      >
+        <textarea value={waText} onChange={e => setWaText(e.target.value)} rows={3} autoFocus
+          placeholder="Type your message..."
+          className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20 resize-none" />
+      </Dialog>
     </div>
   );
 }
