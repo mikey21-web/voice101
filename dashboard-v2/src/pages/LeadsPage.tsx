@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { fetchLeads, getLeadTimeline } from '../lib/data';
 import { consumePendingFilter, PENDING_FILTER_APPLIED_EVENT } from '../lib/pendingSearch';
@@ -300,12 +299,12 @@ export default function LeadsPage() {
           <p className="text-sm text-[var(--muted-foreground)] mt-0.5">{meta.total} total {labelPlural.toLowerCase()}</p>
         </div>
         <div className="flex items-center gap-2">
-          <Link
-            to="/import"
+          <a
+            href="#/import?entity=lead"
             className="inline-flex items-center gap-1.5 h-9 px-4 rounded-lg border border-[var(--border)] text-sm font-medium text-[var(--foreground)] hover:bg-[var(--accent)] transition-colors"
           >
             Import
-          </Link>
+          </a>
           <button
             onClick={() => setShowAddLead(true)}
             className="inline-flex items-center gap-1.5 h-9 px-4 rounded-lg bg-[var(--primary)] text-white text-sm font-medium hover:opacity-90 transition-opacity"

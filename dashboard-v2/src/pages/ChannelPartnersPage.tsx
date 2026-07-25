@@ -70,9 +70,17 @@ export default function ChannelPartnersPage() {
           <h1 className="text-2xl font-bold text-[var(--foreground)]">Agents</h1>
           <p className="text-sm text-[var(--muted-foreground)]">{total} agents · leads sourced, converted, and commission owed</p>
         </div>
-        <Button onClick={() => { window.location.hash = "/channel-partners/new"; }}>
-          <Plus className="h-4 w-4 mr-2" /> Add Agent
-        </Button>
+        <div className="flex items-center gap-2">
+          <a
+            href="#/import?entity=channelPartner"
+            className="inline-flex items-center h-9 px-4 rounded-lg border border-[var(--border)] text-sm font-medium text-[var(--foreground)] hover:bg-[var(--accent)] transition-colors"
+          >
+            Import
+          </a>
+          <Button onClick={() => { window.location.hash = "/channel-partners/new"; }}>
+            <Plus className="h-4 w-4 mr-2" /> Add Agent
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-3 items-center">

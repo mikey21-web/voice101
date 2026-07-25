@@ -230,7 +230,7 @@ export class AdvancedFeaturesService {
     return this.prisma.importExportLog.create({ data: { type: 'import', userId, totalRows, status: 'processing' } });
   }
 
-  async processImport(logId: string, rows: Record<string, string>[], entity: 'contact' | 'lead') {
+  async processImport(logId: string, rows: Record<string, string>[], entity: 'contact' | 'lead' | 'property' | 'project' | 'channelPartner') {
     const log = await this.prisma.importExportLog.findUnique({ where: { id: logId } });
     if (!log) throw new NotFoundException('Import log not found');
 
@@ -290,6 +290,67 @@ export class AdvancedFeaturesService {
             contactId,
             metadata: { _bulkImport: true },
           });
+        } else if (entity === 'property') {
+          if (!row.title) throw new Error('Row has no title');
+          const propertyTypes = ['APARTMENT', 'VILLA', 'PLOT', 'COMMERCIAL', 'PENTHOUSE', 'DUPLEX', 'STUDIO'];
+          const propertyStatuses = ['AVAILABLE', 'SOLD', 'UNDER_OFFER', 'ON_HOLD', 'RENTED', 'DRAFT'];
+          const propertyType = propertyTypes.includes((row.propertyType || '').toUpperCase()) ? row.propertyType.toUpperCase() : 'APARTMENT';
+          const status = propertyStatuses.includes((row.status || '').toUpperCase()) ? row.status.toUpperCase() : 'AVAILABLE';
+          await this.prisma.property.create({
+            data: {
+              title: row.title,
+              description: row.description || null,
+              propertyType: propertyType as any,
+              status: status as any,
+              price: row.price ? Number(row.price) : null,
+              bedrooms: row.bedrooms ? parseInt(row.bedrooms, 10) : null,
+              bathrooms: row.bathrooms ? parseInt(row.bathrooms, 10) : null,
+              areaSqft: row.areaSqft ? Number(row.areaSqft) : null,
+              location: row.location || null,
+              address: row.address || null,
+              tenantId: 'default-tenant',
+            },
+          });
+        } else if (entity === 'project') {
+          if (!row.name) throw new Error('Row has no name');
+          const projectStatuses = ['PLANNING', 'UNDER_CONSTRUCTION', 'READY_TO_MOVE', 'COMPLETED'];
+          const status = projectStatuses.includes((row.status || '').toUpperCase()) ? row.status.toUpperCase() : 'UNDER_CONSTRUCTION';
+          await this.prisma.project.create({
+            data: {
+              name: row.name,
+              description: row.description || null,
+              location: row.location || null,
+              address: row.address || null,
+              reraId: row.reraId || null,
+              status: status as any,
+              possessionDate: row.possessionDate ? new Date(row.possessionDate) : null,
+              tenantId: 'default-tenant',
+            },
+          });
+        } else if (entity === 'channelPartner') {
+          if (!row.name) throw new Error('Row has no name');
+          const existing = row.email ? await this.prisma.channelPartner.findFirst({ where: { email: row.email } }) : null;
+          if (existing) {
+            await this.prisma.channelPartner.update({
+              where: { id: existing.id },
+              data: {
+                name: row.name || existing.name,
+                phone: row.phone || existing.phone,
+                company: row.company || existing.company,
+              },
+            });
+          } else {
+            await this.prisma.channelPartner.create({
+              data: {
+                name: row.name,
+                email: row.email || null,
+                phone: row.phone || null,
+                company: row.company || null,
+                commissionRate: row.commissionRate ? Number(row.commissionRate) : null,
+                tenantId: 'default-tenant',
+              },
+            });
+          }
         }
         processed++;
       } catch (e: any) {

@@ -292,6 +292,12 @@ export default function PropertiesPage() {
               <Layers className="h-4 w-4" />
             </button>
           </div>
+          <a
+            href="#/import?entity=property"
+            className="inline-flex items-center h-9 px-4 rounded-lg border border-[var(--border)] text-sm font-medium text-[var(--foreground)] hover:bg-[var(--accent)] transition-colors"
+          >
+            Import
+          </a>
           <Button onClick={() => { resetForm(); setEditing(null); setShowForm(true); }}>
             <Plus className="h-4 w-4 mr-2" /> Add Property
           </Button>

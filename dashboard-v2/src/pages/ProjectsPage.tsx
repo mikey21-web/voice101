@@ -87,9 +87,17 @@ export default function ProjectsPage() {
           <h1 className="text-2xl font-bold text-[var(--foreground)]">Projects</h1>
           <p className="text-sm text-[var(--muted-foreground)]">{projects.length} developments · unit inventory, availability & sales velocity</p>
         </div>
-        <Button onClick={() => { resetForm(); setShowForm(true); }}>
-          <Plus className="h-4 w-4 mr-2" /> Add Project
-        </Button>
+        <div className="flex items-center gap-2">
+          <a
+            href="#/import?entity=project"
+            className="inline-flex items-center h-9 px-4 rounded-lg border border-[var(--border)] text-sm font-medium text-[var(--foreground)] hover:bg-[var(--accent)] transition-colors"
+          >
+            Import
+          </a>
+          <Button onClick={() => { resetForm(); setShowForm(true); }}>
+            <Plus className="h-4 w-4 mr-2" /> Add Project
+          </Button>
+        </div>
       </div>
 
       {loading ? (

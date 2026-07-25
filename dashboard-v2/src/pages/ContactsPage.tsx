@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { fetchContacts } from '../lib/data';
 import { consumePendingFilter, PENDING_FILTER_APPLIED_EVENT } from '../lib/pendingSearch';
@@ -76,12 +75,12 @@ export default function ContactsPage() {
               className="w-full h-9 pl-9 pr-3 rounded-lg border border-[var(--border)] bg-[var(--card)] text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20 transition-colors"
             />
           </div>
-          <Link
-            to="/import"
+          <a
+            href="#/import?entity=contact"
             className="inline-flex items-center gap-1.5 h-9 px-4 rounded-lg border border-[var(--border)] text-sm font-medium text-[var(--foreground)] hover:bg-[var(--accent)] transition-colors whitespace-nowrap"
           >
             Import
-          </Link>
+          </a>
         </div>
       </div>
 

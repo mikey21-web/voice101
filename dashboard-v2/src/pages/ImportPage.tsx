@@ -17,7 +17,9 @@ type ImportLog = {
 
 type ColumnMap = { csvCol: string; field: string };
 
-const FIELD_OPTIONS = {
+type Entity = "contact" | "lead" | "property" | "project" | "channelPartner";
+
+const FIELD_OPTIONS: Record<Entity, { value: string; label: string }[]> = {
   contact: [
     { value: "name", label: "Name" },
     { value: "email", label: "Email" },
@@ -27,10 +29,59 @@ const FIELD_OPTIONS = {
   ],
   lead: [
     { value: "contactId", label: "Contact ID" },
+    { value: "contactName", label: "Contact Name" },
+    { value: "contactEmail", label: "Contact Email" },
+    { value: "contactPhone", label: "Contact Phone" },
     { value: "source", label: "Source" },
     { value: "message", label: "Message" },
+    { value: "interest", label: "Interest" },
+    { value: "budget", label: "Budget" },
+    { value: "urgency", label: "Urgency" },
+  ],
+  property: [
+    { value: "title", label: "Title" },
+    { value: "description", label: "Description" },
+    { value: "propertyType", label: "Property Type" },
+    { value: "status", label: "Status" },
+    { value: "price", label: "Price" },
+    { value: "bedrooms", label: "Bedrooms" },
+    { value: "bathrooms", label: "Bathrooms" },
+    { value: "areaSqft", label: "Area (sqft)" },
+    { value: "location", label: "Location" },
+    { value: "address", label: "Address" },
+  ],
+  project: [
+    { value: "name", label: "Name" },
+    { value: "description", label: "Description" },
+    { value: "location", label: "Location" },
+    { value: "address", label: "Address" },
+    { value: "reraId", label: "RERA ID" },
+    { value: "status", label: "Status" },
+    { value: "possessionDate", label: "Possession Date" },
+  ],
+  channelPartner: [
+    { value: "name", label: "Name" },
+    { value: "email", label: "Email" },
+    { value: "phone", label: "Phone" },
+    { value: "company", label: "Company" },
+    { value: "commissionRate", label: "Commission Rate (%)" },
   ],
 };
+
+const ENTITY_LABELS: Record<Entity, string> = {
+  contact: "Contacts",
+  lead: "Leads",
+  property: "Properties",
+  project: "Projects",
+  channelPartner: "Agents",
+};
+
+function initialEntity(): Entity {
+  const hash = window.location.hash.replace(/^#/, "");
+  const query = hash.split("?")[1] || "";
+  const entity = new URLSearchParams(query).get("entity");
+  return entity && entity in FIELD_OPTIONS ? (entity as Entity) : "contact";
+}
 
 function parseCSV(text: string): { headers: string[]; rows: string[][] } {
   const lines = text.replace(/\r\n/g, "\n").split("\n").filter((l) => l.trim());
@@ -55,7 +106,7 @@ function parseCSV(text: string): { headers: string[]; rows: string[][] } {
 export default function ImportPage() {
   const fileInput = useRef<HTMLInputElement>(null);
   const [step, setStep] = useState<"upload" | "map" | "done">("upload");
-  const [entity, setEntity] = useState<"contact" | "lead">("contact");
+  const [entity, setEntity] = useState<Entity>(initialEntity);
   const [csvText, setCsvText] = useState("");
   const [headers, setHeaders] = useState<string[]>([]);
   const [preview, setPreview] = useState<string[][]>([]);
@@ -155,15 +206,13 @@ export default function ImportPage() {
           <div className="flex justify-center mb-4"><div className="h-12 w-12 rounded-full bg-[var(--primary)]/10 flex items-center justify-center"><Upload size={20} className="text-[var(--primary)]" /></div></div>
           <h2 className="text-lg font-semibold text-[var(--foreground)] mb-2">Upload CSV File</h2>
           <p className="text-sm text-[var(--muted-foreground)] mb-4">Columns should include name, email, phone, company, etc.</p>
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <label className="flex items-center gap-2 text-sm">
-              <input type="radio" checked={entity === "contact"} onChange={() => setEntity("contact")} />
-              Contacts
-            </label>
-            <label className="flex items-center gap-2 text-sm">
-              <input type="radio" checked={entity === "lead"} onChange={() => setEntity("lead")} />
-              Leads
-            </label>
+          <div className="flex items-center justify-center flex-wrap gap-3 mb-4">
+            {(Object.keys(ENTITY_LABELS) as Entity[]).map((e) => (
+              <label key={e} className="flex items-center gap-2 text-sm">
+                <input type="radio" checked={entity === e} onChange={() => setEntity(e)} />
+                {ENTITY_LABELS[e]}
+              </label>
+            ))}
           </div>
           <input ref={fileInput} type="file" accept=".csv" onChange={handleFile} className="hidden" />
           <button onClick={() => fileInput.current?.click()} className="inline-flex items-center gap-2 h-10 px-5 rounded-lg bg-[var(--primary)] text-white text-sm font-medium hover:opacity-90 transition-opacity">
