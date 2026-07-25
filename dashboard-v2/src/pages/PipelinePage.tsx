@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { DndContext, DragOverlay, DragStartEvent, DragEndEvent, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -205,7 +206,7 @@ function DealDetailPanel({ leadId, onClose }: { leadId: string; onClose: () => v
     } catch { toast.error('Failed to update task'); }
   };
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/30 p-4" onClick={onClose}>
       <div className="w-full max-w-lg rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
@@ -238,7 +239,8 @@ function DealDetailPanel({ leadId, onClose }: { leadId: string; onClose: () => v
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -406,7 +408,7 @@ function ManageStagesPanel({ stages, onClose }: { stages: any[]; onClose: () => 
     finally { setSaving(false); }
   };
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/30 p-4" onClick={onClose}>
       <div className="w-full max-w-lg rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
@@ -439,6 +441,7 @@ function ManageStagesPanel({ stages, onClose }: { stages: any[]; onClose: () => 
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
