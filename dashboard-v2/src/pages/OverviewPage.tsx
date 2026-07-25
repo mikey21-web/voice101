@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { api } from '../lib/api';
 import { useAuth } from '../lib/useAuth';
 import {
@@ -7,6 +7,8 @@ import {
   DollarSign, Clock, Phone, MessageSquare, Calendar,
   ChevronRight, Loader2, ArrowUpRight, ArrowDownRight,
   CheckSquare, UserCheck, Building2, MapPin, Bot,
+  Volume2, VolumeX, Home, ChevronLeft, Bed, Bath,
+  Maximize2, Star,
 } from 'lucide-react';
 import { Skeleton } from '../components/ui/skeleton';
 
@@ -47,6 +49,62 @@ interface DailyBrief {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Mock Data — EstateRocket sections                                  */
+/* ------------------------------------------------------------------ */
+
+const STATS = [
+  { icon: Building2, label: "Total Listings", value: "428", delta: "+12.4%", timeframe: "vs last month", positive: true },
+  { icon: TrendingUp, label: "Active Deals", value: "86", delta: "+8.1%", timeframe: "vs last month", positive: true },
+  { icon: DollarSign, label: "Revenue MTD", value: "$2.84M", delta: "+18.6%", timeframe: "vs last month", positive: true },
+  { icon: Users, label: "Pending Inquiries", value: "34", delta: "-4.2%", timeframe: "vs last month", positive: false },
+];
+
+const SALES_DATA = [
+  { month: "Jan", sales: 1850000, rentals: 420000 },
+  { month: "Feb", sales: 2200000, rentals: 380000 },
+  { month: "Mar", sales: 1950000, rentals: 510000 },
+  { month: "Apr", sales: 2800000, rentals: 460000 },
+  { month: "May", sales: 2450000, rentals: 530000 },
+  { month: "Jun", sales: 3100000, rentals: 490000 },
+];
+
+const LISTING_MIX = [
+  { label: "Residential", value: 42, color: "#0F766E" },
+  { label: "Commercial", value: 28, color: "#3b82f6" },
+  { label: "Luxury", value: 20, color: "#d97706" },
+  { label: "Land & Plot", value: 10, color: "#8b5cf6" },
+];
+
+const PROPERTIES = [
+  { id: 1, title: "245 Skyline Drive", price: "$1,250,000", type: "Modern Villa", beds: 4, baths: 3, sqft: 3200, agent: "Sarah Chen", agentInitials: "SC", status: "For Sale" },
+  { id: 2, title: "78 Harbor View", price: "$875,000", type: "Waterfront Condo", beds: 3, baths: 2, sqft: 2100, agent: "Michael Torres", agentInitials: "MT", status: "For Sale" },
+  { id: 3, title: "1500 Maple Avenue", price: "$2,100,000", type: "Luxury Estate", beds: 6, baths: 4, sqft: 5800, agent: "Emily Watson", agentInitials: "EW", status: "Featured" },
+  { id: 4, title: "42 Oakwood Lane", price: "$550,000", type: "Cozy Cottage", beds: 2, baths: 1, sqft: 1200, agent: "David Kim", agentInitials: "DK", status: "New" },
+];
+
+const PROPERTY_IMAGES: Record<number, string> = {
+  1: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=400&h=280&fit=crop",
+  2: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=400&h=280&fit=crop",
+  3: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=400&h=280&fit=crop",
+  4: "https://images.unsplash.com/photo-1600566753086-00f18f6bae82?w=400&h=280&fit=crop",
+};
+
+const DEALS = [
+  { property: "245 Skyline Drive", buyer: "John & Lisa Anderson", amount: "$1,250,000", status: "Closing", date: "2026-07-28" },
+  { property: "78 Harbor View", buyer: "Robert Martinez", amount: "$875,000", status: "Under Contract", date: "2026-07-25" },
+  { property: "1500 Maple Avenue", buyer: "The Thompson Family Trust", amount: "$2,100,000", status: "Negotiation", date: "2026-07-22" },
+  { property: "180 River Road", buyer: "Jennifer Walsh", amount: "$720,000", status: "Under Contract", date: "2026-07-20" },
+  { property: "55 Park Avenue #12B", buyer: "David & Karen Lee", amount: "$1,850,000", status: "Closing", date: "2026-07-18" },
+];
+
+const AGENTS = [
+  { name: "Sarah Chen", initials: "SC", role: "Senior Agent", listings: 18, volume: "$8.2M", closed: 12, color: "bg-emerald-500" },
+  { name: "Michael Torres", initials: "MT", role: "Luxury Specialist", listings: 14, volume: "$5.8M", closed: 9, color: "bg-blue-500" },
+  { name: "Emily Watson", initials: "EW", role: "Commercial Lead", listings: 12, volume: "$6.4M", closed: 10, color: "bg-amber-500" },
+  { name: "David Kim", initials: "DK", role: "Residential Agent", listings: 9, volume: "$3.9M", closed: 7, color: "bg-violet-500" },
+];
+
+/* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
 /* ------------------------------------------------------------------ */
 
@@ -76,6 +134,32 @@ const daysAgo = (n: number) => {
   return `${n} days ago`;
 };
 
+const formatUSD = (n: number) => {
+  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `$${(n / 1_000).toFixed(0)}K`;
+  return `$${n}`;
+};
+
+function buildBriefSpeech(brief: DailyBrief, firstName: string): string {
+  const s = brief.summary;
+  const parts: string[] = [];
+  parts.push(`Good morning${firstName ? ' ' + firstName : ''}. Here's where things stand.`);
+  parts.push(`${s.newLeadsYesterday} new leads yesterday, ${s.hotLeads} hot right now out of ${s.totalLeads} total.`);
+  if (brief.revenueAtRisk.totalPaise > 0) {
+    parts.push(`${formatINR(brief.revenueAtRisk.totalPaise)} in revenue is at risk across ${brief.revenueAtRisk.bookingsAtRisk} bookings.`);
+  }
+  if (s.slowAgents.length > 0) {
+    parts.push(`${s.slowAgents.length} agent${s.slowAgents.length > 1 ? 's are' : ' is'} responding slowly to hot leads.`);
+  }
+  if (brief.pendingApprovals.count > 0) {
+    parts.push(`${brief.pendingApprovals.count} action${brief.pendingApprovals.count > 1 ? 's are' : ' is'} waiting on your approval.`);
+  }
+  if (brief.todayVisits.length > 0) {
+    parts.push(`${brief.todayVisits.length} site visit${brief.todayVisits.length > 1 ? 's' : ''} scheduled today.`);
+  }
+  return parts.join(' ');
+}
+
 /* ------------------------------------------------------------------ */
 /*  Loading skeleton                                                   */
 /* ------------------------------------------------------------------ */
@@ -83,29 +167,255 @@ const daysAgo = (n: number) => {
 function PageFallback() {
   return (
     <div className="space-y-4 animate-fade-in">
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-3">
-        {[1, 2, 3, 4, 5].map(i => (
-          <Skeleton key={i} className="h-20 rounded-xl" />
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-3">
+        {[1, 2, 3, 4].map(i => (
+          <Skeleton key={i} className="h-28 rounded-xl" />
+        ))}
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <Skeleton className="h-72 rounded-xl lg:col-span-2" />
+        <Skeleton className="h-72 rounded-xl" />
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+        {[1, 2, 3, 4].map(i => (
+          <Skeleton key={i} className="h-64 rounded-xl" />
         ))}
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Skeleton className="h-48 rounded-xl" />
-        <Skeleton className="h-48 rounded-xl" />
+        <Skeleton className="h-60 rounded-xl" />
+        <Skeleton className="h-60 rounded-xl" />
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Skeleton className="h-52 rounded-xl" />
-        <Skeleton className="h-52 rounded-xl" />
-      </div>
-      <Skeleton className="h-64 rounded-xl" />
     </div>
   );
 }
 
 /* ------------------------------------------------------------------ */
-/*  Sub-components                                                     */
+/*  EstateRocket Sub-components                                        */
 /* ------------------------------------------------------------------ */
 
-/** Conic-gradient progress ring, no chart library needed. */
+function StatCard({ icon: Icon, label, value, delta, timeframe, positive, delay }: {
+  icon: any; label: string; value: string; delta: string; timeframe: string; positive: boolean; delay: string;
+}) {
+  return (
+    <div className={`rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 animate-fade-up ${delay}`}>
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-xs font-medium text-[var(--muted-foreground)] uppercase tracking-wider">{label}</span>
+        <div className="h-9 w-9 rounded-lg bg-[var(--primary-light)] flex items-center justify-center">
+          <Icon size={16} className="text-[var(--primary)]" />
+        </div>
+      </div>
+      <div className="flex items-baseline gap-2">
+        <span className="text-3xl font-bold font-[family-name:var(--font-display)] text-[var(--foreground)] tabular-nums">{value}</span>
+        <span className={`text-xs font-semibold flex items-center gap-0.5 ${positive ? 'text-emerald-600' : 'text-red-500'}`}>
+          {positive ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
+          {delta}
+        </span>
+      </div>
+      <p className="text-xs text-[var(--muted-foreground)] mt-1">{timeframe}</p>
+    </div>
+  );
+}
+
+function SalesChart({ data }: { data: typeof SALES_DATA }) {
+  const maxVal = Math.max(...data.map(d => d.sales));
+  return (
+    <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 animate-fade-up delay-4">
+      <div className="flex items-center justify-between mb-5">
+        <div>
+          <h2 className="text-lg font-semibold font-[family-name:var(--font-display)] text-[var(--foreground)]">Sales & Rentals Overview</h2>
+          <p className="text-xs text-[var(--muted-foreground)]">Monthly performance</p>
+        </div>
+        <select className="text-xs rounded-lg border border-[var(--border)] bg-[var(--background)] px-2 py-1.5 text-[var(--foreground)]">
+          <option>This Year</option>
+          <option>Last Year</option>
+        </select>
+      </div>
+      <div className="flex items-end gap-3 h-40">
+        {data.map(d => (
+          <div key={d.month} className="flex-1 flex flex-col items-center gap-1 h-full justify-end">
+            <div className="flex gap-0.5 w-full h-full items-end">
+              <div
+                className="flex-1 rounded-t-sm bg-[var(--chart-emerald)] transition-all duration-500"
+                style={{ height: `${(d.sales / maxVal) * 100}%` }}
+              />
+              <div
+                className="flex-1 rounded-t-sm bg-[var(--chart-blue)] transition-all duration-500"
+                style={{ height: `${(d.rentals / maxVal) * 100}%` }}
+              />
+            </div>
+            <span className="text-[10px] text-[var(--muted-foreground)] font-medium">{d.month}</span>
+          </div>
+        ))}
+      </div>
+      <div className="flex items-center gap-4 mt-4 pt-3 border-t border-[var(--border)]">
+        <div className="flex items-center gap-1.5">
+          <span className="h-2.5 w-2.5 rounded-sm bg-[var(--chart-emerald)]" />
+          <span className="text-xs text-[var(--muted-foreground)]">Sales</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="h-2.5 w-2.5 rounded-sm bg-[var(--chart-blue)]" />
+          <span className="text-xs text-[var(--muted-foreground)]">Rentals</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ListingMixDonut({ mix }: { mix: typeof LISTING_MIX }) {
+  const segments = mix.map((item, i, arr) => {
+    const prevSum = arr.slice(0, i).reduce((s, x) => s + x.value, 0);
+    const start = (prevSum / 100) * 360;
+    const end = ((prevSum + item.value) / 100) * 360;
+    return { ...item, start, end };
+  });
+  const gradient = segments.map(s => `${s.color} ${s.start}deg ${s.end}deg`).join(', ');
+
+  return (
+    <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 animate-fade-up delay-5">
+      <h2 className="text-lg font-semibold font-[family-name:var(--font-display)] text-[var(--foreground)] mb-1">Listing Mix</h2>
+      <p className="text-xs text-[var(--muted-foreground)] mb-5">Distribution by type</p>
+      <div className="flex items-center gap-6">
+        <div className="relative">
+          <div
+            className="h-32 w-32 rounded-full"
+            style={{ background: `conic-gradient(${gradient})` }}
+          >
+            <div className="absolute inset-1.5 rounded-full bg-[var(--card)] flex items-center justify-center">
+              <span className="text-xs font-semibold text-[var(--muted-foreground)]">100%</span>
+            </div>
+          </div>
+        </div>
+        <div className="space-y-2.5">
+          {mix.map(item => (
+            <div key={item.label} className="flex items-center gap-2">
+              <span className="h-2.5 w-2.5 rounded-sm shrink-0" style={{ background: item.color }} />
+              <span className="text-xs text-[var(--foreground)] min-w-20">{item.label}</span>
+              <span className="text-xs font-semibold text-[var(--foreground)]">{item.value}%</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PropertyCard({ property, index }: { property: typeof PROPERTIES[0]; index: number }) {
+  return (
+    <div className={`rounded-xl border border-[var(--border)] bg-[var(--card)] overflow-hidden animate-fade-up delay-${index + 3}`}>
+      <div className="relative h-40 overflow-hidden">
+        <img
+          src={PROPERTY_IMAGES[property.id]}
+          alt={property.title}
+          className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+          loading="lazy"
+        />
+        <span className={`absolute top-2 left-2 text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+          property.status === 'Featured' ? 'bg-amber-400 text-amber-950' :
+          property.status === 'New' ? 'bg-emerald-500 text-white' :
+          'bg-white/90 text-[var(--foreground)]'
+        }`}>
+          {property.status}
+        </span>
+        <span className="absolute top-2 right-2 text-xs font-bold bg-white/90 text-[var(--foreground)] px-2 py-0.5 rounded-full">
+          {property.price}
+        </span>
+      </div>
+      <div className="p-3.5">
+        <h3 className="text-sm font-semibold text-[var(--foreground)] truncate">{property.title}</h3>
+        <p className="text-xs text-[var(--muted-foreground)] mb-2.5">{property.type}</p>
+        <div className="flex items-center gap-3 text-xs text-[var(--muted-foreground)] mb-3">
+          <span className="flex items-center gap-1"><Bed size={12} /> {property.beds}</span>
+          <span className="flex items-center gap-1"><Bath size={12} /> {property.baths}</span>
+          <span className="flex items-center gap-1"><Maximize2 size={12} /> {property.sqft.toLocaleString()} sqft</span>
+        </div>
+        <div className="flex items-center gap-2 pt-2.5 border-t border-[var(--border)]">
+          <span className="h-6 w-6 rounded-full bg-[var(--primary)] text-[10px] font-semibold text-white flex items-center justify-center">
+            {property.agentInitials}
+          </span>
+          <span className="text-xs text-[var(--muted-foreground)]">{property.agent}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DealsTimeline({ deals }: { deals: typeof DEALS }) {
+  return (
+    <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 animate-fade-up delay-7">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h2 className="text-lg font-semibold font-[family-name:var(--font-display)] text-[var(--foreground)]">Active Deals</h2>
+          <p className="text-xs text-[var(--muted-foreground)]">{deals.length} ongoing transactions</p>
+        </div>
+        <a href="#" className="text-xs font-medium text-[var(--primary)] hover:underline">View All</a>
+      </div>
+      <div className="space-y-0">
+        {deals.map((deal, i) => (
+          <div key={i} className="flex items-start gap-3 pb-3 mb-3 border-b border-[var(--border)] last:border-0 last:mb-0 last:pb-0">
+            <div className="relative flex flex-col items-center">
+              <div className={`h-2.5 w-2.5 rounded-full mt-1.5 ${
+                deal.status === 'Closing' ? 'bg-emerald-500' :
+                deal.status === 'Under Contract' ? 'bg-blue-500' : 'bg-amber-500'
+              }`} />
+              {i < deals.length - 1 && <div className="w-px flex-1 bg-[var(--border)] min-h-6" />}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium text-[var(--foreground)] truncate">{deal.property}</p>
+                <span className="text-xs font-semibold text-[var(--foreground)] shrink-0 ml-2">{deal.amount}</span>
+              </div>
+              <p className="text-xs text-[var(--muted-foreground)]">{deal.buyer}</p>
+              <div className="flex items-center gap-2 mt-1">
+                <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${
+                  deal.status === 'Closing' ? 'bg-emerald-50 text-emerald-700' :
+                  deal.status === 'Under Contract' ? 'bg-blue-50 text-blue-700' : 'bg-amber-50 text-amber-700'
+                }`}>
+                  {deal.status}
+                </span>
+                <span className="text-[10px] text-[var(--muted-foreground)]">{deal.date}</span>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function TopAgents({ agents }: { agents: typeof AGENTS }) {
+  return (
+    <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 animate-fade-up delay-8">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h2 className="text-lg font-semibold font-[family-name:var(--font-display)] text-[var(--foreground)]">Top Agents</h2>
+          <p className="text-xs text-[var(--muted-foreground)]">Best performers this month</p>
+        </div>
+      </div>
+      <div className="space-y-3">
+        {agents.map((agent, i) => (
+          <div key={agent.name} className="flex items-center gap-3 pb-3 border-b border-[var(--border)] last:border-0 last:pb-0">
+            <span className={`h-8 w-8 rounded-lg ${agent.color} text-white text-xs font-semibold flex items-center justify-center shrink-0`}>
+              {agent.initials}
+            </span>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-[var(--foreground)]">{agent.name}</p>
+              <p className="text-xs text-[var(--muted-foreground)]">{agent.role}</p>
+            </div>
+            <div className="text-right">
+              <p className="text-sm font-semibold text-[var(--foreground)]">{agent.volume}</p>
+              <p className="text-[10px] text-[var(--muted-foreground)]">{agent.closed} closed</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Existing CRM Sub-components (unchanged)                            */
+/* ------------------------------------------------------------------ */
+
 function StatDonut({ percent, color }: { percent: number; color: string }) {
   const clamped = Math.max(0, Math.min(100, percent));
   return (
@@ -139,9 +449,9 @@ function HotLeadRatioCard({ hot, total }: { hot: number; total: number }) {
   const percent = total > 0 ? Math.round((hot / total) * 100) : 0;
   return (
     <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 flex items-center gap-4">
-      <StatDonut percent={percent} color="var(--chart-orange)" />
+      <StatDonut percent={percent} color="var(--chart-amber)" />
       <div>
-        <p className="text-xs font-semibold text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10 inline-block px-2 py-0.5 rounded-full mb-1">
+        <p className="text-xs font-semibold text-emerald-600 bg-emerald-50 inline-block px-2 py-0.5 rounded-full mb-1">
           {hot} hot
         </p>
         <p className="text-2xl font-bold text-[var(--foreground)]">{total}</p>
@@ -155,10 +465,10 @@ function StatChip({ icon: Icon, label, value, color }: {
   icon: any; label: string; value: string | number; color: 'emerald' | 'red' | 'amber' | 'blue';
 }) {
   const colors: Record<string, string> = {
-    emerald: 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
-    red: 'bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400',
-    amber: 'bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400',
-    blue: 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400',
+    emerald: 'bg-emerald-50 text-emerald-600',
+    red: 'bg-red-50 text-red-600',
+    amber: 'bg-amber-50 text-amber-600',
+    blue: 'bg-blue-50 text-blue-600',
   };
   return (
     <div className={`flex items-center gap-2 rounded-lg px-3 py-2 ${colors[color]}`}>
@@ -185,13 +495,13 @@ function RevenueCard({ data }: { data: DailyBrief['revenueAtRisk'] | null }) {
         <div className="flex items-center gap-2 text-sm">
           <AlertCircle size={12} className="text-amber-500" />
           <span className="text-[var(--muted-foreground)]">
-            <strong className="text-amber-600 dark:text-amber-400">{formatINR(data.overdueCollectionsPaise)}</strong> overdue collections
+            <strong className="text-amber-600">{formatINR(data.overdueCollectionsPaise)}</strong> overdue collections
           </span>
         </div>
         <div className="flex items-center gap-2 text-sm">
           <Calendar size={12} className="text-amber-500" />
           <span className="text-[var(--muted-foreground)]">
-            <strong className="text-amber-600 dark:text-amber-400">{data.bookingsAtRisk}</strong> booking{data.bookingsAtRisk !== 1 ? 's' : ''} may slip
+            <strong className="text-amber-600">{data.bookingsAtRisk}</strong> booking{data.bookingsAtRisk !== 1 ? 's' : ''} may slip
           </span>
         </div>
       </div>
@@ -217,7 +527,7 @@ function ApprovalsCard({ data }: { data: DailyBrief['pendingApprovals'] | null }
         )}
       </div>
       {isEmpty ? (
-        <div className="mt-3 flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400">
+        <div className="mt-3 flex items-center gap-2 text-sm text-emerald-600">
           <CheckCircle size={16} />
           <span>All caught up — no actions waiting</span>
         </div>
@@ -321,7 +631,7 @@ function AgentWatchCard({ agents }: { agents: DailyBrief['summary']['slowAgents'
           <Users size={16} className="text-emerald-500" />
           <h3 className="font-semibold text-sm text-[var(--foreground)]">Agent Watch</h3>
         </div>
-        <div className="mt-3 flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400">
+        <div className="mt-3 flex items-center gap-2 text-sm text-emerald-600">
           <CheckCircle size={16} />
           <span>All agents responding on time</span>
         </div>
@@ -334,7 +644,7 @@ function AgentWatchCard({ agents }: { agents: DailyBrief['summary']['slowAgents'
       <div className="flex items-center gap-2 mb-1">
         <Users size={16} className="text-amber-500" />
         <h3 className="font-semibold text-sm text-[var(--foreground)]">Agent Watch</h3>
-        <span className="ml-auto text-xs font-semibold bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 px-2 py-0.5 rounded-full">
+        <span className="ml-auto text-xs font-semibold bg-red-50 text-red-600 px-2 py-0.5 rounded-full">
           {agents.length} slow
         </span>
       </div>
@@ -348,7 +658,7 @@ function AgentWatchCard({ agents }: { agents: DailyBrief['summary']['slowAgents'
               </a>
             </div>
             <div className="text-xs text-[var(--muted-foreground)]">
-              <span className="text-amber-600 dark:text-amber-400 font-semibold">{a.hotLeadCount}</span> hot · {a.responseTimeHours}h response
+              <span className="text-amber-600 font-semibold">{a.hotLeadCount}</span> hot · {a.responseTimeHours}h response
             </div>
           </div>
         ))}
@@ -368,7 +678,7 @@ function ReadyForBookingCard({ items }: { items: DailyBrief['readyForBooking'] |
           <CheckCircle size={16} className="text-emerald-500" />
           <h3 className="font-semibold text-sm text-[var(--foreground)]">Ready for Booking</h3>
         </div>
-        <div className="mt-3 flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400">
+        <div className="mt-3 flex items-center gap-2 text-sm text-emerald-600">
           <CheckCircle size={16} />
           <span>No leads ready for booking right now</span>
         </div>
@@ -381,7 +691,7 @@ function ReadyForBookingCard({ items }: { items: DailyBrief['readyForBooking'] |
       <div className="flex items-center gap-2 mb-1">
         <Target size={16} className="text-emerald-500" />
         <h3 className="font-semibold text-sm text-[var(--foreground)]">Ready for Booking</h3>
-        <span className="ml-auto text-xs font-semibold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded-full">
+        <span className="ml-auto text-xs font-semibold bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-full">
           {items.length}
         </span>
       </div>
@@ -400,7 +710,7 @@ function ReadyForBookingCard({ items }: { items: DailyBrief['readyForBooking'] |
                 </div>
               </div>
               {lead.missingCostSheet && (
-                <span className="text-[10px] font-semibold bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 px-2 py-0.5 rounded shrink-0">
+                <span className="text-[10px] font-semibold bg-amber-50 text-amber-600 px-2 py-0.5 rounded shrink-0">
                   No cost sheet
                 </span>
               )}
@@ -428,7 +738,7 @@ function ChannelConflictsCard({ conflicts }: { conflicts: DailyBrief['channelCon
           <Building2 size={16} className="text-emerald-500" />
           <h3 className="font-semibold text-sm text-[var(--foreground)]">Channel Conflicts</h3>
         </div>
-        <div className="mt-3 flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400">
+        <div className="mt-3 flex items-center gap-2 text-sm text-emerald-600">
           <CheckCircle size={16} />
           <span>No channel partner conflicts detected</span>
         </div>
@@ -441,7 +751,7 @@ function ChannelConflictsCard({ conflicts }: { conflicts: DailyBrief['channelCon
       <div className="flex items-center gap-2 mb-1">
         <Zap size={16} className="text-amber-500" />
         <h3 className="font-semibold text-sm text-[var(--foreground)]">Channel Conflicts</h3>
-        <span className="ml-auto text-xs font-semibold bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 px-2 py-0.5 rounded-full">
+        <span className="ml-auto text-xs font-semibold bg-red-50 text-red-600 px-2 py-0.5 rounded-full">
           {conflicts.length}
         </span>
       </div>
@@ -493,7 +803,7 @@ function TodayVisitsCard({ visits }: { visits: DailyBrief['todayVisits'] | null 
       <div className="flex items-center gap-2 mb-1">
         <Calendar size={16} className="text-[var(--primary)]" />
         <h3 className="font-semibold text-sm text-[var(--foreground)]">Today's Site Visits</h3>
-        <span className="ml-auto text-xs font-semibold bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded-full">
+        <span className="ml-auto text-xs font-semibold bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">
           {visits.length}
         </span>
       </div>
@@ -540,7 +850,7 @@ function TodayVisitsCard({ visits }: { visits: DailyBrief['todayVisits'] | null 
                 View Brief <ChevronRight size={10} />
               </a>
               <a href={`#/site-visits`}
-                className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-colors">
+                className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 px-2.5 py-1 text-[11px] font-medium text-emerald-600 hover:bg-emerald-100 transition-colors">
                 Mark Complete <CheckCircle size={10} />
               </a>
             </div>
@@ -560,6 +870,8 @@ export default function OverviewPage() {
   const [brief, setBrief] = useState<DailyBrief | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [voiceOn, setVoiceOn] = useState(() => localStorage.getItem('mikeyVoiceOn') !== 'false');
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -577,13 +889,42 @@ export default function OverviewPage() {
   const rar = brief?.revenueAtRisk;
   const pa = brief?.pendingApprovals;
 
-  // ── Loading ──────────────────────────────────────────────────
+  const speakBrief = async (force = false) => {
+    if (!brief) return;
+    const today = new Date().toISOString().slice(0, 10);
+    if (!force) {
+      if (!voiceOn) return;
+      if (localStorage.getItem('mikeyBriefSpokenOn') === today) return;
+    }
+    try {
+      const text = buildBriefSpeech(brief, firstName);
+      const res = await api('/copilot/speak', { method: 'POST', body: JSON.stringify({ text }) });
+      if (!res.audioBase64) return;
+      localStorage.setItem('mikeyBriefSpokenOn', today);
+      const audio = new Audio(`data:${res.mimeType};base64,${res.audioBase64}`);
+      audioRef.current?.pause();
+      audioRef.current = audio;
+      audio.play().catch(() => {});
+    } catch {
+      // Voice is a nice-to-have — never break the dashboard over TTS failing.
+    }
+  };
+
+  useEffect(() => { speakBrief(); }, [brief]);
+
+  const toggleVoice = () => {
+    setVoiceOn(prev => {
+      const next = !prev;
+      localStorage.setItem('mikeyVoiceOn', String(next));
+      if (!next) audioRef.current?.pause();
+      return next;
+    });
+  };
+
   if (loading) return <PageFallback />;
 
-  // ── Error (show partial, never blank) ─────────────────────────
   const headerContent = (
     <>
-      {/* Greeting */}
       <div>
         <div className="flex items-center gap-3 mb-2">
           <span className="flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1 text-[11px] font-semibold text-emerald-600 tracking-wide">
@@ -593,16 +934,31 @@ export default function OverviewPage() {
           <span className="text-[11px] font-medium text-[var(--muted-foreground)] uppercase tracking-[0.15em]">
             {todayLabel()}
           </span>
+          <button
+            onClick={() => (voiceOn ? speakBrief(true) : toggleVoice())}
+            title={voiceOn ? "Replay spoken briefing" : "Voice briefing off — click to unmute"}
+            className={`ml-auto p-1.5 rounded-md transition-colors ${voiceOn ? "text-[var(--primary)] bg-[var(--primary-light)]" : "text-[var(--muted-foreground)] hover:bg-[var(--accent)]"}`}
+          >
+            {voiceOn ? <Volume2 size={14} /> : <VolumeX size={14} />}
+          </button>
+          {voiceOn && (
+            <button
+              onClick={toggleVoice}
+              title="Mute voice briefing"
+              className="text-[10px] text-[var(--muted-foreground)] hover:underline"
+            >
+              mute
+            </button>
+          )}
         </div>
         <h1 className="text-2xl font-bold text-[var(--foreground)]">
           {greeting()}, <span className="font-[family-name:var(--font-script)] text-3xl font-normal text-emerald-600">{firstName}</span>
         </h1>
         <p className="text-sm text-[var(--muted-foreground)] mt-1">
-          Mikey&rsquo;s been watching the business since 6 AM
+          Here&rsquo;s your real estate overview for today
         </p>
       </div>
 
-      {/* KPI chips */}
       {(s || error) && (
         <div className="flex flex-wrap gap-2">
           {s && <StatChip icon={TrendingUp} label="yesterday" value={s.newLeadsYesterday} color="blue" />}
@@ -614,7 +970,7 @@ export default function OverviewPage() {
       )}
 
       {error && (
-        <div className="flex items-center gap-2 text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 rounded-lg px-3 py-2">
+        <div className="flex items-center gap-2 text-xs text-amber-600 bg-amber-50 rounded-lg px-3 py-2">
           <AlertCircle size={12} />
           <span>Couldn&apos;t load full briefing: {error}</span>
         </div>
@@ -623,13 +979,79 @@ export default function OverviewPage() {
   );
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* ── Header ────────────────────────────────────────────── */}
+    <div className="space-y-5 animate-fade-in">
+      {/* Header */}
       <div className="space-y-4">
         {headerContent}
       </div>
 
-      {/* ── Row 1: Hero stat + Hot lead ratio ──────────────────── */}
+      {/* ── EstateRocket Sections ── */}
+
+      {/* Breadcrumb + pill group */}
+      <div className="flex items-center justify-between animate-fade-up">
+        <div className="flex items-center gap-2 text-xs text-[var(--muted-foreground)]">
+          <a href="#" className="hover:text-[var(--foreground)] transition-colors"><Home size={13} /></a>
+          <ChevronRight size={11} />
+          <span>Dashboard</span>
+          <ChevronRight size={11} />
+          <span className="text-[var(--foreground)] font-medium">Overview</span>
+        </div>
+        <div className="flex items-center gap-2">
+          {["7D", "1M", "3M", "1Y"].map(p => (
+            <button key={p} className={`text-xs font-medium px-2.5 py-1 rounded-md transition-colors ${
+              p === "1M" ? "bg-[var(--primary)] text-white" : "text-[var(--muted-foreground)] hover:bg-[var(--accent)]"
+            }`}>
+              {p}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Stat cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {STATS.map((stat, i) => (
+          <StatCard key={stat.label} {...stat} delay={`delay-${i + 1}`} />
+        ))}
+      </div>
+
+      {/* Sales chart + Listing Mix */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="lg:col-span-2">
+          <SalesChart data={SALES_DATA} />
+        </div>
+        <ListingMixDonut mix={LISTING_MIX} />
+      </div>
+
+      {/* Recently Added Listings */}
+      <div className="animate-fade-up delay-6">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h2 className="text-lg font-semibold font-[family-name:var(--font-display)] text-[var(--foreground)]">Recently Added Listings</h2>
+            <p className="text-xs text-[var(--muted-foreground)]">Latest properties on the market</p>
+          </div>
+          <a href="#" className="text-xs font-medium text-[var(--primary)] hover:underline">View All</a>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {PROPERTIES.map((p, i) => (
+            <PropertyCard key={p.id} property={p} index={i} />
+          ))}
+        </div>
+      </div>
+
+      {/* Active Deals + Top Agents */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <DealsTimeline deals={DEALS} />
+        <TopAgents agents={AGENTS} />
+      </div>
+
+      {/* ── Separator ── */}
+      <div className="flex items-center gap-3 pt-2">
+        <div className="h-px flex-1 bg-[var(--border)]" />
+        <span className="text-[10px] font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">CRM Daily Brief</span>
+        <div className="h-px flex-1 bg-[var(--border)]" />
+      </div>
+
+      {/* ── Existing CRM Cards ── */}
       {brief && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <HeroStatCard
@@ -641,7 +1063,6 @@ export default function OverviewPage() {
         </div>
       )}
 
-      {/* ── Row 2: Revenue + Approvals ────────────────────────── */}
       {brief && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <RevenueCard data={brief.revenueAtRisk} />
@@ -649,7 +1070,6 @@ export default function OverviewPage() {
         </div>
       )}
 
-      {/* ── Row 2: Lead Pulse + Agent Watch ────────────────────── */}
       {brief && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <LeadPulseCard summary={brief.summary} sources={brief.sources} />
@@ -657,7 +1077,6 @@ export default function OverviewPage() {
         </div>
       )}
 
-      {/* ── Row 3: Ready for Booking + Channel Conflicts ───────── */}
       {brief && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <ReadyForBookingCard items={brief.readyForBooking} />
@@ -665,7 +1084,6 @@ export default function OverviewPage() {
         </div>
       )}
 
-      {/* ── Row 4: Today's Visits ──────────────────────────────── */}
       {brief && (
         <TodayVisitsCard visits={brief.todayVisits} />
       )}

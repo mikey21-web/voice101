@@ -1,18 +1,11 @@
 @import "tailwindcss";
 
-/* Trezo Real Estate reference, adapted: white sidebar (not navy), terracotta
-   accent (not violet), same soft-rounded/soft-shadow card structure. Remapped
-   at the Tailwind theme level so every rounded-*/shadow-* utility inherits it. */
 @theme {
   --radius-sm: 0.5rem;
   --radius-md: 0.75rem;
   --radius-lg: 1rem;
   --radius-xl: 1.25rem;
-  --radius-2xl: 1.5rem;
-  --radius-3xl: 1.75rem;
 
-  /* Tight elevation only — kill-ai-slop flagged the old scale (up to 40px
-     blur / 0.12 opacity) as oversized-drop-shadow slop for a dashboard. */
   --shadow-2xs: 0 1px 1px rgb(20 20 20 / 0.03);
   --shadow-xs: 0 1px 2px rgb(20 20 20 / 0.04);
   --shadow-sm: 0 1px 2px rgb(20 20 20 / 0.05);
@@ -23,31 +16,31 @@
 }
 
 :root {
-  --font-display: 'Plus Jakarta Sans', system-ui, sans-serif;
-  --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-display: 'Fraunces', serif;
+  --font-body: 'Inter', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
   --font-script: 'Caveat', cursive;
 
-  --background: #ffffff;
-  --foreground: #2A2622;
+  --background: #f6f8fb;
+  --foreground: #1e293b;
   --card: #ffffff;
-  --card-foreground: #2A2622;
-  --muted: #F2F0EB;
-  --muted-foreground: #7A7268;
-  --muted-foreground-light: #A69E93;
-  --primary: #C1552C;
+  --card-foreground: #1e293b;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --muted-foreground-light: #94a3b8;
+  --primary: #0F766E;
   --primary-foreground: #ffffff;
-  --primary-light: #F7E3D9;
-  --accent: #F2F0EB;
-  --accent-foreground: #2A2622;
-  --secondary: #F2F0EB;
-  --secondary-foreground: #2A2622;
+  --primary-light: #ccfbf1;
+  --accent: #f1f5f9;
+  --accent-foreground: #1e293b;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #1e293b;
   --destructive: #DC2626;
   --destructive-foreground: #ffffff;
-  --border: #EAE6DF;
-  --border-strong: #D9D3C9;
-  --input: #D9D3C9;
-  --ring: #C1552C;
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --input: #cbd5e1;
+  --ring: #0F766E;
   --radius-sm: 0.75rem;
   --radius: 1rem;
   --radius-lg: 1.25rem;
@@ -56,19 +49,18 @@
   --shadow-md: 0 2px 6px rgb(20 20 20 / 0.06);
   --shadow-lg: 0 4px 10px rgb(20 20 20 / 0.07);
 
-  /* Chart palette: kept multi-color like Trezo's reference (not single-accent) */
-  --chart-orange: #E2711D;
-  --chart-green: #4C9F70;
-  --chart-blue: #4C7CE2;
-  --chart-terracotta: #C1552C;
+  --chart-emerald: #0F766E;
+  --chart-blue: #3b82f6;
+  --chart-amber: #d97706;
+  --chart-violet: #8b5cf6;
 
   --sidebar-bg: #ffffff;
-  --sidebar-fg: #2A2622;
-  --sidebar-muted: #7A7268;
-  --sidebar-border: #EAE6DF;
-  --sidebar-hover: #F2F0EB;
-  --sidebar-active-bg: #F7E3D9;
-  --sidebar-active-fg: #C1552C;
+  --sidebar-fg: #1e293b;
+  --sidebar-muted: #64748b;
+  --sidebar-border: #e2e8f0;
+  --sidebar-hover: #f1f5f9;
+  --sidebar-active-bg: #ccfbf1;
+  --sidebar-active-fg: #0F766E;
 }
 
 /* Cold Institutional: tabular numerics for every metric/stat, cards read as data not decoration */
