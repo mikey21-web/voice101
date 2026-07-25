@@ -5,6 +5,8 @@ import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
 import { api, apiUpload } from "../lib/api";
 import toast from "react-hot-toast";
+import { createPortal } from "react-dom";
+import { Dialog } from "../components/ui/dialog";
 
 function getProjectId(): string {
   const hash = window.location.hash.replace('#', '');
@@ -333,30 +335,40 @@ export default function ProjectDetailPage() {
 
       {/* Tower form */}
       {showTowerForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setShowTowerForm(false)}>
-          <div className="bg-[var(--card)] rounded-xl shadow-2xl w-full max-w-sm p-6 space-y-4 overflow-y-auto" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold">Add Tower</h2>
-              <button onClick={() => setShowTowerForm(false)}><X className="h-5 w-5" /></button>
-            </div>
-            <Input value={towerForm.name} onChange={e => setTowerForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Tower A" />
-            <Input type="number" value={towerForm.totalFloors} onChange={e => setTowerForm(f => ({ ...f, totalFloors: e.target.value }))} placeholder="Total floors (optional)" />
-            <div className="flex justify-end gap-2">
+        <Dialog
+          open
+          onClose={() => setShowTowerForm(false)}
+          title="Add Tower"
+          maxWidth="max-w-sm"
+          footer={
+            <>
               <Button variant="outline" onClick={() => setShowTowerForm(false)}>Cancel</Button>
               <Button onClick={addTower} disabled={!towerForm.name}>Add</Button>
-            </div>
+            </>
+          }
+        >
+          <div className="space-y-4">
+            <Input value={towerForm.name} onChange={e => setTowerForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Tower A" />
+            <Input type="number" value={towerForm.totalFloors} onChange={e => setTowerForm(f => ({ ...f, totalFloors: e.target.value }))} placeholder="Total floors (optional)" />
           </div>
-        </div>
+        </Dialog>
       )}
 
       {/* Unit form */}
       {showUnitForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setShowUnitForm(false)}>
-          <div className="bg-[var(--card)] rounded-xl shadow-2xl w-full max-w-md p-6 space-y-3 overflow-y-auto" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold">Add Unit</h2>
-              <button onClick={() => setShowUnitForm(false)}><X className="h-5 w-5" /></button>
-            </div>
+        <Dialog
+          open
+          onClose={() => setShowUnitForm(false)}
+          title="Add Unit"
+          maxWidth="max-w-md"
+          footer={
+            <>
+              <Button variant="outline" onClick={() => setShowUnitForm(false)}>Cancel</Button>
+              <Button onClick={addUnit} disabled={!unitForm.unitNumber}>Add</Button>
+            </>
+          }
+        >
+          <div className="space-y-3">
             {grid.towers.length > 0 && grid.towers[0].towerId && (
               <select value={unitForm.towerId} onChange={e => setUnitForm((f: any) => ({ ...f, towerId: e.target.value }))} className="w-full h-10 rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 text-sm">
                 <option value="">No tower</option>
@@ -370,22 +382,27 @@ export default function ProjectDetailPage() {
               <Input type="number" value={unitForm.areaSqft} onChange={e => setUnitForm((f: any) => ({ ...f, areaSqft: e.target.value }))} placeholder="Area (sqft)" />
               <Input type="number" value={unitForm.price} onChange={e => setUnitForm((f: any) => ({ ...f, price: e.target.value }))} placeholder="Price (₹)" className="col-span-2" />
             </div>
-            <div className="flex justify-end gap-2 pt-1">
-              <Button variant="outline" onClick={() => setShowUnitForm(false)}>Cancel</Button>
-              <Button onClick={addUnit} disabled={!unitForm.unitNumber}>Add</Button>
-            </div>
           </div>
-        </div>
+        </Dialog>
       )}
 
       {/* Bulk unit import */}
       {showBulkForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={closeBulkForm}>
-          <div className="bg-[var(--card)] rounded-xl shadow-2xl w-full max-w-lg p-6 space-y-4 overflow-y-auto" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold">Bulk Import Units (CSV)</h2>
-              <button onClick={closeBulkForm}><X className="h-5 w-5" /></button>
-            </div>
+        <Dialog
+          open
+          onClose={closeBulkForm}
+          title="Bulk Import Units (CSV)"
+          maxWidth="max-w-lg"
+          footer={
+            <>
+              <Button variant="outline" onClick={closeBulkForm}>Close</Button>
+              <Button onClick={runBulkImport} disabled={bulkRows.length === 0 || bulkLoading}>
+                {bulkLoading ? "Importing..." : `Import ${bulkRows.length || ""} Unit(s)`}
+              </Button>
+            </>
+          }
+        >
+          <div className="space-y-4">
             <p className="text-xs text-[var(--muted-foreground)]">
               CSV header row: <code className="text-[11px]">unitNumber,towerName,floor,unitType,areaSqft,price,currency,facing</code>.
               Only <code className="text-[11px]">unitNumber</code> is required; towers referenced by name are created automatically. Duplicate unit numbers are skipped.
@@ -411,14 +428,8 @@ export default function ProjectDetailPage() {
                 )}
               </div>
             )}
-            <div className="flex justify-end gap-2 pt-1">
-              <Button variant="outline" onClick={closeBulkForm}>Close</Button>
-              <Button onClick={runBulkImport} disabled={bulkRows.length === 0 || bulkLoading}>
-                {bulkLoading ? "Importing..." : `Import ${bulkRows.length || ""} Unit(s)`}
-              </Button>
-            </div>
           </div>
-        </div>
+        </Dialog>
       )}
 
       {/* Unit detail drawer */}
@@ -457,7 +468,7 @@ function UnitDetailDrawer({ unitId, onClose, onStatusChanged }: { unitId: string
     }
   };
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex justify-end bg-black/30" onClick={onClose}>
       <div className="w-full max-w-md h-full bg-[var(--card)] border-l border-[var(--border)] overflow-y-auto" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between p-4 border-b border-[var(--border)]">
@@ -539,6 +550,7 @@ function UnitDetailDrawer({ unitId, onClose, onStatusChanged }: { unitId: string
           </div>
         ) : null}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

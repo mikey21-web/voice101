@@ -5,6 +5,7 @@ import { Input } from "../components/ui/input";
 import { api } from "../lib/api";
 import toast from "react-hot-toast";
 import LeadPicker from "../components/LeadPicker";
+import { Dialog } from "../components/ui/dialog";
 
 const statusMeta: Record<string, { color: string; icon: any; label: string }> = {
   PENDING: { color: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200", icon: Clock, label: "Pending" },
@@ -185,59 +186,60 @@ export default function PaymentSchedulesPage() {
       </div>
 
       {demandLetter && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setDemandLetter(null)}>
-          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800">
-              <h2 className="text-lg font-bold">Demand Letter</h2>
-              <button onClick={() => window.print()} className="inline-flex items-center gap-1 text-sm px-3 py-1.5 rounded-lg bg-indigo-100 text-indigo-800 hover:bg-indigo-200 dark:bg-indigo-900 dark:text-indigo-200">
-                <Printer className="h-4 w-4" /> Print
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto p-6 text-sm leading-relaxed whitespace-pre-wrap font-serif">
-              {demandLetter.snapshot?.body || demandLetter.snapshot || "No content"}
-            </div>
+        <Dialog
+          open
+          onClose={() => setDemandLetter(null)}
+          title="Demand Letter"
+          maxWidth="max-w-2xl"
+          footer={
+            <button onClick={() => window.print()} className="inline-flex items-center gap-1 text-sm px-3 py-1.5 rounded-lg bg-[var(--primary)]/10 text-[var(--primary)] hover:bg-[var(--primary)]/20">
+              <Printer className="h-4 w-4" /> Print
+            </button>
+          }
+        >
+          <div className="max-h-[60vh] overflow-y-auto text-sm leading-relaxed whitespace-pre-wrap font-serif">
+            {demandLetter.snapshot?.body || demandLetter.snapshot || "No content"}
           </div>
-        </div>
+        </Dialog>
       )}
 
       {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setShowForm(false)}>
-          <div className="bg-[var(--card)] rounded-xl shadow-2xl w-full max-w-md p-6 space-y-4 overflow-y-auto" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold">Add Payment Milestone</h2>
-              <button onClick={() => setShowForm(false)}><X className="h-5 w-5" /></button>
-            </div>
-
-            <div className="space-y-3">
-              <div>
-                <label className="text-sm font-medium block mb-1">Buyer *</label>
-                <LeadPicker value={selectedLead} onChange={setSelectedLead} placeholder="Search by name, email, or phone..." />
-                <p className="text-xs text-[var(--muted-foreground)] mt-1">You can also add a milestone directly from a buyer's row on the Leads page.</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium block mb-1">Milestone *</label>
-                <Input value={form.label} onChange={e => setForm((f: any) => ({ ...f, label: e.target.value }))} placeholder="e.g. Booking Amount, Registration, Possession" />
-              </div>
-              <div>
-                <label className="text-sm font-medium block mb-1">Amount (₹) *</label>
-                <Input type="number" value={form.amount} onChange={e => setForm((f: any) => ({ ...f, amount: e.target.value }))} />
-              </div>
-              <div>
-                <label className="text-sm font-medium block mb-1">Due Date</label>
-                <Input type="date" value={form.dueDate} onChange={e => setForm((f: any) => ({ ...f, dueDate: e.target.value }))} />
-              </div>
-              <div>
-                <label className="text-sm font-medium block mb-1">Notes</label>
-                <textarea value={form.notes} onChange={e => setForm((f: any) => ({ ...f, notes: e.target.value }))} className="w-full rounded-lg border border-[var(--border)] bg-[var(--card)] p-2 min-h-[60px] text-sm" />
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-2 pt-2">
+        <Dialog
+          open
+          onClose={() => setShowForm(false)}
+          title="Add Payment Milestone"
+          maxWidth="max-w-md"
+          footer={
+            <>
               <Button variant="outline" onClick={() => setShowForm(false)}>Cancel</Button>
               <Button onClick={handleCreate} disabled={!selectedLead || !form.label || !form.amount}>Create</Button>
+            </>
+          }
+        >
+          <div className="space-y-3">
+            <div>
+              <label className="text-sm font-medium block mb-1">Buyer *</label>
+              <LeadPicker value={selectedLead} onChange={setSelectedLead} placeholder="Search by name, email, or phone..." />
+              <p className="text-xs text-[var(--muted-foreground)] mt-1">You can also add a milestone directly from a buyer's row on the Leads page.</p>
+            </div>
+            <div>
+              <label className="text-sm font-medium block mb-1">Milestone *</label>
+              <Input value={form.label} onChange={e => setForm((f: any) => ({ ...f, label: e.target.value }))} placeholder="e.g. Booking Amount, Registration, Possession" />
+            </div>
+            <div>
+              <label className="text-sm font-medium block mb-1">Amount (₹) *</label>
+              <Input type="number" value={form.amount} onChange={e => setForm((f: any) => ({ ...f, amount: e.target.value }))} />
+            </div>
+            <div>
+              <label className="text-sm font-medium block mb-1">Due Date</label>
+              <Input type="date" value={form.dueDate} onChange={e => setForm((f: any) => ({ ...f, dueDate: e.target.value }))} />
+            </div>
+            <div>
+              <label className="text-sm font-medium block mb-1">Notes</label>
+              <textarea value={form.notes} onChange={e => setForm((f: any) => ({ ...f, notes: e.target.value }))} className="w-full rounded-lg border border-[var(--border)] bg-[var(--card)] p-2 min-h-[60px] text-sm" />
             </div>
           </div>
-        </div>
+        </Dialog>
       )}
     </div>
   );

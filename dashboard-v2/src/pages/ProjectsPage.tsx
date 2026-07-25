@@ -4,6 +4,7 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { api, apiUpload } from "../lib/api";
 import toast from "react-hot-toast";
+import { Dialog } from "../components/ui/dialog";
 
 const statusColors: Record<string, string> = {
   PLANNING: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200",
@@ -129,12 +130,20 @@ export default function ProjectsPage() {
       )}
 
       {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={closeForm}>
-          <div className="bg-[var(--card)] rounded-xl shadow-2xl w-full max-w-lg p-6 space-y-4 overflow-y-auto" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold">Add Project</h2>
-              <button onClick={closeForm}><X className="h-5 w-5" /></button>
-            </div>
+        <Dialog
+          open
+          onClose={closeForm}
+          title="Add Project"
+          maxWidth="max-w-lg"
+          footer={
+            <>
+              <Button variant="outline" onClick={closeForm}>Cancel</Button>
+              <Button onClick={handleCreate} disabled={!form.name || uploadingMedia}>
+                {uploadingMedia ? "Uploading..." : "Create"}
+              </Button>
+            </>
+          }
+        >
             <div className="grid grid-cols-2 gap-4">
               <div className="col-span-2">
                 <label className="text-sm font-medium block mb-1">Project Name *</label>
@@ -201,15 +210,7 @@ export default function ProjectsPage() {
                 </Button>
               </div>
             </div>
-
-            <div className="flex justify-end gap-2 pt-2">
-              <Button variant="outline" onClick={closeForm}>Cancel</Button>
-              <Button onClick={handleCreate} disabled={!form.name || uploadingMedia}>
-                {uploadingMedia ? "Uploading..." : "Create"}
-              </Button>
-            </div>
-          </div>
-        </div>
+        </Dialog>
       )}
     </div>
   );
