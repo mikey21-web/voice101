@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { api } from "../lib/api";
 import toast from "react-hot-toast";
 import { X, Loader2, Check } from "lucide-react";
@@ -95,7 +96,7 @@ export default function BookingWizardModal({ costSheet, onClose, onDone }: Booki
     setApplicants(prev => prev.filter((_, idx) => idx !== i));
   };
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" onClick={onClose}>
       <div className="w-full max-w-lg rounded-xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-lg" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
@@ -195,6 +196,7 @@ export default function BookingWizardModal({ costSheet, onClose, onDone }: Booki
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

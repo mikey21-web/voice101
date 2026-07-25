@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   X,
   ChevronLeft,
@@ -695,7 +696,7 @@ export default function CampaignWizard({ open, onClose, onComplete }: CampaignWi
     }
   };
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
       onClick={onClose}
@@ -789,6 +790,7 @@ export default function CampaignWizard({ open, onClose, onComplete }: CampaignWi
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

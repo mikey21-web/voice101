@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 
 interface Command {
   id: string;
@@ -41,7 +42,7 @@ export function CommandPalette({ commands }: { commands: Command[] }) {
 
   if (!open) return null;
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center pt-[15vh]" onClick={() => setOpen(false)}>
       <div
         className="w-full max-w-lg bg-[var(--background)] border rounded-xl shadow-2xl overflow-hidden"
@@ -74,6 +75,7 @@ export function CommandPalette({ commands }: { commands: Command[] }) {
           ))}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

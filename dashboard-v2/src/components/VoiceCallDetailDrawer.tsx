@@ -1,10 +1,11 @@
 import { X } from 'lucide-react';
+import { createPortal } from 'react-dom';
 import type { VoiceCallRun } from '../lib/data';
 
 export default function VoiceCallDetailDrawer({ run, onClose }: { run: VoiceCallRun; onClose: () => void }) {
   const vars = Object.entries(run.gatheredContext || {}).filter(([k]) => k !== 'answered_by');
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-end bg-black/40" onClick={onClose}>
       <div className="w-full max-w-lg h-full bg-[var(--card)] border-l border-[var(--border)] shadow-xl overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-start justify-between p-5 border-b border-[var(--border)] sticky top-0 bg-[var(--card)]">
@@ -67,6 +68,7 @@ export default function VoiceCallDetailDrawer({ run, onClose }: { run: VoiceCall
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

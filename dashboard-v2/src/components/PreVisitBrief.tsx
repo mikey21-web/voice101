@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Phone, Mail, AlertTriangle, Home, Building2, MessageSquare, StickyNote, X, IndianRupee } from "lucide-react";
 import { api } from "../lib/api";
 
@@ -31,7 +32,7 @@ export default function PreVisitBrief({ leadId, onClose }: Props) {
     return `₹${n.toLocaleString()}`;
   };
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
       <div className="bg-[var(--card)] rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
         <div className="sticky top-0 bg-[var(--card)] border-b border-[var(--border)] px-6 py-4 flex items-center justify-between z-10">
@@ -191,6 +192,7 @@ export default function PreVisitBrief({ leadId, onClose }: Props) {
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

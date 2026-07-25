@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 
 interface OnboardingStep {
   id: string;
@@ -60,7 +61,7 @@ export function OnboardingWizard({ open, onClose, steps = DEFAULT_STEPS }: { ope
   const isLast = currentStep === steps.length - 1;
   const progress = ((currentStep + 1) / steps.length) * 100;
 
-  return (
+  return createPortal(
     <div role="dialog" aria-modal="true" aria-labelledby="onboarding-title" className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-[var(--background)] rounded-lg p-8 max-w-md w-full">
         <div className="flex justify-between items-center mb-4">
@@ -93,6 +94,7 @@ export function OnboardingWizard({ open, onClose, steps = DEFAULT_STEPS }: { ope
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

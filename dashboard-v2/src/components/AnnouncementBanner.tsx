@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 
 interface Announcement {
   id: string;
@@ -51,7 +52,7 @@ export function AnnouncementBanner({ announcements }: { announcements: Announcem
  */
 export function MaintenanceMode({ enabled, message = 'System maintenance in progress' }: { enabled: boolean; message?: string }) {
   if (!enabled) return null;
-  return (
+  return createPortal(
     <div role="alertdialog" aria-modal="true" className="fixed inset-0 bg-yellow-100 dark:bg-yellow-950/40 flex items-center justify-center z-50">
       <div className="max-w-md text-center p-8">
         <div className="text-4xl mb-4">🔧</div>
@@ -60,6 +61,7 @@ export function MaintenanceMode({ enabled, message = 'System maintenance in prog
           We're making the system better. We'll be back shortly.
         </p>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
