@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { api } from "../lib/api";
 import toast from "react-hot-toast";
 import { Plus, Search, Edit3, Eye, FileText } from "lucide-react";
+import { Dialog } from "../components/ui/dialog";
 
 export default function KnowledgeBasePage() {
   const [articles, setArticles] = useState<any[]>([]);
@@ -79,27 +80,19 @@ export default function KnowledgeBasePage() {
 
 function ArticleViewModal({ article, onClose }: { article: any; onClose: () => void }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" onClick={onClose}>
-      <div className="w-full max-w-2xl max-h-[80vh] overflow-y-auto rounded-xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-lg" onClick={e => e.stopPropagation()}>
-        <div className="flex items-start justify-between mb-4">
-          <div>
-            <h2 className="text-xl font-bold text-[var(--foreground)]">{article.title}</h2>
-            {article.tags?.length > 0 && (
-              <div className="flex flex-wrap gap-1 mt-2">
-                {article.tags.map((tag: string) => (
-                  <span key={tag} className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-[var(--muted)] text-[var(--muted-foreground)]">{tag}</span>
-                ))}
-              </div>
-            )}
-          </div>
-          <button onClick={onClose} className="text-[var(--muted-foreground)] hover:text-[var(--foreground)]">✕</button>
+    <Dialog open onClose={onClose} title={article.title} maxWidth="max-w-2xl">
+      {article.tags?.length > 0 && (
+        <div className="flex flex-wrap gap-1 mb-3 -mt-2">
+          {article.tags.map((tag: string) => (
+            <span key={tag} className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-[var(--muted)] text-[var(--muted-foreground)]">{tag}</span>
+          ))}
         </div>
-        <div className="prose prose-sm dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: article.body }} />
-        <div className="mt-4 text-xs text-[var(--muted-foreground)]">
-          By {article.author?.name || "Unknown"} &middot; {new Date(article.createdAt).toLocaleString()}
-        </div>
+      )}
+      <div className="prose prose-sm dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: article.body }} />
+      <div className="mt-4 text-xs text-[var(--muted-foreground)]">
+        By {article.author?.name || "Unknown"} &middot; {new Date(article.createdAt).toLocaleString()}
       </div>
-    </div>
+    </Dialog>
   );
 }
 
@@ -128,9 +121,7 @@ function ArticleEditorModal({ article, onClose, onSaved }: { article: any | null
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" onClick={onClose}>
-      <div className="w-full max-w-2xl max-h-[85vh] overflow-y-auto rounded-xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-lg" onClick={e => e.stopPropagation()}>
-        <h2 className="text-lg font-bold text-[var(--foreground)] mb-4">{article ? "Edit Article" : "New Article"}</h2>
+    <Dialog open onClose={onClose} title={article ? "Edit Article" : "New Article"} maxWidth="max-w-2xl">
         <form onSubmit={handleSubmit} className="space-y-4">
           <input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="Title" required className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/50" />
           <input value={form.slug} onChange={e => setForm(f => ({ ...f, slug: e.target.value }))} placeholder="Slug (auto-generated)" className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/50" />
@@ -157,7 +148,6 @@ function ArticleEditorModal({ article, onClose, onSaved }: { article: any | null
             <button type="submit" disabled={saving} className="rounded-lg bg-[var(--primary)] px-4 py-2 text-sm font-medium text-[var(--primary-foreground)] hover:bg-[var(--primary)]/90 disabled:opacity-50 transition-colors">{saving ? "Saving..." : article ? "Update" : "Create"}</button>
           </div>
         </form>
-      </div>
-    </div>
+    </Dialog>
   );
 }

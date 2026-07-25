@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { MessageCircle, Globe, CheckCircle, XCircle, Copy, Mail, Save, Eye, EyeOff, Building, Cloud, Zap, X, Trash2, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { fetchWebhooks, fetchIntegrations, createIntegration, deleteIntegration, testIntegration, updateIntegration } from '../lib/data';
@@ -464,7 +465,7 @@ export default function IntegrationsPage() {
       </div>
 
       {/* ===== CRM Connect/Configure Modal ===== */}
-      {crmModal && (
+      {crmModal && createPortal(
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
           onClick={() => setCrmModal(null)}
@@ -565,7 +566,8 @@ export default function IntegrationsPage() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

@@ -34,6 +34,7 @@ import StepManager from '../components/forms/StepManager';
 import type { FormStep } from '../components/forms/StepManager';
 import FormPreview from '../components/forms/FormPreview';
 import EmbedPanel from '../components/forms/EmbedPanel';
+import { Dialog } from '../components/ui/dialog';
 
 const FORM_TYPES = [
   { value: 'custom', label: 'Custom' },
@@ -1195,52 +1196,49 @@ export default function FormsPage() {
       </div>
 
       {/* Template confirmation dialog */}
-      {showTemplateConfirm && pendingTemplate && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 animate-fade-in">
-          <div className="bg-[var(--card)] rounded-xl border border-[var(--border)] shadow-[var(--shadow-lg)] p-6 max-w-md w-full mx-4 animate-scale-in">
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
-                <AlertTriangle size={20} className="text-amber-600" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-base font-bold text-[var(--foreground)]">Apply Template?</h3>
-                <p className="text-sm text-[var(--muted-foreground)] mt-1">
-                  This will replace all existing fields and steps with the{' '}
-                  <strong>{FORM_TYPES.find(t => t.value === pendingTemplate)?.label}</strong> template fields.
-                  {formData?.fields?.length > 0 && (
-                    <> You have {formData.fields.length} existing field{formData.fields.length !== 1 ? 's' : ''} that will be removed.</>
-                  )}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center justify-end gap-2 mt-6">
-              <button
-                type="button"
-                onClick={() => {
-                  setShowTemplateConfirm(false);
-                  setPendingTemplate(null);
-                }}
-                className="px-4 py-2 rounded-lg border border-[var(--border)] text-sm text-[var(--foreground)] hover:bg-[var(--accent)] transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={() => doApplyTemplate(pendingTemplate!)}
-                disabled={applyingTemplate}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[var(--primary)] text-white text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
-              >
-                {applyingTemplate ? (
-                  <Loader2 size={14} className="animate-spin" />
-                ) : (
-                  <Sparkles size={14} />
-                )}
-                {applyingTemplate ? 'Applying...' : 'Apply Template'}
-              </button>
-            </div>
+      <Dialog
+        open={showTemplateConfirm && !!pendingTemplate}
+        onClose={() => { setShowTemplateConfirm(false); setPendingTemplate(null); }}
+        title="Apply Template?"
+        maxWidth="max-w-md"
+        footer={
+          <>
+            <button
+              type="button"
+              onClick={() => { setShowTemplateConfirm(false); setPendingTemplate(null); }}
+              className="px-4 py-2 rounded-lg border border-[var(--border)] text-sm text-[var(--foreground)] hover:bg-[var(--accent)] transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={() => doApplyTemplate(pendingTemplate!)}
+              disabled={applyingTemplate}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[var(--primary)] text-white text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
+            >
+              {applyingTemplate ? (
+                <Loader2 size={14} className="animate-spin" />
+              ) : (
+                <Sparkles size={14} />
+              )}
+              {applyingTemplate ? 'Applying...' : 'Apply Template'}
+            </button>
+          </>
+        }
+      >
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+            <AlertTriangle size={20} className="text-amber-600" />
           </div>
+          <p className="text-sm text-[var(--muted-foreground)]">
+            This will replace all existing fields and steps with the{' '}
+            <strong>{FORM_TYPES.find(t => t.value === pendingTemplate)?.label}</strong> template fields.
+            {formData?.fields?.length > 0 && (
+              <> You have {formData.fields.length} existing field{formData.fields.length !== 1 ? 's' : ''} that will be removed.</>
+            )}
+          </p>
         </div>
-      )}
+      </Dialog>
     </div>
   );
 }
