@@ -339,7 +339,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: { co
               <span className="truncate text-sm font-bold text-[var(--sidebar-fg)]">{companyName}</span>
             </div>
           )}
-          <button onClick={onToggle} className="hidden rounded-md p-1.5 text-[var(--sidebar-muted)] transition-colors hover:bg-[var(--sidebar-hover)] lg:block">
+          <button onClick={onToggle} className="hidden rounded-md p-1.5 text-[var(--sidebar-muted)] transition-all duration-150 hover:bg-[var(--sidebar-hover)] hover:scale-105 lg:block">
             {collapsed ? <ChevronRight size={15} /> : <ChevronLeft size={15} />}
           </button>
         </div>
@@ -354,7 +354,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: { co
                   collapsible ? (
                     <button
                       onClick={() => toggleGroup(group.label)}
-                      className="w-full flex items-center justify-between px-2.5 py-1.5 text-[10px] font-semibold text-[var(--sidebar-muted)] uppercase tracking-wider hover:text-[var(--sidebar-fg)] transition-colors"
+                      className="w-full flex items-center justify-between px-2.5 py-1.5 text-[10px] font-semibold text-[var(--sidebar-muted)] uppercase tracking-wider hover:text-[var(--sidebar-fg)] transition-colors duration-150 active:scale-[0.98]"
                     >
                       <span>{group.label}</span>
                       <ChevronDown size={12} className={`transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
@@ -377,10 +377,10 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: { co
                         key={item.path}
                         href={`#${item.path}`}
                         onClick={onMobileClose}
-                        className={`flex items-center gap-3 rounded-md px-2.5 py-2 text-sm transition-colors font-medium relative ${
+                        className={`flex items-center gap-3 rounded-md px-2.5 py-2 text-sm font-medium relative transition-all duration-150 ${
                           isActive
                             ? "bg-[var(--sidebar-active-bg)] text-[var(--sidebar-active-fg)]"
-                            : "text-[var(--sidebar-muted)] hover:bg-[var(--sidebar-hover)] hover:text-[var(--sidebar-fg)]"
+                            : "text-[var(--sidebar-muted)] hover:bg-[var(--sidebar-hover)] hover:text-[var(--sidebar-fg)] hover:translate-x-0.5"
                         }`}
                       >
                         {isActive && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-4 w-[3px] rounded-full bg-[var(--sidebar-active-fg)]" />}
@@ -396,7 +396,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: { co
         </nav>
 
         <div className="border-t border-[var(--sidebar-border)] p-3">
-          <div className="flex items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-[var(--sidebar-hover)] transition-colors cursor-pointer">
+          <div className="flex items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-[var(--sidebar-hover)] transition-all duration-150 cursor-pointer active:scale-[0.99]">
             <div className="h-7 w-7 rounded-full bg-[var(--sidebar-active-fg)] flex items-center justify-center text-xs font-semibold text-[#08130f] shrink-0">
               {profile?.name?.[0] || 'U'}
             </div>
@@ -408,7 +408,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: { co
             )}
             <button
               onClick={(e) => { e.preventDefault(); logout(); }}
-              className="rounded-md p-1.5 hover:bg-red-500/10 text-[var(--sidebar-muted)] hover:text-red-400 transition-colors"
+              className="rounded-md p-1.5 hover:bg-red-500/10 text-[var(--sidebar-muted)] hover:text-red-400 transition-all duration-150 active:scale-95"
               title="Sign out"
             >
               <LogOut size={15} />

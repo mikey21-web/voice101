@@ -79,7 +79,7 @@ function GlobalSearch() {
     <div ref={containerRef} className="relative">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="rounded-md p-2 text-[var(--muted-foreground)] hover:bg-[var(--accent)] hover:text-[var(--foreground)] transition-colors"
+        className="rounded-md p-2 text-[var(--muted-foreground)] hover:bg-[var(--accent)] hover:text-[var(--foreground)] transition-all duration-150 active:scale-95"
         title="Search"
       >
         <Search size={15} />
@@ -169,7 +169,7 @@ function GuidedToursMenu() {
     <div ref={containerRef} className="relative">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="rounded-md p-2 text-[var(--muted-foreground)] hover:bg-[var(--accent)] hover:text-[var(--foreground)] transition-colors"
+        className="rounded-md p-2 text-[var(--muted-foreground)] hover:bg-[var(--accent)] hover:text-[var(--foreground)] transition-all duration-150 active:scale-95"
         title="Guided Tours"
       >
         <GraduationCap size={15} />
@@ -255,7 +255,7 @@ function NotificationsBell() {
     <div ref={containerRef} className="relative">
       <button
         onClick={handleToggle}
-        className="rounded-md p-2 text-[var(--muted-foreground)] hover:bg-[var(--accent)] hover:text-[var(--foreground)] transition-colors relative"
+        className="rounded-md p-2 text-[var(--muted-foreground)] hover:bg-[var(--accent)] hover:text-[var(--foreground)] transition-all duration-150 active:scale-95 relative"
         title="Notifications"
       >
         <Bell size={15} />

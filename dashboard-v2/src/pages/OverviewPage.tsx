@@ -347,7 +347,10 @@ function DealsTimeline({ deals }: { deals: typeof DEALS }) {
           <h2 className="text-lg font-semibold font-[family-name:var(--font-display)] text-[var(--foreground)]">Active Deals</h2>
           <p className="text-xs text-[var(--muted-foreground)]">{deals.length} ongoing transactions</p>
         </div>
-        <a href="#" className="text-xs font-medium text-[var(--primary)] hover:underline">View All</a>
+        <a href="#" className="group text-xs font-medium text-[var(--primary)] flex items-center gap-1">
+          View All
+          <ChevronRight size={12} className="transition-transform duration-150 group-hover:translate-x-0.5" />
+        </a>
       </div>
       <div className="space-y-0">
         {deals.map((deal, i) => (
@@ -505,8 +508,8 @@ function RevenueCard({ data }: { data: DailyBrief['revenueAtRisk'] | null }) {
           </span>
         </div>
       </div>
-      <a href="#/collections" className="mt-4 inline-flex items-center gap-1 text-xs font-medium text-[var(--primary)] hover:underline">
-        View Details <ChevronRight size={12} />
+      <a href="#/collections" className="group mt-4 inline-flex items-center gap-1 text-xs font-medium text-[var(--primary)]">
+        View Details <ChevronRight size={12} className="transition-transform duration-150 group-hover:translate-x-0.5" />
       </a>
     </div>
   );
@@ -546,11 +549,11 @@ function ApprovalsCard({ data }: { data: DailyBrief['pendingApprovals'] | null }
           </div>
           <div className="mt-3 flex gap-2">
             <a href="#/approvals"
-              className="inline-flex items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-1.5 text-xs font-medium text-[var(--foreground)] hover:bg-[var(--muted)] transition-colors">
+              className="inline-flex items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-1.5 text-xs font-medium text-[var(--foreground)] hover:border-[var(--border-strong)] transition-all duration-150 active:scale-[0.97]">
               Approve All
             </a>
             <a href="#/approvals"
-              className="inline-flex items-center justify-center rounded-lg bg-[var(--primary)] px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 transition-opacity">
+              className="inline-flex items-center justify-center rounded-lg bg-[var(--primary)] px-3 py-1.5 text-xs font-medium text-white transition-all duration-150 hover:-translate-y-0.5 hover:shadow-md active:scale-[0.97]">
               Review <ChevronRight size={12} className="ml-0.5" />
             </a>
           </div>
@@ -663,8 +666,8 @@ function AgentWatchCard({ agents }: { agents: DailyBrief['summary']['slowAgents'
           </div>
         ))}
       </div>
-      <a href="#/queue" className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-[var(--primary)] hover:underline">
-        View Agent Queue <ChevronRight size={12} />
+      <a href="#/queue" className="group mt-3 inline-flex items-center gap-1 text-xs font-medium text-[var(--primary)]">
+        View Agent Queue <ChevronRight size={12} className="transition-transform duration-150 group-hover:translate-x-0.5" />
       </a>
     </div>
   );
@@ -723,8 +726,8 @@ function ReadyForBookingCard({ items }: { items: DailyBrief['readyForBooking'] |
           </div>
         ))}
       </div>
-      <a href="#/cost-sheets" className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-[var(--primary)] hover:underline">
-        Send Cost Sheet <ChevronRight size={12} />
+      <a href="#/cost-sheets" className="group mt-3 inline-flex items-center gap-1 text-xs font-medium text-[var(--primary)]">
+        Send Cost Sheet <ChevronRight size={12} className="transition-transform duration-150 group-hover:translate-x-0.5" />
       </a>
     </div>
   );
@@ -775,8 +778,8 @@ function ChannelConflictsCard({ conflicts }: { conflicts: DailyBrief['channelCon
           </div>
         ))}
       </div>
-      <a href="#/channel-partners" className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-[var(--primary)] hover:underline">
-        Resolve <ChevronRight size={12} />
+      <a href="#/channel-partners" className="group mt-3 inline-flex items-center gap-1 text-xs font-medium text-[var(--primary)]">
+        Resolve <ChevronRight size={12} className="transition-transform duration-150 group-hover:translate-x-0.5" />
       </a>
     </div>
   );
@@ -846,11 +849,11 @@ function TodayVisitsCard({ visits }: { visits: DailyBrief['todayVisits'] | null 
             </div>
             <div className="mt-2 flex gap-2">
               <a href={`#/leads/${v.leadId}`}
-                className="inline-flex items-center gap-1 rounded-lg border border-[var(--border)] px-2.5 py-1 text-[11px] font-medium text-[var(--foreground)] hover:bg-[var(--muted)] transition-colors">
-                View Brief <ChevronRight size={10} />
+                className="group inline-flex items-center gap-1 rounded-lg border border-[var(--border)] px-2.5 py-1 text-[11px] font-medium text-[var(--foreground)] hover:border-[var(--border-strong)] transition-all duration-150 active:scale-[0.97]">
+                View Brief <ChevronRight size={10} className="transition-transform duration-150 group-hover:translate-x-0.5" />
               </a>
               <a href={`#/site-visits`}
-                className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 px-2.5 py-1 text-[11px] font-medium text-emerald-600 hover:bg-emerald-100 transition-colors">
+                className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 px-2.5 py-1 text-[11px] font-medium text-emerald-600 transition-all duration-150 hover:-translate-y-0.5 hover:shadow-sm active:scale-[0.97]">
                 Mark Complete <CheckCircle size={10} />
               </a>
             </div>
@@ -996,10 +999,10 @@ export default function OverviewPage() {
           <ChevronRight size={11} />
           <span className="text-[var(--foreground)] font-medium">Overview</span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 p-0.5 rounded-lg bg-[var(--accent)]">
           {["7D", "1M", "3M", "1Y"].map(p => (
-            <button key={p} className={`text-xs font-medium px-2.5 py-1 rounded-md transition-colors ${
-              p === "1M" ? "bg-[var(--primary)] text-white" : "text-[var(--muted-foreground)] hover:bg-[var(--accent)]"
+            <button key={p} className={`text-xs font-medium px-3 py-1.5 rounded-md transition-all duration-150 ${
+              p === "1M" ? "bg-[var(--card)] text-[var(--foreground)] shadow-sm" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
             }`}>
               {p}
             </button>
@@ -1029,7 +1032,10 @@ export default function OverviewPage() {
             <h2 className="text-lg font-semibold font-[family-name:var(--font-display)] text-[var(--foreground)]">Recently Added Listings</h2>
             <p className="text-xs text-[var(--muted-foreground)]">Latest properties on the market</p>
           </div>
-          <a href="#" className="text-xs font-medium text-[var(--primary)] hover:underline">View All</a>
+          <a href="#" className="group text-xs font-medium text-[var(--primary)] flex items-center gap-1">
+            View All
+            <ChevronRight size={12} className="transition-transform duration-150 group-hover:translate-x-0.5" />
+          </a>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {PROPERTIES.map((p, i) => (
