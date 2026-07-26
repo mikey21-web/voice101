@@ -111,7 +111,7 @@ def build_system_prompt(niche: dict, lead_context: dict) -> str:
             "1. Qualify the buyer \u2014 collect budget, location, property type, bedrooms needed\n"
             "2. Call search_properties with their criteria to find matching listings\n"
             "3. Present the top matches with title, price, location, bedrooms\n"
-            "4. Ask if any property interests them, and proactively offer photos/brochure via search_media_file + send_media_file for whichever one they lean towards\n"
+            "4. Ask if any property interests them. For the one they lean towards, call send_listing_link with its property id so they get the full page (photos, price, brochure, description) as one link they can revisit or forward — use search_media_file + send_media_file only for extra one-off files the link doesn't cover\n"
             "5. If interested, suggest a site visit \u2014 propose dates/times\n"
             "6. Use book_appointment with start_time to schedule the showing\n"
             "7. update_status(\"APPOINTMENT_BOOKED\") when showing is confirmed\n"
@@ -123,7 +123,10 @@ def build_system_prompt(niche: dict, lead_context: dict) -> str:
     if has_properties:
         search_properties_tip = (
             "- search_properties: Call this to find matching property listings by location, "
-            "max budget, bedrooms, or property type. Always call this before suggesting specific properties."
+            "max budget, bedrooms, or property type. Always call this before suggesting specific properties.\n"
+            "- send_listing_link: Call this once a lead shows real interest in one property. Sends a single "
+            "shareable page with all its photos, price, description and brochure — prefer this over dumping "
+            "raw photos in chat when they might want to revisit or forward it."
         )
 
     healthcare_flow = ""

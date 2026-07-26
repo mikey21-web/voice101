@@ -3,6 +3,11 @@ import { PrismaService } from '../prisma/prisma.service';
 import { Prisma, PropertyStatus } from '@prisma/client';
 import { saveUploadedFile, deleteUploadedFile } from '../shared/file-storage.util';
 
+function slugify(title: string): string {
+  const base = title.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60);
+  return `${base || 'listing'}-${Math.random().toString(36).slice(2, 7)}`;
+}
+
 @Injectable()
 export class PropertiesService {
   private readonly logger = new Logger(PropertiesService.name);
@@ -36,6 +41,7 @@ export class PropertiesService {
     return this.prisma.property.create({
       data: {
         ...propertyData,
+        slug: slugify(propertyData.title),
         images: images?.length
           ? { create: images.map((img, i) => ({ url: img.url, caption: img.caption, isPrimary: img.isPrimary ?? i === 0, orderIndex: i })) }
           : undefined,
@@ -220,5 +226,26 @@ export class PropertiesService {
     if (!property) throw new NotFoundException('Property not found');
     deleteUploadedFile(property.brochureUrl);
     return this.prisma.property.update({ where: { id: propertyId }, data: { brochureUrl: null } });
+  }
+
+  // Public, unauthenticated listing page — the shareable link Mikey sends to leads.
+  async getPublicBySlug(slug: string) {
+    const property = await this.prisma.property.findUnique({
+      where: { slug },
+      include: { images: { orderBy: { orderIndex: 'asc' } } },
+    });
+    if (!property || property.deletedAt) throw new NotFoundException('Listing not found');
+    await this.prisma.property.update({ where: { id: property.id }, data: { viewCount: { increment: 1 } } });
+    return property;
+  }
+
+  async getPublicLink(propertyId: string, dashboardUrl: string) {
+    const property = await this.prisma.property.findUnique({ where: { id: propertyId } });
+    if (!property) throw new NotFoundException('Property not found');
+    const slug = property.slug ?? (await this.prisma.property.update({
+      where: { id: propertyId },
+      data: { slug: slugify(property.title) },
+    })).slug;
+    return { url: `${dashboardUrl.replace(/\/$/, '')}/#/listing/${slug}` };
   }
 }

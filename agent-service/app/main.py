@@ -42,18 +42,36 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="AI Lead Agent Service", version="1.0.0", lifespan=lifespan)
 
+# Runs are dispatched as fire-and-forget background tasks per inbound message, so two
+# messages arriving close together for the same lead (e.g. "/start" then "Hi") would
+# otherwise run concurrently, each reading the same empty history and independently
+# generating its own greeting, both getting sent. Serialize per lead so the second run
+# always sees the first one's reply already in history.
+# ponytail: grows one entry per distinct lead for the process lifetime, never evicted.
+# Fine at demo scale; switch to an LRU or TTL cache if lead volume gets large.
+_lead_locks: dict[str, asyncio.Lock] = {}
+
+
+def _lock_for(lead_id: str) -> asyncio.Lock:
+    lock = _lead_locks.get(lead_id)
+    if lock is None:
+        lock = asyncio.Lock()
+        _lead_locks[lead_id] = lock
+    return lock
+
 
 async def _retry_execute_run(settings: Settings, req: AgentRunRequest) -> None:
     """Run execute_run with a single retry on failure."""
-    try:
-        await execute_run(settings, req)
-    except Exception:
-        logger.exception("execute_run_failed_first_attempt", lead_id=req.lead_id)
+    async with _lock_for(req.lead_id):
         try:
-            await asyncio.sleep(2)
             await execute_run(settings, req)
         except Exception:
-            logger.exception("execute_run_failed_retry", lead_id=req.lead_id)
+            logger.exception("execute_run_failed_first_attempt", lead_id=req.lead_id)
+            try:
+                await asyncio.sleep(2)
+                await execute_run(settings, req)
+            except Exception:
+                logger.exception("execute_run_failed_retry", lead_id=req.lead_id)
 
 
 @app.post("/agent/run", response_model=AgentRunResponse, status_code=202)

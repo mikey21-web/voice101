@@ -1,9 +1,11 @@
 import { Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards, UseInterceptors, UploadedFile, UploadedFiles, Req } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+import { ConfigService } from '@nestjs/config';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
+import { Public } from '../auth/public.decorator';
 import { PropertiesService } from './properties.service';
 import { CreatePropertyDto } from './dto/create-property.dto';
 import { UpdatePropertyDto } from './dto/update-property.dto';
@@ -14,7 +16,22 @@ import { SearchPropertyDto } from './dto/search-property.dto';
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiBearerAuth()
 export class PropertiesController {
-  constructor(private service: PropertiesService) {}
+  constructor(private service: PropertiesService, private config: ConfigService) {}
+
+  // Public, unauthenticated listing page — the link Mikey shares with leads.
+  @Public()
+  @Get('properties/public/:slug')
+  getPublicListing(@Param('slug') slug: string) {
+    return this.service.getPublicBySlug(slug);
+  }
+
+  @Get('properties/:id/public-link')
+  @Roles('OWNER', 'ADMIN', 'MANAGER', 'SALES_AGENT')
+  getPublicLink(@Param('id') id: string) {
+    const dashboardUrl = this.config.get<string>('DASHBOARD_PUBLIC_URL')
+      || this.config.get<string>('PUBLIC_URL', '').replace(/\/api\/?$/, '');
+    return this.service.getPublicLink(id, dashboardUrl);
+  }
 
   @Post('properties')
   @Roles('OWNER', 'ADMIN', 'MANAGER')

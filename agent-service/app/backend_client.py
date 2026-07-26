@@ -262,6 +262,11 @@ class BackendClient:
         result = await self._retry_get(f"/properties/search?{'&'.join(params)}")
         return result if isinstance(result, list) else result.get("data", [])
 
+    async def get_property_public_link(self, property_id: str) -> str:
+        result = await self._get(f"/properties/{property_id}/public-link")
+        data = result.get('data', result)
+        return data.get('url', '')
+
     async def get_property(self, property_id: str) -> dict:
         return await self._retry_get(f"/properties/{property_id}")
 

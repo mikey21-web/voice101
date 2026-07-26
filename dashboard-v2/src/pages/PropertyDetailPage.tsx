@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import {
   ArrowLeft, MapPin, BedDouble, Bath, Maximize,
-  FileText, Building2, Loader2, ShieldCheck, Phone, Mail, TrendingUp, TrendingDown,
+  FileText, Building2, Loader2, ShieldCheck, Phone, Mail, TrendingUp, TrendingDown, Link2, Check,
 } from "lucide-react";
 import { api, resolveMediaUrl } from "../lib/api";
 import { Badge } from "../components/ui/badge";
+import toast from "react-hot-toast";
 
 function getPropertyId() {
   const hash = window.location.hash.replace("#", "");
@@ -39,6 +40,19 @@ export default function PropertyDetailPage() {
   const [agent, setAgent] = useState<any>(null);
   const [similar, setSimilar] = useState<any[]>([]);
   const [marketAvgPerSqft, setMarketAvgPerSqft] = useState<number | null>(null);
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  const copyShareLink = async () => {
+    try {
+      const { url } = await api(`/properties/${property.id}/public-link`);
+      await navigator.clipboard.writeText(url);
+      setLinkCopied(true);
+      toast.success("Listing link copied");
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch (e: any) {
+      toast.error(e.message || "Failed to generate link");
+    }
+  };
 
   useEffect(() => {
     const id = getPropertyId();
@@ -209,16 +223,25 @@ export default function PropertyDetailPage() {
         </div>
       )}
 
-      {property.brochureUrl && (
-        <a
-          href={property.brochureUrl}
-          target="_blank"
-          rel="noreferrer"
+      <div className="flex flex-wrap gap-3">
+        {property.brochureUrl && (
+          <a
+            href={property.brochureUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-2 rounded-lg border border-[var(--border)] px-4 py-2.5 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--accent)] transition-colors"
+          >
+            <FileText className="h-4 w-4" /> View Brochure
+          </a>
+        )}
+        <button
+          onClick={copyShareLink}
           className="inline-flex items-center gap-2 rounded-lg border border-[var(--border)] px-4 py-2.5 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--accent)] transition-colors"
         >
-          <FileText className="h-4 w-4" /> View Brochure
-        </a>
-      )}
+          {linkCopied ? <Check className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}
+          {linkCopied ? "Copied" : "Copy Shareable Link"}
+        </button>
+      </div>
 
       {/* Listed by */}
       {agent && (

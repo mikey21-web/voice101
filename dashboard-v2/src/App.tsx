@@ -336,6 +336,17 @@ export default function App() {
     return <PublicOrgPage slug={slug} />;
   }
 
+  // Public listing page — the shareable per-property link Mikey sends to leads.
+  if (publicRoute.startsWith('/listing/')) {
+    const PublicListingPage = lazy(() => import('./pages/PublicListingPage'));
+    const slug = publicRoute.slice('/listing/'.length);
+    return (
+      <Suspense fallback={<PageFallback />}>
+        <PublicListingPage slug={slug} />
+      </Suspense>
+    );
+  }
+
   // Public form renderer — embeddable multi-step form
   if (publicRoute.startsWith('/form/')) {
     const FormRendererPage = lazy(() => import('./pages/FormRendererPage'));

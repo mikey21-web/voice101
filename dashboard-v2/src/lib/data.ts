@@ -353,3 +353,4 @@ export async function acceptTeamInvite(token: string, password: string) {
 export async function fetchMyPublicProfile() { return api('/public-profile/mine'); }
 export async function updateMyPublicProfile(data: any) { return api('/public-profile/mine', { method: 'PATCH', body: JSON.stringify(data) }); }
 export async function fetchPublicProfileBySlug(slug: string) { return api(`/public-profile/org/${slug}`); }
+export async function fetchPublicListingBySlug(slug: string) { return api(`/properties/public/${slug}`); }
