@@ -226,7 +226,15 @@ export default function VoiceCommandUI() {
   useEffect(() => {
     const hasWhisperPath = !!(navigator.mediaDevices?.getUserMedia && (window as any).MediaRecorder);
     const Ctor = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    setWhisperMode(hasWhisperPath);
+    // Prefer the browser's own SpeechRecognition when available: it's a single
+    // API with sole access to the mic. The record-and-upload path additionally
+    // ran a "shadow" SpeechRecognition alongside MediaRecorder as a fallback,
+    // which meant two consumers fighting over the same microphone on every
+    // single command — and since server transcription needs a configured STT
+    // backend (Moonshine/Sarvam/Whisper) that isn't always deployed, that
+    // contended fallback was actually the only path most commands had.
+    // Recording+upload is now the fallback for browsers without SpeechRecognition.
+    setWhisperMode(hasWhisperPath && !Ctor);
     setSupported(hasWhisperPath || !!Ctor);
   }, []);
 
@@ -295,14 +303,44 @@ export default function VoiceCommandUI() {
     if (!Ctor) { setResult('Voice input not supported in this browser'); return; }
 
     const r = new Ctor();
-    r.continuous = false;
+    // continuous:true + a silence-based stop (below) instead of continuous:false,
+    // which ended the whole recognition after the FIRST pause — cutting off any
+    // command with a natural pause in the middle ("show me... hot leads").
+    r.continuous = true;
     r.interimResults = false;
     r.lang = 'en-US';
 
-    r.onstart = () => { setListening(true); setMode('listening'); };
-    r.onresult = (e: any) => handleTranscript(e.results[e.results.length - 1][0].transcript);
-    r.onerror = () => { setResult('Microphone error. Check permissions.'); };
-    r.onend = () => { setListening(false); setMode('idle'); if (wakeWordOn) wakeWord.start(); };
+    let finalText = '';
+    let stopTimer: ReturnType<typeof setTimeout> | undefined;
+    const armAutoStop = () => {
+      if (stopTimer) clearTimeout(stopTimer);
+      stopTimer = setTimeout(() => { try { r.stop(); } catch {} }, 2500);
+    };
+
+    r.onstart = () => { setListening(true); setMode('listening'); armAutoStop(); };
+    r.onresult = (e: any) => {
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        if (e.results[i].isFinal) finalText += e.results[i][0].transcript + ' ';
+      }
+      armAutoStop();
+    };
+    r.onerror = (e: any) => {
+      // 'no-speech' (silence until timeout) and 'aborted' (stopped manually,
+      // or a fresh start cut off the previous session) are routine, not
+      // failures — surfacing "Microphone error" for either was overwriting a
+      // clean stop or empty attempt with a scary, wrong message every time.
+      if (e.error === 'aborted' || e.error === 'no-speech') return;
+      setResult('Microphone error. Check permissions.');
+    };
+    r.onend = () => {
+      if (stopTimer) clearTimeout(stopTimer);
+      setListening(false);
+      setMode('idle');
+      const text = finalText.trim();
+      if (text) handleTranscript(text);
+      else setResult("Didn't catch that — tap the mic and speak.");
+      if (wakeWordOn) wakeWord.start();
+    };
 
     recognitionRef.current = r;
     try { r.start(); } catch { setResult('Failed to start microphone.'); }
