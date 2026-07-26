@@ -9,6 +9,7 @@ import { MetricsService } from '../monitoring/metrics.service';
 import { TimelineService } from '../timeline/timeline.service';
 import { envelopeDecrypt } from '../shared/crypto.util';
 import { OutboundWebhookDispatchService } from '../shared/outbound-webhook-dispatch.service';
+import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
 
 @Injectable()
@@ -23,7 +24,19 @@ export class WebhooksService {
     private metrics: MetricsService,
     private timeline: TimelineService,
     private outboundDispatch: OutboundWebhookDispatchService,
+    private config: ConfigService,
   ) {}
+
+  // Stops the tap-loading spinner on the lead's phone; failure here shouldn't block the message flow.
+  private async answerTelegramCallback(callbackQueryId: string): Promise<void> {
+    const token = this.config.get<string>('TELEGRAM_BOT_TOKEN');
+    if (!token) return;
+    await fetch(`https://api.telegram.org/bot${token}/answerCallbackQuery`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ callback_query_id: callbackQueryId }),
+    });
+  }
 
   private idempotencyKey(parts: string[]): string { return parts.join(':').slice(0, 255); }
   private payloadHash(payload: any): string { return crypto.createHash('md5').update(JSON.stringify(payload, Object.keys(payload).sort())).digest('hex'); }
@@ -70,7 +83,9 @@ export class WebhooksService {
     if (existing) return { status: 'duplicate', result: existing.processedResult };
 
     const fromNumber = msg.from;
-    const text = msg.text?.body || msg.text?.body || '';
+    // A tapped button/list option arrives as msg.interactive, not msg.text — without this,
+    // every reply to a send_options message would be read as an empty string.
+    const text = msg.text?.body || msg.interactive?.button_reply?.title || msg.interactive?.list_reply?.title || '';
 
     const contactName = msg.context?.name || value?.contacts?.[0]?.profile?.name || '';
     const contact = await this.contactsService.findOrCreate({ name: contactName, phone: fromNumber, whatsapp: fromNumber }, req);
@@ -184,12 +199,16 @@ export class WebhooksService {
   }
 
   async handleTelegram(payload: any, req?: any) {
-    const msg = payload?.message;
+    // A tapped inline-keyboard button arrives as callback_query, not message — normalize
+    // it into the same shape so the rest of this function needs no separate branch.
+    const cb = payload?.callback_query;
+    const msg = cb?.message ? { ...cb.message, from: cb.from, text: cb.data } : payload?.message;
     if (!msg?.chat?.id) return { status: 'ignored', reason: 'no chat message' };
+    if (cb) this.answerTelegramCallback(cb.id).catch(() => {});
 
     const chatId = String(msg.chat.id);
     const text = msg.text || '';
-    const msgId = String(msg.message_id);
+    const msgId = cb ? `cb-${cb.id}` : String(msg.message_id);
     const key = this.idempotencyKey(['telegram', chatId, msgId]);
 
     const existing = await this.prisma.webhookEvent.findUnique({ where: { idempotencyKey: key } });

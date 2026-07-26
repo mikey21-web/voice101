@@ -125,6 +125,7 @@ class BackendClient:
         media_url: str | None = None,
         media_type: str | None = None,
         caption: str | None = None,
+        options: list[dict] | None = None,
     ) -> dict:
         body = {
             "leadId": lead_id,
@@ -136,6 +137,8 @@ class BackendClient:
             body["messageTemplateId"] = template_id
         if media_url and media_type:
             body["metadata"] = {"mediaUrl": media_url, "mediaType": media_type, "caption": caption or text}
+        if options:
+            body["metadata"] = {**(body.get("metadata") or {}), "options": options}
         return await self._retry_post("/conversations/messages", body)
 
     async def update_custom_fields(self, lead_id: str, fields: dict) -> dict:

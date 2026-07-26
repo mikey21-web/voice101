@@ -189,6 +189,7 @@ export class TelegramBotAdapter implements MessagingAdapter {
     if (!token) return { success: false, error: 'Telegram bot token not configured' };
     const mediaUrl = config?.mediaUrl;
     const mediaType = config?.mediaType;
+    const options = config?.options as Array<{ id: string; title: string }> | undefined;
     try {
       const mediaMethods: Record<string, { method: string; field: string }> = {
         image: { method: 'sendPhoto', field: 'photo' },
@@ -201,6 +202,12 @@ export class TelegramBotAdapter implements MessagingAdapter {
       const body: any = media
         ? { chat_id: to, [media.field]: mediaUrl, caption: config?.caption || text, parse_mode: 'Markdown' }
         : { chat_id: to, text, parse_mode: 'Markdown' };
+      // Each option becomes its own row so long labels never get clipped side-by-side.
+      if (!media && options?.length) {
+        body.reply_markup = {
+          inline_keyboard: options.slice(0, 10).map(o => [{ text: o.title, callback_data: o.id }]),
+        };
+      }
 
       const send = () => fetchWithTimeout(`https://api.telegram.org/bot${token}/${endpoint}`, {
         method: 'POST',

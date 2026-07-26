@@ -79,7 +79,14 @@ function navigateTo(page: string) {
   return true;
 }
 
+// A sentence that mentions a page name isn't necessarily a "go there" command —
+// "how many leads do we have" contains "leads" but is a question, not
+// navigation. Route anything question-shaped straight to the AI instead of
+// silently treating it as "show me leads".
+const QUESTION_PATTERN = /\?\s*$|^(how|what|why|when|who|which|is|are|do|does|can|could|will|should|would)\b/i;
+
 function matchCommand(text: string): { page: string; filter?: string } | null {
+  if (QUESTION_PATTERN.test(text.trim())) return null;
   const t = text.toLowerCase().trim().replace(/^(?:show\s+me|go\s+to|open|navigate\s+to|navigate|take\s+me\s+to)\s+/i, '');
   const words = t.split(/\s+/);
 
@@ -118,6 +125,22 @@ export default function VoiceCommandUI() {
 
   const [wakeWordOn, setWakeWordOn] = useState(() => localStorage.getItem('mikeyWakeWordOn') === 'true');
   const wakeWord = useVoiceInput();
+  const speakAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Reuses the same voice-on preference the Mikey chat page uses, so turning
+  // voice on/off in one place applies everywhere Mikey talks.
+  const speakReply = useCallback((text: string) => {
+    if (localStorage.getItem('mikeyVoiceOn') !== 'true' || !text?.trim()) return;
+    api('/copilot/speak', { method: 'POST', body: JSON.stringify({ text }) })
+      .then((res: any) => {
+        if (!res?.audioBase64) return;
+        speakAudioRef.current?.pause();
+        const audio = new Audio(`data:${res.mimeType};base64,${res.audioBase64}`);
+        speakAudioRef.current = audio;
+        audio.play().catch(() => {});
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     const hasWhisperPath = !!(navigator.mediaDevices?.getUserMedia && (window as any).MediaRecorder);
@@ -166,9 +189,13 @@ export default function VoiceCommandUI() {
       if (nav) {
         setPendingFilter(nav.args.page, { filters: nav.args.filters, highlightId: nav.args.highlightId, zoom: nav.args.zoom, summary: nav.args.summary });
         window.location.hash = PAGE_MAP[nav.args.page] || '/' + nav.args.page;
-        setResult(`${transcriptLine}\n→ ${nav.args.summary || `Navigated to ${nav.args.page}`}`);
+        const summary = nav.args.summary || `Navigated to ${nav.args.page}`;
+        setResult(`${transcriptLine}\n→ ${summary}`);
+        speakReply(summary);
       } else {
-        setResult(`${transcriptLine}\n→ ${res.reply || 'Done'}`);
+        const reply = res.reply || 'Done';
+        setResult(`${transcriptLine}\n→ ${reply}`);
+        speakReply(reply);
       }
     }).catch(() => {
       setResult(`${transcriptLine}\n→ I didn't understand that. Try 'show me leads' or 'go to qr'.`);
@@ -177,7 +204,7 @@ export default function VoiceCommandUI() {
       setListening(false);
       if (wakeWordOn) wakeWord.start();
     });
-  }, [wakeWordOn, wakeWord]);
+  }, [wakeWordOn, wakeWord, speakReply]);
 
   const startBrowserRecognition = useCallback(() => {
     const Ctor = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;

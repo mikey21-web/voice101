@@ -62,16 +62,16 @@ def _lock_for(lead_id: str) -> asyncio.Lock:
 
 async def _retry_execute_run(settings: Settings, req: AgentRunRequest) -> None:
     """Run execute_run with a single retry on failure."""
-    async with _lock_for(req.lead_id):
+    async with _lock_for(req.leadId):
         try:
             await execute_run(settings, req)
         except Exception:
-            logger.exception("execute_run_failed_first_attempt", lead_id=req.lead_id)
+            logger.exception("execute_run_failed_first_attempt", lead_id=req.leadId)
             try:
                 await asyncio.sleep(2)
                 await execute_run(settings, req)
             except Exception:
-                logger.exception("execute_run_failed_retry", lead_id=req.lead_id)
+                logger.exception("execute_run_failed_retry", lead_id=req.leadId)
 
 
 @app.post("/agent/run", response_model=AgentRunResponse, status_code=202)
@@ -146,7 +146,7 @@ async def agent_chat(req: AgentRunRequest, x_agent_key: str = Header(None)):
         )
         return {"response": response_text}
     except asyncio.TimeoutError:
-        logger.warning("agent_chat_timeout", lead_id=req.lead_id)
+        logger.warning("agent_chat_timeout", lead_id=req.leadId)
         return await _agent_test_response_fallback(req.messageText or "")
 
 

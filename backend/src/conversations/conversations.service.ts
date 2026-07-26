@@ -141,7 +141,13 @@ export class ConversationsService {
       // A message can carry a photo/brochure/floor-plan alongside its text — e.g.
       // Mikey sending matching unit photos during a WhatsApp conversation. Passed
       // through as ordinary message metadata so no schema/DTO change was needed.
-      const meta = (msg.metadata || {}) as { mediaUrl?: string; mediaType?: string; caption?: string };
+      const meta = (msg.metadata || {}) as {
+        mediaUrl?: string; mediaType?: string; caption?: string;
+        options?: Array<{ id: string; title: string }>;
+      };
+      // send_options gives us plain {id, title} pairs regardless of channel; WhatsApp
+      // wants buttons (max 3) as "button" and anything larger as a "list" of rows.
+      const interactiveType = meta.options?.length ? (meta.options.length <= 3 ? 'button' : 'list') : undefined;
 
       const config = {
         phoneNumberId: this.config.get<string>('WHATSAPP_PHONE_NUMBER_ID') || '',
@@ -151,6 +157,12 @@ export class ConversationsService {
         mediaUrl: meta.mediaUrl,
         mediaType: meta.mediaType,
         caption: meta.caption,
+        interactiveType,
+        interactiveBody: interactiveType ? text : undefined,
+        interactiveButtons: interactiveType === 'button' ? meta.options : undefined,
+        interactiveSections: interactiveType === 'list'
+          ? [{ title: 'Options', rows: meta.options!.map(o => ({ id: o.id, title: o.title.slice(0, 24) })) }]
+          : undefined,
       };
       const result = await this.whatsAppAdapter.sendMessage(to, text, config);
       if (result.success) {
@@ -181,12 +193,13 @@ export class ConversationsService {
       }
       const chatId: string = lead.contact.whatsapp || lead.contact.phone || '';
       if (!chatId) return;
-      const telegramMeta = (msg.metadata || {}) as { mediaUrl?: string; mediaType?: string; caption?: string };
+      const telegramMeta = (msg.metadata || {}) as { mediaUrl?: string; mediaType?: string; caption?: string; options?: Array<{ id: string; title: string }> };
       const result = await this.telegramAdapter.sendMessage(chatId, text, {
         botToken: this.config.get<string>('TELEGRAM_BOT_TOKEN'),
         mediaUrl: telegramMeta.mediaUrl,
         mediaType: telegramMeta.mediaType,
         caption: telegramMeta.caption,
+        options: telegramMeta.options,
       });
       if (result.success) {
         await this.prisma.conversationMessage.update({

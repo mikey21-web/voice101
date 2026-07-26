@@ -281,6 +281,18 @@ def build_tools(ctx: ToolContext) -> list:
             return _err(str(e))
 
     @tool
+    async def send_options(question: str, options: list[str]):
+        """Ask the lead a closed-set question as tappable buttons instead of typing it out (e.g. "Buy or Rent?", "Which type: Apartment, Villa, Plot?", "Budget: Under 50L, 50L-1Cr, 1Cr+"). Use this for any question where the answer is one of a small fixed set of choices — it's faster and less error-prone for the lead than typing. Sends up to 10 options; on WhatsApp 3 or fewer render as buttons, more as a tappable list. Whatever they tap comes back to you as a normal text reply with that option's label, so just keep the conversation going as usual."""
+        try:
+            # WhatsApp caps button titles at 20 chars, list row titles at 24.
+            title_limit = 20 if len(options) <= 3 else 24
+            opts = [{"id": o[:title_limit], "title": o[:title_limit]} for o in options[:10]]
+            await ctx.client.send_message(ctx.lead_id, ctx.channel, question, options=opts)
+            return _ok(f"sent {len(opts)} option(s) for: {question}")
+        except BackendError as e:
+            return _err(str(e))
+
+    @tool
     async def send_listing_link(property_id: str):
         """Send the lead a shareable listing page link for one property (photos, price, description, brochure all in one page they can browse or forward). Use this instead of, or in addition to, raw photos once the lead shows real interest in a specific property — a link is easier for them to revisit and share than loose chat images."""
         if not (ctx.features and ctx.features.get("properties")):
@@ -494,6 +506,7 @@ def build_tools(ctx: ToolContext) -> list:
         record_conversion,
         mark_lost,
         escalate_to_human,
+        send_options,
         search_properties,
         search_units,
         send_listing_link,

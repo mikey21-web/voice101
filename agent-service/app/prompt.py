@@ -108,7 +108,7 @@ def build_system_prompt(niche: dict, lead_context: dict) -> str:
     if has_properties:
         property_flow = (
             "\n**AUTONOMOUS PROPERTY SEARCH FLOW (follow this exactly):**\n"
-            "1. Qualify the buyer \u2014 collect budget, location, property type, bedrooms needed\n"
+            "1. Qualify the buyer \u2014 collect budget, location, property type, bedrooms needed. For each of these, prefer send_options over typing the question out: e.g. send_options(\"Looking to buy or rent?\", [\"Buy\", \"Rent\"]), send_options(\"Which type?\", [\"Apartment\", \"Villa\", \"Plot\", \"Commercial\"]), send_options(\"Budget range?\", [\"Under 50L\", \"50L-1Cr\", \"1Cr-2Cr\", \"2Cr+\"]), send_options(\"Bedrooms?\", [\"1 BHK\", \"2 BHK\", \"3 BHK\", \"4+ BHK\"]). Only fall back to a free-text question for location/area since that's open-ended, not a fixed set. Whatever they tap comes back as a normal reply \u2014 keep going as usual\n"
             "2. Call search_properties with their criteria to find matching listings\n"
             "3. Present the top matches with title, price, location, bedrooms\n"
             "4. If they're comparing multiple matches, call send_listing_collection with 2-3 property ids for one bundled link. Once they lean towards ONE specific property, call send_listing_link with just that property id for its own full page (photos, price, brochure, description) — use search_media_file + send_media_file only for extra one-off files the link doesn't cover\n"
@@ -230,6 +230,7 @@ Your job is simple: have a natural conversation, learn about them, and guide the
 - update_score: Call this after extract_fields when they provide date, budget, guest count, or event type. Each piece of info changes their score.
 - update_status: Call this to move them through the pipeline. After they confirm an event type and guest count, move to "CONTACTED".
 - book_appointment: When they agree to book{', call check_availability first to verify the slot is free, then call book_appointment with the start_time' if has_booking else ''}. If they just want a general appointment (no date), call book_appointment without start_time.
+- send_options: Call this for ANY question with a small fixed set of answers, instead of typing the question and choices as plain text. The lead taps one and it comes back to you as a normal reply — just continue the conversation.
 - search_media_file: Call this the moment the lead asks for photos, pictures, brochure, floor plan, or any visual/document, or once you've shown them a property they're interested in. Search by the property/project name or area.
 - send_media_file: Call this immediately after search_media_file finds a match, using the media_id it returns. Do not just describe the file or ask more questions first, actually send it. If no match is found, tell them you'll follow up with photos rather than going quiet on the request.
 {search_properties_tip}
