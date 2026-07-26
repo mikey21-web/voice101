@@ -1,4 +1,4 @@
-import panzoom from 'https://cdn.jsdelivr.net/npm/@panzoom/panzoom/+esm';
+// panzoom loaded globally via UMD script from unpkg
 
 // Browser Params
 const queryString = window.location.search;
@@ -226,32 +226,32 @@ const clubhouseFloorPlansData = [
     {
         id: "Floor_Third",
         name: "Third",
-        image: "../assets/Clubhouse_Floor_Plans/Third_floor.webp"
+        image: "assets/Clubhouse_Floor_Plans/Third_floor.webp"
     },
     {
         id: "Floor_Fourth",
         name: "Fourth",
-        image: "../assets/Clubhouse_Floor_Plans/Fourth_floor.webp"
+        image: "assets/Clubhouse_Floor_Plans/Fourth_floor.webp"
     },
     {
         id: "Floor_Fifth",
         name: "Fifth",
-        image: "../assets/Clubhouse_Floor_Plans/Fifth_floor.webp"
+        image: "assets/Clubhouse_Floor_Plans/Fifth_floor.webp"
     },
     {
         id: "Floor_Sixth",
         name: "Sixth",
-        image: "../assets/Clubhouse_Floor_Plans/Sixth_floor.webp"
+        image: "assets/Clubhouse_Floor_Plans/Sixth_floor.webp"
     },
     {
         id: "Floor_Seventh",
         name: "Seventh",
-        image: "../assets/Clubhouse_Floor_Plans/Seventh_floor.webp"
+        image: "assets/Clubhouse_Floor_Plans/Seventh_floor.webp"
     },
     {
         id: "Floor_Terrace",
         name: "Terrace",
-        image: "../assets/Clubhouse_Floor_Plans/Terrace_floor.webp"
+        image: "assets/Clubhouse_Floor_Plans/Terrace_floor.webp"
     }
 ];
 
@@ -262,7 +262,8 @@ detailsIcon.addEventListener('click', () => {
 let clubhouseFloorPlan = 0;
 
 const updateClubhouseFloorPlanImg = () => {
-    clubhouseFloorPlanImg.src = clubhouseFloorPlansData[clubhouseFloorPlan].image;
+    if (!clubhouseFloorPlanImg) return;
+    clubhouseFloorPlanImg.src = clubhouseFloorPlansData[clubhouseFloorPlan]?.image ?? '';
 };
 
 const updateClubhouseFloorPlanLabel = () => {
@@ -4197,364 +4198,364 @@ const markersData = [
         title: "Indus International School",
         lat: 17.450540050895533, 
         lng: 78.17871842504304,
-        img: "/assets/markers_images/indus_international_school.jpg",
+        img: "assets/markers_images/indus_international_school.jpg",
         category: "education"
     },
     {
         title: "Avinya International School",
         lat: 17.438426556014793, 
         lng: 78.17597693421676,
-        img: "/assets/markers_images/avinya_international_school.jpg",
+        img: "assets/markers_images/avinya_international_school.jpg",
         category: "education",
     },
     {
         title: "The Quantium School",
         lat: 17.429373172696536, 
         lng: 78.19171425606218,
-        img: "/assets/markers_images/the_quantium_school.jpg",
+        img: "assets/markers_images/the_quantium_school.jpg",
         category: "education",
     },
     {
         title: "Acumen International School",
         lat: 17.454952688363132, 
         lng: 78.196557094022,
-        img: "/assets/markers_images/acumen_international_school.jpg",
+        img: "assets/markers_images/acumen_international_school.jpg",
         category: "education",
     },
     {
         title: "Meru International School",
         lat: 17.47089513902315, 
         lng: 78.2617306032822,
-        img: "/assets/markers_images/meru_international_school.jpg",
+        img: "assets/markers_images/meru_international_school.jpg",
         category: "education",
     },
      {
         title: "The Gaudium School",
         lat: 17.486471914376743, 
         lng: 78.24486884250243,
-        img: "/assets/markers_images/the_gaudium_school.jpg",
+        img: "assets/markers_images/the_gaudium_school.jpg",
         category: "education",
     },
     {
         title: "Samashti International School",
         lat: 17.45357313196139, 
         lng: 78.25023477985984, 
-        img: "/assets/markers_images/samashti_international_school.png",
+        img: "assets/markers_images/samashti_international_school.png",
         category: "education",
     },
     {
         title: "Prachin Global School",
         lat: 17.469087129239636, 
         lng: 78.18106742776462,
-        img: "/assets/markers_images/prachin_global_school.jpg",
+        img: "assets/markers_images/prachin_global_school.jpg",
         category: "education",
     },
     {
         title: "DELHI PUBLIC SCHOOL",
         lat: 17.448423977483834, 
         lng: 78.24082487059196,
-        img: "/assets/markers_images/delhi_public_school.jpg",
+        img: "assets/markers_images/delhi_public_school.jpg",
         category: "education",
     },
     {
         title: "DAV BDL Public School",
         lat: 17.46790086193772, 
         lng: 78.16511199428601,
-        img: "/assets/markers_images/DAV_BDL_Public_School.jpg",
+        img: "assets/markers_images/DAV_BDL_Public_School.jpg",
         category: "education",
     },
 {
         title: "Kidshine Global School",
         lat: 17.42927590235642, 
         lng: 78.19412890391112,
-        img: "/assets/markers_images/Kidshine_Global_School.jpg",
+        img: "assets/markers_images/Kidshine_Global_School.jpg",
         category: "education",
     },
     {
         title: "Rockwell International School",
         lat: 17.38675094813484, 
         lng: 78.33469270782955,
-        img: "/assets/markers_images/Rockwell_International_School.jpg",
+        img: "assets/markers_images/Rockwell_International_School.jpg",
         category: "education",
     },
     {
         title: "Birla Open Minds International School",
         lat: 17.434259972638205, 
         lng: 78.2687282367861,
-        img: "/assets/markers_images/Birla_Open_Minds_International_School.jpg",
+        img: "assets/markers_images/Birla_Open_Minds_International_School.jpg",
         category: "education",
     },
     {
         title: "Sloka The Global School kokapet",
         lat: 17.384952429051854, 
         lng: 78.3371042514631,
-        img: "/assets/markers_images/Sloka_The_Global_School.jpg",
+        img: "assets/markers_images/Sloka_The_Global_School.jpg",
         category: "education",
     },
     {
         title: "Candiidus International School",
         lat: 17.53512616539899, 
         lng:  78.23690025412834,
-        img: "/assets/markers_images//Candiidus_International_School.png",
+        img: "assets/markers_images/Candiidus_International_School.png",
         category: "education",
     },
      {
         title: "The Global Edge School",
         lat: 17.391760829561584, 
         lng: 78.34171493866299,
-        img: "/assets/markers_images/The_Global_Edge_School.jpg",
+        img: "assets/markers_images/The_Global_Edge_School.jpg",
         category: "education",
     },
     {
         title: "Green Gables International School",
         lat: 17.423485586764897, 
         lng: 78.26885838020678,
-        img: "/assets/markers_images/Green_Gables_International_School.jpg",
+        img: "assets/markers_images/Green_Gables_International_School.jpg",
         category: "education",
     },
     {
         title: "Sadhana Infinity International School",
         lat: 17.475423130676845, 
         lng: 78.30271449959713,
-        img: "/assets/markers_images/Sadhana_Infinity_International_School.jpg",
+        img: "assets/markers_images/Sadhana_Infinity_International_School.jpg",
         category: "education",
     },
     {
         title: "SATTVA Academy",
         lat: 17.405624857507945, 
         lng: 78.2858993283564,
-        img: "/assets/markers_images/SATTVA_Academy.jpg",
+        img: "assets/markers_images/SATTVA_Academy.jpg",
         category: "education",
     },
     {
         title: "Glendale International School",
         lat: 17.432977010126315, 
         lng: 78.29852149632063,
-        img: "/assets/markers_images/Glendale_International_School.jpg",
+        img: "assets/markers_images/Glendale_International_School.jpg",
         category: "education",
     },
     {
         title: "CGR Academy",
         lat: 17.495450592342387, 
         lng: 78.22769051371205,
-        img: "/assets/markers_images/CGR_Academy.png",
+        img: "assets/markers_images/CGR_Academy.png",
         category: "education",
     },
     {
         title: "Freedom Hospitals",
         lat: 17.387983104549768,  
         lng: 78.32786135254398,
-        img: "/assets/markers_images/Freedom_Hospitals.jpg",
+        img: "assets/markers_images/Freedom_Hospitals.jpg",
         category: "hospital",
     },
     {
         title: "Lalitha Hospital",
         lat: 17.453805466461617, 
         lng: 78.13739802272086,
-        img: "/assets/markers_images/Lalitha_Hospital.jpg",
+        img: "assets/markers_images/Lalitha_Hospital.jpg",
         category: "hospital",
     },
     {
         title: "Gayatri Hospital",
         lat: 17.454298600755084, 
         lng: 78.13773908932005,
-        img: "/assets/markers_images/Gayatri_Hospital.jpg",
+        img: "assets/markers_images/Gayatri_Hospital.jpg",
         category: "hospital",
     },
     {
         title: "Svaraaj Hospitals",
         lat: 17.453985177276387, 
         lng: 78.13668300421928,
-        img: "/assets/markers_images/Svaraaj_Hospital.jpg",
+        img: "assets/markers_images/Svaraaj_Hospital.jpg",
         category: "hospital",
     },
     {
         title: "Bharath Multi-Speciality Clinic",
         lat: 17.43325973085256, 
         lng: 78.18739531679063,
-        img: "/assets/markers_images/Bharath_Multi_Speciality_Clinic.jpg",
+        img: "assets/markers_images/Bharath_Multi_Speciality_Clinic.jpg",
         category: "hospital",
     },
     {
         title: "Medicover Hospitals",
         lat: 17.41282992309623, 
         lng: 78.33576240182146,
-        img: "/assets/markers_images/Medicover_Hospitals.jpg",
+        img: "assets/markers_images/Medicover_Hospitals.jpg",
         category: "hospital",
     },
     {
         title: "Airaavata Hospitals",
         lat: 17.46997369285665, 
         lng: 78.28948356087486,
-        img: "/assets/markers_images/Airaavata_Multispeciality_Hospital.jpg",
+        img: "assets/markers_images/Airaavata_Multispeciality_Hospital.jpg",
         category: "hospital",
     },
     {
         title: "Continental Hospitals",
         lat: 17.41749704746946, 
         lng: 78.33945441850679,
-        img: "/assets/markers_images/Continental_Hospitals.jpg",
+        img: "assets/markers_images/Continental_Hospitals.jpg",
         category: "hospital",
     },
 {
         title: "Apollo Hospitals",
         lat: 17.41672765414676, 
         lng: 78.35520468499219,
-        img: "/assets/markers_images/Apollo_Hospitals.jpg",
+        img: "assets/markers_images/Apollo_Hospitals.jpg",
         category: "hospital",
     },
     {
         title: "Rainbow Hospitals",
         lat: 17.41887553457532, 
         lng: 78.353945289201,
-        img: "/assets/markers_images/Rainbow_Hospitals.png",
+        img: "assets/markers_images/Rainbow_Hospitals.png",
         category: "hospital",
     },
     {
         title: "Star Hospitals",
         lat: 17.419407972507816, 
         lng: 78.35402903961831,
-        img: "/assets/markers_images/Star_Hospitals.jpg",
+        img: "assets/markers_images/Star_Hospitals.jpg",
         category: "hospital",
     },
     {
         title: "Citizens Hospitals",
         lat: 17.470398547677615, 
         lng: 78.31105863738534,
-        img: "/assets/markers_images/Citizens_Hospitals.jpg",
+        img: "assets/markers_images/Citizens_Hospitals.jpg",
         category: "hospital",
     },
     {
         title: "Yashoda Hospitals (Upcoming) ",
         lat: 17.402152709507487, 
         lng: 78.35203284033994,
-        img: "/assets/markers_images/Yashoda_Hospitals.jpg",
+        img: "assets/markers_images/Yashoda_Hospitals.jpg",
         category: "hospital",
     },
      {
         title: "Kokapet One",
         lat: 17.38538868323935, 
         lng: 78.3303399204239,
-        img: "/assets/markers_images/Kokapet_One.jpg",
+        img: "assets/markers_images/Kokapet_One.jpg",
         category: "malls",
     },
     {
         title: "Aparna Neo",
         lat: 17.46682998218494, 
         lng: 78.31011530502798,
-        img: "/assets/markers_images/Aparna_Neo_Mall.jpg",
+        img: "assets/markers_images/Aparna_Neo_Mall.jpg",
         category: "malls",
     },
     {
         title: "Allu Cinemas",
         lat: 17.38961802642539, 
         lng: 78.34388371266522,
-        img: "/assets/markers_images/Allu_Cinemas.jpg",
+        img: "assets/markers_images/Allu_Cinemas.jpg",
         category: "malls",
     },
     {
         title: "Miraj Cinemas",
         lat: 17.38414632188372, 
         lng: 78.36003288047702,
-        img: "/assets/markers_images/Miraj_Cinemas.jpg",
+        img: "assets/markers_images/Miraj_Cinemas.jpg",
         category: "malls",
     },
     {
         title: "Gandipet Landscape Park",
         lat: 17.381643165403748, 
         lng: 78.31666333905973,
-        img: "/assets/markers_images/Gandipet_Landscape_Park.jpg",
+        img: "assets/markers_images/Gandipet_Landscape_Park.jpg",
         category: "entertainment",
     },
     {
         title: "Experium Eco-Park",
         lat: 17.379671930716718, 
         lng: 78.19087205765015,
-        img: "/assets/markers_images/Experium_Eco_Park.jpg",
+        img: "assets/markers_images/Experium_Eco_Park.jpg",
         category: "entertainment",
     },
     {
         title: "Ocean Park",
         lat: 17.389341650733208, 
         lng: 78.32910532534629,
-        img: "/assets/markers_images/Ocean_Park.png",
+        img: "assets/markers_images/Ocean_Park.png",
         category: "entertainment",
     },
     {
         title: "Daisy dale farm park & Resort",
         lat: 17.449177347819084, 
         lng: 78.17173443790497,
-        img: "/assets/markers_images/Daisy_dale_farm_park_Resort.jpg",
+        img: "assets/markers_images/Daisy_dale_farm_park_Resort.jpg",
         category: "entertainment",
     },
    {
         title: "One Golf",
         lat: 17.414388458973896, 
         lng: 78.32903283073384,
-        img: "/assets/markers_images/One_Golf.jpg",
+        img: "assets/markers_images/One_Golf.jpg",
         category: "entertainment",
     },
     {
         title: "Thrive Sports Hub",
         lat: 17.418727383604246, 
         lng: 78.22900129193529,
-        img: "/assets/markers_images/Thrive_Sports_Hub.jpg",
+        img: "assets/markers_images/Thrive_Sports_Hub.jpg",
         category: "entertainment",
     },
      {
         title: "FNF ARENA",
         lat: 17.416534649314837, 
         lng: 78.2501031223829,
-        img: "/assets/markers_images/FNF_ARENA.jpg",
+        img: "assets/markers_images/FNF_ARENA.jpg",
         category: "entertainment",
     },
     {
         title: "Aarya Convention",
         lat: 17.41854405791115, 
         lng: 78.24627271420076,
-        img: "/assets/markers_images/Aarya_Convention.jpg",
+        img: "assets/markers_images/Aarya_Convention.jpg",
         category: "convention",
     },
     {
         title: "Zen Convention",
         lat: 17.40870864029674, 
         lng: 78.28692060877121,
-        img: "/assets/markers_images/Zen_Convention.jpg",
+        img: "assets/markers_images/Zen_Convention.jpg",
         category: "convention",
     },
     {
         title: "Fiesta Convention",
         lat: 17.401224414474918, 
         lng: 78.28658662289486,
-        img: "/assets/markers_images/Fiesta_Convention.jpg",
+        img: "assets/markers_images/Fiesta_Convention.jpg",
         category: "convention",
     },
     {
         title: "Savaaya Convention",
         lat: 17.386212884344065, 
         lng: 78.31793701271457,
-        img: "/assets/markers_images/Savaaya_Convention.jpg",
+        img: "assets/markers_images/Savaaya_Convention.jpg",
         category: "convention",
     },
     {
         title: "Neo Convention",
         lat: 17.409559214933857, 
         lng: 78.27022244950346,
-        img: "/assets/markers_images/Neo_Convention.jpg",
+        img: "assets/markers_images/Neo_Convention.jpg",
         category: "convention",
     },
     {
         title: "K Convention",
         lat: 17.418808107611476, 
         lng: 78.24340305026368,
-        img: "/assets/markers_images/K_Convention.jpg",
+        img: "assets/markers_images/K_Convention.jpg",
         category: "convention",
     },
     {
         title: "Raaga Convention",
         lat: 17.412439950288874, 
         lng: 78.2479109716403,
-        img: "/assets/markers_images/Raaga_Convention.png",
+        img: "assets/markers_images/Raaga_Convention.png",
         category: "convention",
     }
 ]; 
@@ -5264,7 +5265,8 @@ const fetchFloorSVGContent = async (url) => {
 
 const updateFloorPlanImg = () => {
     const floorData = data?.floors?.filter(each => each.towerId === towerId).find(each => each.floorId === `Floor_${floorPlan}`);
-    floorPlanImg.src = floorData?.["2dImage"];
+    if (!floorPlanImg) return;
+    floorPlanImg.src = floorData?.["2dImage"] ?? '';
     floorPlanImg.classList.remove('opacity-100');
     floorPlanImg.classList.add('opacity-0');
 
