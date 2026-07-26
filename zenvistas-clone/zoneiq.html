@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zone IQ</title>
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="icon" href="./assets/logos/Vezraa_logo.webp" type="image/png">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
+    <script src="https://kit.fontawesome.com/a0bdb82872.js" crossorigin="anonymous"></script>
+</head>
+<body>
+    <div class="w-screen h-screen bg-black fixed top-0 left-0 -z-1 text-white flex flex-col justify-center items-center text-3xl font-semibold">
+      Loading...
+    </div>
+    <!-- Device Rotation Message -->
+    <div class="device-rotation h-screen h-dvh w-screen w-dvw z-999999 fixed top-0 left-0 bg-white flex-col items-center justify-center">
+        <div class="p-8">
+            <img src="assets/rotate-device.png" alt="device orientation" class="mx-auto">
+            <p class="-mt-16 text-lg font-semibold text-center"> Rotate your device for a better experience in landscape mode. </p>
+        </div>
+    </div>
+    <div id="logoWrapper" class="fixed top-8 left-2 lg:left-4 z-9 select-none flex items-center gap-1.5 lg:gap-3 p-1.5 lg:p-2.5 rounded-xl bg-gradient-to-b from-gray-900/90 to-black/90 backdrop-blur-md border border-white/20 shadow-lg max-w-xs">
+      <!-- Logo -->
+      <a href="" target="_blank" class="flex items-center gap-2 sm:gap-3 no-underline">
+                        <img src="assets/logos/Vezraa_logo.webp" alt="Vezraa logo" loading="eager"
+            class="h-8 w-8 object-contain">
+                            <img src="./assets/logos/Vezraa_logo_1.webp" alt="Vezraa logo 1" class="max-h-4">
+      </a>
+      <!-- Divider -->
+      <div class="h-10 w-[1px] bg-white/20 rounded-full"></div>
+      <div class="flex items-center gap-2">
+          <a href="./index.html" class="cursor-pointer flex items-center justify-center rounded-lg bg-gradient-to-b from-gray-800/60 to-black/30 backdrop-blur-md border border-[#D4AF37]/40 hover:border-[#D4AF37] hover:shadow-[0_0_15px_rgba(212,175,55,0.7)] transition-all duration-300 h-8 w-8 text-lg active:scale-95">
+              <i class="fa-solid fa-house text-[#D4AF37]"></i>
+          </a>
+          <button id="backBtn" class="cursor-pointer flex items-center justify-center rounded-lg bg-gradient-to-b from-gray-800/60 to-black/30 backdrop-blur-md border border-[#D4AF37]/40 hover:border-[#D4AF37] hover:shadow-[0_0_15px_rgba(212,175,55,0.7)] transition-all duration-300 h-8 w-8 text-lg active:scale-95">
+              <i class="fa-solid fa-chevron-left text-[#D4AF37]"></i>
+          </button>
+      </div>
+    </div>
+    <iframe src="https://hookbot.in/viewer/index.php?code=a2557a7b2e94197ff767970b67041697" frameborder="0" allow="vr; autoplay; fullscreen" allowfullscreen loading="eager" class="w-dvw h-dvh"></iframe>
+    <script src="./js/zoneiq.js"></script>
+  </body>
+</html>

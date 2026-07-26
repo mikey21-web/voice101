@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maps</title>
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="icon" href="./assets/logos/Vezraa_logo.webp" type="image/png">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://kit.fontawesome.com/a0bdb82872.js" crossorigin="anonymous"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
+    <!-- Google Map API -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDKsh3i9qb4EYqkHKzsQKtw2kHQqslNqZM&callback=initMap" async></script>
+</head>
+<body>
+    <!-- Device Rotation Message -->
+    <div class="device-rotation h-screen h-dvh w-screen w-dvw z-999999 fixed top-0 left-0 bg-white flex-col items-center justify-center">
+        <div class="p-8">
+            <img src="assets/rotate-device.png" alt="device orientation" class="mx-auto">
+            <p class="-mt-16 text-lg font-semibold text-center"> Rotate your device for a better experience in landscape mode. </p>
+        </div>
+    </div>
+    <div class="fixed top-2 left-2 lg:top-4 lg:left-4 z-9 space-y-1 lg:space-y-2">
+
+
+    <div id="logoWrapper" class="select-none flex items-center gap-1.5 lg:gap-3 p-1.5 lg:p-2.5 rounded-xl bg-gradient-to-b from-gray-900/90 to-black/90 backdrop-blur-md border border-white/20 shadow-lg max-w-xs">
+
+        <a href="" target="_blank" class="flex items-center gap-2 no-underline">
+
+          <!-- LOGO -->
+          <img src="./assets/logos/Vezraa_logo.webp" alt="Vezraa logo"
+            class="h-7 w-7 object-contain" />
+          <div class="leading-tight space-y-1">
+            <img src="./assets/logos/Vezraa_logo_1.webp" alt="Vezraa logo 1" class="max-h-4">
+            <span
+              class="text-[9px] lg:text-[11px] font-bold tracking-[0.12em] bg-gradient-to-b from-[#F3E299] to-[#BE9B42] bg-clip-text text-transparent block mt-[-2px]">
+              by Vezraa
+            </span>
+            <p class="hidden sm:block text-[10px] text-white/70 mt-[1px]">Your Location, City</p>
+          </div>
+        </a>
+
+        <!-- Divider -->
+        <div class="h-8 w-[1px] bg-white/20 rounded-full"></div>
+
+        <div class="flex items-center gap-1.5">
+
+          <!-- Home Button -->
+          <button onclick="window.location.href='index.html'"
+            class="cursor-pointer flex items-center justify-center rounded-md bg-gradient-to-b from-gray-800/60 to-black/30 backdrop-blur-md border border-[#D4AF37]/40 hover:border-[#D4AF37] hover:shadow-[0_0_12px_rgba(212,175,55,0.5)] transition-all duration-300 h-8 w-8 active:scale-95">
+            <svg viewBox="0 0 512 512" class="h-4 w-4">
+              <defs>
+                <linearGradient id="goldGradient" y1="0%" y2="100%">
+                  <stop offset="0%" style="stop-color:#F3E299" />
+                  <stop offset="100%" style="stop-color:#BE9B42" />
+                </linearGradient>
+              </defs>
+              <path fill="url(#goldGradient)"
+                d="m499.4 207.2-198.4-166.3c-26-21.8-63.9-21.8-89.9 0l-198.5 166.3c-25.2 21.1-10.3 62.1 22.6 62.1h18v183.2c0 19.3 15.7 35 35 35h100.3v-118.3c0-37.3 30.2-67.5 67.5-67.5 37.3 0 67.5 30.2 67.5 67.5v118.3h100.3c19.3 0 35-15.7 35-35v-183.2h18c32.8 0 47.7-41 22.6-62.1z" />
+            </svg>
+          </button>
+
+          <!-- Back Button -->
+          <button id="backBtn"
+            class="cursor-pointer flex items-center justify-center rounded-md bg-gradient-to-b from-gray-800/60 to-black/30 backdrop-blur-md border border-[#D4AF37]/40 hover:border-[#D4AF37] hover:shadow-[0_0_12px_rgba(212,175,55,0.5)] transition-all duration-300 h-8 w-8 active:scale-95">
+            <svg viewBox="0 0 24 24" class="h-4 w-4">
+              <defs>
+                <linearGradient id="goldGradient" y1="0%" y2="100%">
+                  <stop offset="0%" style="stop-color:#F3E299" />
+                  <stop offset="100%" style="stop-color:#BE9B42" />
+                </linearGradient>
+              </defs>
+              <path fill="url(#goldGradient)"
+                d="m17.25 23.75c-.32 0-.64-.12-.88-.37l-10.5-10.5c-.49-.49-.49-1.28 0-1.77l10.5-10.5c.49-.49 1.28-.49 1.77 0s.49 1.28 0 1.77l-9.62 9.62 9.62 9.62c.49.49.49 1.28 0 1.77-.25.24-.57.36-.89.36z" />
+            </svg>
+          </button>
+
+        </div>
+      </div>
+    </div>
+    <!-- COMMON BUTTONS -->
+    <div id="commonBtnsWrapper" class="fixed z-999 flex items-center top-1 right-1 gap-1 sm:top-2 sm:right-2 sm:gap-1.5 lg:top-4 lg:right-4 lg:gap-3">
+         <!-- Full / Exit Screen -->
+        <div class="relative group">
+            <div class="flex flex-col items-center justify-center rounded-full text-white bg-black/70 backdrop-blur-sm shadow-md shadow-black/50 transition-transform duration-200 hover:scale-110 hover:bg-[rgba(0,0,0,0.8)] h-8 w-8 lg:h-10 lg:w-10">
+                <button id="fullScreenBtn" class="cursor-pointer">
+                    <i class="fa-solid fa-expand text-white text-[11px] sm:text-[13px] lg:text-[18px]"></i>
+                </button>
+                <button id="exitScreenBtn" class="cursor-pointer hidden">
+                    <i class="fa-solid fa-compress text-white text-[11px] sm:text-[13px] lg:text-[18px]"></i>
+                </button>
+            </div>
+            <span id="screenLabel" class="button-tooltip absolute left-1/2 top-full mt-1.5 w-max rounded-md bg-white px-1.5 py-1.5 text-xs font-normal text-black shadow-lg opacity-0 scale-90 origin-top transform -translate-x-1/2 transition-all duration-300 pointer-events-none group-hover:opacity-100 group-hover:scale-100 group-hover:pointer-events-auto">
+                Full Screen
+                <span class="absolute top-0 left-1/2 -translate-x-1/2 -mt-1 h-2 w-2 bg-white rotate-45"></span>
+            </span>
+        </div>
+        <!-- Menu -->
+        <div class="relative group">
+            <button id="featurePanelBtn" class="cursor-pointer flex items-center justify-center rounded-full text-white bg-black/70 backdrop-blur-sm shadow-md shadow-black/80 transition-transform duration-200 hover:scale-110 hover:bg-[rgba(0,0,0,0.8)] h-8 w-8 text-[11px] sm:text-[12px] lg:h-10 lg:w-10 lg:text-[18px]">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+            <span class="button-tooltip absolute left-1/2 top-full mt-1.5 w-max rounded-md bg-white px-1.5 py-1.5 text-xs font-normal text-black shadow-lg opacity-0 scale-90 origin-top transform -translate-x-1/2 transition-all duration-300 pointer-events-none group-hover:opacity-100 group-hover:scale-100 group-hover:pointer-events-auto">
+                Menu
+                <span class="absolute top-0 left-1/2 -translate-x-1/2 -mt-1 h-2 w-2 bg-white rotate-45"></span>
+            </span>
+        </div>
+    </div>
+    <div id="googleMaps" class="w-screen h-screen w-dvw h-dvh opacity-100 transition-opacity duration-500 ease-in-out">
+        <div id="map" class="w-full h-full"></div>     
+    </div>
+    <!-- LEFT PANEL -->
+    <ul class="flex space-x-1.5 backdrop-blur-sm rounded-xl bg-black shadow-lg p-1.5 fixed bottom-2 left-2 lg:bottom-4 lg:left-4 border border-white/30">
+        <!-- Home Tab -->
+        <li data-type="/webverse.html" class="tab-btn group relative cursor-pointer border border-white/40 h-8 w-8 lg:h-10 lg:w-10 inline-flex justify-center items-center gap-2 rounded-lg text-white font-semibold shadow transition-all duration-300">
+            <i class="far fa-map"></i>
+            <span class="tab-text font-semibold text-sm hidden">Aerial view</span>
+            <div
+            class="absolute bottom-full left-1/2 mb-3 w-max rounded-md bg-white py-2 px-3 text-sm font-normal text-black shadow-lg 
+                    opacity-0 scale-90 origin-bottom transform -translate-x-1/2 transition-all duration-300 pointer-events-none
+                    group-hover:opacity-100 group-hover:scale-100 group-hover:pointer-events-auto">
+            Aerial View
+            <span class="absolute top-3/4 left-1/2 h-3 w-3 bg-white rotate-45 -translate-x-1/2">
+            </span>
+            </div>
+        </li>
+
+        <!-- Profile Tab -->
+        <li data-type="/exterior.html" class="tab-btn group relative cursor-pointer border border-white/40 h-8 w-8 lg:h-10 lg:w-10 inline-flex justify-center items-center gap-2 rounded-lg text-white font-semibold shadow transition-all duration-300">
+            <i class="fa-solid fa-building fa-lg"></i>
+            <span class="tab-text font-semibold text-sm hidden">Exterior</span>
+            <div
+            class="absolute bottom-full left-1/2 mb-3 w-max rounded-md bg-white py-2 px-3 text-sm font-normal text-black shadow-lg 
+                    opacity-0 scale-90 origin-bottom transform -translate-x-1/2 transition-all duration-300 pointer-events-none
+                    group-hover:opacity-100 group-hover:scale-100 group-hover:pointer-events-auto">
+            Exterior
+            <span class="absolute top-3/4 left-1/2 h-3 w-3 bg-white rotate-45 -translate-x-1/2">
+            </span>
+            </div>
+        </li>
+        
+        <!-- Settings Tab -->
+        <li data-type="/interior.html" class="tab-btn group relative cursor-pointer border border-white/40 h-8 w-8 lg:h-10 lg:w-10 inline-flex justify-center items-center gap-2 rounded-lg text-white font-semibold shadow transition-all duration-300">
+            <i class="fa-solid fa-couch"></i>
+            <span class="tab-text font-semibold text-sm hidden">Interior</span>
+            <div
+            class="absolute bottom-full left-1/2 mb-3 w-max rounded-md bg-white py-2 px-3 text-sm font-normal text-black shadow-lg 
+                    opacity-0 scale-90 origin-bottom transform -translate-x-1/2 transition-all duration-300 pointer-events-none
+                    group-hover:opacity-100 group-hover:scale-100 group-hover:pointer-events-auto">
+            Interior
+            <span class="absolute top-3/4 left-1/2 h-3 w-3 bg-white rotate-45 -translate-x-1/2">
+            </span>
+            </div>
+        </li>
+
+        <!-- Google Maps Tab -->
+        <li data-type="/maps.html" class="tab-btn group relative bg-white cursor-pointer transition-all duration-500 border border-white/40 px-2 lg:px-4 inline-flex justify-center items-center gap-2 rounded-lg text-black font-semibold shadow">
+            <img src="assets/googlemaps.png" alt="Location" class="w-6 h-6 filter brightness-100 hover:brightness-125 transition-all duration-300" />
+            <span class="tab-text font-semibold text-sm">Google Maps</span>
+            <div
+            class="absolute bottom-full left-1/2 mb-3 w-max rounded-md bg-white py-2 px-3 text-sm font-normal text-black shadow-lg 
+                    opacity-0 scale-90 origin-bottom transform -translate-x-1/2 transition-all duration-300 pointer-events-none
+                    group-hover:opacity-100 group-hover:scale-100 group-hover:pointer-events-auto">
+            Google Maps
+            <span class="absolute top-3/4 left-1/2 h-3 w-3 bg-white rotate-45 -translate-x-1/2">
+            </span>
+            </div>
+        </li>
+
+        <li data-type="/zoneiq.html" class="tab-btn group relative cursor-pointer border border-white/40 h-8 w-8 lg:h-10 lg:w-10 inline-flex justify-center items-center gap-2 rounded-lg text-white font-semibold shadow transition-all duration-300">
+            <i class="fa-solid fa-globe fa-lg"></i>
+            <span class="tab-text font-semibold text-sm hidden">Zone IQ</span>
+            <div
+            class="absolute bottom-full left-1/2 mb-3 w-max rounded-md bg-white py-2 px-3 text-sm font-normal text-black shadow-lg 
+                    opacity-0 scale-90 origin-bottom transform -translate-x-1/2 transition-all duration-300 pointer-events-none
+                    group-hover:opacity-100 group-hover:scale-100 group-hover:pointer-events-auto">
+            Zone IQ
+            <span class="absolute top-3/4 left-1/2 h-3 w-3 bg-white rotate-45 -translate-x-1/2">
+            </span>
+            </div>
+        </li>
+    </ul>
+    <div id="features" class="transform translate-x-full transition-transform duration-600 ease-in-out fixed top-0 right-0 w-[100px] h-screen bg-black/90 p-3 z-9999 overflow-x-hidden">
+        <div class="flex flex-col items-center gap-6 w-full h-full">
+            <button id="featurePanelCloseBtn" class="h-10 w-10 rounded-full bg-black border border-white/20 cursor-pointer shrink-0 text-white">
+                <i class="fa-solid fa-xmark fa-lg" aria-hidden="true"></i>
+            </button>
+            <div id="featuresList" class="overflow-y-auto w-full">
+                <ul class="features flex flex-col gap-4 !w-full">
+                    <!-- About Feature -->
+                    <li class="select-none cursor-pointer flex flex-col justify-center items-center gap-2 w-full group" data-type="about">
+                        <a href="./about.html" class="inline-flex flex-col items-center gap-2">
+                        <div class="border border-white/20  p-2 lg:!p-4 flex flex-col items-center justify-center rounded-full h-[50px] w-[50px] transition-colors duration-300 group-hover:bg-gradient-to-br group-hover:from-[#F3E299]/50 group-hover:to-[#BE9B42]/70 bg-[rgba(0,0,0,0.45)]">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="h-[30px] w-[30px]">
+                                <path fill="#ffffff" d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM216 336l24 0 0-64-24 0c-13.3 0-24-10.7-24-24s10.7-24 24-24l48 0c13.3 0 24 10.7 24 24l0 88 8 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-80 0c-13.3 0-24-10.7-24-24s10.7-24 24-24zm40-208a32 32 0 1 1 0 64 32 32 0 1 1 0-64z"/>
+                            </svg>
+                        </div>
+                        <p class="text-xs text-white text-center"> About </p>
+                        </a>  
+                    </li>
+                    <!-- Gallery Feature -->
+                    <li class="select-none cursor-pointer flex flex-col justify-center items-center gap-2 w-full group" data-type="gallery">
+                        <a href="./gallery.html" class="inline-flex flex-col items-center gap-2">
+                        <div class="border border-white/20 p-4 flex flex-col items-center justify-center rounded-full h-[50px] w-[50px] transition-colors duration-300 group-hover:bg-gradient-to-br group-hover:from-[#F3E299]/50 group-hover:to-[#BE9B42]/70 bg-[rgba(0,0,0,0.45)]">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" style="height: 24px; width: 24px;">
+                                    <path fill="#ffffff" d="M464 448H48c-26.5 0-48-21.5-48-48V112c0-26.5 21.5-48 48-48h416c26.5 0 48 21.5 48 48v288c0 26.5-21.5 48-48 48zM112 120c-30.9 0-56 25.1-56 56s25.1 56 56 56 56-25.1 56-56-25.1-56-56-56zM64 384h384V272l-87.5-87.5c-4.7-4.7-12.3-4.7-17 0L208 320l-55.5-55.5c-4.7-4.7-12.3-4.7-17 0L64 336v48z"/>
+                                </svg>
+                            </div>
+                            <p class="text-xs text-white text-center"> Gallery </p>
+                        </a>  
+                    </li>
+                    <!-- Brochure Feature -->
+                    <li class="select-none cursor-pointer flex flex-col justify-center items-center gap-2 w-full group" data-type="brochure">
+                        <a href="./brochure.html" class="inline-flex flex-col items-center gap-2">
+                            <div class="border border-white/20 p-4 flex flex-col items-center justify-center rounded-full h-[50px] w-[50px] transition-colors duration-300 group-hover:bg-gradient-to-br group-hover:from-[#F3E299]/50 group-hover:to-[#BE9B42]/70 bg-[rgba(0,0,0,0.45)]"> 
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" style="height: 24px; width: 24px;">
+                                    <path fill="#ffffff" d="M0 64C0 28.7 28.7 0 64 0L224 0l0 128c0 17.7 14.3 32 32 32l128 0 0 144-208 0c-35.3 0-64 28.7-64 64l0 144-48 0c-35.3 0-64-28.7-64-64L0 64zm384 64l-128 0L256 0 384 128zM176 352l32 0c30.9 0 56 25.1 56 56s-25.1 56-56 56l-16 0 0 32c0 8.8-7.2 16-16 16s-16-7.2-16-16l0-48 0-80c0-8.8 7.2-16 16-16zm32 80c13.3 0 24-10.7 24-24s-10.7-24-24-24l-16 0 0 48 16 0zm96-80l32 0c26.5 0 48 21.5 48 48l0 64c0 26.5-21.5 48-48 48l-32 0c-8.8 0-16-7.2-16-16l0-128c0-8.8 7.2-16 16-16zm32 128c8.8 0 16-7.2 16-16l0-64c0-8.8-7.2-16-16-16l-16 0 0 96 16 0zm80-112c0-8.8 7.2-16 16-16l48 0c8.8 0 16 7.2 16 16s-7.2 16-16 16l-32 0 0 32 32 0c8.8 0 16 7.2 16 16s-7.2 16-16 16l-32 0 0 48c0 8.8-7.2 16-16 16s-16-7.2-16-16l0-64 0-64z"/>
+                                </svg>
+                            </div>
+                            <p class="text-xs text-white text-center"> Brochure </p>
+                        </a>
+                    </li>
+                    <!-- Contact Feature -->
+                    <li class="select-none cursor-pointer flex flex-col justify-center items-center gap-2 w-full group" data-type="contact">
+                        <a href="https://wa.me/0000000000" class="inline-flex flex-col items-center gap-2"> 
+                            <div class="border border-white/20 p-4 flex flex-col items-center justify-center rounded-full h-[50px] w-[50px] transition-colors duration-300 group-hover:bg-gradient-to-br group-hover:from-[#F3E299]/50 group-hover:to-[#BE9B42]/70 bg-[rgba(0,0,0,0.45)]"> 
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" style="height: 22px; width: 22px;">
+                                    <path fill="#ffffff" d="M164.9 24.6c-7.7-18.6-28-28.5-47.4-23.2l-88 24C12.1 30.2 0 46 0 64C0 311.4 200.6 512 448 512c18 0 33.8-12.1 38.6-29.5l24-88c5.3-19.4-4.6-39.7-23.2-47.4l-96-40c-16.3-6.8-35.2-2.1-46.3 11.6L304.7 368C234.3 334.7 177.3 277.7 144 207.3L193.3 167c13.7-11.2 18.4-30 11.6-46.3l-40-96z"/>
+                                </svg>
+                            </div>
+                            <p class="text-xs text-white text-center"> Contact </p>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div> 
+    <div class="fixed bottom-2 right-2 lg:bottom-4 lg:right-4 flex flex-col gap-1.5 lg:gap-3 items-end z-999">
+        <div id="markersPanel" class="h-72 w-64 lg:h-[450px] lg:w-[350px] bg-[rgba(0,0,0,0.8)] rounded-lg p-3 flex flex-col gap-1.5 lg:gap-2">
+            <ul class="markers-categories grid grid-cols-2 lg:grid-cols-3 gap-2 text-white select-none">
+                <!-- Travel -->
+                <li data-type="travel" class="category-item group cursor-pointer h-6 rounded-full border hover:border-[#BE9B42] transition-all duration-300 bg-gradient-to-b from-gray-900 to-black ring-1 ring-[#BE9B42] border-transparent" title="Schools & Colleges">
+                    <div class="flex items-center justify-center gap-1.5 h-full text-white/90 group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-[#F3E299] group-hover:to-[#BE9B42] group-hover:bg-clip-text transition-all duration-300">
+                        <span class="text-xs font-medium">Travel</span>
+                        <i class="fa-solid fa-bus fa-xs"></i>
+                    </div>
+                </li>
+                <!-- Destination -->
+                <li data-type="destination" class="category-item group cursor-pointer h-6 rounded-full border border-gray-700 bg-gradient-to-b from-black to-[#1a1a1a] hover:border-[#BE9B42] transition-all duration-300" title="Schools & Colleges">
+                    <div class="flex items-center justify-center gap-1.5 h-full text-white/90 group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-[#F3E299] group-hover:to-[#BE9B42] group-hover:bg-clip-text transition-all duration-300">
+                        <span class="text-xs font-medium">Destination</span>
+                        <i class="fa-solid fa-map-location fa-xs"></i>
+                    </div>
+                </li>
+                <!-- Education -->
+                <li data-type="education" class="category-item group cursor-pointer h-6 rounded-full border border-gray-700 bg-gradient-to-b from-black to-[#1a1a1a] hover:border-[#BE9B42] transition-all duration-300" title="Schools & Colleges">
+                    <div class="flex items-center justify-center gap-1.5 h-full text-white/90 group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-[#F3E299] group-hover:to-[#BE9B42] group-hover:bg-clip-text transition-all duration-300">
+                        <span class="text-xs font-medium">Education</span>
+                        <i class="fa-solid fa-graduation-cap fa-xs"></i>
+                    </div>
+                </li>
+                <!-- Work -->
+                <li data-type="work" class="category-item group cursor-pointer h-6 rounded-full border border-gray-700 bg-gradient-to-b from-black to-[#1a1a1a] hover:border-[#BE9B42] transition-all duration-300" title="Work Hubs">
+                    <div class="flex items-center justify-center gap-1.5 h-full text-white/90 group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-[#F3E299] group-hover:to-[#BE9B42] group-hover:bg-clip-text transition-all duration-300">
+                        <span class="text-xs font-medium">Work</span>
+                        <i class="fa-solid fa-briefcase fa-xs"></i>
+                    </div>
+                </li>
+                <!-- Shopping -->
+                <li data-type="shopping" class="category-item group cursor-pointer h-6 rounded-full border border-gray-700 bg-gradient-to-b from-black to-[#1a1a1a] hover:border-[#BE9B42] transition-all duration-300" title="Malls & Shopping">
+                    <div class="flex items-center justify-center gap-1.5 h-full text-white/90 group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-[#F3E299] group-hover:to-[#BE9B42] group-hover:bg-clip-text transition-all duration-300">
+                        <span class="text-xs font-medium">Shopping</span>
+                        <i class="fa-solid fa-bag-shopping fa-xs"></i>
+                    </div>
+                </li>
+                <!-- Hospitals -->
+                <li data-type="hospital" class="category-item group cursor-pointer h-6 rounded-full border border-gray-700 bg-gradient-to-b from-black to-[#1a1a1a] hover:border-[#BE9B42] transition-all duration-300" title="Hospitals">
+                    <div class="flex items-center justify-center gap-1.5 h-full text-white/90 group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-[#F3E299] group-hover:to-[#BE9B42] group-hover:bg-clip-text transition-all duration-300">
+                        <span class="text-xs font-medium">Hospitals</span>
+                        <i class="fa-solid fa-hospital fa-xs"></i>
+                    </div>
+                </li>
+            </ul>
+            <div class="flex items-center justify-between px-2 py-1 bg-[#BE9B42] rounded-sm">
+                <span class="font-semibold text-xs text-white/80">NAME</span>
+                <span class="font-semibold text-xs text-white/80">DISTANCE (KM)</span>
+            </div>
+            <ul id="" class="markers-list flex flex-col gap-2 px-2 overflow-y-auto h-full"></ul>
+        </div>
+        <!-- Filters Button -->
+        <button id="mapFilterBtn" class="relative group h-8 w-8 lg:h-12 lg:w-12 border-2 border-[#BE9B42] cursor-pointer text-xs lg:text-sm px-1.5 py-1 lg:px-3 lg:py-2 rounded-full shadow-lg bg-gradient-to-b from-gray-900/90 to-black/90 backdrop-blur-md transition-all duration-300 hover:from-gray-800/90 hover:shadow-xl hover:-translate-y-0.5">
+            <span class="inline-flex h-full w-full flex-col items-center justify-center bg-gradient-to-b from-[#F3E299] to-[#BE9B42] bg-clip-text text-transparent font-normal lg:font-medium uppercase">
+                <i class="fa-solid fa-filter fa-lg"></i>
+            </span>
+            <div class="absolute right-full top-1/2 mr-1.5 w-max rounded-md bg-white px-1.5 py-1.5 text-xs font-normal text-black shadow-lg opacity-0 scale-90 origin-right transform -translate-y-1/2 transition-all duration-300 pointer-events-none group-hover:opacity-100 group-hover:scale-100 group-hover:pointer-events-auto">
+                Filters
+                <span class="absolute top-1/2 right-0 -translate-y-1/2 translate-x-1 h-2 w-2 bg-white rotate-45 -z-1"></span>
+            </div>
+        </button>
+    </div>
+    <script src="./js/maps.js"></script>
+</body>
+</html>

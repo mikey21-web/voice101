@@ -33,17 +33,19 @@ conn.on('ready', async () => {
   console.log('\n=== git pull ===');
   console.log(await run(`cd ${dir} && git pull 2>&1`));
 
+  const compose = `docker compose -f docker-compose.demo.yml -p demo-realestate --env-file deploy-demo/.env.realestate`;
+
   console.log('\n=== Rebuild backend + dashboard (realestate only) ===');
-  console.log(await run(`cd ${dir} && docker compose up -d --build backend dashboard 2>&1 | tail -30`));
+  console.log(await run(`cd ${dir} && ${compose} up -d --build backend dashboard agent-service 2>&1 | tail -30`));
 
   console.log('\n=== Run prisma migrate deploy ===');
-  console.log(await run(`cd ${dir} && docker compose exec -T backend npx prisma migrate deploy 2>&1`));
+  console.log(await run(`cd ${dir} && ${compose} exec -T backend npx prisma migrate deploy 2>&1`));
 
   console.log('\n=== Health check ===');
   console.log(await run(`docker exec ${backend} curl -s -o /dev/null -w "HTTP %{http_code}\\n" http://localhost:3001/health 2>&1`));
 
   console.log('\n=== Container status ===');
-  console.log(await run(`cd ${dir} && docker compose ps`));
+  console.log(await run(`cd ${dir} && ${compose} ps`));
 
   console.log('\n=== Done ===');
   conn.end();

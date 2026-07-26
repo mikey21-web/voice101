@@ -1,0 +1,20 @@
+URL: https://propsite.in/dashboard/collections
+TITLE: PropSite — AI-Powered Property Listings for Indian Real Estate
+
+Home
+My Listings
+Collections
+Agency
+Settings
++ New Listing
+B
+Profile
+Collections
+0
++ New Collection
+📂
+No collections yet
+
+Bundle multiple listings under one shareable link, perfect for sending to clients
+
+✨ Create Collection

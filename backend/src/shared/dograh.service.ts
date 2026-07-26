@@ -32,7 +32,7 @@ export class DograhService {
   }
 
   workflowUuidFor(language: string): string {
-    return WORKFLOW_UUID_BY_LANGUAGE[language] || WORKFLOW_UUID_BY_LANGUAGE.en;
+    return WORKFLOW_UUID_BY_LANGUAGE[language] || WORKFLOW_UUID_BY_LANGUAGE.te;
   }
 
   async triggerCall(workflowUuid: string, phoneNumber: string, initialContext: Record<string, any>): Promise<{ workflow_run_id: number; status: string }> {
@@ -104,8 +104,8 @@ export class DograhService {
     return Boolean(config?.credentials?.amd_enabled);
   }
 
-  async getSettings(language = 'en'): Promise<VoiceAgentSettings> {
-    const workflowId = WORKFLOW_ID_BY_LANGUAGE[language] || WORKFLOW_ID_BY_LANGUAGE.en;
+  async getSettings(language = 'te'): Promise<VoiceAgentSettings> {
+    const workflowId = WORKFLOW_ID_BY_LANGUAGE[language] || WORKFLOW_ID_BY_LANGUAGE.te;
     const { definition } = await this.fetchWorkflowDefinition(workflowId);
     const globalNode = definition.nodes.find((n: any) => n.type === 'globalNode');
     const startNode = definition.nodes.find((n: any) => n.type === 'startCall');
@@ -125,7 +125,7 @@ export class DograhService {
   }
 
   async updateSettings(language: string, changes: { greeting?: string; persona?: string; antiEarlyHangupEnabled?: boolean; checklistCopy?: string }): Promise<void> {
-    const workflowId = WORKFLOW_ID_BY_LANGUAGE[language] || WORKFLOW_ID_BY_LANGUAGE.en;
+    const workflowId = WORKFLOW_ID_BY_LANGUAGE[language] || WORKFLOW_ID_BY_LANGUAGE.te;
     const { name, definition } = await this.fetchWorkflowDefinition(workflowId);
     const globalNode = definition.nodes.find((n: any) => n.type === 'globalNode');
     const startNode = definition.nodes.find((n: any) => n.type === 'startCall');
@@ -159,18 +159,18 @@ export class DograhService {
   /** Fields captured by the core qualification flow itself - never shown as removable "custom" fields. */
   private static readonly BUILTIN_FIELDS = ['needs_loan', 'wants_site_visit'];
 
-  async getCustomFields(language = 'en'): Promise<Array<{ name: string; type: string; prompt: string }>> {
-    const workflowId = WORKFLOW_ID_BY_LANGUAGE[language] || WORKFLOW_ID_BY_LANGUAGE.en;
+  async getCustomFields(language = 'te'): Promise<Array<{ name: string; type: string; prompt: string }>> {
+    const workflowId = WORKFLOW_ID_BY_LANGUAGE[language] || WORKFLOW_ID_BY_LANGUAGE.te;
     const { definition } = await this.fetchWorkflowDefinition(workflowId);
-    const loanNode = definition.nodes.find((n: any) => n.data?.name === 'loan');
+    const loanNode = definition.nodes.find((n: any) => n.data?.name === 'qualification');
     const vars: Array<{ name: string; type: string; prompt: string }> = loanNode?.data?.extraction_variables || [];
     return vars.filter((v) => !DograhService.BUILTIN_FIELDS.includes(v.name));
   }
 
   async addCustomField(language: string, field: { name: string; type: 'string' | 'number' | 'boolean'; prompt: string }): Promise<void> {
-    const workflowId = WORKFLOW_ID_BY_LANGUAGE[language] || WORKFLOW_ID_BY_LANGUAGE.en;
+    const workflowId = WORKFLOW_ID_BY_LANGUAGE[language] || WORKFLOW_ID_BY_LANGUAGE.te;
     const { name, definition } = await this.fetchWorkflowDefinition(workflowId);
-    const loanNode = definition.nodes.find((n: any) => n.data?.name === 'loan');
+    const loanNode = definition.nodes.find((n: any) => n.data?.name === 'qualification');
     if (!loanNode) throw new Error('Could not find the qualification node to attach the field to');
     loanNode.data.extraction_variables = loanNode.data.extraction_variables || [];
     loanNode.data.extraction_variables = loanNode.data.extraction_variables.filter((v: any) => v.name !== field.name);
@@ -182,9 +182,9 @@ export class DograhService {
   }
 
   async deleteCustomField(language: string, fieldName: string): Promise<void> {
-    const workflowId = WORKFLOW_ID_BY_LANGUAGE[language] || WORKFLOW_ID_BY_LANGUAGE.en;
+    const workflowId = WORKFLOW_ID_BY_LANGUAGE[language] || WORKFLOW_ID_BY_LANGUAGE.te;
     const { name, definition } = await this.fetchWorkflowDefinition(workflowId);
-    const loanNode = definition.nodes.find((n: any) => n.data?.name === 'loan');
+    const loanNode = definition.nodes.find((n: any) => n.data?.name === 'qualification');
     if (!loanNode) return;
     loanNode.data.extraction_variables = (loanNode.data.extraction_variables || []).filter((v: any) => v.name !== fieldName);
     loanNode.data.prompt = loanNode.data.prompt.replace(new RegExp(` Also ask:[^\\[]*\\[custom: ${fieldName}\\]`), '');
@@ -201,7 +201,7 @@ export class DograhService {
       scheduleConfig?: { enabled: boolean; timezone: string; slots: Array<{ dayOfWeek: number; startTime: string; endTime: string }> };
     },
   ): Promise<{ campaignId: number }> {
-    const workflowId = WORKFLOW_ID_BY_LANGUAGE[language] || WORKFLOW_ID_BY_LANGUAGE.en;
+    const workflowId = WORKFLOW_ID_BY_LANGUAGE[language] || WORKFLOW_ID_BY_LANGUAGE.te;
     const fileName = `campaign-${Date.now()}.csv`;
 
     const uploadUrlRes = await fetch(`${this.baseUrl}/api/v1/s3/presigned-upload-url`, {
@@ -360,7 +360,7 @@ export class DograhService {
 
   /** Attaches (or detaches) a knowledge-base document to every conversational node so RAG search works regardless of which step the caller is on. */
   async setWorkflowKnowledgeBase(language: string, documentUuid: string, attach: boolean): Promise<void> {
-    const workflowId = WORKFLOW_ID_BY_LANGUAGE[language] || WORKFLOW_ID_BY_LANGUAGE.en;
+    const workflowId = WORKFLOW_ID_BY_LANGUAGE[language] || WORKFLOW_ID_BY_LANGUAGE.te;
     if (!workflowId) return;
     const { name, definition } = await this.fetchWorkflowDefinition(workflowId);
     for (const node of definition.nodes) {

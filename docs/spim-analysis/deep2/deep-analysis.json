@@ -1,0 +1,1155 @@
+{
+  "features": {
+    "spin360": {
+      "layoutState": {
+        "src": "https://royalpavilion.spim-webverse.com/assets/night_frames/layout/ncd_royal_pavilion_night_1.webp"
+      },
+      "blockState": {
+        "src": "https://royalpavilion.spim-webverse.com/assets/night_frames/layout/ncd_royal_pavilion_night_1.webp"
+      }
+    },
+    "d3": {
+      "hasD3": true,
+      "svgElements": 7,
+      "layoutSvgHTML": "<svg id=\"Layer_1\" data-name=\"Layer 1\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 3840 2160\" preserveAspectRatio=\"xMidYMid slice\" width=\"100%\" height=\"100%\">\n  <defs>\n    <style>\n      .cls-1 {\n        fill: none;\n      }\n    </style>\n  </defs>\n  <g id=\"MLOC-mymap\">\n    <g id=\"Block_D\">\n      <polygon class=\"cls-1\" points=\"2714.67 470.22 2177.78 341.78 1210.89 494.44 1210.89 504.22 1218.22 504.22 1221.33 639.11 1218 639.11 1218.44 651.56 1272 654.22 1272 668.44 1225.78 671.56 1225.11 696.67 "
+    },
+    "audio": {
+      "exists": true,
+      "src": "https://royalpavilion.spim-webverse.com/assets/audios/audio_english.mp3",
+      "paused": true,
+      "autoplay": false,
+      "loop": false
+    },
+    "map": {
+      "mapExists": true,
+      "googleMapExists": true,
+      "leafletContainers": 0,
+      "hasLeaflet": true,
+      "leafletVersion": "1.9.4"
+    },
+    "tour": {
+      "hasShepherd": true,
+      "tourInstance": false
+    },
+    "filters": {
+      "webverseFilters": "none",
+      "orientation": "ref: <Node>",
+      "type": "ref: <Node>",
+      "unit": "ref: <Node>",
+      "note": "ref: <Node>"
+    },
+    "dayNight": {
+      "exists": true,
+      "checked": false,
+      "timeOfDay": null
+    },
+    "contact": {
+      "exists": false
+    },
+    "rera": {
+      "exists": true,
+      "text": "P02400010133"
+    },
+    "gallery": {
+      "exists": true,
+      "currentSrc": "https://royalpavilion.spim-webverse.com/assets/gallery/activity.webp",
+      "totalItems": null
+    },
+    "panzoom": {
+      "hasPanzoom": true
+    },
+    "clubhouse": {
+      "exists": true,
+      "image": "https://royalpavilion.spim-webverse.com/assets//Clubhouse.webp",
+      "images": [
+        "https://royalpavilion.spim-webverse.com/assets//Clubhouse.webp"
+      ],
+      "floors": [
+        "Floor_Third",
+        "Floor_Fourth",
+        "Floor_Fifth",
+        "Floor_Sixth",
+        "Floor_Seventh",
+        "Floor_Terrace"
+      ]
+    },
+    "brochure": {
+      "exists": true
+    },
+    "exterior": {
+      "exists": true,
+      "virtualTourBtn": true
+    }
+  },
+  "views": {
+    "home": {
+      "exists": true,
+      "visible": true,
+      "width": 1440,
+      "height": 900,
+      "childCount": 2,
+      "buttons": [],
+      "images": [
+        {
+          "src": "https://royalpavilion.spim-webverse.com/assets/day_frames/layout/ncd_royal_pavilion_day_1.webp",
+          "alt": "ncd layout day"
+        },
+        {
+          "src": "https://royalpavilion.spim-webverse.com/assets/rp_logo.png",
+          "alt": "royal pavilion logo"
+        },
+        {
+          "src": "https://royalpavilion.spim-webverse.com/assets/icons/webverse.gif",
+          "alt": "webverse"
+        },
+        {
+          "src": "https://royalpavilion.spim-webverse.com/assets/icons/interior.gif",
+          "alt": "interior"
+        },
+        {
+          "src": "https://royalpavilion.spim-webverse.com/assets/icons//exterior.gif",
+          "alt": "exterior"
+        },
+        {
+          "src": "https://royalpavilion.spim-webverse.com/assets/icons/zoneiq.gif",
+          "alt": "zone iq"
+        },
+        {
+          "src": "https://royalpavilion.spim-webverse.com/assets/icons/maps.gif",
+          "alt": "location"
+        },
+        {
+          "src": "https://royalpavilion.spim-webverse.com/assets/icons/contact.gif",
+          "alt": "enquiry"
+        }
+      ],
+      "svgs": []
+    },
+    "webverse": {
+      "exists": true,
+      "visible": false,
+      "width": 0,
+      "height": 0,
+      "childCount": 5,
+      "buttons": [
+        {
+          "id": "layoutPrevBtn",
+          "text": "",
+          "tag": "BUTTON",
+          "classes": "pointer-events-auto cursor-pointer h-7 w-7 md:h-10 md:w-10 flex items-center justify-center rounded-"
+        },
+        {
+          "id": "layoutNextBtn",
+          "text": "",
+          "tag": "BUTTON",
+          "classes": "pointer-events-auto cursor-pointer h-7 w-7 md:h-10 md:w-10 flex items-center justify-center rounded-"
+        }
+      ],
+      "images": [
+        {
+          "src": "https://royalpavilion.spim-webverse.com/assets/night_frames/layout/ncd_royal_pavilion_night_1.webp",
+          "alt": "block image"
+        }
+      ],
+      "svgs": [
+        {
+          "id": "Layer_1",
+          "viewBox": "0 0 3840 2160"
+        },
+        {
+          "id": "",
+          "viewBox": "0 0 16 16"
+        }
+      ]
+    },
+    "interior": {
+      "exists": true,
+      "visible": false,
+      "width": 0,
+      "height": 0,
+      "childCount": 3,
+      "buttons": [
+        {
+          "id": "",
+          "text": "Isometric",
+          "tag": "BUTTON",
+          "classes": "select-none text-center cursor-pointer bg-[#a55b44]/90 hover:bg-[#a55b44] border-[#a55b44]/30 text-w"
+        },
+        {
+          "id": "",
+          "text": "View Image",
+          "tag": "BUTTON",
+          "classes": "select-none text-center cursor-pointer bg-[#a27165]/90 hover:bg-[#a27165] border-[#a27165]/30 text-w"
+        },
+        {
+          "id": "",
+          "text": "Balcony View",
+          "tag": "BUTTON",
+          "classes": "select-none text-center cursor-pointer bg-[#F7AA47]/90 hover:bg-[#F7AA47] text-white px-4 py-2 round"
+        },
+        {
+          "id": "",
+          "text": "Virtual Tour",
+          "tag": "BUTTON",
+          "classes": "select-none text-center cursor-pointer bg-[#7A2E43] hover:bg-[#8d3650] text-white px-4 py-2 rounded-"
+        },
+        {
+          "id": "",
+          "text": "Isometric",
+          "tag": "BUTTON",
+          "classes": "select-none text-center cursor-pointer bg-[#a55b44]/90 hover:bg-[#a55b44] border-[#a55b44]/30 text-w"
+        },
+        {
+          "id": "",
+          "text": "View Image",
+          "tag": "BUTTON",
+          "classes": "select-none text-center cursor-pointer bg-[#a27165]/90 hover:bg-[#a27165] border-[#a27165]/30 text-w"
+        },
+        {
+          "id": "",
+          "text": "Balcony View",
+          "tag": "BUTTON",
+          "classes": "select-none text-center cursor-pointer bg-[#F7AA47]/90 hover:bg-[#F7AA47] text-white px-4 py-2 round"
+        },
+        {
+          "id": "",
+          "text": "Virtual Tour",
+          "tag": "BUTTON",
+          "classes": "select-none text-center cursor-pointer bg-[#7A2E43] hover:bg-[#8d3650] text-white px-4 py-2 rounded-"
+        },
+        {
+          "id": "",
+          "text": "Isometric",
+          "tag": "BUTTON",
+          "classes": "select-none text-center cursor-pointer bg-[#a55b44]/90 hover:bg-[#a55b44] border-[#a55b44]/30 text-w"
+        },
+        {
+          "id": "",
+          "text": "View Image",
+          "tag": "BUTTON",
+          "classes": "select-none text-center cursor-pointer bg-[#a27165]/90 hover:bg-[#a27165] border-[#a27165]/30 text-w"
+        },
+        {
+          "id": "",
+          "text": "No Balcony View",
+          "tag": "BUTTON",
+          "classes": "select-none text-center cursor-pointer bg-gray-700/80 hover:bg-gray-600 text-white px-4 py-2 rounded"
+        },
+        {
+          "id": "",
+          "text": "No Virtual Tour",
+          "tag": "BUTTON",
+          "classes": "select-none text-center cursor-pointer bg-gray-700/80 hover:bg-gray-600 text-white px-4 py-2 rounded"
+        },
+        {
+          "id": "",
+          "text": "Isometric",
+          "tag": "BUTTON",
+          "classes": "select-none text-center cursor-pointer bg-[#a55b44]/90 hover:bg-[#a55b44] border-[#a55b44]/30 text-w"
+        },
+        {
+          "id": "",
+          "text": "View Image",
+          "tag": "BUTTON",
+          "classes": "select-none text-center cursor-pointer bg-[#a27165]/90 hover:bg-[#a27165] border-[#a27165]/30 text-w"
+        },
+        {
+          "id": "",
+          "text": "No Balcony View",
+          "tag": "BUTTON",
+          "classes": "select-none text-center cursor-pointer bg-gray-700/80 hover:bg-gray-600 text-white px-4 py-2 rounded"
+        },
+        {
+          "id": "",
+          "text": "No Virtual Tour",
+          "tag": "BUTTON",
+          "classes": "select-none text-center cursor-pointer bg-gray-700/80 hover:bg-gray-600 text-white px-4 py-2 rounded"
+        },
+        {
+          "id": "",
+          "text": "Isometric",
+          "tag": "BUTTON",
+          "classes": "select-none text-center cursor-pointer bg-[#a55b44]/90 hover:bg-[#a55b44] border-[#a55b44]/30 text-w"
+        },
+        {
+          "id": "",
+          "text": "View Image",
+          "tag": "BUTTON",
+          "classes": "select-none text-center cursor-pointer bg-[#a27165]/90 hover:bg-[#a27165] border-[#a27165]/30 text-w"
+        },
+        {
+          "id": "",
+          "text": "No Balcony View",
+          "tag": "BUTTON",
+          "classes": "select-none text-center cursor-pointer bg-gray-700/80 hover:bg-gray-600 text-white px-4 py-2 rounded"
+        },
+        {
+          "id": "",
+          "text": "No Virtual Tour",
+          "tag": "BUTTON",
+          "classes": "select-none text-center cursor-pointer bg-gray-700/80 hover:bg-gray-600 text-white px-4 py-2 rounded"
+        },
+        {
+          "id": "",
+          "text": "Isometric",
+          "tag": "BUTTON",
+          "classes": "select-none text-center cursor-pointer bg-[#a55b44]/90 hover:bg-[#a55b44] border-[#a55b44]/30 text-w"
+        },
+        {
+          "id": "",
+          "text": "View Image",
+          "tag": "BUTTON",
+          "classes": "select-none text-center cursor-pointer bg-[#a27165]/90 hover:bg-[#a27165] border-[#a27165]/30 text-w"
+        },
+        {
+          "id": "",
+          "text": "No Balcony View",
+          "tag": "BUTTON",
+          "classes": "select-none text-center cursor-pointer bg-gray-700/80 hover:bg-gray-600 text-white px-4 py-2 rounded"
+        },
+        {
+          "id": "",
+          "text": "No Virtual Tour",
+          "tag": "BUTTON",
+          "classes": "select-none text-center cursor-pointer bg-gray-700/80 hover:bg-gray-600 text-white px-4 py-2 rounded"
+        },
+        {
+          "id": "closeBtn",
+          "text": "",
+          "tag": "BUTTON",
+          "classes": "bg-red-500 h-8 w-8 rounded-full cursor-pointer absolute top-4 right-4 z-999"
+        }
+      ],
+      "images": [
+        {
+          "src": "https://royalpavilion.spim-webverse.com/assets/day_frames/layout/ncd_royal_pavilion_day_1.webp",
+          "alt": "layout"
+        },
+        {
+          "src": "https://royalpavilion.spim-webverse.com/assets/2d/Typical_Flat_2.webp",
+          "alt": "4bhk"
+        },
+        {
+          "src": "https://royalpavilion.spim-webverse.com/assets/2d/Typical_Flat_9.webp",
+          "alt": "4bhk"
+        },
+        {
+          "src": "https://royalpavilion.spim-webverse.com/assets/2d/Typical_Flat_10.webp",
+          "alt": "4bhk"
+        },
+        {
+          "src": "https://royalpavilion.spim-webverse.com/assets/2d/Typical_Flat_10.webp",
+          "alt": "4bhk"
+        },
+        {
+          "src": "https://royalpavilion.spim-webverse.com/assets/2d/Typical_Flat_8.webp",
+          "alt": "4bhk"
+        },
+        {
+          "src": "https://royalpavilion.spim-webverse.com/assets/2d/Typical_Flat_9.webp",
+          "alt": "4bhk"
+        },
+        {
+          "src": "https://royalpavilion.spim-webverse.com/",
+          "alt": ""
+        }
+      ],
+      "svgs": []
+    },
+    "floorPlans": {
+      "exists": true,
+      "visible": false,
+      "width": 0,
+      "height": 0,
+      "childCount": 3,
+      "buttons": [
+        {
+          "id": "",
+          "text": "1",
+          "tag": "LI",
+          "classes": "h-8 w-8 w-full cursor-pointer rounded-md text-xs font-semibold flex items-center justify-center tran"
+        },
+        {
+          "id": "",
+          "text": "2",
+          "tag": "LI",
+          "classes": "h-8 w-8 w-full cursor-pointer rounded-md text-xs font-semibold flex items-center justify-center tran"
+        },
+        {
+          "id": "",
+          "text": "3",
+          "tag": "LI",
+          "classes": "h-8 w-8 w-full cursor-pointer rounded-md text-xs font-semibold flex items-center justify-center tran"
+        },
+        {
+          "id": "",
+          "text": "4",
+          "tag": "LI",
+          "classes": "h-8 w-8 w-full cursor-pointer rounded-md text-xs font-semibold flex items-center justify-center tran"
+        },
+        {
+          "id": "",
+          "text": "5",
+          "tag": "LI",
+          "classes": "h-8 w-8 w-full cursor-pointer rounded-md text-xs font-semibold flex items-center justify-center tran"
+        },
+        {
+          "id": "",
+          "text": "6",
+          "tag": "LI",
+          "classes": "h-8 w-8 w-full cursor-pointer rounded-md text-xs font-semibold flex items-center justify-center tran"
+        },
+        {
+          "id": "",
+          "text": "7",
+          "tag": "LI",
+          "classes": "h-8 w-8 w-full cursor-pointer rounded-md text-xs font-semibold flex items-center justify-center tran"
+        },
+        {
+          "id": "",
+          "text": "8",
+          "tag": "LI",
+          "classes": "h-8 w-8 w-full cursor-pointer rounded-md text-xs font-semibold flex items-center justify-center tran"
+        },
+        {
+          "id": "",
+          "text": "9",
+          "tag": "LI",
+          "classes": "h-8 w-8 w-full cursor-pointer rounded-md text-xs font-semibold flex items-center justify-center tran"
+        },
+        {
+          "id": "",
+          "text": "10",
+          "tag": "LI",
+          "classes": "h-8 w-8 w-full cursor-pointer rounded-md text-xs font-semibold flex items-center justify-center tran"
+        },
+        {
+          "id": "",
+          "text": "11",
+          "tag": "LI",
+          "classes": "h-8 w-8 w-full cursor-pointer rounded-md text-xs font-semibold flex items-center justify-center tran"
+        },
+        {
+          "id": "",
+          "text": "12",
+          "tag": "LI",
+          "classes": "h-8 w-8 w-full cursor-pointer rounded-md text-xs font-semibold flex items-center justify-center tran"
+        },
+        {
+          "id": "",
+          "text": "13",
+          "tag": "LI",
+          "classes": "h-8 w-8 w-full cursor-pointer rounded-md text-xs font-semibold flex items-center justify-center tran"
+        },
+        {
+          "id": "",
+          "text": "14",
+          "tag": "LI",
+          "classes": "h-8 w-8 w-full cursor-pointer rounded-md text-xs font-semibold flex items-center justify-center tran"
+        },
+        {
+          "id": "",
+          "text": "15",
+          "tag": "LI",
+          "classes": "h-8 w-8 w-full cursor-pointer rounded-md text-xs font-semibold flex items-center justify-center tran"
+        },
+        {
+          "id": "floorPrevBtn",
+          "text": "",
+          "tag": "BUTTON",
+          "classes": "cursor-pointer text-white h-9 w-9 flex items-center justify-center rounded-full hover:bg-white/20 tr"
+        },
+        {
+          "id": "floorNextBtn",
+          "text": "",
+          "tag": "BUTTON",
+          "classes": "cursor-pointer text-white h-9 w-9 flex items-center justify-center rounded-full hover:bg-white/20 tr"
+        }
+      ],
+      "images": [
+        {
+          "src": "https://royalpavilion.spim-webverse.com/assets/floors/First&Second_Floor.webp",
+          "alt": "floor plan"
+        }
+      ],
+      "svgs": [
+        {
+          "id": "Layer_1",
+          "viewBox": "0 0 3840 2160"
+        },
+        {
+          "id": "Line",
+          "viewBox": "0 0 64 64"
+        },
+        {
+          "id": "",
+          "viewBox": "0 0 24 24"
+        },
+        {
+          "id": "",
+          "viewBox": "0 0 24 24"
+        }
+      ]
+    },
+    "amenities": {
+      "exists": true,
+      "visible": false,
+      "width": 0,
+      "height": 0,
+      "childCount": 2,
+      "buttons": [
+        {
+          "id": "",
+          "text": "No Virtual Tour",
+          "tag": "BUTTON",
+          "classes": "select-none inline-flex items-center gap-2 cursor-pointer bg-gray-600 hover:bg-gray-700 text-sm text"
+        },
+        {
+          "id": "",
+          "text": "No Virtual Tour",
+          "tag": "BUTTON",
+          "classes": "select-none inline-flex items-center gap-2 cursor-pointer bg-gray-600 hover:bg-gray-700 text-sm text"
+        },
+        {
+          "id": "",
+          "text": "No Virtual Tour",
+          "tag": "BUTTON",
+          "classes": "select-none inline-flex items-center gap-2 cursor-pointer bg-gray-600 hover:bg-gray-700 text-sm text"
+        },
+        {
+          "id": "",
+          "text": "No Virtual Tour",
+          "tag": "BUTTON",
+          "classes": "select-none inline-flex items-center gap-2 cursor-pointer bg-gray-600 hover:bg-gray-700 text-sm text"
+        },
+        {
+          "id": "",
+          "text": "No Virtual Tour",
+          "tag": "BUTTON",
+          "classes": "select-none inline-flex items-center gap-2 cursor-pointer bg-gray-600 hover:bg-gray-700 text-sm text"
+        },
+        {
+          "id": "",
+          "text": "No Virtual Tour",
+          "tag": "BUTTON",
+          "classes": "select-none inline-flex items-center gap-2 cursor-pointer bg-gray-600 hover:bg-gray-700 text-sm text"
+        },
+        {
+          "id": "",
+          "text": "No Virtual Tour",
+          "tag": "BUTTON",
+          "classes": "select-none inline-flex items-center gap-2 cursor-pointer bg-gray-600 hover:bg-gray-700 text-sm text"
+        },
+        {
+          "id": "",
+          "text": "No Virtual Tour",
+          "tag": "BUTTON",
+          "classes": "select-none inline-flex items-center gap-2 cursor-pointer bg-gray-600 hover:bg-gray-700 text-sm text"
+        },
+        {
+          "id": "",
+          "text": "No Virtual Tour",
+          "tag": "BUTTON",
+          "classes": "select-none inline-flex items-center gap-2 cursor-pointer bg-gray-600 hover:bg-gray-700 text-sm text"
+        },
+        {
+          "id": "",
+          "text": "No Virtual Tour",
+          "tag": "BUTTON",
+          "classes": "select-none inline-flex items-center gap-2 cursor-pointer bg-gray-600 hover:bg-gray-700 text-sm text"
+        },
+        {
+          "id": "",
+          "text": "No Virtual Tour",
+          "tag": "BUTTON",
+          "classes": "select-none inline-flex items-center gap-2 cursor-pointer bg-gray-600 hover:bg-gray-700 text-sm text"
+        },
+        {
+          "id": "",
+          "text": "No Virtual Tour",
+          "tag": "BUTTON",
+          "classes": "select-none inline-flex items-center gap-2 cursor-pointer bg-gray-600 hover:bg-gray-700 text-sm text"
+        },
+        {
+          "id": "",
+          "text": "No Virtual Tour",
+          "tag": "BUTTON",
+          "classes": "select-none inline-flex items-center gap-2 cursor-pointer bg-gray-600 hover:bg-gray-700 text-sm text"
+        },
+        {
+          "id": "",
+          "text": "No Virtual Tour",
+          "tag": "BUTTON",
+          "classes": "select-none inline-flex items-center gap-2 cursor-pointer bg-gray-600 hover:bg-gray-700 text-sm text"
+        },
+        {
+          "id": "",
+          "text": "No Virtual Tour",
+          "tag": "BUTTON",
+          "classes": "select-none inline-flex items-center gap-2 cursor-pointer bg-gray-600 hover:bg-gray-700 text-sm text"
+        },
+        {
+          "id": "",
+          "text": "No Virtual Tour",
+          "tag": "BUTTON",
+          "classes": "select-none inline-flex items-center gap-2 cursor-pointer bg-gray-600 hover:bg-gray-700 text-sm text"
+        },
+        {
+          "id": "",
+          "text": "No Virtual Tour",
+          "tag": "BUTTON",
+          "classes": "select-none inline-flex items-center gap-2 cursor-pointer bg-gray-600 hover:bg-gray-700 text-sm text"
+        },
+        {
+          "id": "",
+          "text": "No Virtual Tour",
+          "tag": "BUTTON",
+          "classes": "select-none inline-flex items-center gap-2 cursor-pointer bg-gray-600 hover:bg-gray-700 text-sm text"
+        },
+        {
+          "id": "",
+          "text": "No Virtual Tour",
+          "tag": "BUTTON",
+          "classes": "select-none inline-flex items-center gap-2 cursor-pointer bg-gray-600 hover:bg-gray-700 text-sm text"
+        },
+        {
+          "id": "",
+          "text": "No Virtual Tour",
+          "tag": "BUTTON",
+          "classes": "select-none inline-flex items-center gap-2 cursor-pointer bg-gray-600 hover:bg-gray-700 text-sm text"
+        },
+        {
+          "id": "",
+          "text": "No Virtual Tour",
+          "tag": "BUTTON",
+          "classes": "select-none inline-flex items-center gap-2 cursor-pointer bg-gray-600 hover:bg-gray-700 text-sm text"
+        },
+        {
+          "id": "",
+          "text": "No Virtual Tour",
+          "tag": "BUTTON",
+          "classes": "select-none inline-flex items-center gap-2 cursor-pointer bg-gray-600 hover:bg-gray-700 text-sm text"
+        },
+        {
+          "id": "",
+          "text": "No Virtual Tour",
+          "tag": "BUTTON",
+          "classes": "select-none inline-flex items-center gap-2 cursor-pointer bg-gray-600 hover:bg-gray-700 text-sm text"
+        }
+      ],
+      "images": [
+        {
+          "src": "https://royalpavilion.spim-webverse.com/assets/Clubhouse.webp",
+          "alt": "clubhouse"
+        },
+        {
+          "src": "https://media.istockphoto.com/id/1980276924/vector/no-photo-thumbnail-graphic-element-no-found-or-available-image-in-the",
+          "alt": "Air-conditioned Gym"
+        },
+        {
+          "src": "https://royalpavilion.spim-webverse.com/assets/amenities/Multipurpose_Hall.webp",
+          "alt": "Multi-purpose Hall 1"
+        },
+        {
+          "src": "https://royalpavilion.spim-webverse.com/assets/amenities/Multipurpose_Hall.webp",
+          "alt": "Multi-purpose Hall 2"
+        },
+        {
+          "src": "https://royalpavilion.spim-webverse.com/assets/amenities/Indoor_Games.webp",
+          "alt": "Indoor Games"
+        },
+        {
+          "src": "https://media.istockphoto.com/id/1980276924/vector/no-photo-thumbnail-graphic-element-no-found-or-available-image-in-the",
+          "alt": "Baby Creche"
+        },
+        {
+          "src": "https://royalpavilion.spim-webverse.com/assets/amenities/Office_Work_Spaces.webp",
+          "alt": "Office Working Spaces"
+        },
+        {
+          "src": "https://media.istockphoto.com/id/1980276924/vector/no-photo-thumbnail-graphic-element-no-found-or-available-image-in-the",
+          "alt": "Reading Room"
+        },
+        {
+          "src": "https://media.istockphoto.com/id/1980276924/vector/no-photo-thumbnail-graphic-element-no-found-or-available-image-in-the",
+          "alt": "Senior Citizens Room"
+        },
+        {
+          "src": "https://media.istockphoto.com/id/1980276924/vector/no-photo-thumbnail-graphic-element-no-found-or-available-image-in-the",
+          "alt": "Guest Rooms"
+        },
+        {
+          "src": "https://media.istockphoto.com/id/1980276924/vector/no-photo-thumbnail-graphic-element-no-found-or-available-image-in-the",
+          "alt": "Mini-Theatre"
+        },
+        {
+          "src": "https://royalpavilion.spim-webverse.com/assets/amenities/Roof_Top_Swimming_Pool.webp",
+          "alt": "Rooftop Swimming Pool"
+        },
+        {
+          "src": "https://royalpavilion.spim-webverse.com/assets/amenities/Roof_Top_party_Area.webp",
+          "alt": "Rooftop Pool Party Area"
+        },
+        {
+          "src": "https://royalpavilion.spim-webverse.com/assets/amenities/Multipurpose_Hall.webp",
+          "alt": "Multi-purpose Hall 3 (150 Seater)"
+        },
+        {
+          "src": "https://royalpavilion.spim-webverse.com/assets/amenities/Indoor_Tot_Lot_With_Slides.webp",
+          "alt": "Indoor Tot-Lot – Kids Play Zone"
+        },
+        {
+          "src": "https://media.istockphoto.com/id/1980276924/vector/no-photo-thumbnail-graphic-element-no-found-or-available-image-in-the",
+          "alt": "Ladies Kitty Room"
+        },
+        {
+          "src": "https://royalpavilion.spim-webverse.com/assets/amenities/Yoga.webp",
+          "alt": "Yoga / Meditation Hall"
+        },
+        {
+          "src": "https://royalpavilion.spim-webverse.com/assets/amenities/Aerobic.webp",
+          "alt": "Aerobics / Dance Studio"
+        },
+        {
+          "src": "https://media.istockphoto.com/id/1980276924/vector/no-photo-thumbnail-graphic-element-no-found-or-available-image-in-the",
+          "alt": "Knowledge Room – Tuitions / Chess etc."
+        },
+        {
+          "src": "https://royalpavilion.spim-webverse.com/assets/amenities/Hobby.webp",
+          "alt": "Hobby Room – Music, Dance etc."
+        },
+        {
+          "src": "https://royalpavilion.spim-webverse.com/assets/amenities/Lounge_Area.webp",
+          "alt": "Lounge Area"
+        },
+        {
+          "src": "https://media.istockphoto.com/id/1980276924/vector/no-photo-thumbnail-graphic-element-no-found-or-available-image-in-the",
+          "alt": "Guest Rooms - 4 Nos"
+        },
+        {
+          "src": "https://royalpavilion.spim-webverse.com/assets/amenities/Roof_Top_Swimming_Pool.webp",
+          "alt": "Roof Top Swimming Pool"
+        },
+        {
+          "src": "https://royalpavilion.spim-webverse.com/assets/amenities/Roof_Top_party_Area.webp",
+          "alt": "Roof Top Pool Party Area"
+        }
+      ],
+      "svgs": []
+    },
+    "about": {
+      "exists": true,
+      "visible": false,
+      "width": 0,
+      "height": 0,
+      "childCount": 2,
+      "buttons": [
+        {
+          "id": "aboutCopyReraBtn",
+          "text": "",
+          "tag": "BUTTON",
+          "classes": "cursor-pointer bg-[#7A2E43] px-3 py-2 text-white transition-colors"
+        }
+      ],
+      "images": [
+        {
+          "src": "https://royalpavilion.spim-webverse.com/assets/day_frames/layout/ncd_royal_pavilion_day_1.webp",
+          "alt": "Royal Pavilion"
+        }
+      ],
+      "svgs": []
+    },
+    "exterior": {
+      "exists": true,
+      "visible": false,
+      "width": 0,
+      "height": 0,
+      "childCount": 1,
+      "buttons": [
+        {
+          "id": "",
+          "text": "360 View\n                    Complete panoramic experience",
+          "tag": "LI",
+          "classes": "cursor-pointer flex flex-col items-center text-center gap-[clamp(6px,1.8vw,12px)] bg-black/50 p-[cla"
+        },
+        {
+          "id": "",
+          "text": "Interactive\n                    Zoom and explore details",
+          "tag": "LI",
+          "classes": "cursor-pointer flex flex-col items-center text-center gap-[clamp(6px,1.8vw,12px)] bg-black/50 p-[cla"
+        },
+        {
+          "id": "",
+          "text": "All Devices\n                    Works on any device",
+          "tag": "LI",
+          "classes": "cursor-pointer flex flex-col items-center text-center gap-[clamp(6px,1.8vw,12px)] bg-black/50 p-[cla"
+        },
+        {
+          "id": "exteriorVirtualTourBtn",
+          "text": "Exterior Virtual Tour",
+          "tag": "BUTTON",
+          "classes": "select-none cursor-pointer rounded-full inline-flex items-center gap-3 px-3.5 py-2 text-[clamp(13px,"
+        }
+      ],
+      "images": [],
+      "svgs": []
+    },
+    "gallery": {
+      "exists": true,
+      "visible": false,
+      "width": 0,
+      "height": 0,
+      "childCount": 3,
+      "buttons": [
+        {
+          "id": "galleryPrevBtn",
+          "text": "",
+          "tag": "BUTTON",
+          "classes": "cursor-pointer text-white h-10 w-10 rounded-full grid place-items-center hover:bg-white/10 transitio"
+        },
+        {
+          "id": "galleryExpand",
+          "text": "View All Images",
+          "tag": "BUTTON",
+          "classes": "shrink-0 cursor-pointer flex items-center gap-2 text-white text-xs lg:text-sm font-medium px-2 py-1 "
+        },
+        {
+          "id": "galleryNextBtn",
+          "text": "",
+          "tag": "BUTTON",
+          "classes": "cursor-pointer text-white h-10 w-10 rounded-full grid place-items-center hover:bg-white/10 transitio"
+        },
+        {
+          "id": "galleryCollapse",
+          "text": "",
+          "tag": "BUTTON",
+          "classes": "cursor-pointer absolute -top-10 left-[50%] translate-x-[-50%] text-black h-10 w-10 rounded-full grid"
+        }
+      ],
+      "images": [
+        {
+          "src": "https://royalpavilion.spim-webverse.com/assets/gallery/activity.webp",
+          "alt": "gallery image"
+        },
+        {
+          "src": "https://royalpavilion.spim-webverse.com/assets/gallery/activity.webp",
+          "alt": "activity"
+        },
+        {
+          "src": "https://royalpavilion.spim-webverse.com/assets/gallery/aerobic.webp",
+          "alt": "aerobic"
+        },
+        {
+          "src": "https://royalpavilion.spim-webverse.com/assets/gallery/balcony.webp",
+          "alt": "balcony"
+        },
+        {
+          "src": "https://royalpavilion.spim-webverse.com/assets/gallery/co-working%20spaces.webp",
+          "alt": "co-working spaces"
+        },
+        {
+          "src": "https://royalpavilion.spim-webverse.com/assets/gallery/dining.webp",
+          "alt": "dining"
+        },
+        {
+          "src": "https://royalpavilion.spim-webverse.com/assets/gallery/drawing.webp",
+          "alt": "drawing"
+        },
+        {
+          "src": "https://royalpavilion.spim-webverse.com/assets/gallery/entrance%20gate.webp",
+          "alt": "entrance gate"
+        },
+        {
+          "src": "https://royalpavilion.spim-webverse.com/assets/gallery/front%20elevation%20night.webp",
+          "alt": "front elevation night"
+        },
+        {
+          "src": "https://royalpavilion.spim-webverse.com/assets/gallery/hobby.webp",
+          "alt": "hobby"
+        },
+        {
+          "src": "https://royalpavilion.spim-webverse.com/assets/gallery/indoor%20games.webp",
+          "alt": "indoor games"
+        },
+        {
+          "src": "https://royalpavilion.spim-webverse.com/assets/gallery/indoor%20tot-lot%20with%20games.webp",
+          "alt": "indoor tot-lot with games"
+        },
+        {
+          "src": "https://royalpavilion.spim-webverse.com/assets/gallery/indoor%20totlot.webp",
+          "alt": "indoor totlot"
+        },
+        {
+          "src": "https://royalpavilion.spim-webverse.com/assets/gallery/kitchen.webp",
+          "alt": "kitchen"
+        },
+        {
+          "src": "https://royalpavilion.spim-webverse.com/assets/gallery/m.bedroom.webp",
+          "alt": "m.bedroom"
+        },
+        {
+          "src": "https://royalpavilion.spim-webverse.com/assets/gallery/multipurpose%20hall.webp",
+          "alt": "multipurpose hall"
+        },
+        {
+          "src": "https://royalpavilion.spim-webverse.com/assets/gallery/office.webp",
+          "alt": "office"
+        },
+        {
+          "src": "https://royalpavilion.spim-webverse.com/assets/gallery/side%20elevation%20night.webp",
+          "alt": "side elevation night"
+        },
+        {
+          "src": "https://royalpavilion.spim-webverse.com/assets/gallery/suit%20room.webp",
+          "alt": "suit room"
+        },
+        {
+          "src": "https://royalpavilion.spim-webverse.com/assets/gallery/yoga.webp",
+          "alt": "yoga"
+        }
+      ],
+      "svgs": []
+    },
+    "brochure": {
+      "exists": true,
+      "visible": false,
+      "width": 0,
+      "height": 0,
+      "childCount": 1,
+      "buttons": [
+        {
+          "id": "shareBrochureBtn",
+          "text": "",
+          "tag": "BUTTON",
+          "classes": "animate-bounce cursor-pointer absolute bottom-3 right-3 text-white h-10 w-10 rounded-full grid place"
+        }
+      ],
+      "images": [],
+      "svgs": []
+    },
+    "contact": {
+      "exists": false
+    },
+    "features": {
+      "exists": true,
+      "visible": false,
+      "width": 100,
+      "height": 900,
+      "childCount": 1,
+      "buttons": [
+        {
+          "id": "featurePanelCloseBtn",
+          "text": "",
+          "tag": "BUTTON",
+          "classes": "h-8 w-8 rounded-full bg-red-500 hover:bg-red-600 cursor-pointer shrink-0 text-white"
+        },
+        {
+          "id": "",
+          "text": "Home",
+          "tag": "LI",
+          "classes": "select-none cursor-pointer flex flex-col justify-center items-center gap-2 w-full group"
+        },
+        {
+          "id": "",
+          "text": "About",
+          "tag": "LI",
+          "classes": "select-none cursor-pointer flex flex-col justify-center items-center gap-2 w-full group"
+        },
+        {
+          "id": "",
+          "text": "Layout",
+          "tag": "LI",
+          "classes": "select-none cursor-pointer flex flex-col justify-center items-center gap-2 w-full group"
+        },
+        {
+          "id": "",
+          "text": "Webverse",
+          "tag": "LI",
+          "classes": "select-none cursor-pointer flex flex-col justify-center items-center gap-2 w-full group"
+        },
+        {
+          "id": "",
+          "text": "Zone IQ",
+          "tag": "LI",
+          "classes": "select-none cursor-pointer flex flex-col justify-center items-center gap-2 w-full group"
+        },
+        {
+          "id": "",
+          "text": "Maps",
+          "tag": "LI",
+          "classes": "select-none cursor-pointer flex flex-col justify-center items-center gap-2 w-full group"
+        },
+        {
+          "id": "",
+          "text": "Interior",
+          "tag": "LI",
+          "classes": "select-none cursor-pointer flex flex-col justify-center items-center gap-2 w-full group"
+        },
+        {
+          "id": "",
+          "text": "Floor Plans",
+          "tag": "LI",
+          "classes": "select-none cursor-pointer flex flex-col justify-center items-center gap-2 w-full group"
+        },
+        {
+          "id": "",
+          "text": "Amenities",
+          "tag": "LI",
+          "classes": "select-none cursor-pointer flex flex-col justify-center items-center gap-2 w-full group"
+        },
+        {
+          "id": "",
+          "text": "Club Royal",
+          "tag": "LI",
+          "classes": "select-none cursor-pointer flex flex-col justify-center items-center gap-2 w-full group"
+        },
+        {
+          "id": "",
+          "text": "Club Pavilion",
+          "tag": "LI",
+          "classes": "select-none cursor-pointer flex flex-col justify-center items-center gap-2 w-full group"
+        },
+        {
+          "id": "",
+          "text": "360 Exterior",
+          "tag": "LI",
+          "classes": "select-none cursor-pointer flex flex-col justify-center items-center gap-2 w-full group"
+        },
+        {
+          "id": "",
+          "text": "Gallery",
+          "tag": "LI",
+          "classes": "select-none cursor-pointer flex flex-col justify-center items-center gap-2 w-full group"
+        },
+        {
+          "id": "",
+          "text": "Brochure",
+          "tag": "LI",
+          "classes": "select-none cursor-pointer flex flex-col justify-center items-center gap-2 w-full group"
+        },
+        {
+          "id": "",
+          "text": "Contact",
+          "tag": "LI",
+          "classes": "select-none cursor-pointer flex flex-col justify-center items-center gap-2 w-full group"
+        },
+        {
+          "id": "",
+          "text": "YouTube",
+          "tag": "LI",
+          "classes": "select-none cursor-pointer flex flex-col justify-center items-center gap-2 w-full group"
+        },
+        {
+          "id": "",
+          "text": "Instagram",
+          "tag": "LI",
+          "classes": "select-none cursor-pointer flex flex-col justify-center items-center gap-2 w-full group"
+        }
+      ],
+      "images": [],
+      "svgs": [
+        {
+          "id": "",
+          "viewBox": "0 0 495.398 495.398"
+        },
+        {
+          "id": "",
+          "viewBox": "0 0 512 512"
+        },
+        {
+          "id": "",
+          "viewBox": "0 0 32 32"
+        },
+        {
+          "id": "",
+          "viewBox": "0 0 640 512"
+        },
+        {
+          "id": "",
+          "viewBox": "0 0 512 512"
+        },
+        {
+          "id": "Capa_1",
+          "viewBox": "0 0 512 512"
+        },
+        {
+          "id": "Layer_1",
+          "viewBox": "0 0 507.33 507.33"
+        },
+        {
+          "id": "",
+          "viewBox": "0 0 2333 2333"
+        },
+        {
+          "id": "",
+          "viewBox": "0 0 640 512"
+        },
+        {
+          "id": "Layer_1",
+          "viewBox": "0 0 64 64"
+        },
+        {
+          "id": "Layer_1",
+          "viewBox": "0 0 64 64"
+        },
+        {
+          "id": "Line",
+          "viewBox": "0 0 64 64"
+        },
+        {
+          "id": "",
+          "viewBox": "0 0 512 512"
+        },
+        {
+          "id": "",
+          "viewBox": "0 0 512 512"
+        },
+        {
+          "id": "",
+          "viewBox": "0 0 512 512"
+        },
+        {
+          "id": "",
+          "viewBox": "0 0 576 512"
+        },
+        {
+          "id": "",
+          "viewBox": "0 0 448 512"
+        }
+      ]
+    },
+    "clubhouse": {
+      "exists": true,
+      "visible": false,
+      "width": 0,
+      "height": 0,
+      "childCount": 3,
+      "buttons": [
+        {
+          "id": "clubhouseVirtualTour",
+          "text": "",
+          "tag": "BUTTON",
+          "classes": "cursor-pointer fixed top-3.5 right-43 z-9 select-none inline-flex items-center justify-center h-11 w"
+        }
+      ],
+      "images": [
+        {
+          "src": "https://royalpavilion.spim-webverse.com/assets//Clubhouse.webp",
+          "alt": "clubhouse"
+        }
+      ],
+      "svgs": [
+        {
+          "id": "Layer_1",
+          "viewBox": "0 0 3840 2160"
+        },
+        {
+          "id": "Layer_1",
+          "viewBox": "0 0 480 480"
+        }
+      ]
+    }
+  },
+  "transitions": [],
+  "errors": []
+}

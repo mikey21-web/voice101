@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us | Vezraa</title>
+    <link rel="icon" href="./assets/logos/Vezraa_logo.webp" type="image/png">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Font Awesome Icons -->
+    <script src="https://kit.fontawesome.com/a0bdb82872.js" crossorigin="anonymous"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #000000;
+        }
+    </style>
+</head>
+<body class="bg-black text-white">
+    <!-- Header -->
+    <div class="header fixed top-4 left-4 z-9 hidden lg:flex items-center gap-3">
+        <div id="logoWrapper" class="fixed top-2 left-2 lg:top-4 lg:left-4 z-99 select-none flex items-center gap-1.5 lg:gap-3 p-1.5 lg:p-2.5 rounded-xl bg-gradient-to-b from-gray-900/90 to-black/90 backdrop-blur-md border border-white/20 shadow-lg max-w-xs">
+
+        <a href="" target="_blank" class="flex items-center gap-2 no-underline">
+
+          <!-- LOGO -->
+          <img src="./assets/logos/Vezraa_logo.webp" alt="Vezraa logo"
+            class="h-7 w-7 object-contain" />
+          <div class="leading-tight space-y-1">
+            <img src="./assets/logos/Vezraa_logo_1.webp" alt="Vezraa logo 1" class="max-h-4">
+            <span
+              class="text-[9px] lg:text-[11px] font-bold tracking-[0.12em] bg-gradient-to-b from-[#F3E299] to-[#BE9B42] bg-clip-text text-transparent block mt-[-2px]">
+              by Vezraa
+            </span>
+            <p class="hidden sm:block text-[10px] text-white/70 mt-[1px]">Your Location, City</p>
+          </div>
+        </a>
+
+        <!-- Divider -->
+        <div class="h-8 w-[1px] bg-white/20 rounded-full"></div>
+
+        <div class="flex items-center gap-1.5">
+
+          <!-- Home Button -->
+          <button onclick="window.location.href='index.html'"
+            class="cursor-pointer flex items-center justify-center rounded-md bg-gradient-to-b from-gray-800/60 to-black/30 backdrop-blur-md border border-[#D4AF37]/40 hover:border-[#D4AF37] hover:shadow-[0_0_12px_rgba(212,175,55,0.5)] transition-all duration-300 h-8 w-8 active:scale-95">
+            <svg viewBox="0 0 512 512" class="h-4 w-4">
+              <defs>
+                <linearGradient id="goldGradient" y1="0%" y2="100%">
+                  <stop offset="0%" style="stop-color:#F3E299" />
+                  <stop offset="100%" style="stop-color:#BE9B42" />
+                </linearGradient>
+              </defs>
+              <path fill="url(#goldGradient)"
+                d="m499.4 207.2-198.4-166.3c-26-21.8-63.9-21.8-89.9 0l-198.5 166.3c-25.2 21.1-10.3 62.1 22.6 62.1h18v183.2c0 19.3 15.7 35 35 35h100.3v-118.3c0-37.3 30.2-67.5 67.5-67.5 37.3 0 67.5 30.2 67.5 67.5v118.3h100.3c19.3 0 35-15.7 35-35v-183.2h18c32.8 0 47.7-41 22.6-62.1z" />
+            </svg>
+          </button>
+
+          <!-- Back Button -->
+          <button id="backBtn"
+            class="cursor-pointer flex items-center justify-center rounded-md bg-gradient-to-b from-gray-800/60 to-black/30 backdrop-blur-md border border-[#D4AF37]/40 hover:border-[#D4AF37] hover:shadow-[0_0_12px_rgba(212,175,55,0.5)] transition-all duration-300 h-8 w-8 active:scale-95">
+            <svg viewBox="0 0 24 24" class="h-4 w-4">
+              <defs>
+                <linearGradient id="goldGradient" y1="0%" y2="100%">
+                  <stop offset="0%" style="stop-color:#F3E299" />
+                  <stop offset="100%" style="stop-color:#BE9B42" />
+                </linearGradient>
+              </defs>
+              <path fill="url(#goldGradient)"
+                d="m17.25 23.75c-.32 0-.64-.12-.88-.37l-10.5-10.5c-.49-.49-.49-1.28 0-1.77l10.5-10.5c.49-.49 1.28-.49 1.77 0s.49 1.28 0 1.77l-9.62 9.62 9.62 9.62c.49.49.49 1.28 0 1.77-.25.24-.57.36-.89.36z" />
+            </svg>
+          </button>
+
+        </div>
+      </div>
+    </div>
+    <!-- Vezraa Logo -->
+    <a href="https://www.vezraa.com/" target="_blank" class="logo-wrapper fixed right-4 bottom-4 z-9 select-none inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-black/80 border border-white/20 shadow-lg hover:bg-black transition">
+        <img src="./assets/logos/Vezraa_logo.webp" alt="Vezraa logo" class="max-h-[75%] max-w-[75%] object-contain">
+    </a>
+    <!-- Contact Section -->
+    <div id="contact" class="min-h-screen flex flex-col items-center justify-center">
+        <div class="flex flex-col lg:flex-row items-center gap-8 
+                    bg-gradient-to-br from-black to-gray-800 
+                    backdrop-blur-md rounded-3xl p-8 shadow-2xl border border-white/10 
+                    w-full max-w-4xl">  <!-- reduced max width -->
+
+            <!-- Info Column -->
+            <div class="flex flex-col gap-6 text-center lg:text-left items-center lg:items-start flex-1">
+                <div class="leading-none space-y-1">
+                    <p class="text-base text-white tracking-widest uppercase">Vezraa</p>
+                    <h1 class="text-3xl font-normal bg-gradient-to-b from-[#F3E299] to-[#BE9B42] bg-clip-text text-transparent">Vezraa</h1>
+                </div>
+                <img src="./assets/1.jpg" alt="Creative Homes West Winds" loading="eager" class="select-none w-sm aspect-16/9 object-cover rounded-xl shadow-lg border border-white/10">
+                <address class="select-none text-base text-slate-300 not-italic">
+                    Vezraa Realty Ventures LLP <br />
+                    Site no.26, SF no : 292/2, <br />
+                    Peedampalli, Nest Valley, <br />
+                    Your Address Line, City - 000000 <br />
+                </address>
+                <a href="https://wa.me/910000000000" target="_blank" class="text-green-400 hover:text-green-300 transition-transform hover:scale-110"> 
+                    <i class="fa-brands fa-whatsapp fa-3x" aria-hidden="true"></i> 
+                </a>
+            </div>
+            <!-- Enquiry Form Column -->
+            <form class="flex flex-col gap-3 p-4 w-full max-w-sm flex-1 rounded-2xl shadow-xl border border-white/10 bg-gradient-to-br from-gray-900 via-gray-800 to-black">
+                <h2 class="select-none text-xl text-white text-center font-semibold mb-2">Enquiry Form</h2>
+                <input type="text" id="fullName" name="fullName" placeholder="Full Name" required class="select-none bg-slate-900/60 text-white placeholder-slate-400 px-3 py-2 border border-slate-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full transition" />
+                <input type="email" id="email" name="email" placeholder="Email Address" required class="select-none bg-slate-900/60 text-white placeholder-slate-400 px-3 py-2 border border-slate-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full transition" />
+                <input type="tel" id="mobileNumber" name="mobileNumber" placeholder="Mobile Number" required class="select-none bg-slate-900/60 text-white placeholder-slate-400 px-3 py-2 border border-slate-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full transition" />
+                <textarea name="message" id="message" rows="3" placeholder="Write your message here..." class="select-none bg-slate-900/60 text-white placeholder-slate-400 px-3 py-2 border border-slate-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full transition"></textarea>
+                <button type="submit" class="select-none bg-[#BE9B42] hover:bg-blue-700 cursor-pointer text-white py-2.5 px-4 rounded-md transition-all duration-300 shadow-lg hover:shadow-blue-500/50">
+                    Submit Enquiry
+                </button>
+            </form>
+        </div>
+    </div>
+        <div id="commonBtnsWrapper" class="fixed z-[999] flex items-center top-4 right-4 gap-3">
+        <div class="relative group">
+            <a href="https://wa.me/0000000000" target="_blank"
+                class="h-10 w-10 flex items-center justify-center rounded-full bg-black/70 backdrop-blur-sm text-white hover:bg-black border border-white/20 transition shadow-md no-underline cursor-pointer">
+                <i class="fa-brands fa-whatsapp text-xl"></i>
+            </a>
+            <span
+                class="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2 py-1 text-[11px] font-medium text-white bg-black/90 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap">Contact</span>
+        </div>
+        <div class="relative group">
+            <div
+                class="flex flex-col items-center justify-center rounded-full text-white bg-black/70 backdrop-blur-sm shadow-md shadow-black/50 transition-transform duration-200 hover:scale-110 hover:bg-[rgba(0,0,0,0.8)] h-10 w-10">
+                <button id="fullScreenBtn" class="cursor-pointer"><i
+                        class="fa-solid fa-expand text-white text-[16px]"></i></button>
+                <button id="exitScreenBtn" class="cursor-pointer hidden"><i
+                        class="fa-solid fa-compress text-white text-[16px]"></i></button>
+            </div>
+            <span
+                class="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2 py-1 text-[11px] font-medium text-white bg-black/90 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap"><span
+                    id="tooltipText">Full Screen</span></span>
+        </div>
+        <div class="relative group">
+            <button id="featurePanelBtn"
+                class="cursor-pointer flex items-center justify-center rounded-full text-white bg-black/70 backdrop-blur-sm shadow-md shadow-black/80 transition-transform duration-200 hover:scale-110 hover:bg-[rgba(0,0,0,0.8)] h-10 w-10">
+                <i class="fa-solid fa-bars text-[16px]"></i>
+            </button>
+            <span
+                class="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2 py-1 text-[11px] font-medium text-white bg-black/90 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap">Menu</span>
+        </div>
+    </div>
+        <div id="features"
+        class="transform translate-x-full transition-transform duration-600 ease-in-out fixed top-0 right-0 w-[100px] h-screen bg-black/90 p-3 z-[9999] overflow-x-hidden">
+        <div class="flex flex-col items-center gap-6 w-full h-full">
+            <button id="featurePanelCloseBtn"
+                class="h-10 w-10 inline-flex flex-col justify-center items-center rounded-full bg-black border border-white/20 cursor-pointer shrink-0 text-white">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" class="h-8 w-8">
+                    <path
+                        d="M6.99486 7.00636C6.60433 7.39689 6.60433 8.03005 6.99486 8.42058L10.58 12.0057L6.99486 15.5909C6.60433 15.9814 6.60433 16.6146 6.99486 17.0051C7.38538 17.3956 8.01855 17.3956 8.40907 17.0051L11.9942 13.4199L15.5794 17.0051C15.9699 17.3956 16.6031 17.3956 16.9936 17.0051C17.3841 16.6146 17.3841 15.9814 16.9936 15.5909L13.4084 12.0057L16.9936 8.42059C17.3841 8.03007 17.3841 7.3969 16.9936 7.00638C16.603 6.61585 15.9699 6.61585 15.5794 7.00638L11.9942 10.5915L8.40907 7.00636C8.01855 6.61584 7.38538 6.61584 6.99486 7.00636Z"
+                        fill="#ffffff" />
+                </svg>
+            </button>
+            <div id="featuresList" class="overflow-y-auto w-full">
+                <ul class="features flex flex-col gap-4 !w-full">
+                    <li class="select-none cursor-pointer flex flex-col justify-center items-center gap-2 w-full group"
+                        data-type="about">
+                        <a href="./about.html" class="inline-flex flex-col items-center gap-2 cursor-pointer">
+                            <div
+                                class="border border-white/20  p-2 lg:!p-4 flex flex-col items-center justify-center rounded-full h-[50px] w-[50px] transition-colors duration-300 group-hover:bg-gradient-to-br group-hover:from-[#F3E299]/50 group-hover:to-[#BE9B42]/70 bg-[rgba(0,0,0,0.45)]">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="h-[30px] w-[30px]">
+                                    <path fill="#ffffff"
+                                        d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM216 336l24 0 0-64-24 0c-13.3 0-24-10.7-24-24s10.7-24 24-24l48 0c13.3 0 24 10.7 24 10.7 24 24l0 88 8 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-80 0c-13.3 0-24-10.7-24-24s10.7-24 24-24zm40-208a32 32 0 1 1 0 64 32 32 0 1 1 0-64z" />
+                                </svg>
+                            </div>
+                            <p class="text-xs text-white text-center"> About </p>
+                        </a>
+                    </li>
+                    <li class="select-none cursor-pointer flex flex-col justify-center items-center gap-2 w-full group"
+                        data-type="gallery">
+                        <a href="./gallery.html" class="inline-flex flex-col items-center gap-2 cursor-pointer">
+                            <div
+                                class="border border-white/20 p-4 flex flex-col items-center justify-center rounded-full h-[50px] w-[50px] transition-colors duration-300 group-hover:bg-gradient-to-br group-hover:from-[#F3E299]/50 group-hover:to-[#BE9B42]/70 bg-[rgba(0,0,0,0.45)]">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"
+                                    style="height: 24px; width: 24px;">
+                                    <path fill="#ffffff"
+                                        d="M464 448H48c-26.5 0-48-21.5-48-48V112c0-26.5 21.5-48 48-48h416c26.5 0 48 21.5 48 48v288c0 26.5-21.5 48-48 48zM112 120c-30.9 0-56 25.1-56 56s25.1 56 56 56 56-25.1 56-56-25.1-56-56-56zM64 384h384V272l-87.5-87.5c-4.7-4.7-12.3-4.7-17 0L208 320l-55.5-55.5c-4.7-4.7-12.3-4.7-17 0L64 336v48z" />
+                                </svg>
+                            </div>
+                            <p class="text-xs text-white text-center"> Gallery </p>
+                        </a>
+                    </li>
+                    <li class="select-none cursor-pointer flex flex-col justify-center items-center gap-2 w-full group"
+                        data-type="brochure">
+                        <a href="./brochure.html" class="inline-flex flex-col items-center gap-2 cursor-pointer">
+                            <div
+                                class="border border-white/20 p-4 flex flex-col items-center justify-center rounded-full h-[50px] w-[50px] transition-colors duration-300 group-hover:bg-gradient-to-br group-hover:from-[#F3E299]/50 group-hover:to-[#BE9B42]/70 bg-[rgba(0,0,0,0.45)]">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"
+                                    style="height: 24px; width: 24px;">
+                                    <path fill="#ffffff"
+                                        d="M0 64C0 28.7 28.7 0 64 0L224 0l0 128c0 17.7 14.3 32 32 32l128 0 0 144-208 0c-35.3 0-64 28.7-64 64l0 144-48 0c-35.3 0-64-28.7-64-64L0 64zm384 64l-128 0L256 0 384 128zM176 352l32 0c30.9 0 56 25.1 56 56s-25.1 56-56 56l-16 0 0 32c0 8.8-7.2 16-16 16s-16-7.2-16-16l0-48 0-80c0-8.8 7.2-16 16-16zm32 80c13.3 0 24-10.7 24-24s-10.7-24-24-24l-16 0 0 48 16 0zm96-80l32 0c26.5 0 48 21.5 48 48l0 64c0 26.5-21.5 48-48 48l-32 0c-8.8 0-16-7.2-16-16l0-128c0-8.8 7.2-16 16-16zm32 128c8.8 0 16-7.2 16-16l0-64c0-8.8-7.2-16-16-16l-16 0 0 96 16 0zm80-112c0-8.8 7.2-16 16-16l48 0c8.8 0 16 7.2 16 16s-7.2 16-16 16l-32 0 0 32 32 0c8.8 0 16 7.2 16 16s-7.2 16-16 16l-32 0 0 48c0 8.8-7.2 16-16 16s-16-7.2-16-16l0-64 0-64z" />
+                                </svg>
+                            </div>
+                            <p class="text-xs text-white text-center"> Brochure </p>
+                        </a>
+                    </li>
+                    <li class="select-none cursor-pointer flex flex-col justify-center items-center gap-2 w-full group"
+                        data-type="contact">
+                        <a href="./contact.html" class="inline-flex flex-col items-center gap-2 cursor-pointer">
+                            <div
+                                class="border border-white/20 p-4 flex flex-col items-center justify-center rounded-full h-[50px] w-[50px] transition-colors duration-300 group-hover:bg-gradient-to-br group-hover:from-[#F3E299]/50 group-hover:to-[#BE9B42]/70 bg-[rgba(0,0,0,0.45)]">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"
+                                    style="height: 22px; width: 22px;">
+                                    <path fill="#ffffff"
+                                        d="M164.9 24.6c-7.7-18.6-28-28.5-47.4-23.2l-88 24C12.1 30.2 0 46 0 64C0 311.4 200.6 512 448 512c18 0 33.8-12.1 38.6-29.5l24-88c5.3-19.4-4.6-39.7-23.2-47.4l-96-40c-16.3-6.8-35.2-2.1-46.3 11.6L304.7 368C234.3 334.7 177.3 277.7 144 207.3L193.3 167c13.7-11.2 18.4-30 11.6-46.3l-40-96z" />
+                                </svg>
+                            </div>
+                            <p class="text-xs text-white text-center"> Contact </p>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <script src="./js/contact.js"></script>
+</body>
+</html>

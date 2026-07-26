@@ -1,0 +1,313 @@
+URL after login attempt: https://propsite.in/dashboard
+
+=== https://propsite.in/dashboard ===
+TITLE: PropSite — AI-Powered Property Listings for Indian Real Estate
+Home
+My Listings
+Collections
+Agency
+Settings
++ New Listing
+B
+Profile
+Welcome to PropSite 🎉
+
+A few things we want you to know:
+
+✅ Your listings belong to you. We never use them without your permission.
+
+🔒 Your buyer leads go straight to your WhatsApp. We don't store or sell them.
+
+💰 PropSite is completely free to start. We'll introduce optional paid plans in the future — you'll always choose.
+
+🇮🇳 We're an Indian startup building for Indian brokers. Your trust matters more than anything.
+
+Got it, let's go →
+
+Questions? WhatsApp us anytime.
+
+Welcome, Tumma
+
+Ready to close some deals?
+
+1 free listings left
+Buy now · 15 for ₹299
+Create New Listing
+Your Mini-Website is Live!
+
+Share your customized profile to build trust and capture leads.
+
+propsite.in/broker/broker-74228036-5dds
+Open Site
+C
+
+=== https://propsite.in/dashboard/listings ===
+TITLE: PropSite — AI-Powered Property Listings for Indian Real Estate
+Home
+My Listings
+Collections
+Agency
+Settings
++ New Listing
+B
+Profile
+My Listings
+New Listing
+All
+Live
+Draft
+No listings yet
+
+Create your first property listing to get started.
+
+Create Listing
+
+=== https://propsite.in/dashboard/collections ===
+TITLE: PropSite — AI-Powered Property Listings for Indian Real Estate
+Home
+My Listings
+Collections
+Agency
+Settings
++ New Listing
+B
+Profile
+Collections
+0
++ New Collection
+📂
+No collections yet
+
+Bundle multiple listings under one shareable link, perfect for sending to clients
+
+✨ Create Collection
+
+=== https://propsite.in/dashboard/agency ===
+TITLE: PropSite — AI-Powered Property Listings for Indian Real Estate
+Home
+My Listings
+Collections
+Agency
+Settings
++ New Listing
+B
+Profile
+Agency Dashboard
+
+Manage a team of sub-agents with a shared listing pool.
+
+Create an Agency
+Pick a plan, complete payment, then invite sub-agents.
+Join an Agency
+Enter the 7-digit code your primary agent shared.
+
+=== https://propsite.in/dashboard/settings ===
+TITLE: PropSite — AI-Powered Property Listings for Indian Real Estate
+Home
+My Listings
+Collections
+Agency
+Settings
++ New Listing
+B
+Profile
+My Profile
+
+Configure your public mini-website identity.
+
+Share My Profile
+Preview
+Basics
+T
+Profile Photo
+
+Upload a professional headshot to build trust.
+
+Full Name *
+Agency Name
+Phone Number
+WhatsApp Number
+City
+Public Broker Slug
+propsite.in/broker/
+RERA Registration Number
+Bio / About Me
+0/300
+Expertise & Preferences
+Years of Experience
+Deals Closed
+Areas I Cover
+
+Type an area and press Enter to add
+
+Property Types
+Residential
+Commercial
+Luxury
+Plots
+Industrial
+Languages Spoken
+Hindi
+English
+Marathi
+Gujarati
+Tamil
+Telugu
+Kannada
+Punjabi
+Bengali
+Other
+Usual Response Time
+Within 1 hour
+Same day
+Within 24 hours
+Within 48 hours
+Client Testimonials (0/3)
+Add Quote
+
+No testimonials added. Buyers love reading social proof!
+
+�
+
+=== https://propsite.in/create ===
+TITLE: PropSite — AI-Powered Property Listings for Indian Real Estate
+Dashboard
+Sign Out
+1
+PHOTOS
+2
+DETAILS
+3
+DONE
+Add photos
+Add property photos
+
+JPG, PNG up to 10MB · Drag or tap to upload
+
+PROPERTY VIDEOS
+OPTIONAL
+DESCRIBE YOUR PROPERTY
+
+The more detail you give, the better your listing. AI will extract all details automatically.
+
+✦ AI will extract all details automatically
+
+Continue to Details
+
+=== https://propsite.in/broker/broker-74228036-5dds ===
+TITLE: Tumma Udayakiran | Independent Broker | PropSite
+Dashboard
+Sign Out
+Edit
+Share
+T
+Tumma Udayakiran
+Independent Broker
+
+RERA: A02200000001
+
+0
+LISTINGS
+-
+YRS EXP
+-
+DEALS
+WhatsApp
+Call
+Powered by
+
+=== https://propsite.in/pay ===
+TITLE: PropSite — AI-Powered Property Listings for Indian Real Estate
+Invalid payment link.
+
+=== https://propsite.in/ ===
+TITLE: PropSite — AI-Powered Property Listings for Indian Real Estate
+How It Works
+Features
+Pricing
+Dashboard
+Sign Out
+⚡
+AI-POWERED PROPERTY PAGES
+The smartest way for brokers to share property on WhatsApp.
+
+Turn any property into a beautiful, shareable page in 60 seconds. No apps. No training. Just share a link on WhatsApp.
+
+Create Free Listing
+View Dashboard
+
+No signup required · Free forever for 3 listings
+
+HOW IT WORKS
+
+Three steps. Less than a minute.
+📸
+Add photos & describe
+
+In any language. Hindi, Hinglish, or English.
+
+✨
+AI creates your listing
+
+Writes the headline, description, and builds the page.
+
+🔗
+Share the link
+
+One link. Works for one client or a hundred. Track every view.
+
+FEATURES
+
+Built for Indian brokers.
+
+Every feature designed for how brokers actually work.
+
+✦
+AI Content
+
+Multilingual, auto-written from your photos.
+
+📱
+Mobile-First
+
+O
+
+=== https://propsite.in/privacy ===
+TITLE: PropSite — AI-Powered Property Listings for Indian Real Estate
+PropSite
+← Home
+Privacy Policy
+
+Last updated: 25 June 2026
+
+This page is maintained by PropSite to explain how we collect, use and protect your data when you use propsite.in and our WhatsApp bot. It is informational and does not constitute an independent certification.
+
+1. What we collect
+Broker profile: name, phone, WhatsApp number, email, agency, RERA, avatar, logo.
+Listing data: text descriptions, photos, videos and captions you upload or send via WhatsApp.
+Buyer leads: name, phone and message that buyers submit on your listing pages.
+Usage data: page views, clicks, device/browser type, IP address, approximate location.
+2. How we use it
+To create and host your public listing pages and broker profile.
+To send you lead notifications and account / transactional messages.
+To improve the pro
+
+=== https://propsite.in/terms ===
+TITLE: PropSite — AI-Powered Property Listings for Indian Real Estate
+PropSite
+← Home
+Terms & Conditions
+
+Last updated: 25 June 2026
+
+1. Who we are
+
+PropSite ("PropSite", "we", "us") provides a software platform that helps real-estate brokers in India create, share and manage online property listing pages and capture leads. By creating an account or using the service you agree to these Terms.
+
+2. Accounts
+
+You are responsible for the accuracy of the information you provide, for keeping your login credentials safe and for all activity on your account. You must be at least 18 years old and legally authorised to market the properties you list.
+
+3. Listings & content
+
+You retain ownership of the listing content (text, photos, videos) you upload. You grant PropSite a worldwide, royalty-free licence to host, display, resize, cache and share that content for the pu

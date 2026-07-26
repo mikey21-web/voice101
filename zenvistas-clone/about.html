@@ -1,0 +1,353 @@
+ <!DOCTYPE html>
+ <html lang="en">
+ <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About</title>
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="icon" href="./assets/logos/Vezraa_logo.webp" type="image/png">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://kit.fontawesome.com/a0bdb82872.js" crossorigin="anonymous"></script>
+        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
+ </head>
+ <body class="bg-black">
+    <!-- Device Rotation Message -->
+    <div class="device-rotation h-screen h-dvh w-screen w-dvw z-999999 fixed top-0 left-0 bg-white flex-col items-center justify-center">
+        <div class="p-8">
+            <img src="assets/rotate-device.png" alt="device orientation" class="mx-auto">
+            <p class="-mt-16 text-lg font-semibold text-center"> Rotate your device for a better experience in landscape mode. </p>
+        </div>
+    </div>
+        <div id="logoWrapper" class="fixed top-2 left-2 lg:top-4 lg:left-4 z-99 select-none flex items-center gap-1.5 lg:gap-3 p-1.5 lg:p-2.5 rounded-xl bg-gradient-to-b from-gray-900/90 to-black/90 backdrop-blur-md border border-white/20 shadow-lg max-w-xs">
+
+        <a href="" target="_blank" class="flex items-center gap-2 no-underline">
+
+          <!-- LOGO -->
+          <img src="./assets/logos/Vezraa_logo.webp" alt="Vezraa logo"
+            class="h-7 w-7 object-contain" />
+          <div class="leading-tight space-y-1">
+            <img src="./assets/logos/Vezraa_logo_1.webp" alt="Vezraa logo 1" class="max-h-4">
+            <span
+              class="text-[9px] lg:text-[11px] font-bold tracking-[0.12em] bg-gradient-to-b from-[#F3E299] to-[#BE9B42] bg-clip-text text-transparent block mt-[-2px]">
+              by Vezraa
+            </span>
+            <p class="hidden sm:block text-[10px] text-white/70 mt-[1px]">Your Location, City</p>
+          </div>
+        </a>
+
+        <!-- Divider -->
+        <div class="h-8 w-[1px] bg-white/20 rounded-full"></div>
+
+        <div class="flex items-center gap-1.5">
+
+          <!-- Home Button -->
+          <button onclick="window.location.href='index.html'"
+            class="cursor-pointer flex items-center justify-center rounded-md bg-gradient-to-b from-gray-800/60 to-black/30 backdrop-blur-md border border-[#D4AF37]/40 hover:border-[#D4AF37] hover:shadow-[0_0_12px_rgba(212,175,55,0.5)] transition-all duration-300 h-8 w-8 active:scale-95">
+            <svg viewBox="0 0 512 512" class="h-4 w-4">
+              <defs>
+                <linearGradient id="goldGradient" y1="0%" y2="100%">
+                  <stop offset="0%" style="stop-color:#F3E299" />
+                  <stop offset="100%" style="stop-color:#BE9B42" />
+                </linearGradient>
+              </defs>
+              <path fill="url(#goldGradient)"
+                d="m499.4 207.2-198.4-166.3c-26-21.8-63.9-21.8-89.9 0l-198.5 166.3c-25.2 21.1-10.3 62.1 22.6 62.1h18v183.2c0 19.3 15.7 35 35 35h100.3v-118.3c0-37.3 30.2-67.5 67.5-67.5 37.3 0 67.5 30.2 67.5 67.5v118.3h100.3c19.3 0 35-15.7 35-35v-183.2h18c32.8 0 47.7-41 22.6-62.1z" />
+            </svg>
+          </button>
+
+          <!-- Back Button -->
+          <button id="backBtn"
+            class="cursor-pointer flex items-center justify-center rounded-md bg-gradient-to-b from-gray-800/60 to-black/30 backdrop-blur-md border border-[#D4AF37]/40 hover:border-[#D4AF37] hover:shadow-[0_0_12px_rgba(212,175,55,0.5)] transition-all duration-300 h-8 w-8 active:scale-95">
+            <svg viewBox="0 0 24 24" class="h-4 w-4">
+              <defs>
+                <linearGradient id="goldGradient" y1="0%" y2="100%">
+                  <stop offset="0%" style="stop-color:#F3E299" />
+                  <stop offset="100%" style="stop-color:#BE9B42" />
+                </linearGradient>
+              </defs>
+              <path fill="url(#goldGradient)"
+                d="m17.25 23.75c-.32 0-.64-.12-.88-.37l-10.5-10.5c-.49-.49-.49-1.28 0-1.77l10.5-10.5c.49-.49 1.28-.49 1.77 0s.49 1.28 0 1.77l-9.62 9.62 9.62 9.62c.49.49.49 1.28 0 1.77-.25.24-.57.36-.89.36z" />
+            </svg>
+          </button>
+
+        </div>
+      </div>
+    <!-- COMMON BUTTONS -->
+    <div id="commonBtnsWrapper" class="fixed z-999 flex items-center top-1 right-1 gap-1 sm:top-2 sm:right-2 sm:gap-1.5 lg:top-4 lg:right-4 lg:gap-3">
+        <!-- Full / Exit Screen -->
+        <div class="relative group">
+            <div class="flex flex-col items-center justify-center rounded-full text-white bg-black/70 border border-white/20 shadow-lg backdrop-blur-md transition-transform duration-200 hover:scale-110 hover:bg-[rgba(0,0,0,0.8)] h-8 w-8 lg:h-10 lg:w-10">
+                <button id="fullScreenBtn" class="cursor-pointer">
+                    <i class="fa-solid fa-expand text-white text-[11px] sm:text-[13px] lg:text-[18px]"></i>
+                </button>
+                <button id="exitScreenBtn" class="cursor-pointer hidden">
+                    <i class="fa-solid fa-compress text-white text-[11px] sm:text-[13px] lg:text-[18px]"></i>
+                </button>
+            </div>
+            <span id="screenLabel" class="button-tooltip absolute left-1/2 top-full mt-1.5 w-max rounded-md bg-white px-1.5 py-1.5 text-xs font-normal text-black shadow-lg opacity-0 scale-90 origin-top transform -translate-x-1/2 transition-all duration-300 pointer-events-none group-hover:opacity-100 group-hover:scale-100 group-hover:pointer-events-auto">
+                Full Screen
+                <span class="absolute top-0 left-1/2 -translate-x-1/2 -mt-1 h-2 w-2 bg-white rotate-45"></span>
+            </span>
+        </div>
+        <!-- Menu -->
+        <div class="relative group">
+            <button id="featurePanelBtn" class="cursor-pointer flex items-center justify-center rounded-full text-white bg-black/70 border border-white/20 shadow-lg backdrop-blur-md transition-transform duration-200 hover:scale-110 hover:bg-[rgba(0,0,0,0.8)] h-8 w-8 text-[11px] sm:text-[12px] lg:h-10 lg:w-10 lg:text-[18px]">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+            <span class="button-tooltip absolute left-1/2 top-full mt-1.5 w-max rounded-md bg-white px-1.5 py-1.5 text-xs font-normal text-black shadow-lg opacity-0 scale-90 origin-top transform -translate-x-1/2 transition-all duration-300 pointer-events-none group-hover:opacity-100 group-hover:scale-100 group-hover:pointer-events-auto">
+                Menu
+                <span class="absolute top-0 left-1/2 -translate-x-1/2 -mt-1 h-2 w-2 bg-white rotate-45"></span>
+            </span>
+        </div>
+    </div>
+    <div id="features" class="transform translate-x-full transition-transform duration-600 ease-in-out fixed top-0 right-0 w-[100px] h-screen bg-black/90 p-3 z-9999 overflow-x-hidden">
+        <div class="flex flex-col items-center gap-6 w-full h-full">
+            <button id="featurePanelCloseBtn" class="h-10 w-10 rounded-full bg-black border border-white/20 cursor-pointer shrink-0 text-white">
+                <i class="fa-solid fa-xmark fa-lg" aria-hidden="true"></i>
+            </button>
+            <div id="featuresList" class="overflow-y-auto w-full">
+                <ul class="features flex flex-col gap-4 !w-full">
+                    <!-- About Feature -->
+                    <li class="select-none cursor-pointer flex flex-col justify-center items-center gap-2 w-full group" data-type="about">
+                        <a href="./about.html" class="inline-flex flex-col items-center gap-2">
+                        <div class="border border-white/20  p-2 lg:!p-4 flex flex-col items-center justify-center rounded-full h-[50px] w-[50px] transition-colors duration-300 group-hover:bg-gradient-to-br group-hover:from-[#F3E299]/50 group-hover:to-[#BE9B42]/70 bg-[rgba(0,0,0,0.45)]">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="h-[30px] w-[30px]">
+                                <path fill="#ffffff" d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM216 336l24 0 0-64-24 0c-13.3 0-24-10.7-24-24s10.7-24 24-24l48 0c13.3 0 24 10.7 24 24l0 88 8 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-80 0c-13.3 0-24-10.7-24-24s10.7-24 24-24zm40-208a32 32 0 1 1 0 64 32 32 0 1 1 0-64z"/>
+                            </svg>
+                        </div>
+                        <p class="text-xs text-white text-center"> About </p>
+                        </a>  
+                    </li>
+                    <!-- Webverse Feature -->
+                    <!-- <li class="select-none cursor-pointer flex flex-col justify-center items-center gap-2 w-full group" data-type="webverse">
+                        <a href="./webverse.html" class="inline-flex flex-col items-center gap-2">
+                        <div class="p-4 flex flex-col items-center justify-center rounded-full h-[50px] w-[50px] transition-colors duration-300 group-hover:bg-gradient-to-br group-hover:from-blue-600/70 group-hover:to-violet-600/40 bg-[rgba(0,0,0,0.45)]">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512" class="h-[30px] w-[30px]">
+                                <path fill="#ffffff" d="M576 64L64 64C28.7 64 0 92.7 0 128L0 384c0 35.3 28.7 64 64 64l120.4 0c24.2 0 46.4-13.7 57.2-35.4l32-64c8.8-17.5 26.7-28.6 46.3-28.6s37.5 11.1 46.3 28.6l32 64c10.8 21.7 33 35.4 57.2 35.4L576 448c35.3 0 64-28.7 64-64l0-256c0-35.3-28.7-64-64-64zM96 240a64 64 0 1 1 128 0A64 64 0 1 1 96 240zm384-64a64 64 0 1 1 0 128 64 64 0 1 1 0-128z"/>
+                            </svg>
+                        </div>
+                        <p class="text-xs text-white text-center"> Webverse </p>
+                        </a>  
+                    </li> -->
+                    <!-- Zone IQ Feature -->
+                    <!-- <li class="select-none cursor-pointer flex flex-col justify-center items-center gap-2 w-full group" data-type="zone iq">
+                        <a href="./virtualtour.html" class="inline-flex flex-col items-center gap-2">
+                        <div class="p-4 flex flex-col items-center justify-center rounded-full h-[50px] w-[50px] transition-colors duration-300 group-hover:bg-gradient-to-br group-hover:from-blue-600/70 group-hover:to-violet-600/40 bg-[rgba(0,0,0,0.45)]">
+                                <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+                                    <g fill="#ffffff">
+                                        <path d="m344 128c0-11.046 8.954-20 20-20s20 8.954 20 20-8.954 20-20 20-20-8.954-20-20z" />
+                                        <g clip-rule="evenodd" fill-rule="evenodd">
+                                            <path d="m357.336 240.956c.002.002.004.003 6.664-7.456l-6.66 7.459c3.794 3.388 9.526 3.388 13.32 0l-6.66-7.459c6.66 7.459 6.662 7.458 6.664 7.456l.004-.004.015-.013.048-.043c.042-.037.1-.09.176-.158.15-.136.368-.333.649-.589.561-.511 1.373-1.257 2.4-2.215 2.054-1.915 4.973-4.682 8.468-8.124 6.978-6.874 16.312-16.495 25.675-27.441 9.331-10.908 18.877-23.348 26.142-35.853 7.12-12.257 12.759-25.762 12.759-38.516 0-45.8396-37.16-83-83-83s-83 37.1604-83 83c0 12.754 5.639 26.259 12.759 38.516 7.265 12.505 16.811 24.945 26.142 35.853 9.363 10.946 18.697 20.567 25.675 27.441 3.495 3.442 6.414 6.209 8.468 8.124 1.027.958 1.839 1.704 2.4 2.215.281.256.499.453.649.589l.074.067.15.134.015.013zm-56.336-112.956c0-34.7939 28.206-63 63-63s63 28.2061 63 63c0 7.405-3.486 17.166-10.053 28.47-6.423 11.056-15.127 22.471-24.046 32.899-8.887 10.389-17.803 19.583-24.512 26.192-1.603 1.578-3.076 3.006-4.389 4.263-1.313-1.257-2.786-2.685-4.389-4.263-6.709-6.609-15.625-15.803-24.512-26.192-8.919-10.428-17.623-21.843-24.046-32.899-6.567-11.304-10.053-21.065-10.053-28.47z" />
+                                            <path d="m383.781 369.639c26.885-30.21 43.219-70.017 43.219-113.639v-45.25c0-5.523 4.477-10 10-10s10 4.477 10 10v45.25c0 105.486-85.514 191-191 191s-191-85.514-191-191 85.514-191 191-191c5.523 0 10 4.4772 10 10s-4.477 10-10 10c-43.622 0-83.429 16.334-113.639 43.219zm-14.142 14.142-113.639-113.639-113.639 113.639c30.21 26.885 70.017 43.219 113.639 43.219s83.429-16.334 113.639-43.219zm-241.42-241.42 113.639 113.639-113.639 113.639c-26.885-30.21-43.219-70.017-43.219-113.639s16.334-83.429 43.219-113.639z" />
+                                        </g>
+                                    </g>
+                                </svg>
+                            </div>
+                        </a>  
+                        <p class="text-xs text-white text-center"> Zone IQ </p>
+                    </li> -->
+                    <!-- Google Map Feature -->
+                    <!-- <li class="select-none cursor-pointer flex flex-col justify-center items-center gap-2 w-full group" data-type="google maps">
+                        <a href="./maps.html" class="inline-flex flex-col items-center gap-2">
+                        <div class="p-4 flex flex-col items-center justify-center rounded-full h-[50px] w-[50px] transition-colors duration-300 group-hover:bg-gradient-to-br group-hover:from-blue-600/70 group-hover:to-violet-600/40 bg-[rgba(0,0,0,0.45)]">
+                                <svg xmlns="http://www.w3.org/2000/svg" id="Capa_1" enable-background="new 0 0 512 512" viewBox="0 0 512 512" class="h-[44px] w-[44px]">
+                                    <g>
+                                        <g id="Google_Maps_2_">
+                                            <g>
+                                                <path d="m272.5 268.5-54.958 84.957-52.443 22.442c-30.899-35.4-63.898-77.399-79.499-130.499l31.4-58.4 50.5-23.5c-.899 5.4-1.5 10.8-1.5 16.5 0 49.499 40.499 90 90 90 5.7 0 11.1-.601 16.5-1.5z" fill="#ffda2d"/>
+                                            </g>
+                                        </g>
+                                        <path d="m344.51 196.41c.9-5.37 1.49-10.74 1.49-16.41 0-49.46-40.44-89.94-89.89-90h-.11c-5.7 0-11.1.6-16.5 1.5l79.8-79.8c48.3 18 87 56.7 105 105l-79.8 79.8c0-.03.01-.06.01-.09z" fill="#80aef8"/>
+                                        <path d="m424.3 116.7-27.3 53.3-52.5 26.5c0-.03.01-.06.01-.09.9-5.37 1.49-10.74 1.49-16.41 0-49.46-40.44-89.94-89.89-90h-.08v-15.03l17.97-39.97 45.3-23.3c48.3 18 87 56.7 105 105z" fill="#4086f4"/>
+                                        <g>
+                                            <path d="m424.3 116.7-79.8 79.799c-6.901 36.301-35.7 65.1-72.001 72.001h-.001l-86.872 86.871-20.528 20.527c5.101 5.7 9.6 10.802 14.401 16.201 33.001 37.501 61.501 71.9 61.501 104.901 0 8.399 6.599 15 15 15s15-6.601 15-15c0-33.001 28.5-67.4 61.5-104.9 46.201-51.901 103.5-116.7 103.5-212.1 0-22.2-3.9-43.5-11.7-63.3z" fill="#59c36a"/>
+                                            <path d="m424.3 116.7-79.799 79.798v.001c-6.901 36.301-35.7 65.1-72.001 72.001-.001 0-.001 0-.002 0l-16.467 16.466v227.028c8.386-.018 14.969-6.606 14.969-14.994 0-33.001 28.5-67.4 61.5-104.9 46.201-51.901 103.5-116.7 103.5-212.1 0-22.2-3.9-43.5-11.7-63.3z" fill="#00a66c"/>
+                                        </g>
+                                        <g id="Google_Maps_3_">
+                                            <path d="m256.031 284.969 16.469-16.469c-5.389.897-10.779 1.492-16.469 1.496z" fill="#fdbf00"/>
+                                        </g>
+                                        <path d="m319.3 11.7-79.8 79.8c-18.3 3.6-34.501 12.299-47.1 24.901l-46.4-19.401-17.2-44.2c32.401-32.701 77.401-52.8 127.2-52.8 22.2 0 43.5 3.9 63.3 11.7z" fill="#4086f4"/>
+                                        <path d="m256.031 74.969 63.269-63.269c-19.79-7.797-41.08-11.693-63.268-11.697v74.966z" fill="#4175df"/>
+                                        <path d="m192.4 116.4c-12.599 12.6-21.301 28.799-24.9 47.1l-81.9 81.9c-6-20.099-9.6-41.7-9.6-65.4 0-49.801 20.099-94.801 52.8-127.2z" fill="#f03800"/>
+                                    </g>
+                                </svg>
+                        </div>
+                        <p class="text-xs text-white text-center"> Google Maps </p>
+                        </a>  
+                    </li> -->
+                    <!-- Interior Feature -->
+                    <!-- <li class="select-none cursor-pointer flex flex-col justify-center items-center gap-2 w-full group" data-type="interior">
+                        <a href="#" class="inline-flex flex-col items-center gap-2">
+                        <div class="p-4 flex flex-col items-center justify-center rounded-full h-[50px] w-[50px] transition-colors duration-300 group-hover:bg-gradient-to-br group-hover:from-blue-600/70 group-hover:to-violet-600/40 bg-[rgba(0,0,0,0.45)]">
+                                <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:svgjs="http://svgjs.dev/svgjs" id="Layer_1" enable-background="new 0 0 507.33 507.33" viewBox="0 0 507.33 507.33" version="1.1" class="h-[44px] w-[44px]">
+                                    <g width="100%" height="100%" transform="matrix(1,0,0,1,0,0)">
+                                        <path fill="#ffffff" d="m63.475 385.425-4.75 19.01c-1.77 7.08-.21 14.43 4.28 20.18s11.25 9.05 18.54 9.05c10.81 0 20.2-7.33 22.82-17.82l7.55-30.18h-42.25c-2.08 0-4.15-.08-6.19-.24z" fill="#ffffff" fill-opacity="1" data-original-color="#000000ff" stroke="none" stroke-opacity="1"/>
+                                        <path fill="#ffffff" d="m443.855 385.425c-2.04.16-4.11.24-6.19.24h-42.24l7.54 30.18c2.62 10.49 12.01 17.82 22.82 17.82 7.29 0 14.05-3.3 18.54-9.05s6.05-13.1 4.28-20.18z" fill="#ffffff" fill-opacity="1" data-original-color="#000000ff" stroke="none" stroke-opacity="1"/>
+                                        <path fill="#ffffff" d="m46.665 161.865c25.45 2.11 46.9 20.95 51.98 46.33l12.31 61.56c1.38 6.9 7.49 11.91 14.53 11.91h256.36c7.04 0 13.15-5.01 14.53-11.91l12.31-61.56c4.72-23.59 23.59-41.53 46.66-45.64l2.01-11.24c3.44-19.29-1.8-38.97-14.38-54s-31.04-23.65-50.64-23.65h-282.87c-20.04 0-38.76 8.94-51.36 24.52-12.6 15.59-17.42 35.77-13.22 55.36z" fill="#ffffff" fill-opacity="1" data-original-color="#000000ff" stroke="none" stroke-opacity="1"/>
+                                        <path fill="#ffffff" d="m496.032 190.935c-7.891-8.433-19.039-13.27-30.588-13.27-4.577 0-9.012.758-13.181 2.149l.002-.009c-14.041 4.598-25.091 17.006-27.893 31.531l-12.311 61.555c-2.871 14.354-15.58 24.773-30.219 24.773h-256.354c-14.639 0-27.348-10.418-30.219-24.773l-12.311-61.555c-3.088-16.213-16.536-29.659-32.723-32.821l.001.004c-14.017-2.974-29.198 1.904-38.938 12.416-7.89 8.434-11.975 19.879-11.207 31.402l5.574 83.603c.147 34.413 27.599 62.487 61.764 63.668l-.004.017c.74.03 1.49.04 2.24.04h46.25 275.51 46.24c.75 0 1.5-.01 2.24-.04l-.004-.017c34.165-1.181 61.617-29.255 61.763-63.668l5.574-83.603c.768-11.523-3.316-22.969-11.206-31.402z" fill="#ffffff" />
+                                    </g>
+                                </svg>
+                            </div>
+                            <p class="text-xs text-white text-center"> Interior </p>
+                        </a>  
+                    </li> -->
+                    <!-- Amenities Feature -->
+                    <!-- <li class="select-none cursor-pointer flex flex-col justify-center items-center gap-2 w-full group" data-type="amenities">
+                        <a href="#" class="inline-flex flex-col items-center gap-2">
+                        <div class="p-4 flex flex-col items-center justify-center rounded-full h-[50px] w-[50px] transition-colors duration-300 group-hover:bg-gradient-to-br group-hover:from-blue-600/70 group-hover:to-violet-600/40 bg-[rgba(0,0,0,0.45)]">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512" class="h-[30px] w-[30px]">
+                                    <path fill="#ffffff" d="M96 64c0-17.7 14.3-32 32-32l32 0c17.7 0 32 14.3 32 32l0 160 0 64 0 160c0 17.7-14.3 32-32 32l-32 0c-17.7 0-32-14.3-32-32l0-64-32 0c-17.7 0-32-14.3-32-32l0-64c-17.7 0-32-14.3-32-32s14.3-32 32-32l0-64c0-17.7 14.3-32 32-32l32 0 0-64zm448 0l0 64 32 0c17.7 0 32 14.3 32 32l0 64c17.7 0 32 14.3 32 32s-14.3 32-32 32l0 64c0 17.7-14.3 32-32 32l-32 0 0 64c0 17.7-14.3 32-32 32l-32 0c-17.7 0-32-14.3-32-32l0-160 0-64 0-160c0-17.7 14.3-32 32-32l32 0c17.7 0 32 14.3 32 32zM416 224l0 64-192 0 0-64 192 0z"/>
+                                </svg>
+                            </div>
+                            <p class="text-xs text-white text-center"> Amenities </p>
+                        </a>  
+                    </li> -->
+                    <!-- Exterior Feature -->
+                    <!-- <li class="select-none cursor-pointer flex flex-col justify-center items-center gap-2 w-full group" data-type="exterior">
+                        <a href="#" class="inline-flex flex-col items-center gap-2">
+                        <div class="p-4 flex flex-col items-center justify-center rounded-full h-[50px] w-[50px] transition-colors duration-300 group-hover:bg-gradient-to-br group-hover:from-blue-600/70 group-hover:to-violet-600/40 bg-[rgba(0,0,0,0.45)]">
+                                <svg xmlns="http://www.w3.org/2000/svg" id="Line" viewBox="0 0 64 64" class="h-[64px] w-[64px]">
+                                    <path fill="#ffffff" d="M20,35a3.00328,3.00328,0,0,1-3-3,1.00019,1.00019,0,0,0-2,.00006c.20922,6.60538,9.79019,6.60811,10-.00017A4.98132,4.98132,0,0,0,22.96906,28,4.98137,4.98137,0,0,0,25,24c-.2094-6.60556-9.79012-6.60812-10,.00011A1,1,0,0,0,17,24a3,3,0,1,1,3,3,1.00019,1.00019,0,0,0,.00006,2A3.00019,3.00019,0,0,1,20,35Z"/>
+                                    <path fill="#ffffff" d="M32,37a4.99146,4.99146,0,1,0-3.00006-8.9743L29,24a3.00019,3.00019,0,0,1,6,.00009A1,1,0,0,0,37,24a5,5,0,0,0-10,0v8A5.00588,5.00588,0,0,0,32,37Zm0-8a3.00019,3.00019,0,0,1-.00009,6A3.00019,3.00019,0,0,1,32,29Z"/>
+                                    <path fill="#ffffff" d="M44,37a5.00588,5.00588,0,0,0,5-5V24c-.20931-6.6055-9.79016-6.60814-10,.00011V32A5.00588,5.00588,0,0,0,44,37ZM41,24a3.00019,3.00019,0,0,1,6,.00009V32a3.00019,3.00019,0,0,1-6-.00009Z"/>
+                                    <path fill="#ffffff" d="M25.936,46.69482c1.19818.12537,2.44451.19861,3.70831.24677L27.293,49.293a1.00009,1.00009,0,0,0,1.4141,1.414c.10337-.1491,4.33554-4.20905,4.21572-4.32469a1.00685,1.00685,0,0,0-.21607-1.08963L28.707,41.293a1.00007,1.00007,0,0,0-1.414,1.4141l2.23153,2.23153c-10.8428-.13345-23.90064-5.045-23.52432-10.93887C6,31.31445,8.42627,28.70654,12.832,26.65674a1.00019,1.00019,0,0,0-.84379-1.81345C-5.079,33.43065,7.54917,45.19934,25.936,46.69482Z"/>
+                                    <path fill="#ffffff" d="M52.438,25.041a1.00013,1.00013,0,0,0-.87592,1.79788c15.30066,8.03065.84387,17.11332-15.63761,18.033a1.00028,1.00028,0,1,0,.13169,1.99622C54.97077,46.01269,69.65,34.14765,52.438,25.041Z"/>
+                                    <path fill="#ffffff" d="M52,19a3.00019,3.00019,0,0,0-.00009-6A3.00019,3.00019,0,0,0,52,19Zm0-4a1.00019,1.00019,0,0,1-.00006,2A1.00019,1.00019,0,0,1,52,15Z"/>
+                                </svg>
+                            </div>
+                            <p class="text-xs text-white text-center"> 360 Exterior </p>
+                        </a>  
+                    </li> -->
+                    <!-- Gallery Feature -->
+                    <li class="select-none cursor-pointer flex flex-col justify-center items-center gap-2 w-full group" data-type="gallery">
+                        <a href="./gallery.html" class="inline-flex flex-col items-center gap-2">
+                        <div class="border border-white/20 p-4 flex flex-col items-center justify-center rounded-full h-[50px] w-[50px] transition-colors duration-300 group-hover:bg-gradient-to-br group-hover:from-[#F3E299]/50 group-hover:to-[#BE9B42]/70 bg-[rgba(0,0,0,0.45)]">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" style="height: 24px; width: 24px;">
+                                    <path fill="#ffffff" d="M464 448H48c-26.5 0-48-21.5-48-48V112c0-26.5 21.5-48 48-48h416c26.5 0 48 21.5 48 48v288c0 26.5-21.5 48-48 48zM112 120c-30.9 0-56 25.1-56 56s25.1 56 56 56 56-25.1 56-56-25.1-56-56-56zM64 384h384V272l-87.5-87.5c-4.7-4.7-12.3-4.7-17 0L208 320l-55.5-55.5c-4.7-4.7-12.3-4.7-17 0L64 336v48z"/>
+                                </svg>
+                            </div>
+                            <p class="text-xs text-white text-center"> Gallery </p>
+                        </a>  
+                    </li>
+                    <!-- Brochure Feature -->
+                    <li class="select-none cursor-pointer flex flex-col justify-center items-center gap-2 w-full group" data-type="brochure">
+                        <a href="./brochure.html" class="inline-flex flex-col items-center gap-2">
+                            <div class="border border-white/20 p-4 flex flex-col items-center justify-center rounded-full h-[50px] w-[50px] transition-colors duration-300 group-hover:bg-gradient-to-br group-hover:from-[#F3E299]/50 group-hover:to-[#BE9B42]/70 bg-[rgba(0,0,0,0.45)]"> 
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" style="height: 24px; width: 24px;">
+                                    <path fill="#ffffff" d="M0 64C0 28.7 28.7 0 64 0L224 0l0 128c0 17.7 14.3 32 32 32l128 0 0 144-208 0c-35.3 0-64 28.7-64 64l0 144-48 0c-35.3 0-64-28.7-64-64L0 64zm384 64l-128 0L256 0 384 128zM176 352l32 0c30.9 0 56 25.1 56 56s-25.1 56-56 56l-16 0 0 32c0 8.8-7.2 16-16 16s-16-7.2-16-16l0-48 0-80c0-8.8 7.2-16 16-16zm32 80c13.3 0 24-10.7 24-24s-10.7-24-24-24l-16 0 0 48 16 0zm96-80l32 0c26.5 0 48 21.5 48 48l0 64c0 26.5-21.5 48-48 48l-32 0c-8.8 0-16-7.2-16-16l0-128c0-8.8 7.2-16 16-16zm32 128c8.8 0 16-7.2 16-16l0-64c0-8.8-7.2-16-16-16l-16 0 0 96 16 0zm80-112c0-8.8 7.2-16 16-16l48 0c8.8 0 16 7.2 16 16s-7.2 16-16 16l-32 0 0 32 32 0c8.8 0 16 7.2 16 16s-7.2 16-16 16l-32 0 0 48c0 8.8-7.2 16-16 16s-16-7.2-16-16l0-64 0-64z"/>
+                                </svg>
+                            </div>
+                            <p class="text-xs text-white text-center"> Brochure </p>
+                        </a>
+                    </li>
+                    <!-- Contact Feature -->
+                    <li class="select-none cursor-pointer flex flex-col justify-center items-center gap-2 w-full group" data-type="contact">
+                        <a href="./contact.html" class="inline-flex flex-col items-center gap-2"> 
+                            <div class="border border-white/20 p-4 flex flex-col items-center justify-center rounded-full h-[50px] w-[50px] transition-colors duration-300 group-hover:bg-gradient-to-br group-hover:from-[#F3E299]/50 group-hover:to-[#BE9B42]/70 bg-[rgba(0,0,0,0.45)]"> 
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" style="height: 22px; width: 22px;">
+                                    <path fill="#ffffff" d="M164.9 24.6c-7.7-18.6-28-28.5-47.4-23.2l-88 24C12.1 30.2 0 46 0 64C0 311.4 200.6 512 448 512c18 0 33.8-12.1 38.6-29.5l24-88c5.3-19.4-4.6-39.7-23.2-47.4l-96-40c-16.3-6.8-35.2-2.1-46.3 11.6L304.7 368C234.3 334.7 177.3 277.7 144 207.3L193.3 167c13.7-11.2 18.4-30 11.6-46.3l-40-96z"/>
+                                </svg>
+                            </div>
+                            <p class="text-xs text-white text-center"> Contact </p>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div> 
+    <!-- Vezraa LOGO -->
+    <a href="https://www.vezraa.com/" target="_blank" class="fixed bottom-2 right-2 lg:bottom-4 lg:right-4 z-99 select-none inline-flex items-center justify-center h-10 w-10 sm:h-12 sm:w-12 lg:h-16 lg:w-16 rounded-xl lg:rounded-2xl bg-black/70 border border-white/20 shadow-lg hover:bg-black transition">
+        <img src="./assets/logos/Vezraa_logo.webp" alt="Vezraa logo" class="max-h-[75%] max-w-[75%] object-contain">
+    </a>
+    <!-- LEFT PANEL -->
+    <ul class="flex space-x-1.5 backdrop-blur-sm rounded-xl bg-black shadow-lg p-1.5 fixed bottom-2 left-2 lg:bottom-4 lg:left-4 z-99 border border-white/30">
+        <!-- Home Tab -->
+        <li data-type="/webverse.html" class="tab-btn group relative cursor-pointer border border-white/40 h-8 w-8 lg:h-10 lg:w-10 inline-flex justify-center items-center gap-2 rounded-lg text-white font-semibold shadow transition-all duration-300">
+            <i class="far fa-map"></i>
+            <span class="tab-text font-semibold text-sm hidden">Aerial view</span>
+            <div
+            class="absolute bottom-full left-1/2 mb-3 w-max rounded-md bg-white py-2 px-3 text-sm font-normal text-black shadow-lg 
+                    opacity-0 scale-90 origin-bottom transform -translate-x-1/2 transition-all duration-300 pointer-events-none
+                    group-hover:opacity-100 group-hover:scale-100 group-hover:pointer-events-auto">
+            Aerial View
+            <span class="absolute top-3/4 left-1/2 h-3 w-3 bg-white rotate-45 -translate-x-1/2">
+            </span>
+            </div>
+        </li>
+
+        <!-- Profile Tab -->
+        <li data-type="/exterior.html" class="tab-btn group relative cursor-pointer border border-white/40 h-8 w-8 lg:h-10 lg:w-10 inline-flex justify-center items-center gap-2 rounded-lg text-white font-semibold shadow transition-all duration-300">
+            <i class="fa-solid fa-building fa-lg"></i>
+            <span class="tab-text font-semibold text-sm hidden">Community</span>
+            <div
+            class="absolute bottom-full left-1/2 mb-3 w-max rounded-md bg-white py-2 px-3 text-sm font-normal text-black shadow-lg 
+                    opacity-0 scale-90 origin-bottom transform -translate-x-1/2 transition-all duration-300 pointer-events-none
+                    group-hover:opacity-100 group-hover:scale-100 group-hover:pointer-events-auto">
+            Community
+            <span class="absolute top-3/4 left-1/2 h-3 w-3 bg-white rotate-45 -translate-x-1/2">
+            </span>
+            </div>
+        </li>
+        
+        <!-- Settings Tab -->
+        <li data-type="/interior.html" class="tab-btn group relative cursor-pointer border border-white/40 h-8 w-8 lg:h-10 lg:w-10 inline-flex justify-center items-center gap-2 rounded-lg text-white font-semibold shadow transition-all duration-300">
+            <i class="fa-solid fa-couch"></i>
+            <span class="tab-text font-semibold text-sm hidden">Interior</span>
+            <div
+            class="absolute bottom-full left-1/2 mb-3 w-max rounded-md bg-white py-2 px-3 text-sm font-normal text-black shadow-lg 
+                    opacity-0 scale-90 origin-bottom transform -translate-x-1/2 transition-all duration-300 pointer-events-none
+                    group-hover:opacity-100 group-hover:scale-100 group-hover:pointer-events-auto">
+            Interior
+            <span class="absolute top-3/4 left-1/2 h-3 w-3 bg-white rotate-45 -translate-x-1/2">
+            </span>
+            </div>
+        </li>
+
+        <!-- Google Maps Tab -->
+        <li data-type="/maps.html" class="tab-btn group relative cursor-pointer border border-white/40 h-8 w-8 lg:h-10 lg:w-10 inline-flex justify-center items-center gap-2 rounded-lg text-white font-semibold shadow transition-all duration-300">
+            <img src="assets/googlemaps.png" alt="Location" class="w-6 h-6 filter brightness-100 hover:brightness-125 transition-all duration-300" />
+            <span class="tab-text font-semibold text-sm hidden">Google Maps</span>
+            <div
+            class="absolute bottom-full left-1/2 mb-3 w-max rounded-md bg-white py-2 px-3 text-sm font-normal text-black shadow-lg 
+                    opacity-0 scale-90 origin-bottom transform -translate-x-1/2 transition-all duration-300 pointer-events-none
+                    group-hover:opacity-100 group-hover:scale-100 group-hover:pointer-events-auto">
+            Google Maps
+            <span class="absolute top-3/4 left-1/2 h-3 w-3 bg-white rotate-45 -translate-x-1/2">
+            </span>
+            </div>
+        </li>
+
+        <li data-type="/zoneiq.html" class="tab-btn group relative cursor-pointer border border-white/40 h-8 w-8 lg:h-10 lg:w-10 inline-flex justify-center items-center gap-2 rounded-lg text-white font-semibold shadow transition-all duration-300">
+            <i class="fa-solid fa-globe fa-lg"></i>
+            <span class="tab-text font-semibold text-sm hidden">Zone IQ</span>
+            <div
+            class="absolute bottom-full left-1/2 mb-3 w-max rounded-md bg-white py-2 px-3 text-sm font-normal text-black shadow-lg 
+                    opacity-0 scale-90 origin-bottom transform -translate-x-1/2 transition-all duration-300 pointer-events-none
+                    group-hover:opacity-100 group-hover:scale-100 group-hover:pointer-events-auto">
+            Zone IQ
+            <span class="absolute top-3/4 left-1/2 h-3 w-3 bg-white rotate-45 -translate-x-1/2">
+            </span>
+            </div>
+        </li>
+    </ul>
+    <div class="overflow-y-auto h-screen w-full flex flex-col items-center justify-center opacity-100 transition-opacity duration-500 ease-in-out pt-14">
+        <div class="relative w-full min-h-full">
+            <!-- Background image for small devices -->
+            <div
+                class="relative flex flex-col items-center justify-center gap-6 w-full min-h-screen p-4 z-10"
+                style="background: none;"
+            >
+                <h1 class="text-2xl lg:text-4xl text-white font-semibold mb-4 select-none">
+                    About Vezraa
+                </h1>
+                <p class="text-base lg:text-lg font-thin text-white max-w-3xl text-center select-none">
+                    Vezraa is a haven of modern comfort and serene living, nestled in the peaceful surroundings of Your Location, City. This exclusive community features 59 premium 4 BHK & 5 BHK villas, thoughtfully designed with north and south-facing orientations to capture natural light and ventilation. Each villa embodies refined architecture, spacious interiors, and a perfect blend of elegance and tranquility — offering you a lifestyle that is both luxurious and harmonious.
+                </p>
+            </div>
+        </div>
+    </div>
+    <script src="./js/about.js"></script>
+ </body>
+ </html>   
+    
+    

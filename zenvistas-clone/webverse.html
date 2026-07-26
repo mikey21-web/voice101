@@ -1,0 +1,1182 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webverse</title>
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="./assets/logos/Vezraa_logo.webp" type="image/png">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://kit.fontawesome.com/a0bdb82872.js" crossorigin="anonymous"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
+  </head>
+  <body class="overflow-hidden bg-[rgba(0,0,0,1)]">
+    <!-- Device Rotation Message -->
+    <div
+      class="device-rotation h-screen h-dvh w-screen w-dvw z-999999 fixed top-0 left-0 bg-white flex-col items-center justify-center">
+      <div class="p-8">
+        <img src="assets/rotate-device.png" alt="device orientation" class="mx-auto">
+        <p class="-mt-16 text-lg font-semibold text-center"> Rotate your device for a better experience in landscape mode.
+        </p>
+      </div>
+    </div>
+    <div class="fixed top-2 left-2 lg:top-3 lg:left-3 z-9">
+      <div id="logoWrapper"
+        class="select-none flex items-center gap-1.5 p-1.5 lg:p-2 rounded-lg bg-gradient-to-b from-gray-900/90 to-black/90 backdrop-blur-md border border-white/20 shadow-lg max-w-xs">
+
+        <a href="" target="_blank" class="flex items-center gap-2 no-underline">
+
+          <!-- LOGO -->
+          <img src="./assets/logos/Vezraa_logo.webp" alt="Vezraa logo"
+            class="h-7 w-7 object-contain" />
+          <div class="leading-tight space-y-1">
+            <img src="./assets/logos/Vezraa_logo_1.webp" alt="Vezraa logo 1" class="max-h-4">
+            <span
+              class="text-[9px] lg:text-[11px] font-bold tracking-[0.12em] bg-gradient-to-b from-[#F3E299] to-[#BE9B42] bg-clip-text text-transparent block mt-[-2px]">
+              by Vezraa
+            </span>
+            <p class="hidden sm:block text-[10px] text-white/70 mt-[1px]">Your Location, City</p>
+          </div>
+        </a>
+
+        <!-- Divider -->
+        <div class="h-8 w-[1px] bg-white/20 rounded-full"></div>
+
+        <div class="flex items-center gap-1.5">
+
+          <!-- Home Button -->
+          <button onclick="window.location.href='index.html'"
+            class="cursor-pointer flex items-center justify-center rounded-md bg-gradient-to-b from-gray-800/60 to-black/30 backdrop-blur-md border border-[#D4AF37]/40 hover:border-[#D4AF37] hover:shadow-[0_0_12px_rgba(212,175,55,0.5)] transition-all duration-300 h-8 w-8 active:scale-95">
+            <svg viewBox="0 0 512 512" class="h-4 w-4">
+              <defs>
+                <linearGradient id="goldGradient" y1="0%" y2="100%">
+                  <stop offset="0%" style="stop-color:#F3E299" />
+                  <stop offset="100%" style="stop-color:#BE9B42" />
+                </linearGradient>
+              </defs>
+              <path fill="url(#goldGradient)"
+                d="m499.4 207.2-198.4-166.3c-26-21.8-63.9-21.8-89.9 0l-198.5 166.3c-25.2 21.1-10.3 62.1 22.6 62.1h18v183.2c0 19.3 15.7 35 35 35h100.3v-118.3c0-37.3 30.2-67.5 67.5-67.5 37.3 0 67.5 30.2 67.5 67.5v118.3h100.3c19.3 0 35-15.7 35-35v-183.2h18c32.8 0 47.7-41 22.6-62.1z" />
+            </svg>
+          </button>
+
+          <!-- Back Button -->
+          <button id="backBtn"
+            class="cursor-pointer flex items-center justify-center rounded-md bg-gradient-to-b from-gray-800/60 to-black/30 backdrop-blur-md border border-[#D4AF37]/40 hover:border-[#D4AF37] hover:shadow-[0_0_12px_rgba(212,175,55,0.5)] transition-all duration-300 h-8 w-8 active:scale-95">
+            <svg viewBox="0 0 24 24" class="h-4 w-4">
+              <defs>
+                <linearGradient id="goldGradient" y1="0%" y2="100%">
+                  <stop offset="0%" style="stop-color:#F3E299" />
+                  <stop offset="100%" style="stop-color:#BE9B42" />
+                </linearGradient>
+              </defs>
+              <path fill="url(#goldGradient)"
+                d="m17.25 23.75c-.32 0-.64-.12-.88-.37l-10.5-10.5c-.49-.49-.49-1.28 0-1.77l10.5-10.5c.49-.49 1.28-.49 1.77 0s.49 1.28 0 1.77l-9.62 9.62 9.62 9.62c.49.49.49 1.28 0 1.77-.25.24-.57.36-.89.36z" />
+            </svg>
+          </button>
+
+        </div>
+      </div>
+
+      <div class="flex items-center gap-1 lg:gap-2">
+        <!-- Filters Button -->
+        <button id="webverseFilterBtn"
+          class="relative group cursor-pointer text-[11px] lg:text-sm px-1.5 py-1 lg:px-3 lg:py-2 rounded-md shadow-md bg-gradient-to-b from-gray-900/90 to-black/90 backdrop-blur-md transition-all duration-300 hover:from-gray-800/90 hover:shadow-lg hover:-translate-y-0.5 mt-2">
+          <span
+            class="inline-flex items-center gap-1.5 bg-gradient-to-b from-[#F3E299] to-[#BE9B42] bg-clip-text text-transparent font-normal lg:font-medium capitalize">
+            <i class="fa-solid fa-sliders-h text-[11px] lg:text-sm"></i>
+            Filters
+          </span>
+        </button>
+      </div>
+    </div>
+    <div id="zoomContainer"
+      class="w-screen h-screen w-dvw h-dvh overflow-hidden opacity-100 transition-opacity duration-500 ease-in-out">
+      <video id="layoutVideo" src="assets/Vezraa_night_video.mp4" class="relative top-0 left-0 w-full h-full object-cover" autoplay loop muted playsinline preload="auto">
+      </video>
+      <!-- Layout Image -->
+      <!-- <img src="./assets/vezraa_layout_day.webp" alt="block image" id="layoutImage" loading="eager"
+        class="relative top-0 left-0 w-full h-full object-cover"> -->
+      <!-- Layout SVG -->
+      <div id="layoutSvg" class="absolute top-0 left-0 w-full h-full">
+        <svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 7680 4320">
+          <g id="MLOC-mymap">
+            <g id="Villa_1">
+              <polygon class="cls-1"
+                points="4340.81 2673.83 4059.92 2681.83 4068 2791.95 4033.25 2794.72 4057.25 3115.61 4318.14 3105.39 4317.7 3091.17 4376.81 3088.94 4342.58 2794.28 4353.25 2792.94 4340.81 2673.83" />
+            </g>
+            <g id="Villa_2">
+              <polygon class="cls-1"
+                points="4024.96 2683.89 3745.25 2691.61 3748.11 2796.93 3727.65 2797.18 3737.84 3121.46 4057.25 3115.61 4024.96 2683.89" />
+            </g>
+            <g id="Villa_3">
+              <polygon class="cls-1"
+                points="3708.81 2692.94 3426.73 2700.94 3426.73 2806.06 3415.77 2806.31 3413.7 3229.39 3741.98 3234.19 3737.75 3118.56 3727.65 2797.18 3710.95 2797.4 3708.81 2692.94" />
+            </g>
+            <g id="Villa_4">
+              <polygon class="cls-1"
+                points="3391.47 2703.02 3107.62 2709.98 3090.14 3224.8 3413.7 3229.39 3415.77 2806.31 3392.07 2807.02 3390.14 2777.09 3391.47 2703.02" />
+            </g>
+            <g id="Villa_5">
+              <polygon class="cls-1"
+                points="3071.92 2712.5 2788.36 2720.5 2778.81 2840.28 2791.03 2841.17 2765.41 3217.74 3090.14 3224.8 3104.08 2814.26 3081.25 2814.72 3075.03 2780.94 3067.7 2780.94 3071.92 2712.5" />
+            </g>
+            <g id="Villa_6">
+              <polygon class="cls-1"
+                points="2753.81 2723.17 2469.55 2730.43 2453.62 2850.78 2464.81 2851.78 2447.87 2982.41 2465.03 3026.94 2442.14 3213.06 2765.41 3217.74 2791.03 2841.17 2778.81 2840.28 2780.1 2824.09 2768.05 2823.78 2760.7 2791.61 2749.36 2791.17 2753.81 2723.17" />
+            </g>
+            <g id="Villa_7">
+              <polygon class="cls-1"
+                points="2433.36 2732.07 2149.25 2740.65 2128.81 2862.57 2138.58 2863.17 2114.88 2993.54 2142.73 3048.65 2118.44 3207.76 2442.14 3213.06 2465.03 3026.94 2447.87 2982.41 2464.81 2851.78 2453.62 2850.78 2458.38 2814.82 2446.44 2815.17 2440.07 2800.8 2431.62 2800.8 2425.76 2787.64 2433.36 2732.07" />
+            </g>
+            <g id="Villa_8">
+              <polygon class="cls-1"
+                points="2111.03 2742.72 1827.47 2749.54 1801.03 2871.39 1810.58 2871.61 1782.36 3004.06 1820.81 3067.61 1800.33 3199.57 2134.65 3212.16 2142.73 3048.65 2114.88 2993.54 2138.58 2863.17 2128.81 2862.57 2133.89 2832.26 2124.36 2810.43 2114.88 2810.43 2103.92 2790.72 2111.03 2742.72" />
+            </g>
+            <g id="Villa_9">
+              <polygon class="cls-1"
+                points="1790.54 2751.78 1504.14 2760.28 1473.92 2882.28 1481.92 2882.5 1447.47 3015.17 1514.14 3108.5 1470.37 3195.09 1800.33 3199.57 1820.81 3067.61 1782.36 3004.06 1810.58 2871.61 1801.03 2871.39 1811.12 2824.89 1804.36 2820.94 1796.36 2820.28 1781.38 2796.12 1790.54 2751.78" />
+            </g>
+            <g id="Villa_10">
+              <polygon class="cls-1"
+                points="1675.03 2580.06 1720.81 2578.28 1718.58 2588.06 1743.25 2628.28 1717.7 2715.02 1973.7 2707.91 1978.44 2681.83 1968.36 2658.72 1973.7 2643.32 1971.33 2637.98 1973.42 2626.19 1979.47 2584.94 1982.89 2566.32 1945.7 2564.89 1972.51 2436.2 1984.81 2434.72 1986.65 2410.4 1972.51 2379.17 1929.92 2289.61 1850.14 2292.28 1840.8 2329.05 1772.22 2330.11 1769.03 2346.72 1740.81 2346.94 1719.92 2439.61 1706.53 2440.83 1675.03 2580.06" />
+            </g>
+            <g id="Villa_11">
+              <polygon class="cls-1"
+                points="2243.02 2278.4 2130.46 2281.61 2121.25 2337.3 2002.73 2337.83 1984.81 2434.72 1972.51 2436.2 1945.55 2563.61 1982.89 2566.32 1980.46 2579.55 1979.47 2584.94 1971.55 2636.7 1973.7 2643.32 1968.36 2658.72 1978.44 2681.83 1973.7 2707.91 2006.88 2707.91 2290.43 2699.33 2291.33 2673.83 2284.51 2655.46 2291.33 2605.98 2279.91 2577.01 2284.14 2570.28 2280.51 2557.34 2247.92 2556.94 2267.25 2427.83 2281.65 2427.01 2288.81 2373.61 2279.18 2373.98 2243.02 2278.4" />
+            </g>
+            <g id="Villa_12">
+              <polygon class="cls-1"
+                points="2532.21 2272.35 2422.58 2272.35 2415.77 2326.87 2296.65 2330.54 2288.81 2373.61 2281.65 2427.01 2267.25 2427.83 2247.92 2556.94 2280.51 2557.34 2284.14 2570.28 2279.91 2577.01 2291.33 2607.17 2284.51 2655.46 2291.33 2673.83 2290.43 2699.33 2581.7 2691.32 2583.18 2664.06 2573.1 2644.8 2581.4 2580.2 2576.36 2567.46 2577.25 2553.54 2576.36 2548.8 2547.62 2548.8 2564.21 2417.54 2578.44 2418.43 2583.18 2374.87 2567.18 2374.28 2532.21 2272.35" />
+            </g>
+            <g id="Villa_13">
+              <polygon class="cls-1"
+                points="2824.66 2264.06 2713.84 2264.06 2707.62 2319.76 2589.4 2322.37 2583.18 2374.87 2578.44 2418.43 2564.21 2417.54 2547.62 2548.8 2576.36 2548.8 2577.25 2553.54 2576.36 2567.46 2581.4 2580.2 2573.1 2644.8 2583.18 2664.06 2581.7 2691.32 2872.07 2683.02 2873.55 2655.76 2867.03 2636.5 2873.55 2540.2 2848.07 2539.91 2859.03 2409.83 2873.55 2408.65 2877.99 2366.57 2849.55 2366.87 2824.66 2264.06" />
+            </g>
+            <g id="Villa_14">
+              <polygon class="cls-1"
+                points="3112.95 2253.09 3002.45 2255.78 2998.88 2311.46 2880.63 2313.7 2877.99 2366.57 2873.55 2408.65 2859.03 2409.83 2848.07 2539.91 2873.55 2540.2 2867.03 2636.5 2872.92 2653.9 2872.07 2683.02 3162.44 2674.43 3160.07 2640.06 3156.21 2625.24 3160.66 2530.13 3147.33 2530.72 3153.25 2399.76 3164.81 2399.76 3168.07 2354.13 3130.73 2354.72 3112.95 2253.09" />
+            </g>
+            <g id="Villa_15">
+              <polygon class="cls-1"
+                points="3402.44 2246.28 3291.33 2247.5 3289.25 2301.39 3173.1 2304.91 3168.07 2354.13 3164.81 2399.76 3153.25 2399.76 3147.33 2530.72 3160.66 2530.13 3156.21 2625.24 3160.07 2640.06 3162.44 2674.43 3449.25 2667.02 3445.4 2521.54 3449.25 2348.5 3412.81 2348.5 3402.44 2246.28" />
+            </g>
+            <g id="Villa_16">
+              <polygon class="cls-1"
+                points="3688.81 2238.5 3580.56 2238.97 3580.56 2292.72 3464.58 2295.83 3462.81 2348.5 3449.25 2348.5 3445.4 2521.54 3449.25 2667.02 3735.03 2659.39 3735.03 2621.83 3733.7 2574.5 3727.7 2340.5 3693.47 2341.39 3688.81 2238.5" />
+            </g>
+            <g id="Villa_17">
+              <polygon class="cls-1"
+                points="3977.03 2227.17 3867.33 2231.46 3868.51 2283.61 3753.85 2287.63 3753.85 2339.32 3727.7 2340.5 3733.7 2574.5 3735.03 2659.39 4024.07 2651.91 4006.58 2325.39 3984.07 2325.69 3977.03 2227.17" />
+            </g>
+            <g id="Villa_18">
+              <polygon class="cls-1"
+                points="4265.03 2220.5 4156.13 2223.09 4152.58 2269.61 4085.7 2269.39 4085.7 2278.57 4043.7 2279.39 4041.7 2314.28 4035.47 2314.5 4035.03 2325.39 4006.58 2325.39 4023.02 2651.94 4310.36 2644.72 4309.82 2614.44 4315.6 2600.83 4298.78 2460.7 4284.26 2315.22 4274.58 2315.17 4265.03 2220.5" />
+            </g>
+            <g id="Villa_19">
+              <polygon class="cls-1"
+                points="4822.44 2204.65 4713.4 2206.28 4703.92 2252.2 4642.73 2253.39 4640.66 2262.28 4606.12 2261.83 4599.62 2297.83 4582.29 2299.17 4586.04 2344.94 4558.24 2348.04 4591.47 2634.28 4680.66 2634.28 4689.7 2609.54 4867.32 2607.58 4865.84 2593.54 4870.29 2574.57 4857.68 2482.09 4877.7 2480.94 4853.1 2351.17 4847.62 2351.17 4822.44 2204.65" />
+            </g>
+            <g id="Villa_20">
+              <polygon class="cls-1"
+                points="5103.67 2195.23 4995.92 2198.94 4982.81 2244.06 4920.81 2244.99 4922.14 2254.76 4890.14 2254.94 4881.25 2290.5 4859.25 2291.17 4856.21 2300.2 4839 2300.99 4847.62 2351.17 4853.1 2351.17 4877.7 2480.94 4856.95 2482.13 4870.29 2574.57 4865.84 2593.54 4867.32 2607.58 5089.48 2598.97 5090.38 2624.8 5150.36 2622.72 5144.81 2583.83 5153.25 2560.94 5137.7 2485.83 5143.25 2471.39 5168.36 2472.06 5139.47 2342.5 5134.81 2342.94 5103.67 2195.23" />
+            </g>
+            <g id="Villa_21">
+              <polygon class="cls-1"
+                points="5109.06 1894.17 5103.64 1894.76 5103.18 1898.57 5047.77 1899.61 5041.25 1869.54 4760.36 1875.02 4758.58 1868.5 4752.66 1868.8 4729.4 1988.35 4693.7 1993.83 4725.25 2204.7 4822.44 2204.65 4838.78 2301.22 4855.63 2299.96 4859.25 2291.17 4863.69 2291.22 4881.9 2290.21 4891.46 2254.83 4921.68 2254.95 4921.68 2244.95 4982.63 2243.81 4996.18 2198.47 5103.67 2195.23 5122.46 2284.35 5155.25 2283.39 5158.58 2223.61 5153.92 2197.39 5171.03 2197.83 5173.1 2178.72 5109.06 1894.17" />
+            </g>
+            <g id="Villa_22">
+              <polygon class="cls-1"
+                points="4051.04 1876.85 3798.86 1884.47 3803.03 2000.06 3782.58 2000.06 3795.9 2286.59 3868.51 2283.61 3867.33 2231.46 3977.03 2227.17 3984.07 2325.69 3992.36 2325.69 4024.07 2325.39 4035.03 2325.39 4035.47 2314.5 4041.7 2314.28 4043.7 2279.39 4051.04 2279.25 4052.81 2218.72 4047.03 2130.87 4037.99 2130.43 4041.47 2015.83 4060.12 2016.47 4051.04 1876.85" />
+            </g>
+            <g id="Villa_23">
+              <polygon class="cls-1"
+                points="3768.36 1885.39 3517.25 1892.06 3517.25 2004.06 3506.58 2004.06 3507.92 2294.67 3580.56 2292.72 3580.56 2238.97 3688.81 2238.5 3693.08 2332.67 3693.47 2341.39 3727.7 2340.5 3753.94 2339.34 3753.85 2287.63 3795.9 2286.59 3782.58 2000.06 3772.36 1999.61 3768.36 1885.39" />
+            </g>
+            <g id="Villa_24">
+              <polygon class="cls-1"
+                points="3488.66 1893.83 3233.77 1899.04 3217.29 2303.82 3289.25 2301.39 3291.33 2247.5 3402.44 2246.28 3412.81 2348.5 3433.84 2348.5 3449.25 2348.5 3462.81 2348.5 3464.58 2295.83 3507.92 2294.67 3506.58 2004.06 3487.36 2004.06 3488.66 1893.83" />
+            </g>
+            <g id="Villa_25">
+              <polygon class="cls-1"
+                points="3206.74 1900.77 2952.05 1907.91 2942.58 2045.69 2951.08 2046.26 2927.92 2312.45 2998.88 2311.46 3002.45 2255.78 3112.95 2253.09 3130.73 2354.72 3168.07 2354.13 3173.1 2303.87 3217.29 2303.82 3228.2 2011.01 3201.26 2010.95 3206.74 1900.77" />
+            </g>
+            <g id="Villa_26">
+              <polygon class="cls-1"
+                points="2922.88 1908.5 2668.66 1914.53 2653.11 2049.93 2662.44 2049.83 2642.81 2221.17 2656.14 2268.94 2650.36 2321.03 2707.62 2319.76 2713.84 2264.06 2824.66 2264.06 2849.55 2366.87 2877.99 2366.57 2880.63 2313.7 2927.92 2312.45 2951.08 2046.26 2942.58 2045.69 2944.5 2017.8 2922.44 2017.83 2917.25 2010.87 2922.88 1908.5" />
+            </g>
+            <g id="Villa_27">
+              <polygon class="cls-1"
+                points="2639.26 1916.67 2385.03 1920.28 2361.7 2058.72 2371.25 2059.17 2345.7 2228.94 2360.36 2270.5 2348.3 2328.12 2415.77 2326.87 2422.58 2272.35 2532.21 2272.35 2567.7 2375.39 2583.18 2374.87 2589.4 2322.37 2650.36 2321.03 2656.14 2268.94 2642.81 2221.17 2662.44 2049.83 2653.11 2049.93 2656.05 2024.38 2642.81 2021.83 2631.25 1992.5 2639.26 1916.67" />
+            </g>
+            <g id="Villa_28">
+              <polygon class="cls-1"
+                points="2355.76 1923.74 2100.66 1927.98 2072.07 2070.87 2080.51 2071.17 2047.33 2236.65 2078.44 2308.2 2071.62 2337.52 2121.25 2337.3 2130.46 2281.61 2243.02 2278.4 2279.18 2373.98 2288.81 2373.61 2296.65 2330.54 2348.3 2328.12 2360.36 2270.5 2345.7 2227.32 2371.25 2059.17 2361.7 2058.72 2365.15 2038.24 2360.36 2029.17 2345.7 1986.72 2355.76 1923.74" />
+            </g>
+            <g id="Villa_29">
+              <polygon class="cls-1"
+                points="2070.59 1932.36 1815.13 1938.02 1782.44 2077.17 1788.14 2077.17 1748.36 2246.06 1791.02 2329.82 1840.8 2329.05 1850.14 2292.28 1929.92 2289.61 1972.96 2380.15 1994.9 2380.15 2002.73 2337.83 2071.62 2337.52 2078.44 2308.2 2047.33 2236.65 2079.82 2071.14 2072.07 2070.87 2079.82 2032.14 2061.4 1989.09 2070.59 1932.36" />
+            </g>
+            <g id="Villa_30">
+              <polygon class="cls-1"
+                points="2248.14 1459.17 2178.81 1459.17 2147.92 1620.94 2135.92 1621.61 2110.36 1753.83 2136.14 1752.94 2146.36 1781.17 2143.03 1788.94 2158.81 1829.39 2148.81 1875.17 2157.25 1890.28 2151.03 1921.83 2426.58 1916.35 2427.03 1891.17 2424.36 1877.39 2429.25 1851.17 2423.92 1841.39 2429.76 1808.17 2421.7 1779.39 2425.47 1775.39 2416.81 1745.83 2393.03 1746.28 2413.25 1613.83 2427.03 1613.39 2431.92 1580.5 2406.36 1500.06 2260.36 1503.39 2248.14 1459.17" />
+            </g>
+            <g id="Villa_31">
+              <polygon class="cls-1"
+                points="2450.93 1452.93 2517.47 1451.17 2528.66 1495.91 2674.14 1494.13 2696.51 1586.43 2704.07 1586.57 2703.03 1607.76 2688.36 1607.46 2672.51 1738.87 2696.47 1739.06 2701.55 1763.02 2698.73 1774.43 2701.55 1788.06 2697.25 1834.94 2699.47 1844.28 2697.92 1869.83 2698.81 1885.17 2697.69 1913.74 2426.58 1916.35 2427.03 1891.17 2424.36 1877.39 2429.25 1851.17 2423.92 1841.39 2429.76 1808.17 2421.7 1779.39 2425.31 1774.83 2416.81 1745.83 2393.03 1746.28 2413.25 1613.83 2427.03 1613.39 2450.93 1452.93" />
+            </g>
+            <g id="Villa_32">
+              <polygon class="cls-1"
+                points="2786.81 1444.72 2721.47 1444.72 2703.03 1607.76 2688.36 1607.46 2672.51 1738.87 2696.47 1739.06 2701.55 1763.02 2698.73 1774.43 2701.55 1788.06 2697.25 1834.94 2699.47 1844.28 2697.92 1869.83 2697.69 1913.74 2972.25 1907.35 2969.84 1877.09 2967.47 1821.39 2972.58 1731.33 2951.2 1731.21 2961.4 1600.2 2977.1 1600.35 2978.14 1570.13 2955.62 1570.13 2941.92 1486.94 2799.06 1490.17 2786.81 1444.72" />
+            </g>
+            <g id="Villa_33">
+              <polygon class="cls-1"
+                points="3053.84 1437.69 2988.95 1439.32 2977.1 1600.35 2961.4 1600.2 2951.2 1731.21 2972.58 1731.33 2967.47 1821.39 2972.25 1907.35 3237.41 1899.04 3237.41 1869.39 3237.41 1820.2 3240.85 1723.62 3230.14 1723.5 3235.47 1591.94 3245.01 1591.61 3245.84 1566.43 3217.4 1566.43 3206.14 1480.5 3060.51 1484.2 3053.84 1437.69" />
+            </g>
+            <g id="Villa_34">
+              <polygon class="cls-1"
+                points="3321.99 1430.57 3257.2 1431.19 3246.88 1592.65 3235.43 1593.09 3230.14 1723.5 3240.85 1723.62 3237.41 1820.2 3237.41 1899.04 3488.65 1892.83 3488.6 1898.42 3509.4 1899.04 3507 1813.69 3508.21 1554.43 3477.7 1555.32 3471.73 1473.24 3326.88 1476.2 3321.99 1430.57" />
+            </g>
+            <g id="Villa_35">
+              <polygon class="cls-1"
+                points="3592.95 1417.83 3524.52 1419.02 3523.92 1585.83 3509.4 1585.83 3507 1813.69 3509.4 1899.04 3517.25 1899.04 3517.25 1892.06 3768.36 1885.39 3768.51 1889.54 3777.55 1889.83 3777.55 1806.87 3768.07 1547.61 3738.12 1548.35 3735.92 1466.72 3595.33 1469.39 3592.95 1417.83" />
+            </g>
+            <g id="Villa_36">
+              <polygon class="cls-1"
+                points="3847.33 1417.83 3783.18 1418.43 3785.99 1578.43 3769.17 1577.67 3777.55 1806.87 3777.55 1889.83 3797.94 1889.83 3797.7 1883.02 4036.52 1877.29 4036.52 1854.87 4035.33 1800.06 4029.7 1705.83 4019.03 1579.91 4017.7 1539.32 3997.1 1539.17 3990.58 1459.76 3850.73 1463.46 3847.33 1417.83" />
+            </g>
+            <g id="Villa_37">
+              <polygon class="cls-1"
+                points="4678.07 1859.84 5078.14 1851.17 5070.14 1804.94 5072.81 1785.39 5019.92 1548.06 5026.14 1524.5 5004.14 1418.5 4841.39 1420.31 4842.03 1427.72 4790.92 1429.28 4784.81 1468.06 4670.58 1469.17 4662.18 1542.09 4631.47 1542.28 4678.07 1859.84" />
+            </g>
+            <g id="Villa_38">
+              <polygon class="cls-1"
+                points="5240.66 1180.5 5172.07 1181.83 5172.07 1177.09 5163.92 1176.65 5163.92 1190.87 5120.95 1192.06 5112.07 1158.28 4840.34 1163.55 4821.1 1260.8 4785.55 1260.8 4818.19 1428.45 4842.03 1427.72 4841.39 1420.31 5004.14 1418.5 5026.14 1524.5 5020.22 1546.92 5020.87 1552.31 5313.55 1542.28 5318.88 1528.06 5296.36 1491.83 5305.03 1412.72 5295.18 1374.57 5240.66 1180.5" />
+            </g>
+            <g id="Villa_39">
+              <polygon class="cls-1"
+                points="4765.1 1186.43 4760.36 1186.58 4760.36 1189.39 4707.47 1190.28 4703.47 1158.28 4449.1 1163.17 4449.1 1157.24 4441.63 1157.07 4431.11 1272.63 4391.77 1272.65 4431.47 1558.28 4520.81 1555.61 4538.58 1524.94 4624.81 1558.28 4631.47 1542.28 4662.38 1541.45 4672.58 1468.06 4784.81 1468.06 4789.7 1432.5 4818.79 1431.53 4785.55 1260.8 4781.25 1261.39 4765.1 1186.43" />
+            </g>
+            <g id="Villa_40">
+              <polygon class="cls-1"
+                points="4149.03 1201.54 4143.58 1201.43 4143.58 1204.98 4083.14 1205.64 4081.06 1174.23 3826.14 1179.5 3826.14 1173.57 3819.94 1173.57 3821.72 1286.76 3794.44 1286.87 3801.45 1418.48 3847.19 1417.65 3850.88 1463.39 3991.25 1459.92 3997.1 1539.17 4018.26 1538.89 4018.01 1555.76 4027.18 1555.91 4067.62 1560.35 4112.95 1536.65 4133.7 1562.72 4202.73 1559.46 4177.84 1279.76 4156.21 1280.02 4149.03 1201.54" />
+            </g>
+            <g id="Villa_41">
+              <path class="cls-1"
+                d="m3755.33,1211.61h-4.74l.22,3.4-65.85.6-1.04-29.48-256.59,4.15v-7.56h-5.85s3.19,112.15,2,112.15h-12.74l-4.28,179.41,65.28-1.03,5.86,82.27h46.44l.25-136.63,69.1-1.49,2.52,51.22,140.15-1.78,2.09,82.26,47.27-1.92-1.27-129.21,18.64-.26-8.34-130.82-36.44,1.48-2.67-76.74Z" />
+            </g>
+            <g id="Villa_42">
+              <polygon class="cls-1"
+                points="3386.42 1171.47 3161.83 1177.99 3154.36 1282.28 3163.25 1282.28 3152 1481.5 3206.14 1480.5 3217.4 1566.43 3250.81 1565.78 3257.11 1431.07 3321.99 1430.57 3327.16 1476.01 3406.45 1474.28 3410.73 1294.87 3378.58 1296.06 3378.43 1284.23 3384.35 1283.93 3386.42 1171.47" />
+            </g>
+            <g id="Villa_43">
+              <polygon class="cls-1"
+                points="3134.14 1178.94 2906.58 1184.35 2896.07 1290.06 2905.31 1290.06 2893.32 1425.8 2899.7 1466.72 2898.79 1487.92 2941.92 1486.94 2955.62 1570.13 2979.33 1570.13 2988.95 1439.32 3053.84 1437.69 3060.51 1484.2 3152 1481.5 3159.81 1304.65 3127.47 1305.24 3128.07 1285.09 3134.14 1178.94" />
+            </g>
+            <g id="Villa_44">
+              <polygon class="cls-1"
+                points="2880.08 1184.18 2652.81 1191.76 2638.29 1293.98 2646.25 1294.23 2628.21 1430.06 2642.7 1494.51 2674.65 1493.88 2690.66 1562.29 2708.29 1561.25 2721.47 1444.72 2787.24 1443.95 2799.06 1490.17 2898.79 1487.92 2899.7 1466.72 2892.99 1427.43 2903.82 1306.99 2879.77 1307.61 2878.18 1292.51 2874.73 1258.43 2880.08 1184.18" />
+            </g>
+            <g id="Villa_45">
+              <polygon class="cls-1"
+                points="2625.63 1191.2 2398.88 1195.46 2378.44 1309.09 2385.55 1309.98 2363.62 1436.5 2381.45 1500.61 2405.98 1500.07 2431.92 1580.5 2450.93 1452.93 2517.47 1451.17 2528.66 1495.91 2642.7 1494.51 2628.21 1430.06 2643.39 1312.96 2629.41 1312.3 2631.27 1301.15 2618.08 1253.64 2625.63 1191.2" />
+            </g>
+            <g id="Villa_46">
+              <polygon class="cls-1"
+                points="2147.62 1391.17 2175.82 1474.79 2178.81 1459.17 2248.14 1459.17 2260.36 1503.39 2381.45 1500.61 2363.62 1436.5 2385.55 1309.98 2378.44 1309.09 2385.09 1272.13 2381.1 1272.13 2367.77 1235.91 2375.47 1196.5 2183.47 1200.35 2164.21 1283.91 2169.25 1284.5 2147.62 1391.17" />
+            </g>
+            <g id="Villa_47">
+              <polygon class="cls-1"
+                points="2717.48 834.39 2584.81 835.61 2584.81 843.39 2547.03 843.39 2547.03 835.61 2536.81 835.61 2529.92 882.72 2438.14 885.39 2425.47 955.61 2416.58 955.61 2416.58 948.28 2407.25 948.5 2391.03 1043.39 2397.7 1070.94 2353.7 1164.72 2361.25 1188.94 2358.59 1196.84 2375.47 1196.5 2369.65 1226.27 2393.34 1226.27 2398.88 1195.46 2625.63 1191.2 2621.9 1222.08 2648.5 1222.08 2652.81 1191.76 2756.15 1188.31 2756.15 1180.94 2750.36 1155.17 2754.14 1124.5 2748.58 1094.28 2749.92 1078.28 2747.03 1062.94 2727.03 1062.72 2737.92 975.39 2749.47 975.83 2750.58 966.28 2741.03 967.17 2717.48 834.39" />
+            </g>
+            <g id="Villa_48">
+              <polygon class="cls-1"
+                points="2949.99 866.43 2859.03 868.2 2854.58 903.76 2756.15 905.54 2750.58 966.28 2749.47 975.83 2737.92 975.39 2727.03 1062.72 2747.03 1062.94 2749.92 1078.28 2748.58 1094.28 2754.14 1124.5 2750.64 1156.42 2756.15 1180.94 2756.15 1188.31 2880.08 1184.18 2877.5 1220.06 2902.14 1220.06 2906.58 1184.35 2987.93 1182.42 2986.14 1169.39 2991.25 1102.72 2990.14 1088.72 2991.25 1066.5 2990.36 1057.61 2970.81 1056.72 2976.81 984.94 2969.7 985.17 2949.99 866.43" />
+            </g>
+            <g id="Villa_49">
+              <polygon class="cls-1"
+                points="3187.92 860.5 3096.14 862.5 3093.03 898.72 2995.7 900.94 2991.25 968.72 2977.92 968.72 2976.81 984.94 2970.81 1056.72 2990.36 1057.61 2991.25 1066.5 2990.14 1088.72 2991.25 1102.72 2986.14 1169.39 2987.93 1182.42 3134.14 1178.94 3131.47 1225.62 3158.42 1225.62 3161.83 1177.99 3225.27 1176.15 3227.7 1051.17 3214.36 1050.94 3218.14 966.06 3199.25 966.5 3187.92 860.5" />
+            </g>
+            <g id="Villa_50">
+              <polygon class="cls-1"
+                points="3233.55 895.76 3330.44 893.69 3332.81 857.54 3424.95 854.57 3431.47 973.09 3459.03 973.09 3457.84 1046.13 3461.4 1046.13 3461.4 1142.28 3461.4 1189.73 3427.33 1190.28 3427.33 1182.72 3421.47 1182.72 3422.19 1209.36 3385.73 1209.36 3386.42 1171.47 3225.27 1176.15 3227.7 1051.17 3214.36 1050.94 3218.14 966.06 3218.14 962.72 3231.62 962.28 3233.55 895.76" />
+            </g>
+            <g id="Villa_51">
+              <polygon class="cls-1"
+                points="3471.92 888.5 3567.47 886.28 3567.47 851.17 3659.92 848.94 3663.77 952.94 3669.4 952.94 3669.4 967.46 3690.73 967.46 3698.73 1197.69 3684.32 1197.69 3683.92 1186.13 3461.4 1189.73 3461.4 1046.13 3457.84 1046.13 3459.03 973.09 3459.62 957.09 3472.07 957.09 3471.92 888.5" />
+            </g>
+            <g id="Villa_52">
+              <polygon class="cls-1"
+                points="3709.7 884.06 3804.81 881.83 3802.78 845.39 3896.81 843.61 3901.7 947.17 3908.81 947.17 3908.81 961.83 3919.47 961.83 3933.69 1177.28 3826.14 1179.5 3826.14 1173.57 3819.94 1173.57 3820.32 1197.69 3698.73 1197.69 3690.73 967.46 3698.73 967.17 3698.73 953.39 3711.47 952.5 3709.7 884.06" />
+            </g>
+            <g id="Villa_53">
+              <polygon class="cls-1"
+                points="4131.92 839.61 4040.81 839.61 4040.81 875.17 3945.25 877.83 3945.25 939.61 3941.7 944.5 3937.7 947.17 3937.7 960.5 3919.47 961.83 3933.69 1177.28 4081.06 1174.23 4079.92 1192.06 4168.36 1188.06 4168.36 1137.39 4150.58 1028.06 4156.36 1028.5 4147.47 941.83 4141.7 942.28 4131.92 839.61" />
+            </g>
+            <g id="Villa_54">
+              <polygon class="cls-1"
+                points="4386.14 1183.83 4441.09 1181.15 4443.49 1157.69 4451.92 1158.2 4451.92 1164.13 4620.78 1160.53 4624.36 1130.06 4621.7 1115.83 4607.7 1032.5 4609.25 1015.83 4622.58 1015.83 4605.92 931.32 4598.44 931.91 4582.81 827.83 4492.29 830.25 4488.36 866.5 4401.71 868.39 4392.58 966.94 4365.99 970.5 4386.14 1183.83" />
+            </g>
+            <g id="Villa_55">
+              <polygon class="cls-1"
+                points="4818.87 822.68 4728.5 824.45 4724.18 860.45 4640.36 862.94 4635.03 888.65 4630.14 925.17 4619.47 925.61 4617.7 943.61 4609.18 943.88 4620.81 1015.17 4607.47 1015.17 4605.92 1031.83 4622.58 1131.32 4619 1159.86 4703.47 1158.28 4706.39 1175.62 4838.32 1173.69 4840.32 1163.72 4856.96 1163.23 4855.47 1149.98 4856.58 1126.06 4845.4 1040.94 4845.74 1012.71 4864.06 1013.09 4845.74 925.39 4841.47 925.56 4818.87 822.68" />
+            </g>
+            <g id="Villa_56">
+              <polygon class="cls-1"
+                points="5090.44 882.43 5054.29 882.43 5054.29 859.91 5038.58 798.57 4930.14 800.94 4918.58 755.02 4859.92 755.02 4839.77 876.5 4830.83 877.1 4841.47 925.56 4845.74 925.39 4864.06 1013.09 4845.74 1012.71 4845.4 1040.94 4856.58 1126.06 4855.47 1149.98 4856.96 1163.23 5098.73 1158.54 5096.07 1139.32 5100.21 1121.83 5096.07 1101.69 5100.21 1090.43 5094.58 1065.83 5105.84 1008.94 5104.66 999.15 5107.62 988.2 5117.4 987.61 5090.44 882.43" />
+            </g>
+            <g id="Villa_57">
+              <polygon class="cls-1"
+                points="5032.36 630.87 4830.83 634.13 4843.62 686.28 4838.88 686.28 4823.77 784.94 4818.51 784.94 4812.13 822.81 4818.87 822.68 4830.83 877.1 4839.77 876.5 4859.92 755.02 4918.58 755.02 4930.14 800.94 5034.16 798.67 5051.03 720.35 5032.36 630.87" />
+            </g>
+            <g id="Villa_58">
+              <polygon class="cls-1"
+                points="4806.03 642.07 4585.84 646.87 4600.66 725.09 4592.07 765.98 4594.14 792.65 4578.42 792.65 4573.39 828.06 4582.58 828.06 4592.36 889.83 4598.44 931.91 4606.48 931.27 4608.53 944.56 4617.7 943.61 4619.47 925.61 4630.14 925.17 4635.03 888.65 4640.36 862.94 4724.18 860.45 4728.5 824.45 4812.13 822.81 4825.58 742.94 4818.58 716.39 4822.7 716.5 4806.03 642.07" />
+            </g>
+            <g id="Villa_59">
+              <polygon class="cls-1"
+                points="4569.78 647.8 4348.81 652.8 4360.36 726.57 4365.55 726.57 4358.29 799.46 4338.44 799.46 4364.21 969.83 4392.76 965.08 4401.71 868.39 4488.36 866.5 4492.29 830.25 4573.39 828.06 4584.74 748.1 4569.78 647.8" />
+            </g>
+            <!-- <foreignObject x="1550" y="560" width="350" height="350" class="p-44 bg-blue-500">
+              <div xmlns="http://www.w3.org/1999/xhtml" class="animate-bounce">
+                <div class="relative flex flex-col items-center group cursor-pointer">
+                  <div class="w-54 h-54 bg-blue-600 p-3 rounded-full relative flex items-center justify-center text-white shadow-md z-10">
+                    <div class="bg-white h-full w-full rounded-full">
+                      <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                      </svg>
+                    </div>
+                  </div>
+                  <div class="absolute bottom-[-10px] left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-5 border-r-5 border-t-[20px] border-t-blue-600 border-l-transparent border-r-transparent rounded-t-sm shadow-sm z-0"></div>
+                  <span class="absolute bottom-full h-36 w-36 mb-2 px-2 py-1 text-xs text-white bg-black rounded opacity-0 group-hover:opacity-100 whitespace-nowrap transition-opacity">
+                    Custom Tooltip Text
+                  </span>
+                </div>
+              </div>
+            </foreignObject> -->
+          </g>
+        </svg>
+      </div>
+    </div>
+    <!-- Webverse Filters Section -->
+    <div id="webverseFilters"
+      class="transform transition-transform duration-500 ease-in-out fixed top-0 left-0 w-[270px] lg:w-[320px] h-screen bg-black/80 backdrop-blur-lg border-r border-white/10 z-9999 h-full flex flex-col">
+      <!-- Filters/Reset All  -->
+      <div class="p-4 flex flex-col gap-4 border-b border-white/10">
+        <div class="flex items-center justify-between gap-y-1">
+          <a href="" target="_blank" class="flex items-center gap-3">
+            <img src="assets/logos/Vezraa_logo.webp" alt="Vezraa logo" loading="eager"
+              class="h-8 w-8 object-contain">
+            <div>
+              <img src="./assets/logos/Vezraa_logo_1.webp" alt="Vezraa logo 1" class="max-h-4">
+              <span
+                class="text-[9px] lg:text-[11px] font-bold tracking-[0.12em] bg-gradient-to-b from-[#F3E299] to-[#BE9B42] bg-clip-text text-transparent block mt-[-1px]">
+                by Vezraa
+              </span>
+              <p class="text-xs text-white/70 mt-[2px]">Your Location, City</p>
+            </div>
+          </a>
+          <button id="webversFilterCloseBtn"
+            class="cursor-pointer h-8 w-8 rounded-lg flex items-center justify-center bg-white/10 hover:bg-white/20 transition-colors flex-shrink-0">
+            <i class="fa-solid fa-xmark text-white" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div class="flex items-baseline justify-between">
+          <h1
+            class="my-1 text-[9px] sm:text-[16px] font-semibold bg-gradient-to-b from-[#F3E299] to-[#BE9B42] bg-clip-text text-transparent uppercase tracking-wider">
+            Filters</h1>
+          <button id="resetFiltersBtn"
+            class="cursor-pointer text-[9px] sm:text-[14px] text-gray-300 hover:text-white hover:underline transition-colors">Reset
+            All</button>
+        </div>
+      </div>
+      <div class="flex-grow overflow-y-auto p-4 flex flex-col gap-4">
+        <!-- Orientation -->
+        <div id="orientation" class="flex flex-col gap-3">
+          <h1 class="text-white text-base select-none"> Orientations</h1>
+          <ul class="orientations grid grid-cols-2 gap-2">
+            <li
+              class="select-none text-center cursor-pointer capitalize text-white p-[1px] rounded-md border-2 border-white/20 bg-black/30 transition-colors hover:border-white/40"
+              data-type="north">
+              <div class="bg-black/30 w-full h-full px-1.5 py-1 flex justify-center items-center gap-2 rounded-md">
+                <span> North </span>
+                <div
+                  class="h-2.5 w-2.5 rounded-full bg-[rgb(14,165,233)] outline-2 outline-offset-2 outline-[rgba(14,165,233,0.6)] animate-pulse">
+                </div>
+              </div>
+            </li>
+            <li
+              class="select-none text-center cursor-pointer capitalize text-white p-[1px] rounded-md border-2 border-white/20 bg-black/30 transition-colors hover:border-white/40"
+              data-type="south">
+              <div class="bg-black/30 w-full h-full px-1.5 py-1 flex justify-center items-center gap-2 rounded-md">
+                <span> South </span>
+                <div
+                  class="h-2.5 w-2.5 rounded-full bg-[rgb(234,179,8)] outline-2 outline-offset-2 outline-[rgba(234,179,8,0.6)] animate-pulse">
+                </div>
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <div id="type" class="flex flex-col gap-3">
+          <h1 class="text-white text-base select-none">Types</h1>
+          <ul class="types grid grid-cols-3 gap-2">
+            <li
+              class="type-btn select-none text-center cursor-pointer capitalize text-white p-[1px] rounded-md border-2 border-white/20 bg-black/30 transition-colors hover:border-white/40"
+              data-type="type1">
+              <div class="bg-black/30 w-full h-full px-1.5 py-1.5 rounded-md flex items-center justify-center">
+                <span class="text-sm font-medium">Type 1</span>
+              </div>
+            </li>
+            <li
+              class="type-btn select-none text-center cursor-pointer capitalize text-white p-[1px] rounded-md border-2 border-white/20 bg-black/30 transition-colors hover:border-white/40"
+              data-type="type2">
+              <div class="bg-black/30 w-full h-full px-1.5 py-1.5 rounded-md flex items-center justify-center">
+                <span class="text-sm font-medium">Type 2</span>
+              </div>
+            </li>
+            <li
+              class="type-btn select-none text-center cursor-pointer capitalize text-white p-[1px] rounded-md border-2 border-white/20 bg-black/30 transition-colors hover:border-white/40"
+              data-type="type3">
+              <div class="bg-black/30 w-full h-full px-1.5 py-1.5 rounded-md flex items-center justify-center">
+                <span class="text-sm font-medium">Type 3</span>
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <div id="unit" class="flex flex-col gap-3">
+      <h1 class="text-white text-base select-none"> Units (cents)</h1>
+      <div class="unitsWrapper flex flex-col gap-3 select-none">
+          <ul class="units grid grid-cols-4 gap-2">
+              <li class="unit-btn select-none cursor-pointer text-white rounded-md border-2 transition-all duration-200 bg-black/30 border-white/20 hover:bg-[#2a3040]" data-type="5.11_4150.59" data-category="type1">
+                  <div class="flex flex-col items-center justify-center py-1.5 px-0.5 bg-black/30">
+                      <span class="font-semibold text-lg leading-none mb-0.5 text-white">5.11</span>
+                      <span class="text-[10px] font-semibold leading-none uppercase tracking-wide text-gray-400 text-center">Sq.Ft<br>4150.59</span>
+                  </div>
+              </li>
+              <li class="unit-btn select-none cursor-pointer text-white rounded-md border-2 transition-all duration-200 bg-black/30 border-white/20 hover:bg-[#2a3040]" data-type="5.31_3972.49" data-category="type1">
+                  <div class="flex flex-col items-center justify-center py-1.5 px-0.5 bg-black/30">
+                      <span class="font-semibold text-lg leading-none mb-0.5 text-white">5.31</span>
+                      <span class="text-[10px] font-semibold leading-none uppercase tracking-wide text-gray-400 text-center">Sq.Ft<br>3972.49</span>
+                  </div>
+              </li>
+              <li class="unit-btn select-none cursor-pointer text-white rounded-md border-2 transition-all duration-200 bg-black/30 border-white/20 hover:bg-[#2a3040]" data-type="5.61_4150.59" data-category="type1">
+                  <div class="flex flex-col items-center justify-center py-1.5 px-0.5 bg-black/30">
+                      <span class="font-semibold text-lg leading-none mb-0.5 text-white">5.61</span>
+                      <span class="text-[10px] font-semibold leading-none uppercase tracking-wide text-gray-400 text-center">Sq.Ft<br>4150.59</span>
+                  </div>
+              </li>
+              <li class="unit-btn select-none cursor-pointer text-white rounded-md border-2 transition-all duration-200 bg-black/30 border-white/20 hover:bg-[#2a3040]" data-type="5.61_4679.54" data-category="type1">
+                  <div class="flex flex-col items-center justify-center py-1.5 px-0.5 bg-black/30">
+                      <span class="font-semibold text-lg leading-none mb-0.5 text-white">5.61</span>
+                      <span class="text-[10px] font-semibold leading-none uppercase tracking-wide text-gray-400 text-center">Sq.Ft<br>4679.54</span>
+                  </div>
+              </li>
+              <li class="unit-btn select-none cursor-pointer text-white rounded-md border-2 transition-all duration-200 bg-black/30 border-white/20 hover:bg-[#2a3040]" data-type="5.61_4773.39" data-category="type1">
+                  <div class="flex flex-col items-center justify-center py-1.5 px-0.5 bg-black/30">
+                      <span class="font-semibold text-lg leading-none mb-0.5 text-white">5.61</span>
+                      <span class="text-[10px] font-semibold leading-none uppercase tracking-wide text-gray-400 text-center">Sq.Ft<br>4773.39</span>
+                  </div>
+              </li>
+              <li class="unit-btn select-none cursor-pointer text-white rounded-md border-2 transition-all duration-200 bg-black/30 border-white/20 hover:bg-[#2a3040]" data-type="5.61_5031.47" data-category="type1">
+                  <div class="flex flex-col items-center justify-center py-1.5 px-0.5 bg-black/30">
+                      <span class="font-semibold text-lg leading-none mb-0.5 text-white">5.61</span>
+                      <span class="text-[10px] font-semibold leading-none uppercase tracking-wide text-gray-400 text-center">Sq.Ft<br>5031.47</span>
+                  </div>
+              </li>
+              <li class="unit-btn select-none cursor-pointer text-white rounded-md border-2 transition-all duration-200 bg-black/30 border-white/20 hover:bg-[#2a3040]" data-type="5.73_4773.39" data-category="type1">
+                  <div class="flex flex-col items-center justify-center py-1.5 px-0.5 bg-black/30">
+                      <span class="font-semibold text-lg leading-none mb-0.5 text-white">5.73</span>
+                      <span class="text-[10px] font-semibold leading-none uppercase tracking-wide text-gray-400 text-center">Sq.Ft<br>4773.39</span>
+                  </div>
+              </li>
+              <li class="unit-btn select-none cursor-pointer text-white rounded-md border-2 transition-all duration-200 bg-black/30 border-white/20 hover:bg-[#2a3040]" data-type="5.74_4773.39" data-category="type1">
+                  <div class="flex flex-col items-center justify-center py-1.5 px-0.5 bg-black/30">
+                      <span class="font-semibold text-lg leading-none mb-0.5 text-white">5.74</span>
+                      <span class="text-[10px] font-semibold leading-none uppercase tracking-wide text-gray-400 text-center">Sq.Ft<br>4773.39</span>
+                  </div>
+              </li>
+              <li class="unit-btn select-none cursor-pointer text-white rounded-md border-2 transition-all duration-200 bg-black/30 border-white/20 hover:bg-[#2a3040]" data-type="5.85_4150.59" data-category="type1">
+                  <div class="flex flex-col items-center justify-center py-1.5 px-0.5 bg-black/30">
+                      <span class="font-semibold text-lg leading-none mb-0.5 text-white">5.85</span>
+                      <span class="text-[10px] font-semibold leading-none uppercase tracking-wide text-gray-400 text-center">Sq.Ft<br>4150.59</span>
+                  </div>
+              </li>
+              <li class="unit-btn select-none cursor-pointer text-white rounded-md border-2 transition-all duration-200 bg-black/30 border-white/20 hover:bg-[#2a3040]" data-type="5.87_4773.39" data-category="type1">
+                  <div class="flex flex-col items-center justify-center py-1.5 px-0.5 bg-black/30">
+                      <span class="font-semibold text-lg leading-none mb-0.5 text-white">5.87</span>
+                      <span class="text-[10px] font-semibold leading-none uppercase tracking-wide text-gray-400 text-center">Sq.Ft<br>4773.39</span>
+                  </div>
+              </li>
+              <li class="unit-btn select-none cursor-pointer text-white rounded-md border-2 transition-all duration-200 bg-black/30 border-white/20 hover:bg-[#2a3040]" data-type="5.97_4773.39" data-category="type1">
+                  <div class="flex flex-col items-center justify-center py-1.5 px-0.5 bg-black/30">
+                      <span class="font-semibold text-lg leading-none mb-0.5 text-white">5.97</span>
+                      <span class="text-[10px] font-semibold leading-none uppercase tracking-wide text-gray-400 text-center">Sq.Ft<br>4773.39</span>
+                  </div>
+              </li>
+              <li class="unit-btn select-none cursor-pointer text-white rounded-md border-2 transition-all duration-200 bg-black/30 border-white/20 hover:bg-[#2a3040]" data-type="6.07_4773.39" data-category="type1">
+                  <div class="flex flex-col items-center justify-center py-1.5 px-0.5 bg-black/30">
+                      <span class="font-semibold text-lg leading-none mb-0.5 text-white">6.07</span>
+                      <span class="text-[10px] font-semibold leading-none uppercase tracking-wide text-gray-400 text-center">Sq.Ft<br>4773.39</span>
+                  </div>
+              </li>
+              <li class="unit-btn select-none cursor-pointer text-white rounded-md border-2 transition-all duration-200 bg-black/30 border-white/20 hover:bg-[#2a3040]" data-type="6.15_3791.2" data-category="type1">
+                  <div class="flex flex-col items-center justify-center py-1.5 px-0.5 bg-black/30">
+                      <span class="font-semibold text-lg leading-none mb-0.5 text-white">6.15</span>
+                      <span class="text-[10px] font-semibold leading-none uppercase tracking-wide text-gray-400 text-center">Sq.Ft<br>3791.20</span>
+                  </div>
+              </li>
+              <li class="unit-btn select-none cursor-pointer text-white rounded-md border-2 transition-all duration-200 bg-black/30 border-white/20 hover:bg-[#2a3040]" data-type="6.17_4773.39" data-category="type1">
+                  <div class="flex flex-col items-center justify-center py-1.5 px-0.5 bg-black/30">
+                      <span class="font-semibold text-lg leading-none mb-0.5 text-white">6.17</span>
+                      <span class="text-[10px] font-semibold leading-none uppercase tracking-wide text-gray-400 text-center">Sq.Ft<br>4773.39</span>
+                  </div>
+              </li>
+              <li class="unit-btn select-none cursor-pointer text-white rounded-md border-2 transition-all duration-200 bg-black/30 border-white/20 hover:bg-[#2a3040]" data-type="6.27_4773.39" data-category="type1">
+                  <div class="flex flex-col items-center justify-center py-1.5 px-0.5 bg-black/30">
+                      <span class="font-semibold text-lg leading-none mb-0.5 text-white">6.27</span>
+                      <span class="text-[10px] font-semibold leading-none uppercase tracking-wide text-gray-400 text-center">Sq.Ft<br>4773.39</span>
+                  </div>
+              </li>
+              <li class="unit-btn select-none cursor-pointer text-white rounded-md border-2 transition-all duration-200 bg-black/30 border-white/20 hover:bg-[#2a3040]" data-type="6.36_4773.39" data-category="type1">
+                  <div class="flex flex-col items-center justify-center py-1.5 px-0.5 bg-black/30">
+                      <span class="font-semibold text-lg leading-none mb-0.5 text-white">6.36</span>
+                      <span class="text-[10px] font-semibold leading-none uppercase tracking-wide text-gray-400 text-center">Sq.Ft<br>4773.39</span>
+                  </div>
+              </li>
+              <li class="unit-btn select-none cursor-pointer text-white rounded-md border-2 transition-all duration-200 bg-black/30 border-white/20 hover:bg-[#2a3040]" data-type="7.03_5905.95" data-category="type2">
+                  <div class="flex flex-col items-center justify-center py-1.5 px-0.5 bg-black/30">
+                      <span class="font-semibold text-lg leading-none mb-0.5 text-white">7.03</span>
+                      <span class="text-[10px] font-semibold leading-none uppercase tracking-wide text-gray-400 text-center">Sq.Ft<br>5905.95</span>
+                  </div>
+              </li>
+              <li class="unit-btn select-none cursor-pointer text-white rounded-md border-2 transition-all duration-200 bg-black/30 border-white/20 hover:bg-[#2a3040]" data-type="7.03_5929.41" data-category="type2">
+                  <div class="flex flex-col items-center justify-center py-1.5 px-0.5 bg-black/30">
+                      <span class="font-semibold text-lg leading-none mb-0.5 text-white">7.03</span>
+                      <span class="text-[10px] font-semibold leading-none uppercase tracking-wide text-gray-400 text-center">Sq.Ft<br>5929.41</span>
+                  </div>
+              </li>
+              <li class="unit-btn select-none cursor-pointer text-white rounded-md border-2 transition-all duration-200 bg-black/30 border-white/20 hover:bg-[#2a3040]" data-type="7.09_5205.3" data-category="type2">
+                  <div class="flex flex-col items-center justify-center py-1.5 px-0.5 bg-black/30">
+                      <span class="font-semibold text-lg leading-none mb-0.5 text-white">7.09</span>
+                      <span class="text-[10px] font-semibold leading-none uppercase tracking-wide text-gray-400 text-center">Sq.Ft<br>5205.30</span>
+                  </div>
+              </li>
+              <li class="unit-btn select-none cursor-pointer text-white rounded-md border-2 transition-all duration-200 bg-black/30 border-white/20 hover:bg-[#2a3040]" data-type="7.34_4773.39" data-category="type2">
+                  <div class="flex flex-col items-center justify-center py-1.5 px-0.5 bg-black/30">
+                      <span class="font-semibold text-lg leading-none mb-0.5 text-white">7.34</span>
+                      <span class="text-[10px] font-semibold leading-none uppercase tracking-wide text-gray-400 text-center">Sq.Ft<br>4773.39</span>
+                  </div>
+              </li>
+              <li class="unit-btn select-none cursor-pointer text-white rounded-md border-2 transition-all duration-200 bg-black/30 border-white/20 hover:bg-[#2a3040]" data-type="9.28_6448.77" data-category="type3">
+                  <div class="flex flex-col items-center justify-center py-1.5 px-0.5 bg-black/30">
+                      <span class="font-semibold text-lg leading-none mb-0.5 text-white">9.28</span>
+                      <span class="text-[10px] font-semibold leading-none uppercase tracking-wide text-gray-400 text-center">Sq.Ft<br>6448.77</span>
+                  </div>
+              </li>
+              <li class="unit-btn select-none cursor-pointer text-white rounded-md border-2 transition-all duration-200 bg-black/30 border-white/20 hover:bg-[#2a3040]" data-type="11.01_8325.71" data-category="type3">
+                  <div class="flex flex-col items-center justify-center py-1.5 px-0.5 bg-black/30">
+                      <span class="font-semibold text-lg leading-none mb-0.5 text-white">11.01</span>
+                      <span class="text-[10px] font-semibold leading-none uppercase tracking-wide text-gray-400 text-center">Sq.Ft<br>8325.71</span>
+                  </div>
+              </li>
+              <li class="unit-btn select-none cursor-pointer text-white rounded-md border-2 transition-all duration-200 bg-black/30 border-white/20 hover:bg-[#2a3040]" data-type="11.01_10110.93" data-category="type3">
+                  <div class="flex flex-col items-center justify-center py-1.5 px-0.5 bg-black/30">
+                      <span class="font-semibold text-lg leading-none mb-0.5 text-white">11.01</span>
+                      <span class="text-[10px] font-semibold leading-none uppercase tracking-wide text-gray-400 text-center">Sq.Ft<br>10110.93</span>
+                  </div>
+              </li>
+              <li class="unit-btn select-none cursor-pointer text-white rounded-md border-2 transition-all duration-200 bg-black/30 border-white/20 hover:bg-[#2a3040]" data-type="11.48_8293.71" data-category="type3">
+                  <div class="flex flex-col items-center justify-center py-1.5 px-0.5 bg-black/30">
+                      <span class="font-semibold text-lg leading-none mb-0.5 text-white">11.48</span>
+                      <span class="text-[10px] font-semibold leading-none uppercase tracking-wide text-gray-400 text-center">Sq.Ft<br>8293.71</span>
+                  </div>
+              </li>
+              <li class="unit-btn select-none cursor-pointer text-white rounded-md border-2 transition-all duration-200 bg-black/30 border-white/20 hover:bg-[#2a3040]" data-type="11.48_8325.71" data-category="type3">
+                  <div class="flex flex-col items-center justify-center py-1.5 px-0.5 bg-black/30">
+                      <span class="font-semibold text-lg leading-none mb-0.5 text-white">11.48</span>
+                      <span class="text-[10px] font-semibold leading-none uppercase tracking-wide text-gray-400 text-center">Sq.Ft<br>8325.71</span>
+                  </div>
+              </li>          
+              <li class="unit-btn select-none cursor-pointer text-white rounded-md border-2 transition-all duration-200 bg-black/30 border-white/20 hover:bg-[#2a3040]" data-type="14.61_9796.33" data-category="type3">
+                  <div class="flex flex-col items-center justify-center py-1.5 px-0.5 bg-black/30">
+                      <span class="font-semibold text-lg leading-none mb-0.5 text-white">14.61</span>
+                      <span class="text-[10px] font-semibold leading-none uppercase tracking-wide text-gray-400 text-center">Sq.Ft<br>9796.33</span>
+                  </div>
+              </li>
+          </ul>
+      </div>
+  </div>
+        <!-- 
+          <div class="unitsWrapper flex flex-col gap-3 select-none">
+            <div class="cents hover:bg-white/10 p-1 cursor-pointer flex items-center justify-between text-sm text-white border-b-1 border-[#BE9B42]/70 pb-1">
+              <span>14.5 Cents</span>
+              <i class="fa-solid fa-chevron-down"></i>
+            </div>
+            <ul class="units hidden grid-cols-2 lg:grid-cols-3 gap-2">
+              <li class="select-none text-center cursor-pointer capitalize text-white p-[1px] rounded-sm border-1 border-white/20 bg-black/30 transition-colors hover:border-white/40" data-type="14.5_7890">
+                  <div class="bg-black/30 w-full h-full px-1.5 py-0.5"> 
+                    7890 <span class="text-xs"> Sq.Ft </span> 
+                  </div>
+              </li>
+            </ul>
+          </div> -->
+
+        <!-- NOTE -->
+        <div id="note" class="block border-y border-white/10 py-4">
+          <!-- Title -->
+          <h3
+            class="inline-block text-black text-sm font-semibold select-none px-2 py-1 rounded-md bg-gradient-to-b from-[#F3E299] to-[#BE9B42] shadow-md">
+            NOTE:</h3>
+          <!-- Content -->
+          <div
+            class="mt-3 p-4 rounded-xl border border-[#BE9B42]/40 bg-gradient-to-br from-[#1a1a1a]/80 to-[#2a200d]/80 shadow-inner">
+            <div class="flex items-center gap-2 mb-2">
+              <i class="fa-solid fa-circle-info text-[#F3E299] text-base"></i>
+              <h3 class="text-[#F3E299] text-sm font-medium select-none tracking-wide">
+                Available Sizes & Virtual Tours
+              </h3>
+            </div>
+            <!-- Content Text -->
+            <div class="text-sm leading-relaxed text-gray-200 space-y-1">
+              <!-- 3BHK Label and Video Units on Same Line -->
+              <div>
+                <span class="font-semibold text-[#F3E299] shrink-0">4BHK:</span>
+                <div class="flex flex-wrap items-center gap-2 pl-[3rem]">
+                  <span class="inline-flex items-center gap-1">
+                    <i
+                      class="fa-solid fa-video text-transparent bg-clip-text bg-gradient-to-b from-[#F3E299] to-[#BE9B42]"></i>
+                    <span
+                      class="text-transparent bg-clip-text bg-gradient-to-b from-[#F3E299] to-[#BE9B42] font-medium">3480</span>
+                  </span>
+                  <span class="inline-flex items-center gap-1">
+                    <i
+                      class="fa-solid fa-video text-transparent bg-clip-text bg-gradient-to-b from-[#F3E299] to-[#BE9B42]"></i>
+                    <span
+                      class="text-transparent bg-clip-text bg-gradient-to-b from-[#F3E299] to-[#BE9B42] font-medium">3895</span>
+                  </span>
+                  <span class="inline-flex items-center gap-1">
+                    <i
+                      class="fa-solid fa-video text-transparent bg-clip-text bg-gradient-to-b from-[#F3E299] to-[#BE9B42]"></i>
+                    <span
+                      class="text-transparent bg-clip-text bg-gradient-to-b from-[#F3E299] to-[#BE9B42] font-medium">4108</span>
+                  </span>
+                  <span class="inline-flex items-center gap-1">
+                    <i
+                      class="fa-solid fa-video text-transparent bg-clip-text bg-gradient-to-b from-[#F3E299] to-[#BE9B42]"></i>
+                    <span
+                      class="text-transparent bg-clip-text bg-gradient-to-b from-[#F3E299] to-[#BE9B42] font-medium">4315</span>
+                  </span>
+                  <span class="inline-flex items-center gap-1">
+                    <i
+                      class="fa-solid fa-video text-transparent bg-clip-text bg-gradient-to-b from-[#F3E299] to-[#BE9B42]"></i>
+                    <span
+                      class="text-transparent bg-clip-text bg-gradient-to-b from-[#F3E299] to-[#BE9B42] font-medium">5045</span>
+                  </span>
+                </div>
+              </div>
+              <div class="flex flex-wrap items-center gap-2 pl-[3rem] text-gray-300">
+                <span>3125,</span>
+                <span>3468,</span>
+                <span>4243,</span>
+                <span>5020,</span>
+                <span>5315,</span>
+                <span>6800,</span>
+                <span>7050</span>
+                <span>7890</span>
+                <span>8205</span>
+              </div>
+            </div>
+            <div class="text-sm leading-relaxed text-gray-200 space-y-1">
+              <div>
+                <span class="font-semibold text-[#F3E299] shrink-0">5BHK:</span>
+              </div>
+              <div class="flex flex-wrap items-center gap-2 pl-[3rem] text-gray-300">
+                <span>3125,</span>
+                <span>5315,</span>
+                <span>6800,</span>
+                <span>7050</span>
+                <span>7890</span>
+                <span>8205</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- LEFT PANEL -->
+    <ul id="leftPanel"
+      class="flex space-x-1.5 backdrop-blur-sm rounded-xl bg-black shadow-lg p-1.5 fixed left-[286px] bottom-2 lg:left-[336px] lg:bottom-4 border border-white/30">
+      <!-- Home Tab -->
+      <li data-type="/webverse.html"
+        class="tab-btn group relative bg-white cursor-pointer transition-all duration-500 border border-white/40 px-2 lg:px-4 inline-flex justify-center items-center gap-2 rounded-lg text-black font-semibold shadow">
+        <i class="far fa-map"></i>
+        <span class="tab-text font-semibold text-sm">Aerial view</span>
+        <div class="absolute bottom-full left-1/2 mb-3 w-max rounded-md bg-white py-2 px-3 text-sm font-normal text-black shadow-lg 
+                  opacity-0 scale-90 origin-bottom transform -translate-x-1/2 transition-all duration-300 pointer-events-none
+                  group-hover:opacity-100 group-hover:scale-100 group-hover:pointer-events-auto">
+          Aerial View
+          <span class="absolute top-3/4 left-1/2 h-3 w-3 bg-white rotate-45 -translate-x-1/2">
+          </span>
+        </div>
+      </li>
+
+      <!-- Profile Tab -->
+      <li data-type="/exterior.html"
+        class="tab-btn group relative cursor-pointer border border-white/40 h-8 w-8 lg:h-10 lg:w-10 inline-flex justify-center items-center gap-2 rounded-lg text-white font-semibold shadow transition-all duration-300">
+        <i class="fa-solid fa-building fa-lg"></i>
+        <span class="tab-text font-semibold text-sm hidden">Community</span>
+        <div class="absolute bottom-full left-1/2 mb-3 w-max rounded-md bg-white py-2 px-3 text-sm font-normal text-black shadow-lg 
+                  opacity-0 scale-90 origin-bottom transform -translate-x-1/2 transition-all duration-300 pointer-events-none
+                  group-hover:opacity-100 group-hover:scale-100 group-hover:pointer-events-auto">
+          Community
+          <span class="absolute top-3/4 left-1/2 h-3 w-3 bg-white rotate-45 -translate-x-1/2">
+          </span>
+        </div>
+      </li>
+
+      <!-- Settings Tab -->
+      <li data-type="/interior.html"
+        class="tab-btn group relative cursor-pointer border border-white/40 h-8 w-8 lg:h-10 lg:w-10 inline-flex justify-center items-center gap-2 rounded-lg text-white font-semibold shadow transition-all duration-300">
+        <i class="fa-solid fa-couch"></i>
+        <span class="tab-text font-semibold text-sm hidden">Interior</span>
+        <div class="absolute bottom-full left-1/2 mb-3 w-max rounded-md bg-white py-2 px-3 text-sm font-normal text-black shadow-lg 
+                  opacity-0 scale-90 origin-bottom transform -translate-x-1/2 transition-all duration-300 pointer-events-none
+                  group-hover:opacity-100 group-hover:scale-100 group-hover:pointer-events-auto">
+          Interior
+          <span class="absolute top-3/4 left-1/2 h-3 w-3 bg-white rotate-45 -translate-x-1/2">
+          </span>
+        </div>
+      </li>
+
+      <!-- Google Maps Tab -->
+      <li data-type="/maps.html"
+        class="tab-btn group relative cursor-pointer border border-white/40 h-8 w-8 lg:h-10 lg:w-10 inline-flex justify-center items-center gap-2 rounded-lg text-white font-semibold shadow transition-all duration-300">
+        <img src="assets/googlemaps.png" alt="Location"
+          class="w-6 h-6 filter brightness-100 hover:brightness-125 transition-all duration-300" />
+        <span class="tab-text font-semibold text-sm hidden">Google Maps</span>
+        <div class="absolute bottom-full left-1/2 mb-3 w-max rounded-md bg-white py-2 px-3 text-sm font-normal text-black shadow-lg 
+                  opacity-0 scale-90 origin-bottom transform -translate-x-1/2 transition-all duration-300 pointer-events-none
+                  group-hover:opacity-100 group-hover:scale-100 group-hover:pointer-events-auto">
+          Google Maps
+          <span class="absolute top-3/4 left-1/2 h-3 w-3 bg-white rotate-45 -translate-x-1/2">
+          </span>
+        </div>
+      </li>
+
+      <li data-type="/zoneiq.html"
+        class="tab-btn group relative cursor-pointer border border-white/40 h-8 w-8 lg:h-10 lg:w-10 inline-flex justify-center items-center gap-2 rounded-lg text-white font-semibold shadow transition-all duration-300">
+        <i class="fa-solid fa-globe fa-lg"></i>
+        <span class="tab-text font-semibold text-sm hidden">Zone IQ</span>
+        <div class="absolute bottom-full left-1/2 mb-3 w-max rounded-md bg-white py-2 px-3 text-sm font-normal text-black shadow-lg 
+                  opacity-0 scale-90 origin-bottom transform -translate-x-1/2 transition-all duration-300 pointer-events-none
+                  group-hover:opacity-100 group-hover:scale-100 group-hover:pointer-events-auto">
+          Zone IQ
+          <span class="absolute top-3/4 left-1/2 h-3 w-3 bg-white rotate-45 -translate-x-1/2">
+          </span>
+        </div>
+      </li>
+    </ul>
+    <!-- COMMON BUTTONS -->
+    <div id="commonBtnsWrapper"
+      class="fixed z-999 flex items-center top-1 right-1 gap-1 sm:top-2 sm:right-2 sm:gap-1.5 lg:top-4 lg:right-4 lg:gap-3">
+      
+
+    <!-- DAY / NIGHT TOGGLE -->
+    <div class="flex items-center gap-2">
+
+      <!-- TEXT -->
+      <span id="themeText"
+        class="text-[10px] lg:text-[11px] text-white font-semibold tracking-[0.15em] select-none">
+        NIGHT
+      </span>
+
+      <!-- TOGGLE -->
+      <div id="themeSwitch"
+        class="relative cursor-pointer w-16 h-8 rounded-full overflow-hidden">
+
+        <!-- BACKGROUND -->
+        <div id="toggleBg" class="absolute inset-0"></div>
+
+        <!-- INACTIVE CIRCLE -->
+        <div class="toggle-circles"></div>
+
+        <!-- ACTIVE PILL -->
+        <div id="themeActivePill"
+          class="absolute top-[2px] h-7 w-7 rounded-full overflow-hidden">
+        <!-- DAY -->
+          <div id="dayInner" class="absolute inset-0 opacity-0 flex items-center justify-center">
+      <svg viewBox="0 0 481.882 481.882" class="w-4 h-4" preserveAspectRatio="xMidYMid meet">
+
+        <!-- CENTER -->
+        <circle cx="240.941" cy="240.941" r="110" fill="#FCD462"/>
+
+        <!-- RAYS -->
+        <g fill="#F6C358">
+
+          <path d="M240.941,0c-11.445,0-20.48,9.035-20.48,20.48v33.732c0,11.445,9.035,20.48,20.48,20.48s20.48-9.035,20.48-20.48V20.48C261.421,9.035,252.386,0,240.941,0z"/>
+
+          <path d="M240.941,407.191c-11.445,0-20.48,9.035-20.48,20.48v33.732c0,11.445,9.035,20.48,20.48,20.48s20.48-9.035,20.48-20.48v-33.732C261.421,416.226,252.386,407.191,240.941,407.191z"/>
+
+          <path d="M481.882,240.941c0-11.445-9.035-20.48-20.48-20.48h-33.732c-11.445,0-20.48,9.035-20.48,20.48s9.035,20.48,20.48,20.48h33.732C472.847,261.421,481.882,252.386,481.882,240.941z"/>
+
+          <path d="M74.692,240.941c0-11.445-9.035-20.48-20.48-20.48H20.48c-11.445,0-20.48,9.035-20.48,20.48s9.035,20.48,20.48,20.48h33.732C65.656,261.421,74.692,252.386,74.692,240.941z"/>
+
+          <path d="M411.407,70.475c-7.831-7.831-21.082-7.831-28.913,0L358.4,94.569c-7.831,7.831-7.831,21.082,0,28.913c7.831,7.831,21.082,7.831,28.913,0l24.094-24.094C419.238,91.558,419.238,78.306,411.407,70.475z"/>
+
+          <path d="M123.482,358.4c-7.831-7.831-21.082-7.831-28.913,0l-24.094,24.094c-7.831,7.831-7.831,21.082,0,28.913c7.831,7.831,21.082,7.831,28.913,0l24.094-24.094C131.313,379.482,131.313,366.833,123.482,358.4z"/>
+
+          <path d="M411.407,411.407c7.831-7.831,7.831-21.082,0-28.913L387.313,358.4c-7.831-7.831-21.082-7.831-28.913,0c-7.831,7.831-7.831,21.082,0,28.913l24.094,24.094C390.325,419.238,403.576,419.238,411.407,411.407z"/>
+
+          <path d="M123.482,123.482c7.831-7.831,7.831-21.082,0-28.913L99.388,70.475c-7.831-7.831-21.082-7.831-28.913,0s-7.831,21.082,0,28.913l24.094,24.094C102.4,131.313,115.049,131.313,123.482,123.482z"/>
+
+        </g>
+
+      </svg>
+    </div>
+
+          <!-- NIGHT -->
+          <div id="nightInner" class="absolute inset-0 flex items-center justify-center">
+            <!-- MOON SVG -->
+            <svg viewBox="0 0 512 512" class="w-4 h-4 fill-white">
+        <path d="m380.08 271.873-2.49 14.513 13.034-6.853c1.657-.871 3.476-1.307 5.295-1.307s3.638.436 5.295 1.307l13.034 6.853-2.49-14.513c-.632-3.691.591-7.457 3.272-10.072l10.545-10.278-14.572-2.117c-3.707-.538-6.91-2.866-8.568-6.224l-6.516-13.204-6.516 13.204c-1.658 3.358-4.861 5.686-8.568 6.224l-14.572 2.117 10.545 10.278c2.681 2.615 3.905 6.381 3.272 10.072z"/>
+        <path d="m213.729 298.726c-55.9-55.901-86.686-130.224-86.686-209.279 0-30.676 4.62-60.651 13.76-89.446-86.09 47.874-140.348 138.82-140.348 238.79 0 150.648 122.561 273.209 273.208 273.209 95.87 0 188.194-58.475 237.881-148.152-27.382 11.323-57.264 21.564-88.536 21.564-79.054 0-153.378-30.786-209.279-86.686z"/>
+      </svg>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+      <div class="relative group">
+        <a href="https://wa.me/0000000000" id="contactBtn"
+          class="cursor-pointer flex items-center justify-center rounded-full text-white bg-black/70 backdrop-blur-sm shadow-md shadow-black/80 transition-transform duration-200 hover:scale-110 hover:bg-[rgba(0,0,0,0.8)] h-8 w-8 text-[11px] sm:text-[12px] lg:h-10 lg:w-10 lg:text-[18px]">
+          <img src="assets/whatsapp.png" alt="Contact" class="h-5 w-5 sm:h-6 sm:w-6 object-contain" />
+        </a>
+        <span
+          class="button-tooltip absolute left-1/2 top-full mt-1.5 w-max rounded-md bg-white px-1.5 py-1.5 text-xs font-normal text-black shadow-lg opacity-0 scale-90 origin-top transform -translate-x-1/2 transition-all duration-300 pointer-events-none group-hover:opacity-100 group-hover:scale-100 group-hover:pointer-events-auto">
+          Contact
+          <span class="absolute top-0 left-1/2 -translate-x-1/2 -mt-1 h-2 w-2 bg-white rotate-45"></span>
+        </span>
+      </div>
+
+      <div class="relative group">
+        <button id="featurePanelBtn"
+          class="cursor-pointer flex items-center justify-center rounded-full text-white bg-black/70 backdrop-blur-sm shadow-md shadow-black/80 transition-transform duration-200 hover:scale-110 hover:bg-[rgba(0,0,0,0.8)] h-8 w-8 text-[11px] sm:text-[12px] lg:h-10 lg:w-10 lg:text-[18px]">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+        <span
+          class="button-tooltip absolute left-1/2 top-full mt-1.5 w-max rounded-md bg-white px-1.5 py-1.5 text-xs font-normal text-black shadow-lg opacity-0 scale-90 origin-top transform -translate-x-1/2 transition-all duration-300 pointer-events-none group-hover:opacity-100 group-hover:scale-100 group-hover:pointer-events-auto">
+          Menu
+          <span class="absolute top-0 left-1/2 -translate-x-1/2 -mt-1 h-2 w-2 bg-white rotate-45"></span>
+        </span>
+      </div>
+
+      <!-- Full / Exit Screen -->
+      <div class="relative group">
+        <div
+          class="flex flex-col items-center justify-center rounded-full text-white bg-black/70 backdrop-blur-sm shadow-md shadow-black/50 transition-transform duration-200 hover:scale-110 hover:bg-[rgba(0,0,0,0.8)] h-8 w-8 lg:h-10 lg:w-10">
+          <button id="fullScreenBtn" class="cursor-pointer">
+            <i class="fa-solid fa-expand text-white text-[11px] sm:text-[13px] lg:text-[18px]"></i>
+          </button>
+          <button id="exitScreenBtn" class="cursor-pointer hidden">
+            <i class="fa-solid fa-compress text-white text-[11px] sm:text-[13px] lg:text-[18px]"></i>
+          </button>
+        </div>
+        <span id="screenLabel"
+          class="button-tooltip absolute left-1/2 top-full mt-1.5 w-max rounded-md bg-white px-1.5 py-1.5 text-xs font-normal text-black shadow-lg opacity-0 scale-90 origin-top transform -translate-x-1/2 transition-all duration-300 pointer-events-none group-hover:opacity-100 group-hover:scale-100 group-hover:pointer-events-auto">
+          Full Screen
+          <span class="absolute top-0 left-1/2 -translate-x-1/2 -mt-1 h-2 w-2 bg-white rotate-45"></span>
+        </span>
+      </div>
+
+    </div>
+    <div id="villaInfoModel"
+      class="fixed bottom-2 right-2 lg:bottom-4 lg:right-4 w-60 h-72 lg:w-72 lg:h-84 bg-black/80 backdrop-blur-lg rounded-2xl shadow-md shadow-black/50 text-white text-sm hidden flex-col items-center gap-1 z-9999">
+      <div class="relative flex flex-col items-center gap-3 h-full w-full">
+        <button
+          class="absolute top-2 right-2 h-6 w-6 bg-red-500 rounded-lg inline-flex flex-col items-center justify-center">
+          <i id="villaInfoCloseBtn" class="fa-solid fa-xmark cursor-pointer text-white"></i>
+        </button>
+        <img id="villaImage" src="" alt="villa image" class="h-full w-full object-cover rounded-2xl"
+          loading="eager">
+        <div
+          class="absolute bottom-0 left-0 z-9 flex flex-col items-start gap-4 text-xs lg:text-sm w-full p-3 bg-black/70 rounded-b-2xl">
+          <div class="grid grid-cols-2 gap-2 mt-3">
+            <div class="inline-flex gap-1 items-center text-xs lg:text-sm">
+              <i class="fa-solid fa-building text-gray-300"></i>
+              <div class="flex items-center gap-1 text-gray-300">Villa:
+                <span id="villaId" class="text-white font-semibold"></span>
+              </div>
+            </div>
+            <div class="inline-flex gap-1 items-center text-xs lg:text-sm">
+              <i class="fa-solid fa-compass text-gray-300"></i>
+              <div class="flex items-center gap-1 text-gray-300">Facing:
+                <span id="villaOrientation" class="text-white font-semibold capitalize"></span>
+              </div>
+            </div>
+            <div class="inline-flex gap-1 items-center text-xs lg:text-sm">
+              <i class="fa-solid fa-house-chimney text-gray-300"></i>
+              <div class="flex items-center gap-1 text-gray-300">Type:
+                <span id="villaType" class="text-white font-semibold"></span>
+              </div>
+            </div>
+            <div class="inline-flex gap-1 items-center text-xs lg:text-sm">
+              <i class="fa-solid fa-ruler-combined text-gray-300"></i>
+              <div class="flex items-center gap-1 text-gray-300">Area:
+                <span id="villaArea" class="text-white font-semibold"></span>
+              </div>
+            </div>
+          </div>
+          <div class="flex gap-3 w-full">
+            <a href="https://wa.me/0000000000"
+              class="flex-1 text-center bg-[rgba(0,0,0,0.6)] hover:bg-[rgba(0,0,0,0.6)] text-white text-xs px-3 py-1.5 ring-1 ring-[rgba(255,255,255,0.3)] rounded-full transition-colors duration-300">Contact
+              Us
+            </a>
+            <button id="exploreMoreBtn"
+              class="flex-1 text-center cursor-pointer text-black px-3 py-1.5 bg-white hover:bg-white text-xs px-2 py-1 rounded-full transition-colors duration-300">
+              Explore More
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="features"
+      class="transform translate-x-full transition-transform duration-600 ease-in-out fixed top-0 right-0 w-[100px] h-screen bg-black/90 p-3 z-9999 overflow-x-hidden">
+      <div class="flex flex-col items-center gap-6 w-full h-full">
+        <button id="featurePanelCloseBtn"
+          class="h-10 w-10 rounded-full bg-black border border-white/20 cursor-pointer shrink-0 text-white">
+          <i class="fa-solid fa-xmark fa-lg" aria-hidden="true"></i>
+        </button>
+        <div id="featuresList" class="overflow-y-auto w-full">
+          <ul class="features flex flex-col gap-4 !w-full">
+            <!-- About Feature -->
+            <li class="select-none cursor-pointer flex flex-col justify-center items-center gap-2 w-full group"
+              data-type="about">
+              <a href="./about.html" class="inline-flex flex-col items-center gap-2">
+                <div
+                  class="border border-white/20  p-2 lg:!p-4 flex flex-col items-center justify-center rounded-full h-[50px] w-[50px] transition-colors duration-300 group-hover:bg-gradient-to-br group-hover:from-[#F3E299]/50 group-hover:to-[#BE9B42]/70 bg-[rgba(0,0,0,0.45)]">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="h-[30px] w-[30px]">
+                    <path fill="#ffffff"
+                      d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM216 336l24 0 0-64-24 0c-13.3 0-24-10.7-24-24s10.7-24 24-24l48 0c13.3 0 24 10.7 24 24l0 88 8 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-80 0c-13.3 0-24-10.7-24-24s10.7-24 24-24zm40-208a32 32 0 1 1 0 64 32 32 0 1 1 0-64z" />
+                  </svg>
+                </div>
+                <p class="text-xs text-white text-center"> About </p>
+              </a>
+            </li>
+            <!-- Webverse Feature -->
+            <!-- <li class="select-none cursor-pointer flex flex-col justify-center items-center gap-2 w-full group" data-type="webverse">
+                      <a href="./webverse.html" class="inline-flex flex-col items-center gap-2">
+                        <div class="p-4 flex flex-col items-center justify-center rounded-full h-[50px] w-[50px] transition-colors duration-300 group-hover:bg-gradient-to-br group-hover:from-blue-600/70 group-hover:to-violet-600/40 bg-[rgba(0,0,0,0.45)]">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512" class="h-[30px] w-[30px]">
+                                <path fill="#ffffff" d="M576 64L64 64C28.7 64 0 92.7 0 128L0 384c0 35.3 28.7 64 64 64l120.4 0c24.2 0 46.4-13.7 57.2-35.4l32-64c8.8-17.5 26.7-28.6 46.3-28.6s37.5 11.1 46.3 28.6l32 64c10.8 21.7 33 35.4 57.2 35.4L576 448c35.3 0 64-28.7 64-64l0-256c0-35.3-28.7-64-64-64zM96 240a64 64 0 1 1 128 0A64 64 0 1 1 96 240zm384-64a64 64 0 1 1 0 128 64 64 0 1 1 0-128z"/>
+                            </svg>
+                        </div>
+                        <p class="text-xs text-white text-center"> Webverse </p>
+                      </a>  
+                    </li> -->
+            <!-- Zone IQ Feature -->
+            <!-- <li class="select-none cursor-pointer flex flex-col justify-center items-center gap-2 w-full group" data-type="zone iq">
+                      <a href="./virtualtour.html" class="inline-flex flex-col items-center gap-2">
+                        <div class="p-4 flex flex-col items-center justify-center rounded-full h-[50px] w-[50px] transition-colors duration-300 group-hover:bg-gradient-to-br group-hover:from-blue-600/70 group-hover:to-violet-600/40 bg-[rgba(0,0,0,0.45)]">
+                              <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+                                  <g fill="#ffffff">
+                                      <path d="m344 128c0-11.046 8.954-20 20-20s20 8.954 20 20-8.954 20-20 20-20-8.954-20-20z" />
+                                      <g clip-rule="evenodd" fill-rule="evenodd">
+                                          <path d="m357.336 240.956c.002.002.004.003 6.664-7.456l-6.66 7.459c3.794 3.388 9.526 3.388 13.32 0l-6.66-7.459c6.66 7.459 6.662 7.458 6.664 7.456l.004-.004.015-.013.048-.043c.042-.037.1-.09.176-.158.15-.136.368-.333.649-.589.561-.511 1.373-1.257 2.4-2.215 2.054-1.915 4.973-4.682 8.468-8.124 6.978-6.874 16.312-16.495 25.675-27.441 9.331-10.908 18.877-23.348 26.142-35.853 7.12-12.257 12.759-25.762 12.759-38.516 0-45.8396-37.16-83-83-83s-83 37.1604-83 83c0 12.754 5.639 26.259 12.759 38.516 7.265 12.505 16.811 24.945 26.142 35.853 9.363 10.946 18.697 20.567 25.675 27.441 3.495 3.442 6.414 6.209 8.468 8.124 1.027.958 1.839 1.704 2.4 2.215.281.256.499.453.649.589l.074.067.15.134.015.013zm-56.336-112.956c0-34.7939 28.206-63 63-63s63 28.2061 63 63c0 7.405-3.486 17.166-10.053 28.47-6.423 11.056-15.127 22.471-24.046 32.899-8.887 10.389-17.803 19.583-24.512 26.192-1.603 1.578-3.076 3.006-4.389 4.263-1.313-1.257-2.786-2.685-4.389-4.263-6.709-6.609-15.625-15.803-24.512-26.192-8.919-10.428-17.623-21.843-24.046-32.899-6.567-11.304-10.053-21.065-10.053-28.47z" />
+                                          <path d="m383.781 369.639c26.885-30.21 43.219-70.017 43.219-113.639v-45.25c0-5.523 4.477-10 10-10s10 4.477 10 10v45.25c0 105.486-85.514 191-191 191s-191-85.514-191-191 85.514-191 191-191c5.523 0 10 4.4772 10 10s-4.477 10-10 10c-43.622 0-83.429 16.334-113.639 43.219zm-14.142 14.142-113.639-113.639-113.639 113.639c30.21 26.885 70.017 43.219 113.639 43.219s83.429-16.334 113.639-43.219zm-241.42-241.42 113.639 113.639-113.639 113.639c-26.885-30.21-43.219-70.017-43.219-113.639s16.334-83.429 43.219-113.639z" />
+                                      </g>
+                                  </g>
+                              </svg>
+                          </div>
+                      </a>  
+                        <p class="text-xs text-white text-center"> Zone IQ </p>
+                    </li> -->
+            <!-- Google Map Feature -->
+            <!-- <li class="select-none cursor-pointer flex flex-col justify-center items-center gap-2 w-full group" data-type="google maps">
+                      <a href="./maps.html" class="inline-flex flex-col items-center gap-2">
+                        <div class="p-4 flex flex-col items-center justify-center rounded-full h-[50px] w-[50px] transition-colors duration-300 group-hover:bg-gradient-to-br group-hover:from-blue-600/70 group-hover:to-violet-600/40 bg-[rgba(0,0,0,0.45)]">
+                              <svg xmlns="http://www.w3.org/2000/svg" id="Capa_1" enable-background="new 0 0 512 512" viewBox="0 0 512 512" class="h-[44px] w-[44px]">
+                                  <g>
+                                      <g id="Google_Maps_2_">
+                                          <g>
+                                              <path d="m272.5 268.5-54.958 84.957-52.443 22.442c-30.899-35.4-63.898-77.399-79.499-130.499l31.4-58.4 50.5-23.5c-.899 5.4-1.5 10.8-1.5 16.5 0 49.499 40.499 90 90 90 5.7 0 11.1-.601 16.5-1.5z" fill="#ffda2d"/>
+                                          </g>
+                                      </g>
+                                      <path d="m344.51 196.41c.9-5.37 1.49-10.74 1.49-16.41 0-49.46-40.44-89.94-89.89-90h-.11c-5.7 0-11.1.6-16.5 1.5l79.8-79.8c48.3 18 87 56.7 105 105l-79.8 79.8c0-.03.01-.06.01-.09z" fill="#80aef8"/>
+                                      <path d="m424.3 116.7-27.3 53.3-52.5 26.5c0-.03.01-.06.01-.09.9-5.37 1.49-10.74 1.49-16.41 0-49.46-40.44-89.94-89.89-90h-.08v-15.03l17.97-39.97 45.3-23.3c48.3 18 87 56.7 105 105z" fill="#4086f4"/>
+                                      <g>
+                                          <path d="m424.3 116.7-79.8 79.799c-6.901 36.301-35.7 65.1-72.001 72.001h-.001l-86.872 86.871-20.528 20.527c5.101 5.7 9.6 10.802 14.401 16.201 33.001 37.501 61.501 71.9 61.501 104.901 0 8.399 6.599 15 15 15s15-6.601 15-15c0-33.001 28.5-67.4 61.5-104.9 46.201-51.901 103.5-116.7 103.5-212.1 0-22.2-3.9-43.5-11.7-63.3z" fill="#59c36a"/>
+                                          <path d="m424.3 116.7-79.799 79.798v.001c-6.901 36.301-35.7 65.1-72.001 72.001-.001 0-.001 0-.002 0l-16.467 16.466v227.028c8.386-.018 14.969-6.606 14.969-14.994 0-33.001 28.5-67.4 61.5-104.9 46.201-51.901 103.5-116.7 103.5-212.1 0-22.2-3.9-43.5-11.7-63.3z" fill="#00a66c"/>
+                                      </g>
+                                      <g id="Google_Maps_3_">
+                                          <path d="m256.031 284.969 16.469-16.469c-5.389.897-10.779 1.492-16.469 1.496z" fill="#fdbf00"/>
+                                      </g>
+                                      <path d="m319.3 11.7-79.8 79.8c-18.3 3.6-34.501 12.299-47.1 24.901l-46.4-19.401-17.2-44.2c32.401-32.701 77.401-52.8 127.2-52.8 22.2 0 43.5 3.9 63.3 11.7z" fill="#4086f4"/>
+                                      <path d="m256.031 74.969 63.269-63.269c-19.79-7.797-41.08-11.693-63.268-11.697v74.966z" fill="#4175df"/>
+                                      <path d="m192.4 116.4c-12.599 12.6-21.301 28.799-24.9 47.1l-81.9 81.9c-6-20.099-9.6-41.7-9.6-65.4 0-49.801 20.099-94.801 52.8-127.2z" fill="#f03800"/>
+                                  </g>
+                              </svg>
+                        </div>
+                        <p class="text-xs text-white text-center"> Google Maps </p>
+                      </a>  
+                    </li> -->
+            <!-- Interior Feature -->
+            <!-- <li class="select-none cursor-pointer flex flex-col justify-center items-center gap-2 w-full group" data-type="interior">
+                      <a href="#" class="inline-flex flex-col items-center gap-2">
+                        <div class="p-4 flex flex-col items-center justify-center rounded-full h-[50px] w-[50px] transition-colors duration-300 group-hover:bg-gradient-to-br group-hover:from-blue-600/70 group-hover:to-violet-600/40 bg-[rgba(0,0,0,0.45)]">
+                              <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:svgjs="http://svgjs.dev/svgjs" id="Layer_1" enable-background="new 0 0 507.33 507.33" viewBox="0 0 507.33 507.33" version="1.1" class="h-[44px] w-[44px]">
+                                  <g width="100%" height="100%" transform="matrix(1,0,0,1,0,0)">
+                                      <path fill="#ffffff" d="m63.475 385.425-4.75 19.01c-1.77 7.08-.21 14.43 4.28 20.18s11.25 9.05 18.54 9.05c10.81 0 20.2-7.33 22.82-17.82l7.55-30.18h-42.25c-2.08 0-4.15-.08-6.19-.24z" fill="#ffffff" fill-opacity="1" data-original-color="#000000ff" stroke="none" stroke-opacity="1"/>
+                                      <path fill="#ffffff" d="m443.855 385.425c-2.04.16-4.11.24-6.19.24h-42.24l7.54 30.18c2.62 10.49 12.01 17.82 22.82 17.82 7.29 0 14.05-3.3 18.54-9.05s6.05-13.1 4.28-20.18z" fill="#ffffff" fill-opacity="1" data-original-color="#000000ff" stroke="none" stroke-opacity="1"/>
+                                      <path fill="#ffffff" d="m46.665 161.865c25.45 2.11 46.9 20.95 51.98 46.33l12.31 61.56c1.38 6.9 7.49 11.91 14.53 11.91h256.36c7.04 0 13.15-5.01 14.53-11.91l12.31-61.56c4.72-23.59 23.59-41.53 46.66-45.64l2.01-11.24c3.44-19.29-1.8-38.97-14.38-54s-31.04-23.65-50.64-23.65h-282.87c-20.04 0-38.76 8.94-51.36 24.52-12.6 15.59-17.42 35.77-13.22 55.36z" fill="#ffffff" fill-opacity="1" data-original-color="#000000ff" stroke="none" stroke-opacity="1"/>
+                                      <path fill="#ffffff" d="m496.032 190.935c-7.891-8.433-19.039-13.27-30.588-13.27-4.577 0-9.012.758-13.181 2.149l.002-.009c-14.041 4.598-25.091 17.006-27.893 31.531l-12.311 61.555c-2.871 14.354-15.58 24.773-30.219 24.773h-256.354c-14.639 0-27.348-10.418-30.219-24.773l-12.311-61.555c-3.088-16.213-16.536-29.659-32.723-32.821l.001.004c-14.017-2.974-29.198 1.904-38.938 12.416-7.89 8.434-11.975 19.879-11.207 31.402l5.574 83.603c.147 34.413 27.599 62.487 61.764 63.668l-.004.017c.74.03 1.49.04 2.24.04h46.25 275.51 46.24c.75 0 1.5-.01 2.24-.04l-.004-.017c34.165-1.181 61.617-29.255 61.763-63.668l5.574-83.603c.768-11.523-3.316-22.969-11.206-31.402z" fill="#ffffff" />
+                                  </g>
+                              </svg>
+                          </div>
+                          <p class="text-xs text-white text-center"> Interior </p>
+                      </a>  
+                    </li> -->
+            <!-- Amenities Feature -->
+            <!-- <li class="select-none cursor-pointer flex flex-col justify-center items-center gap-2 w-full group" data-type="amenities">
+                      <a href="#" class="inline-flex flex-col items-center gap-2">
+                        <div class="p-4 flex flex-col items-center justify-center rounded-full h-[50px] w-[50px] transition-colors duration-300 group-hover:bg-gradient-to-br group-hover:from-blue-600/70 group-hover:to-violet-600/40 bg-[rgba(0,0,0,0.45)]">
+                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512" class="h-[30px] w-[30px]">
+                                  <path fill="#ffffff" d="M96 64c0-17.7 14.3-32 32-32l32 0c17.7 0 32 14.3 32 32l0 160 0 64 0 160c0 17.7-14.3 32-32 32l-32 0c-17.7 0-32-14.3-32-32l0-64-32 0c-17.7 0-32-14.3-32-32l0-64c-17.7 0-32-14.3-32-32s14.3-32 32-32l0-64c0-17.7 14.3-32 32-32l32 0 0-64zm448 0l0 64 32 0c17.7 0 32 14.3 32 32l0 64c17.7 0 32 14.3 32 32s-14.3 32-32 32l0 64c0 17.7-14.3 32-32 32l-32 0 0 64c0 17.7-14.3 32-32 32l-32 0c-17.7 0-32-14.3-32-32l0-160 0-64 0-160c0-17.7 14.3-32 32-32l32 0c17.7 0 32 14.3 32 32zM416 224l0 64-192 0 0-64 192 0z"/>
+                              </svg>
+                          </div>
+                          <p class="text-xs text-white text-center"> Amenities </p>
+                      </a>  
+                    </li> -->
+            <!-- Exterior Feature -->
+            <!-- <li class="select-none cursor-pointer flex flex-col justify-center items-center gap-2 w-full group" data-type="exterior">
+                      <a href="#" class="inline-flex flex-col items-center gap-2">
+                        <div class="p-4 flex flex-col items-center justify-center rounded-full h-[50px] w-[50px] transition-colors duration-300 group-hover:bg-gradient-to-br group-hover:from-blue-600/70 group-hover:to-violet-600/40 bg-[rgba(0,0,0,0.45)]">
+                              <svg xmlns="http://www.w3.org/2000/svg" id="Line" viewBox="0 0 64 64" class="h-[64px] w-[64px]">
+                                  <path fill="#ffffff" d="M20,35a3.00328,3.00328,0,0,1-3-3,1.00019,1.00019,0,0,0-2,.00006c.20922,6.60538,9.79019,6.60811,10-.00017A4.98132,4.98132,0,0,0,22.96906,28,4.98137,4.98137,0,0,0,25,24c-.2094-6.60556-9.79012-6.60812-10,.00011A1,1,0,0,0,17,24a3,3,0,1,1,3,3,1.00019,1.00019,0,0,0,.00006,2A3.00019,3.00019,0,0,1,20,35Z"/>
+                                  <path fill="#ffffff" d="M32,37a4.99146,4.99146,0,1,0-3.00006-8.9743L29,24a3.00019,3.00019,0,0,1,6,.00009A1,1,0,0,0,37,24a5,5,0,0,0-10,0v8A5.00588,5.00588,0,0,0,32,37Zm0-8a3.00019,3.00019,0,0,1-.00009,6A3.00019,3.00019,0,0,1,32,29Z"/>
+                                  <path fill="#ffffff" d="M44,37a5.00588,5.00588,0,0,0,5-5V24c-.20931-6.6055-9.79016-6.60814-10,.00011V32A5.00588,5.00588,0,0,0,44,37ZM41,24a3.00019,3.00019,0,0,1,6,.00009V32a3.00019,3.00019,0,0,1-6-.00009Z"/>
+                                  <path fill="#ffffff" d="M25.936,46.69482c1.19818.12537,2.44451.19861,3.70831.24677L27.293,49.293a1.00009,1.00009,0,0,0,1.4141,1.414c.10337-.1491,4.33554-4.20905,4.21572-4.32469a1.00685,1.00685,0,0,0-.21607-1.08963L28.707,41.293a1.00007,1.00007,0,0,0-1.414,1.4141l2.23153,2.23153c-10.8428-.13345-23.90064-5.045-23.52432-10.93887C6,31.31445,8.42627,28.70654,12.832,26.65674a1.00019,1.00019,0,0,0-.84379-1.81345C-5.079,33.43065,7.54917,45.19934,25.936,46.69482Z"/>
+                                  <path fill="#ffffff" d="M52.438,25.041a1.00013,1.00013,0,0,0-.87592,1.79788c15.30066,8.03065.84387,17.11332-15.63761,18.033a1.00028,1.00028,0,1,0,.13169,1.99622C54.97077,46.01269,69.65,34.14765,52.438,25.041Z"/>
+                                  <path fill="#ffffff" d="M52,19a3.00019,3.00019,0,0,0-.00009-6A3.00019,3.00019,0,0,0,52,19Zm0-4a1.00019,1.00019,0,0,1-.00006,2A1.00019,1.00019,0,0,1,52,15Z"/>
+                              </svg>
+                          </div>
+                          <p class="text-xs text-white text-center"> 360 Exterior </p>
+                      </a>  
+                    </li> -->
+            <!-- Gallery Feature -->
+            <li class="select-none cursor-pointer flex flex-col justify-center items-center gap-2 w-full group"
+              data-type="gallery">
+              <a href="./gallery.html" class="inline-flex flex-col items-center gap-2">
+                <div
+                  class="border border-white/20 p-4 flex flex-col items-center justify-center rounded-full h-[50px] w-[50px] transition-colors duration-300 group-hover:bg-gradient-to-br group-hover:from-[#F3E299]/50 group-hover:to-[#BE9B42]/70 bg-[rgba(0,0,0,0.45)]">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" style="height: 24px; width: 24px;">
+                    <path fill="#ffffff"
+                      d="M464 448H48c-26.5 0-48-21.5-48-48V112c0-26.5 21.5-48 48-48h416c26.5 0 48 21.5 48 48v288c0 26.5-21.5 48-48 48zM112 120c-30.9 0-56 25.1-56 56s25.1 56 56 56 56-25.1 56-56-25.1-56-56-56zM64 384h384V272l-87.5-87.5c-4.7-4.7-12.3-4.7-17 0L208 320l-55.5-55.5c-4.7-4.7-12.3-4.7-17 0L64 336v48z" />
+                  </svg>
+                </div>
+                <p class="text-xs text-white text-center"> Gallery </p>
+              </a>
+            </li>
+            <!-- Brochure Feature -->
+            <li class="select-none cursor-pointer flex flex-col justify-center items-center gap-2 w-full group"
+              data-type="brochure">
+              <a href="./brochure.html" class="inline-flex flex-col items-center gap-2">
+                <div
+                  class="border border-white/20 p-4 flex flex-col items-center justify-center rounded-full h-[50px] w-[50px] transition-colors duration-300 group-hover:bg-gradient-to-br group-hover:from-[#F3E299]/50 group-hover:to-[#BE9B42]/70 bg-[rgba(0,0,0,0.45)]">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" style="height: 24px; width: 24px;">
+                    <path fill="#ffffff"
+                      d="M0 64C0 28.7 28.7 0 64 0L224 0l0 128c0 17.7 14.3 32 32 32l128 0 0 144-208 0c-35.3 0-64 28.7-64 64l0 144-48 0c-35.3 0-64-28.7-64-64L0 64zm384 64l-128 0L256 0 384 128zM176 352l32 0c30.9 0 56 25.1 56 56s-25.1 56-56 56l-16 0 0 32c0 8.8-7.2 16-16 16s-16-7.2-16-16l0-48 0-80c0-8.8 7.2-16 16-16zm32 80c13.3 0 24-10.7 24-24s-10.7-24-24-24l-16 0 0 48 16 0zm96-80l32 0c26.5 0 48 21.5 48 48l0 64c0 26.5-21.5 48-48 48l-32 0c-8.8 0-16-7.2-16-16l0-128c0-8.8 7.2-16 16-16zm32 128c8.8 0 16-7.2 16-16l0-64c0-8.8-7.2-16-16-16l-16 0 0 96 16 0zm80-112c0-8.8 7.2-16 16-16l48 0c8.8 0 16 7.2 16 16s-7.2 16-16 16l-32 0 0 32 32 0c8.8 0 16 7.2 16 16s-7.2 16-16 16l-32 0 0 48c0 8.8-7.2 16-16 16s-16-7.2-16-16l0-64 0-64z" />
+                  </svg>
+                </div>
+                <p class="text-xs text-white text-center"> Brochure </p>
+              </a>
+            </li>
+            <!-- Contact Feature -->
+            <li class="select-none cursor-pointer flex flex-col justify-center items-center gap-2 w-full group"
+              data-type="contact">
+              <a href="https://wa.me/8247084303" class="inline-flex flex-col items-center gap-2">
+                <div
+                  class="border border-white/20 p-4 flex flex-col items-center justify-center rounded-full h-[50px] w-[50px] transition-colors duration-300 group-hover:bg-gradient-to-br group-hover:from-[#F3E299]/50 group-hover:to-[#BE9B42]/70 bg-[rgba(0,0,0,0.45)]">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" style="height: 22px; width: 22px;">
+                    <path fill="#ffffff"
+                      d="M164.9 24.6c-7.7-18.6-28-28.5-47.4-23.2l-88 24C12.1 30.2 0 46 0 64C0 311.4 200.6 512 448 512c18 0 33.8-12.1 38.6-29.5l24-88c5.3-19.4-4.6-39.7-23.2-47.4l-96-40c-16.3-6.8-35.2-2.1-46.3 11.6L304.7 368C234.3 334.7 177.3 277.7 144 207.3L193.3 167c13.7-11.2 18.4-30 11.6-46.3l-40-96z" />
+                  </svg>
+                </div>
+                <p class="text-xs text-white text-center"> Contact </p>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div id="videoWrapper" class="hidden fixed top-0 left-0 bg-[rgba(0,0,0,0.6)] z-9999 h-dvh w-dvw">
+      <div
+        class="relative top-[50%] left-[50%] max-w-md md:max-w-lg lg:max-w-3xl z-9999 transform -translate-x-[50%] -translate-y-[50%] p-1.5 border border-[#F3E299]/80 rounded-md bg-[#F3E299]/40">
+        <video class="rounded-sm aspect-16 / 9"
+          src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" controls>
+
+        </video>
+        <button id="videoWrapperCloseBtn"
+          class="absolute -top-5 -right-5 cursor-pointer h-7 w-7 border-2 rounded-full bg-red-500 text-white">
+          <i class="fa-solid fa-x fa-xs md:fa-xl"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- <div class="relative flex flex-col items-center group cursor-pointer">
+
+    <div class="w-10 h-10 bg-blue-600 rounded-full relative flex items-center justify-center text-white shadow-md z-10">
+      <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+      </svg>
+    </div>
+    <div class="absolute bottom-[-10px] left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-5 border-r-5 border-t-[20px] border-t-blue-600 border-l-transparent border-r-transparent rounded-t-sm shadow-sm z-0"></div>
+    <span class="absolute bottom-full mb-2 px-2 py-1 text-xs text-white bg-black rounded opacity-0 group-hover:opacity-100 whitespace-nowrap transition-opacity">
+      Custom Tooltip Text
+    </span>
+  </div> -->
+    <div class="fixed bottom-2 right-2 lg:bottom-4 lg:right-4 z-[9] flex flex-col items-center gap-2 lg:gap-3">
+
+      <div id="compassWrapper"
+        class="cursor-default h-12 w-12 sm:h-14 sm:w-14 lg:h-16 lg:w-16 rounded-full flex flex-col items-center justify-center bg-black/80 backdrop-blur-md border border-[#D4AF37]/30 shadow-lg shadow-black/50 transition-transform hover:scale-105">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" class="h-8 w-8 sm:h-9 sm:w-9 lg:h-11 lg:w-11">
+          <defs>
+            <linearGradient id="goldCompass" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#F3E299" />
+              <stop offset="100%" style="stop-color:#BE9B42" />
+            </linearGradient>
+          </defs>
+          <circle cx="50" cy="50" r="48" fill="none" stroke="url(#goldCompass)" stroke-width="2" opacity="0.9" />
+          <text x="50" y="24" font-family="Montserrat, sans-serif" font-size="24" font-weight="900"
+            fill="url(#goldCompass)" text-anchor="middle">N</text>
+          <path d="M50 26 L66 50 L50 50 Z" fill="url(#goldCompass)" />
+          <path d="M50 26 L34 50 L50 50 Z" fill="url(#goldCompass)" opacity="0.7" />
+          <path d="M50 82 L66 50 L50 50 Z" fill="#444" />
+          <path d="M50 82 L34 50 L50 50 Z" fill="#222" />
+          <circle cx="50" cy="50" r="3" fill="#FFF" />
+        </svg>
+      </div>
+      <!-- Vezraa LOGO -->
+      <a href="https://www.vezraa.com/" target="_blank"
+        class="select-none inline-flex items-center justify-center h-11 w-11 sm:h-13 sm:w-13 lg:h-15 lg:w-15 rounded-xl bg-black/80 backdrop-blur-md border border-white/10 shadow-lg hover:bg-black transition-all hover:border-[#D4AF37]/50 group">
+        <img src="./assets/logos/Vezraa_logo.webp" alt="Vezraa logo"
+          class="max-h-[70%] max-w-[70%] object-contain opacity-70 group-hover:opacity-100 transition-opacity grayscale group-hover:grayscale-0">
+      </a>
+    </div>
+    <!-- Vezraa LOGO -->
+    <!-- <a href="https://www.vezraa.com/" target="_blank"
+      class="select-none inline-flex items-center justify-center h-10 w-10 sm:h-12 sm:w-12 lg:h-16 lg:w-16 rounded-xl lg:rounded-2xl bg-black/70 border border-white/20 shadow-lg hover:bg-black transition">
+      <img src="./assets/Vezraa_logo.webp" alt="Vezraa logo" class="max-h-[75%] max-w-[75%] object-contain">
+    </a>
+    </div> -->
+
+    <script src="./js/webverse.js"></script>
+  </body>
+</html>

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import { Plus, Search, Edit2, Trash2, Building2, MapPin, BedDouble, Bath, Maximize, IndianRupee, ToggleLeft, ToggleRight, X, Image as ImageIcon, FileText, Upload, LayoutGrid, Layers } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, Building2, MapPin, BedDouble, Bath, Maximize, IndianRupee, ToggleLeft, ToggleRight, X, Image as ImageIcon, FileText, Upload, LayoutGrid, Layers, ExternalLink } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
@@ -227,6 +227,16 @@ export default function PropertiesPage() {
         >
           {p.featured ? <ToggleRight className="h-4 w-4 text-[var(--primary)]" /> : <ToggleLeft className="h-4 w-4 text-[var(--muted-foreground)]" />}
         </button>
+        <a
+          href={`../${p.propertyType === "VILLA" ? "zenvistas-clone" : "webverse-clone"}/index.html`}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          title="View in WebVerse"
+          className="absolute bottom-3 right-3 h-8 w-8 rounded-full bg-black/70 flex items-center justify-center shadow-sm hover:bg-black transition-colors"
+        >
+          <ExternalLink className="h-4 w-4 text-white" />
+        </a>
       </div>
 
       <div className="p-4">

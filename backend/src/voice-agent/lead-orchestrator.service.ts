@@ -9,6 +9,8 @@ import { AutonomousActionService } from '../mikey/autonomous-action.service';
 import { PermissionGateService } from '../mikey/permission-gate.service';
 import { ApprovalsService } from '../approvals/approvals.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { LeadsService } from '../leads/leads.service';
+import { AgentClientService } from '../agent/agent-client.service';
 
 interface ActionPlan {
   call?: { priority: number; lang: string };
@@ -33,6 +35,8 @@ export class LeadOrchestratorService {
     @Inject(forwardRef(() => PermissionGateService)) private permissionGate: PermissionGateService,
     private approvals: ApprovalsService,
     private notifications: NotificationsService,
+    @Inject(forwardRef(() => LeadsService)) private leadsService: LeadsService,
+    private agentClient: AgentClientService,
   ) {}
 
   async onLeadCreated(leadId: string): Promise<void> {
@@ -77,6 +81,14 @@ export class LeadOrchestratorService {
     // Campaign actions override everything
     if (campaignActions && campaignActions.length > 0) {
       return this.buildPlanFromActions(campaignActions, lead, phone, whatsapp);
+    }
+
+    // A filled-out form is a deliberate, high-intent signal on its own — always call,
+    // regardless of the generic aiIntent/aiUrgency heuristic below (which defaults to
+    // a neutral 50/50 before context enrichment finishes and would otherwise route
+    // this into the WhatsApp-only "warm" branch).
+    if (source === 'FORM' && phone) {
+      return this.buildPlanFromActions(this.sourceDefaults('FORM'), lead, phone, whatsapp);
     }
 
     // Source defaults
@@ -147,11 +159,11 @@ export class LeadOrchestratorService {
     const map: Record<string, any[]> = {
       META_ADS: [{ type: 'whatsapp', priority: 1, text: 'Hi! Thanks for reaching out via our ad. How can I help you today?' }],
       GOOGLE_ADS: [{ type: 'whatsapp', priority: 1, text: 'Thanks for your inquiry! Let me know if you need more details.' }],
-      WHATSAPP: [{ type: 'call', priority: 1, lang: 'en' }],
-      FORM: [{ type: 'whatsapp', priority: 1, text: 'Thanks for your interest! Shall I share more details?' }],
+      WHATSAPP: [{ type: 'call', priority: 1 }],
+      FORM: [{ type: 'call', priority: 1 }, { type: 'whatsapp', priority: 2, text: 'Thanks for your interest! Shall I share more details?' }],
       PHONE_CALL: [{ type: 'whatsapp', priority: 1, text: 'We missed your call. Let us know how we can help!' }],
-      PORTAL: [{ type: 'call', priority: 1, lang: 'en' }],
-      CHATBOT: [{ type: 'call', priority: 1, lang: 'en' }],
+      PORTAL: [{ type: 'call', priority: 1 }],
+      CHATBOT: [{ type: 'call', priority: 1 }],
     };
     return map[source] || [];
   }
@@ -355,6 +367,60 @@ export class LeadOrchestratorService {
         });
       } catch {}
     }
+
+    // What the caller actually said (budget/interest/urgency) only becomes known once the
+    // call finishes — write it into the same first-class fields the form/WhatsApp intake
+    // path uses, then re-score, so a qualifying call can move a lead's segment just like
+    // qualifying info from any other channel does.
+    const fields = this.extractCallFields(payload.outcome || {}, payload.summary || '', payload.transcript || '');
+    if (fields.budget || fields.interest || fields.urgency) {
+      await this.prisma.lead.update({ where: { id: leadId }, data: fields }).catch(() => {});
+    }
+    await this.leadsService.score(leadId).catch((e: any) =>
+      this.logger.warn(`Post-call re-score failed for lead ${leadId}: ${e.message}`)
+    );
+
+    // A call that qualifies the lead or books a visit is exactly the moment to get the
+    // matching brochure/photos into their hands — hand it to the same conversational
+    // agent loop used for chat replies so it picks the send_property_photos /
+    // send_media_file tool itself, rather than duplicating its matching logic here.
+    if (outcome.status === 'QUALIFIED' || outcome.status === 'APPOINTMENT_BOOKED') {
+      const lead = await this.prisma.lead.findUnique({ where: { id: leadId }, select: { tenantId: true, contact: { select: { whatsapp: true, phone: true } } } });
+      if (lead?.contact?.whatsapp || lead?.contact?.phone) {
+        this.agentClient.trigger(
+          leadId,
+          `call-qualified-${Date.now()}`,
+          'WHATSAPP',
+          'The voice call with this lead just finished and they are qualified/interested. Send them the matching property photos and brochure now over WhatsApp.',
+          lead!.tenantId,
+          'call_qualified',
+        ).catch(() => {});
+      }
+    }
+  }
+
+  private extractCallFields(outcome: any, summary: string, transcript: string): { budget?: string; interest?: string; urgency?: string } {
+    const fields: { budget?: string; interest?: string; urgency?: string } = {};
+    if (outcome.budget) fields.budget = String(outcome.budget);
+    if (outcome.property_type || outcome.interest) fields.interest = String(outcome.property_type || outcome.interest);
+    if (outcome.timeline) fields.urgency = String(outcome.timeline);
+    if (fields.budget && fields.interest && fields.urgency) return fields;
+
+    const text = `${summary} ${transcript}`.toLowerCase();
+    if (!fields.budget) {
+      const budgetMatch = text.match(/([\d.]+)\s*(cr|crore|l|lakh)\b/i);
+      if (budgetMatch) fields.budget = budgetMatch[0];
+    }
+    if (!fields.interest) {
+      const interestMatch = text.match(/\b(\d\s?bhk|studio|villa|plot|penthouse)\b/i);
+      if (interestMatch) fields.interest = interestMatch[0];
+    }
+    if (!fields.urgency) {
+      if (/\b(immediate|urgent|asap|this week|right away)\b/.test(text)) fields.urgency = 'immediate';
+      else if (/\b(3 months|next quarter|soon)\b/.test(text)) fields.urgency = '3_months';
+      else if (/\b(6 months|exploring|just looking)\b/.test(text)) fields.urgency = '6_months';
+    }
+    return fields;
   }
 
   private mapCallStatus(status: string, endedReason?: string): any {
@@ -365,10 +431,9 @@ export class LeadOrchestratorService {
     return 'COMPLETED';
   }
 
-  private detectLanguage(lead: any): string {
-    const lang = (lead as any).languagePreference || lead.contact?.language || 'en';
-    const supported = ['en', 'hi', 'te', 'ta', 'kn', 'ml', 'bn', 'mr', 'gu'];
-    return supported.includes(lang) ? lang : 'en';
+  /** Mikey speaks Telugu only for this deployment - no per-lead language switching. */
+  private detectLanguage(_lead: any): string {
+    return 'te';
   }
 
   private mapStructuredOutcome(outcome: any): { status?: string; followUpDays?: number; followUpTitle?: string } {

@@ -37,7 +37,7 @@ export class VoiceAgentController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('OWNER', 'ADMIN', 'MANAGER', 'SALES_AGENT')
   async callLead(@Param('leadId') leadId: string, @Req() req: any, @Query('lang') lang?: string) {
-    return this.service.callLead(leadId, req.user.sub, lang || 'en');
+    return this.service.callLead(leadId, req.user.sub, lang || 'te');
   }
 
   @Get('history')
@@ -51,14 +51,14 @@ export class VoiceAgentController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('OWNER', 'ADMIN')
   async getSettings(@Query('lang') lang?: string) {
-    return this.service.getSettings(lang || 'en');
+    return this.service.getSettings(lang || 'te');
   }
 
   @Patch('settings')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('OWNER', 'ADMIN')
   async updateSettings(@Body() body: { greeting?: string; persona?: string; antiEarlyHangupEnabled?: boolean; checklistCopy?: string }, @Query('lang') lang?: string) {
-    return this.service.updateSettings(lang || 'en', body);
+    return this.service.updateSettings(lang || 'te', body);
   }
 
   @Patch('settings/amd')
@@ -83,7 +83,7 @@ export class VoiceAgentController {
     },
     @Req() req: any,
   ) {
-    return this.service.createCampaign(req.user.tenantId, body.name, body.leadIds || [], body.lang || 'en', {
+    return this.service.createCampaign(req.user.tenantId, body.name, body.leadIds || [], body.lang || 'te', {
       maxConcurrency: body.maxConcurrency,
       retryConfig: body.retryConfig,
       scheduleConfig: body.scheduleConfig,
@@ -154,7 +154,7 @@ export class VoiceAgentController {
   @Roles('OWNER', 'ADMIN')
   @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 10 * 1024 * 1024 } }))
   async uploadKnowledgeBaseDocument(@UploadedFile() file: Express.Multer.File, @Query('lang') lang?: string) {
-    return this.service.uploadKnowledgeBaseDocument(file, lang || 'en');
+    return this.service.uploadKnowledgeBaseDocument(file, lang || 'te');
   }
 
   @Get('knowledge-base/documents')
@@ -175,21 +175,21 @@ export class VoiceAgentController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('OWNER', 'ADMIN')
   async getCustomFields(@Query('lang') lang?: string) {
-    return this.service.getCustomFields(lang || 'en');
+    return this.service.getCustomFields(lang || 'te');
   }
 
   @Post('custom-fields')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('OWNER', 'ADMIN')
   async addCustomField(@Body() body: { name: string; type: 'string' | 'number' | 'boolean'; prompt: string }, @Query('lang') lang?: string) {
-    return this.service.addCustomField(lang || 'en', body);
+    return this.service.addCustomField(lang || 'te', body);
   }
 
   @Delete('custom-fields/:name')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('OWNER', 'ADMIN')
   async deleteCustomField(@Param('name') name: string, @Query('lang') lang?: string) {
-    return this.service.deleteCustomField(lang || 'en', name);
+    return this.service.deleteCustomField(lang || 'te', name);
   }
 
   @Public()

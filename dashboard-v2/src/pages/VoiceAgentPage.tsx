@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../lib/api';
 import { fetchLeads, fetchVoiceDashboardStats, VoiceDashboardStats } from '../lib/data';
-import { Phone, PhoneOff, Clock, Loader2, ChevronRight, Globe, PhoneCall, CheckCircle2, Timer } from 'lucide-react';
+import { Phone, PhoneOff, Clock, Loader2, ChevronRight, PhoneCall, CheckCircle2, Timer } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 
 const DISPOSITION_COLORS: Record<string, string> = {
@@ -10,25 +10,12 @@ const DISPOSITION_COLORS: Record<string, string> = {
   failed: '#ef4444', voicemail: '#6366f1', unknown: '#9ca3af',
 };
 
-const LANGUAGES = [
-  { code: 'en', label: 'English' },
-  { code: 'hi', label: 'हिन्दी (Hindi)' },
-  { code: 'te', label: 'తెలుగు (Telugu)' },
-  { code: 'ta', label: 'தமிழ் (Tamil)' },
-  { code: 'kn', label: 'ಕನ್ನಡ (Kannada)' },
-  { code: 'ml', label: 'മലയാളം (Malayalam)' },
-  { code: 'bn', label: 'বাংলা (Bengali)' },
-  { code: 'mr', label: 'मराठी (Marathi)' },
-  { code: 'gu', label: 'ગુજરાતી (Gujarati)' },
-];
-
 export default function VoiceAgentPage() {
   const [leads, setLeads] = useState<any[]>([]);
   const [history, setHistory] = useState<any[]>([]);
   const [stats, setStats] = useState<VoiceDashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [calling, setCalling] = useState<string | null>(null);
-  const [callLang, setCallLang] = useState('en');
 
   useEffect(() => {
     Promise.all([
@@ -41,8 +28,8 @@ export default function VoiceAgentPage() {
   const call = async (leadId: string) => {
     setCalling(leadId);
     try {
-      const r = await api('/voice-agent/call/' + leadId + '?lang=' + callLang, { method: 'POST' });
-      if (r.success) alert('Call initiated — Mikey will speak ' + (LANGUAGES.find(l => l.code === callLang)?.label || callLang));
+      const r = await api('/voice-agent/call/' + leadId, { method: 'POST' });
+      if (r.success) alert('Call initiated — Mikey will speak Telugu');
       else alert('Call failed: ' + (r.message || r.error));
     } catch (e: any) { alert('Error: ' + e.message); }
     setCalling(null);
@@ -113,13 +100,6 @@ export default function VoiceAgentPage() {
       <div>
         <div className="flex items-center gap-3 mb-3">
           <h2 className="text-sm font-semibold text-[var(--foreground)]">Ready to call</h2>
-          <div className="flex items-center gap-1.5 ml-auto">
-            <Globe size={14} className="text-[var(--muted-foreground)]" />
-            <select value={callLang} onChange={e => setCallLang(e.target.value)}
-              className="text-xs rounded-lg border border-[var(--border)] bg-[var(--background)] px-2 py-1 text-[var(--foreground)] outline-none">
-              {LANGUAGES.map(l => <option key={l.code} value={l.code}>{l.label}</option>)}
-            </select>
-          </div>
         </div>
         <div className="grid gap-3">
           {leads.length === 0 && <p className="text-sm text-[var(--muted-foreground)]">No leads ready for voice outreach.</p>}

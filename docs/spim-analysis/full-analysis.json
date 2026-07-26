@@ -1,0 +1,1093 @@
+{
+  "url": "https://royalpavilion.spim-webverse.com/",
+  "timestamp": "2026-07-26T03:03:08.083Z",
+  "techStack": {
+    "fonts": [
+      "-apple-system",
+      "BlinkMacSystemFont",
+      "Segoe UI",
+      "Roboto",
+      "Helvetica Neue",
+      "Noto Sans",
+      "Arial",
+      "Apple Color Emoji",
+      "Segoe UI Emoji",
+      "Segoe UI Symbol",
+      "Noto Color Emoji",
+      "Font Awesome 7 Free",
+      "Font Awesome 7 Brands",
+      "EB+Garamond",
+      "Lato",
+      "ui-monospace",
+      "SFMono-Regular",
+      "Menlo",
+      "Monaco",
+      "Consolas",
+      "Liberation Mono",
+      "Courier New"
+    ],
+    "libraries": [
+      {
+        "src": "https://kit.fontawesome.com/a0bdb82872.js",
+        "async": false,
+        "defer": false
+      },
+      {
+        "src": "https://d3js.org/d3.v7.min.js",
+        "async": false,
+        "defer": false
+      },
+      {
+        "src": "https://cdn.jsdelivr.net/npm/shepherd.js/dist/js/shepherd.min.js",
+        "async": false,
+        "defer": false
+      },
+      {
+        "src": "https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4",
+        "async": false,
+        "defer": false
+      },
+      {
+        "src": "https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4",
+        "async": false,
+        "defer": false
+      },
+      {
+        "src": "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js",
+        "async": false,
+        "defer": false
+      },
+      {
+        "src": "https://unpkg.com/@panzoom/panzoom@4.6.0/dist/panzoom.min.js",
+        "async": false,
+        "defer": false
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/js/script.js",
+        "async": false,
+        "defer": true
+      }
+    ],
+    "jsFiles": [
+      {
+        "src": "https://kit.fontawesome.com/a0bdb82872.js"
+      },
+      {
+        "src": "https://d3js.org/d3.v7.min.js"
+      },
+      {
+        "src": "https://cdn.jsdelivr.net/npm/shepherd.js/dist/js/shepherd.min.js"
+      },
+      {
+        "src": "https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"
+      },
+      {
+        "src": "https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"
+      },
+      {
+        "src": "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      },
+      {
+        "src": "https://unpkg.com/@panzoom/panzoom@4.6.0/dist/panzoom.min.js"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/js/script.js"
+      }
+    ],
+    "cssFiles": [
+      {
+        "href": "https://royalpavilion.spim-webverse.com/css/styles.css"
+      },
+      {
+        "href": "https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=EB+Garamond:ital,wght@0,400..800;1,400..800&family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Nunito:ital,wght@0,200..1000;1,200..1000&family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Oswald:wght@200..700&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap"
+      },
+      {
+        "href": "https://cdn.jsdelivr.net/npm/shepherd.js/dist/css/shepherd.css"
+      },
+      {
+        "href": "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      }
+    ],
+    "frameworks": {
+      "react": false,
+      "vue": false,
+      "angular": false,
+      "nextjs": false,
+      "jquery": false,
+      "d3": true,
+      "tailwind": false
+    }
+  },
+  "views": {
+    "mainViews": {
+      "0": "ref: <Node>",
+      "1": "ref: <Node>",
+      "2": "ref: <Node>",
+      "3": "ref: <Node>",
+      "4": "ref: <Node>",
+      "5": "ref: <Node>",
+      "6": "ref: <Node>",
+      "7": "ref: <Node>",
+      "8": "ref: <Node>",
+      "9": "ref: <Node>",
+      "10": "ref: <Node>",
+      "11": "ref: <Node>",
+      "12": "ref: <Node>",
+      "13": "ref: <Node>",
+      "14": "ref: <Node>",
+      "15": "ref: <Node>",
+      "16": "ref: <Node>",
+      "17": "ref: <Node>",
+      "18": "ref: <Node>",
+      "19": "ref: <Node>"
+    },
+    "sections": {}
+  },
+  "interactions": [
+    {
+      "element": "featurePanelBtn",
+      "viewChanged": [
+        "logoWrapper",
+        "commonBtnsWrapper",
+        "home",
+        "features"
+      ]
+    },
+    {
+      "element": "fullScreenBtn",
+      "viewChanged": [
+        "logoWrapper",
+        "commonBtnsWrapper",
+        "home",
+        "features"
+      ]
+    },
+    {
+      "element": "Webverse",
+      "viewChanged": [
+        "logoWrapper",
+        "commonBtnsWrapper",
+        "home",
+        "features"
+      ]
+    },
+    {
+      "element": "Interior",
+      "viewChanged": [
+        "logoWrapper",
+        "commonBtnsWrapper",
+        "home",
+        "features"
+      ]
+    },
+    {
+      "element": "Exterior",
+      "viewChanged": [
+        "logoWrapper",
+        "commonBtnsWrapper",
+        "home",
+        "features"
+      ]
+    },
+    {
+      "element": "Zone IQ",
+      "viewChanged": [
+        "logoWrapper",
+        "commonBtnsWrapper",
+        "home",
+        "features"
+      ]
+    },
+    {
+      "element": "Location",
+      "viewChanged": [
+        "logoWrapper",
+        "commonBtnsWrapper",
+        "home",
+        "features"
+      ]
+    },
+    {
+      "element": "featurePanelCloseBtn",
+      "viewChanged": [
+        "logoWrapper",
+        "commonBtnsWrapper",
+        "home",
+        "features"
+      ]
+    },
+    {
+      "element": "Home",
+      "viewChanged": [
+        "logoWrapper",
+        "commonBtnsWrapper",
+        "home",
+        "features"
+      ]
+    },
+    {
+      "element": "About",
+      "viewChanged": [
+        "logoWrapper",
+        "commonBtnsWrapper",
+        "home",
+        "features"
+      ]
+    },
+    {
+      "element": "Layout",
+      "viewChanged": [
+        "logoWrapper",
+        "commonBtnsWrapper",
+        "home",
+        "features"
+      ]
+    },
+    {
+      "element": "Webverse",
+      "viewChanged": [
+        "logoWrapper",
+        "commonBtnsWrapper",
+        "home",
+        "features"
+      ]
+    },
+    {
+      "element": "Zone IQ",
+      "viewChanged": [
+        "logoWrapper",
+        "commonBtnsWrapper",
+        "home",
+        "features"
+      ]
+    },
+    {
+      "element": "Maps",
+      "viewChanged": [
+        "logoWrapper",
+        "commonBtnsWrapper",
+        "home",
+        "features"
+      ]
+    },
+    {
+      "element": "Interior",
+      "viewChanged": [
+        "logoWrapper",
+        "commonBtnsWrapper",
+        "home",
+        "features"
+      ]
+    },
+    {
+      "element": "Floor Plans",
+      "viewChanged": [
+        "logoWrapper",
+        "commonBtnsWrapper",
+        "home",
+        "features"
+      ]
+    },
+    {
+      "element": "Amenities",
+      "viewChanged": [
+        "logoWrapper",
+        "commonBtnsWrapper",
+        "home",
+        "features"
+      ]
+    }
+  ],
+  "assets": {
+    "images": [
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/rotate-device.png",
+        "alt": "device orientation",
+        "width": 360,
+        "height": 360,
+        "loading": "auto"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/logo.webp",
+        "alt": "ncd logo",
+        "width": 512,
+        "height": 592,
+        "loading": "eager"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/spim_logo.webp",
+        "alt": "spim logo",
+        "width": 2501,
+        "height": 2504,
+        "loading": "auto"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/day_frames/layout/ncd_royal_pavilion_day_1.webp",
+        "alt": "ncd layout day",
+        "width": 3840,
+        "height": 2160,
+        "loading": "eager"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/rp_logo.png",
+        "alt": "royal pavilion logo",
+        "width": 14999,
+        "height": 10502,
+        "loading": "auto"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/icons/webverse.gif",
+        "alt": "webverse",
+        "width": 500,
+        "height": 500,
+        "loading": "auto"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/icons/interior.gif",
+        "alt": "interior",
+        "width": 500,
+        "height": 500,
+        "loading": "auto"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/icons//exterior.gif",
+        "alt": "exterior",
+        "width": 500,
+        "height": 500,
+        "loading": "auto"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/icons/zoneiq.gif",
+        "alt": "zone iq",
+        "width": 500,
+        "height": 500,
+        "loading": "auto"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/icons/maps.gif",
+        "alt": "location",
+        "width": 500,
+        "height": 500,
+        "loading": "auto"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/icons/contact.gif",
+        "alt": "enquiry",
+        "width": 500,
+        "height": 500,
+        "loading": "auto"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/night_frames/layout/ncd_royal_pavilion_night_1.webp",
+        "alt": "block image",
+        "width": 3840,
+        "height": 2160,
+        "loading": "eager"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/night_frames/layout/ncd_royal_pavilion_night_1.webp",
+        "alt": "block image",
+        "width": 3840,
+        "height": 2160,
+        "loading": "eager"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/logo.webp",
+        "alt": "ncd Logo",
+        "width": 512,
+        "height": 592,
+        "loading": "eager"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/day_frames/layout/ncd_royal_pavilion_day_1.webp",
+        "alt": "layout",
+        "width": 3840,
+        "height": 2160,
+        "loading": "auto"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/2d/Typical_Flat_2.webp",
+        "alt": "4bhk",
+        "width": 3840,
+        "height": 2160,
+        "loading": "auto"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/2d/Typical_Flat_9.webp",
+        "alt": "4bhk",
+        "width": 3840,
+        "height": 2160,
+        "loading": "auto"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/2d/Typical_Flat_10.webp",
+        "alt": "4bhk",
+        "width": 3840,
+        "height": 2160,
+        "loading": "auto"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/2d/Typical_Flat_10.webp",
+        "alt": "4bhk",
+        "width": 3840,
+        "height": 2160,
+        "loading": "auto"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/2d/Typical_Flat_8.webp",
+        "alt": "4bhk",
+        "width": 3840,
+        "height": 2160,
+        "loading": "auto"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/2d/Typical_Flat_9.webp",
+        "alt": "4bhk",
+        "width": 3840,
+        "height": 2160,
+        "loading": "auto"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/",
+        "alt": "",
+        "width": 0,
+        "height": 0,
+        "loading": "auto"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/floors/First&Second_Floor.webp",
+        "alt": "floor plan",
+        "width": 3840,
+        "height": 2160,
+        "loading": "eager"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/logo.webp",
+        "alt": "ncd logo",
+        "width": 512,
+        "height": 592,
+        "loading": "eager"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/",
+        "alt": "unit plan",
+        "width": 0,
+        "height": 0,
+        "loading": "eager"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/Clubhouse.webp",
+        "alt": "clubhouse",
+        "width": 3840,
+        "height": 2160,
+        "loading": "auto"
+      },
+      {
+        "src": "https://media.istockphoto.com/id/1980276924/vector/no-photo-thumbnail-graphic-element-no-found-or-available-image-in-the-gallery-or-album-flat.jpg?s=2048x2048&w=is&k=20&c=_IbveqqDGnANpt-ASFUiaE_R0HcIYrFBRpBP_SW9SCQ=",
+        "alt": "Air-conditioned Gym",
+        "width": 2048,
+        "height": 2048,
+        "loading": "eager"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/amenities/Multipurpose_Hall.webp",
+        "alt": "Multi-purpose Hall 1",
+        "width": 1920,
+        "height": 1080,
+        "loading": "eager"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/amenities/Multipurpose_Hall.webp",
+        "alt": "Multi-purpose Hall 2",
+        "width": 1920,
+        "height": 1080,
+        "loading": "eager"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/amenities/Indoor_Games.webp",
+        "alt": "Indoor Games",
+        "width": 1920,
+        "height": 1080,
+        "loading": "eager"
+      },
+      {
+        "src": "https://media.istockphoto.com/id/1980276924/vector/no-photo-thumbnail-graphic-element-no-found-or-available-image-in-the-gallery-or-album-flat.jpg?s=2048x2048&w=is&k=20&c=_IbveqqDGnANpt-ASFUiaE_R0HcIYrFBRpBP_SW9SCQ=",
+        "alt": "Baby Creche",
+        "width": 2048,
+        "height": 2048,
+        "loading": "eager"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/amenities/Office_Work_Spaces.webp",
+        "alt": "Office Working Spaces",
+        "width": 1920,
+        "height": 1080,
+        "loading": "eager"
+      },
+      {
+        "src": "https://media.istockphoto.com/id/1980276924/vector/no-photo-thumbnail-graphic-element-no-found-or-available-image-in-the-gallery-or-album-flat.jpg?s=2048x2048&w=is&k=20&c=_IbveqqDGnANpt-ASFUiaE_R0HcIYrFBRpBP_SW9SCQ=",
+        "alt": "Reading Room",
+        "width": 2048,
+        "height": 2048,
+        "loading": "eager"
+      },
+      {
+        "src": "https://media.istockphoto.com/id/1980276924/vector/no-photo-thumbnail-graphic-element-no-found-or-available-image-in-the-gallery-or-album-flat.jpg?s=2048x2048&w=is&k=20&c=_IbveqqDGnANpt-ASFUiaE_R0HcIYrFBRpBP_SW9SCQ=",
+        "alt": "Senior Citizens Room",
+        "width": 2048,
+        "height": 2048,
+        "loading": "eager"
+      },
+      {
+        "src": "https://media.istockphoto.com/id/1980276924/vector/no-photo-thumbnail-graphic-element-no-found-or-available-image-in-the-gallery-or-album-flat.jpg?s=2048x2048&w=is&k=20&c=_IbveqqDGnANpt-ASFUiaE_R0HcIYrFBRpBP_SW9SCQ=",
+        "alt": "Guest Rooms",
+        "width": 2048,
+        "height": 2048,
+        "loading": "eager"
+      },
+      {
+        "src": "https://media.istockphoto.com/id/1980276924/vector/no-photo-thumbnail-graphic-element-no-found-or-available-image-in-the-gallery-or-album-flat.jpg?s=2048x2048&w=is&k=20&c=_IbveqqDGnANpt-ASFUiaE_R0HcIYrFBRpBP_SW9SCQ=",
+        "alt": "Mini-Theatre",
+        "width": 2048,
+        "height": 2048,
+        "loading": "eager"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/amenities/Roof_Top_Swimming_Pool.webp",
+        "alt": "Rooftop Swimming Pool",
+        "width": 8000,
+        "height": 4500,
+        "loading": "eager"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/amenities/Roof_Top_party_Area.webp",
+        "alt": "Rooftop Pool Party Area",
+        "width": 3840,
+        "height": 2160,
+        "loading": "eager"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/amenities/Multipurpose_Hall.webp",
+        "alt": "Multi-purpose Hall 3 (150 Seater)",
+        "width": 1920,
+        "height": 1080,
+        "loading": "eager"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/amenities/Indoor_Tot_Lot_With_Slides.webp",
+        "alt": "Indoor Tot-Lot – Kids Play Zone",
+        "width": 1920,
+        "height": 1080,
+        "loading": "eager"
+      },
+      {
+        "src": "https://media.istockphoto.com/id/1980276924/vector/no-photo-thumbnail-graphic-element-no-found-or-available-image-in-the-gallery-or-album-flat.jpg?s=2048x2048&w=is&k=20&c=_IbveqqDGnANpt-ASFUiaE_R0HcIYrFBRpBP_SW9SCQ=",
+        "alt": "Ladies Kitty Room",
+        "width": 2048,
+        "height": 2048,
+        "loading": "eager"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/amenities/Yoga.webp",
+        "alt": "Yoga / Meditation Hall",
+        "width": 1920,
+        "height": 1080,
+        "loading": "eager"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/amenities/Aerobic.webp",
+        "alt": "Aerobics / Dance Studio",
+        "width": 1920,
+        "height": 1080,
+        "loading": "eager"
+      },
+      {
+        "src": "https://media.istockphoto.com/id/1980276924/vector/no-photo-thumbnail-graphic-element-no-found-or-available-image-in-the-gallery-or-album-flat.jpg?s=2048x2048&w=is&k=20&c=_IbveqqDGnANpt-ASFUiaE_R0HcIYrFBRpBP_SW9SCQ=",
+        "alt": "Knowledge Room – Tuitions / Chess etc.",
+        "width": 2048,
+        "height": 2048,
+        "loading": "eager"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/amenities/Hobby.webp",
+        "alt": "Hobby Room – Music, Dance etc.",
+        "width": 1920,
+        "height": 1080,
+        "loading": "eager"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/amenities/Lounge_Area.webp",
+        "alt": "Lounge Area",
+        "width": 1920,
+        "height": 1080,
+        "loading": "eager"
+      },
+      {
+        "src": "https://media.istockphoto.com/id/1980276924/vector/no-photo-thumbnail-graphic-element-no-found-or-available-image-in-the-gallery-or-album-flat.jpg?s=2048x2048&w=is&k=20&c=_IbveqqDGnANpt-ASFUiaE_R0HcIYrFBRpBP_SW9SCQ=",
+        "alt": "Guest Rooms - 4 Nos",
+        "width": 2048,
+        "height": 2048,
+        "loading": "eager"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/amenities/Roof_Top_Swimming_Pool.webp",
+        "alt": "Roof Top Swimming Pool",
+        "width": 8000,
+        "height": 4500,
+        "loading": "eager"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/amenities/Roof_Top_party_Area.webp",
+        "alt": "Roof Top Pool Party Area",
+        "width": 3840,
+        "height": 2160,
+        "loading": "eager"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/day_frames/layout/ncd_royal_pavilion_day_1.webp",
+        "alt": "Royal Pavilion",
+        "width": 3840,
+        "height": 2160,
+        "loading": "eager"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/gallery/activity.webp",
+        "alt": "gallery image",
+        "width": 1920,
+        "height": 1080,
+        "loading": "eager"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/gallery/activity.webp",
+        "alt": "activity",
+        "width": 1920,
+        "height": 1080,
+        "loading": "auto"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/gallery/aerobic.webp",
+        "alt": "aerobic",
+        "width": 1920,
+        "height": 1080,
+        "loading": "auto"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/gallery/balcony.webp",
+        "alt": "balcony",
+        "width": 1920,
+        "height": 1080,
+        "loading": "auto"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/gallery/co-working%20spaces.webp",
+        "alt": "co-working spaces",
+        "width": 1920,
+        "height": 1080,
+        "loading": "auto"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/gallery/dining.webp",
+        "alt": "dining",
+        "width": 1920,
+        "height": 1080,
+        "loading": "auto"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/gallery/drawing.webp",
+        "alt": "drawing",
+        "width": 1920,
+        "height": 1080,
+        "loading": "auto"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/gallery/entrance%20gate.webp",
+        "alt": "entrance gate",
+        "width": 1920,
+        "height": 1080,
+        "loading": "auto"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/gallery/front%20elevation%20night.webp",
+        "alt": "front elevation night",
+        "width": 8000,
+        "height": 4500,
+        "loading": "auto"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/gallery/hobby.webp",
+        "alt": "hobby",
+        "width": 1920,
+        "height": 1080,
+        "loading": "auto"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/gallery/indoor%20games.webp",
+        "alt": "indoor games",
+        "width": 1920,
+        "height": 1080,
+        "loading": "auto"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/gallery/indoor%20tot-lot%20with%20games.webp",
+        "alt": "indoor tot-lot with games",
+        "width": 1920,
+        "height": 1080,
+        "loading": "auto"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/gallery/indoor%20totlot.webp",
+        "alt": "indoor totlot",
+        "width": 1920,
+        "height": 1080,
+        "loading": "auto"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/gallery/kitchen.webp",
+        "alt": "kitchen",
+        "width": 1920,
+        "height": 1080,
+        "loading": "auto"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/gallery/m.bedroom.webp",
+        "alt": "m.bedroom",
+        "width": 1920,
+        "height": 1080,
+        "loading": "auto"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/gallery/multipurpose%20hall.webp",
+        "alt": "multipurpose hall",
+        "width": 1920,
+        "height": 1080,
+        "loading": "auto"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/gallery/office.webp",
+        "alt": "office",
+        "width": 1920,
+        "height": 1080,
+        "loading": "auto"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/gallery/side%20elevation%20night.webp",
+        "alt": "side elevation night",
+        "width": 8000,
+        "height": 4500,
+        "loading": "auto"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/gallery/suit%20room.webp",
+        "alt": "suit room",
+        "width": 1920,
+        "height": 1080,
+        "loading": "auto"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/gallery/yoga.webp",
+        "alt": "yoga",
+        "width": 1920,
+        "height": 1080,
+        "loading": "auto"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets//Clubhouse.webp",
+        "alt": "clubhouse",
+        "width": 3840,
+        "height": 2160,
+        "loading": "eager"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/Clubhouse_Floor_Plans/Third_floor.webp",
+        "alt": "floor plan",
+        "width": 3840,
+        "height": 2160,
+        "loading": "eager"
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/assets/googlemaps.png",
+        "alt": "Location",
+        "width": 512,
+        "height": 512,
+        "loading": "auto"
+      }
+    ],
+    "videos": [
+      {
+        "src": "https://royalpavilion.spim-webverse.com/",
+        "poster": "",
+        "autoplay": true,
+        "loop": true,
+        "muted": true
+      },
+      {
+        "src": "https://royalpavilion.spim-webverse.com/",
+        "poster": "",
+        "autoplay": true,
+        "loop": true,
+        "muted": true
+      }
+    ],
+    "svgs": [
+      {
+        "id": "",
+        "classes": "h-32 w-32",
+        "viewBox": "0 0 120 120",
+        "width": "120",
+        "height": "120"
+      },
+      {
+        "id": "",
+        "classes": "w-5 h-5 fill-current",
+        "viewBox": "0 0 512 512",
+        "width": "",
+        "height": ""
+      },
+      {
+        "id": "",
+        "classes": "w-4 h-4 fill-current",
+        "viewBox": "0 0 55.753 55.753",
+        "width": "",
+        "height": ""
+      },
+      {
+        "id": "arrowIcon",
+        "classes": "h-4 w-4 rotate-180 ml-auto transition-transform duration-300 ease-in-out",
+        "viewBox": "0 -4.5 20 20",
+        "width": "",
+        "height": ""
+      },
+      {
+        "id": "Layer_1",
+        "classes": "",
+        "viewBox": "0 0 3840 2160",
+        "width": "100%",
+        "height": "100%"
+      },
+      {
+        "id": "",
+        "classes": "w-7 h-7 md:w-10 md:h-10 fill-white pointer-events-none",
+        "viewBox": "0 0 16 16",
+        "width": "",
+        "height": ""
+      },
+      {
+        "id": "",
+        "classes": "w-7 h-7 md:w-10 md:h-10 fill-white pointer-events-none",
+        "viewBox": "0 0 16 16",
+        "width": "",
+        "height": ""
+      },
+      {
+        "id": "Layer_1",
+        "classes": "",
+        "viewBox": "0 0 3840 2160",
+        "width": "",
+        "height": ""
+      },
+      {
+        "id": "Line",
+        "classes": "h-[36px] w-[36px]",
+        "viewBox": "0 0 64 64",
+        "width": "",
+        "height": ""
+      },
+      {
+        "id": "",
+        "classes": "h-5 w-5",
+        "viewBox": "0 0 24 24",
+        "width": "",
+        "height": ""
+      },
+      {
+        "id": "",
+        "classes": "h-5 w-5",
+        "viewBox": "0 0 24 24",
+        "width": "",
+        "height": ""
+      },
+      {
+        "id": "",
+        "classes": "w-5 h-5 fill-current",
+        "viewBox": "0 0 512 512",
+        "width": "",
+        "height": ""
+      },
+      {
+        "id": "",
+        "classes": "w-4 h-4 fill-current",
+        "viewBox": "0 0 55.753 55.753",
+        "width": "",
+        "height": ""
+      },
+      {
+        "id": "",
+        "classes": "h-3.5 w-3.5 fill-white group-hover:scale-110 transition-transform",
+        "viewBox": "0 0 576 512",
+        "width": "",
+        "height": ""
+      },
+      {
+        "id": "",
+        "classes": "h-[30px] w-[30px]",
+        "viewBox": "0 0 495.398 495.398",
+        "width": "",
+        "height": ""
+      },
+      {
+        "id": "",
+        "classes": "h-[30px] w-[30px]",
+        "viewBox": "0 0 512 512",
+        "width": "",
+        "height": ""
+      },
+      {
+        "id": "",
+        "classes": "",
+        "viewBox": "0 0 32 32",
+        "width": "",
+        "height": ""
+      },
+      {
+        "id": "",
+        "classes": "h-[30px] w-[30px]",
+        "viewBox": "0 0 640 512",
+        "width": "",
+        "height": ""
+      },
+      {
+        "id": "",
+        "classes": "",
+        "viewBox": "0 0 512 512",
+        "width": "",
+        "height": ""
+      },
+      {
+        "id": "Capa_1",
+        "classes": "h-[44px] w-[44px]",
+        "viewBox": "0 0 512 512",
+        "width": "",
+        "height": ""
+      },
+      {
+        "id": "Layer_1",
+        "classes": "h-[44px] w-[44px]",
+        "viewBox": "0 0 507.33 507.33",
+        "width": "",
+        "height": ""
+      },
+      {
+        "id": "",
+        "classes": "h-[44px] w-[44px]",
+        "viewBox": "0 0 2333 2333",
+        "width": "",
+        "height": ""
+      },
+      {
+        "id": "",
+        "classes": "h-[30px] w-[30px]",
+        "viewBox": "0 0 640 512",
+        "width": "",
+        "height": ""
+      },
+      {
+        "id": "Layer_1",
+        "classes": "h-[40px] w-[40px]",
+        "viewBox": "0 0 64 64",
+        "width": "",
+        "height": ""
+      },
+      {
+        "id": "Layer_1",
+        "classes": "h-[40px] w-[40px]",
+        "viewBox": "0 0 64 64",
+        "width": "",
+        "height": ""
+      },
+      {
+        "id": "Line",
+        "classes": "h-[64px] w-[64px]",
+        "viewBox": "0 0 64 64",
+        "width": "",
+        "height": ""
+      },
+      {
+        "id": "",
+        "classes": "",
+        "viewBox": "0 0 512 512",
+        "width": "",
+        "height": ""
+      },
+      {
+        "id": "",
+        "classes": "",
+        "viewBox": "0 0 512 512",
+        "width": "",
+        "height": ""
+      },
+      {
+        "id": "",
+        "classes": "",
+        "viewBox": "0 0 512 512",
+        "width": "",
+        "height": ""
+      },
+      {
+        "id": "",
+        "classes": "h-[20px] w-[20px] fill-white",
+        "viewBox": "0 0 576 512",
+        "width": "",
+        "height": ""
+      },
+      {
+        "id": "",
+        "classes": "h-[20px] w-[20px] fill-white",
+        "viewBox": "0 0 448 512",
+        "width": "",
+        "height": ""
+      },
+      {
+        "id": "Layer_1",
+        "classes": "",
+        "viewBox": "0 0 3840 2160",
+        "width": "100%",
+        "height": "100%"
+      },
+      {
+        "id": "Layer_1",
+        "classes": "h-8 w-8",
+        "viewBox": "0 0 480 480",
+        "width": "",
+        "height": ""
+      },
+      {
+        "id": "Line",
+        "classes": "h-[36px] w-[36px]",
+        "viewBox": "0 0 64 64",
+        "width": "",
+        "height": ""
+      }
+    ],
+    "backgroundImages": []
+  },
+  "responsive": {},
+  "architecture": {
+    "viewManagerPatterns": {
+      "hasViewShowHide": false,
+      "hasJQuery": false,
+      "hasGSAP": false,
+      "hasThreeJS": false,
+      "scriptCount": 8,
+      "inlineScripts": 0
+    },
+    "hasRouter": false,
+    "globalVars": []
+  },
+  "networkSummary": {
+    "document": 1,
+    "stylesheet": 4,
+    "script": 8,
+    "image": 51,
+    "font": 2
+  }
+}

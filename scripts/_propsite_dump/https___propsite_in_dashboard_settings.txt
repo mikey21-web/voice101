@@ -1,0 +1,83 @@
+URL: https://propsite.in/dashboard/settings
+TITLE: PropSite — AI-Powered Property Listings for Indian Real Estate
+
+Home
+My Listings
+Collections
+Agency
+Settings
++ New Listing
+B
+Profile
+My Profile
+
+Configure your public mini-website identity.
+
+Share My Profile
+Preview
+Basics
+T
+Profile Photo
+
+Upload a professional headshot to build trust.
+
+Full Name *
+Agency Name
+Phone Number
+WhatsApp Number
+City
+Public Broker Slug
+propsite.in/broker/
+RERA Registration Number
+Bio / About Me
+0/300
+Expertise & Preferences
+Years of Experience
+Deals Closed
+Areas I Cover
+
+Type an area and press Enter to add
+
+Property Types
+Residential
+Commercial
+Luxury
+Plots
+Industrial
+Languages Spoken
+Hindi
+English
+Marathi
+Gujarati
+Tamil
+Telugu
+Kannada
+Punjabi
+Bengali
+Other
+Usual Response Time
+Within 1 hour
+Same day
+Within 24 hours
+Within 48 hours
+Client Testimonials (0/3)
+Add Quote
+
+No testimonials added. Buyers love reading social proof!
+
+🏆 Awards & Recognition (0/6)
+Add Award
+
+No awards added. Show off your credentials to build trust!
+
+Save All Changes
+Session
+
+Log out of your account on this device.
+
+Sign Out
+Danger Zone
+
+Deleting your account is permanent. This will immediately wipe all your listings, leads, and your broker mini-site. This action cannot be undone.
+
+Delete My Account

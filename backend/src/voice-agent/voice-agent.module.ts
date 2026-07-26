@@ -7,9 +7,11 @@ import { ApprovalsModule } from '../approvals/approvals.module';
 import { TimelineModule } from '../timeline/timeline.module';
 import { MikeyModule } from '../mikey/mikey.module';
 import { ResultListenerService } from './result-listener.service';
+import { LeadsModule } from '../leads/leads.module';
+import { AgentModule } from '../agent/agent.module';
 
 @Module({
-  imports: [ConversationsModule, ApprovalsModule, TimelineModule, forwardRef(() => MikeyModule)],
+  imports: [ConversationsModule, ApprovalsModule, TimelineModule, forwardRef(() => MikeyModule), forwardRef(() => LeadsModule), AgentModule],
   controllers: [VoiceAgentController],
   providers: [VoiceAgentService, LeadOrchestratorService, ResultListenerService],
   exports: [VoiceAgentService, LeadOrchestratorService, ResultListenerService],

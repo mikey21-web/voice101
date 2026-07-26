@@ -6,7 +6,7 @@ import {
   UserCircle, CheckSquare, Sparkles, Phone, PhoneCall,   Bot, MessageCircle, Smartphone, Webhook, Globe, LogOut, Columns3,
   LifeBuoy, BookOpen, Puzzle, Download, Headset, Brain,
   Truck, ClipboardList, Package, Box, MapPin, DollarSign,
-  Building2, Activity, CalendarClock, GitBranch, Gift, HardDrive, BookCopy, FileSearch, Shield,
+  Building2, Activity, CalendarClock, GitBranch, Gift, HardDrive, BookCopy, FileSearch, Shield, ExternalLink,
 } from "lucide-react";
 import { fetchProfile, fetchBusinessSettings } from "../../lib/data";
 import { useAuth } from "../../lib/useAuth";
@@ -155,6 +155,8 @@ const rawNavGroups = [
       { label: "Approvals", icon: CheckSquare, path: "/approvals" },
       { label: "Payments & Collections", icon: ClipboardList, path: "/payment-schedules" },
       { label: "Collections Ledger", icon: ClipboardList, path: "/collections" },
+      { label: "Vezraa Apartments", icon: ExternalLink, path: "/webverse" },
+      { label: "Vezraa Villas", icon: ExternalLink, path: "/villa-webverse" },
     ],
   },
   {
@@ -371,11 +373,15 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: { co
                   }`}
                 >
                   {group.items.map((item) => {
-                    const isActive = activeHash.split('?')[0] === `#${item.path}` || (!activeHash && item.path === "/");
+                    const isExternal = item.path === "/webverse" || item.path === "/villa-webverse";
+                    const isActive = !isExternal && (activeHash.split('?')[0] === `#${item.path}` || (!activeHash && item.path === "/"));
+                    const externalUrl = item.path === "/webverse" ? "../webverse-clone/index.html" : "../zenvistas-clone/index.html";
                     return (
                       <a
                         key={item.path}
-                        href={`#${item.path}`}
+                        href={isExternal ? externalUrl : `#${item.path}`}
+                        target={isExternal ? "_blank" : undefined}
+                        rel={isExternal ? "noopener noreferrer" : undefined}
                         onClick={onMobileClose}
                         className={`flex items-center gap-3 rounded-md px-2.5 py-2 text-sm font-medium relative transition-all duration-150 ${
                           isActive

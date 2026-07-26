@@ -3,13 +3,10 @@ import { fetchVoiceAgentSettings, updateVoiceAgentSettings, toggleVoiceAgentAmd,
 import { Phone, RefreshCw, Save, ShieldCheck, ShieldOff, Database, Plus, Trash2, ToggleLeft, ToggleRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-const LANGUAGES = [
-  { code: 'en', label: 'English' },
-  { code: 'te', label: 'తెలుగు (Telugu)' },
-];
+const LANG = 'te';
 
 export default function VoiceAgentSettingsPage() {
-  const [lang, setLang] = useState('en');
+  const lang = LANG;
   const [settings, setSettings] = useState<VoiceAgentSettings | null>(null);
   const [form, setForm] = useState({ greeting: '', persona: '', antiEarlyHangupEnabled: false, checklistCopy: '' });
   const [loading, setLoading] = useState(true);
@@ -104,15 +101,8 @@ export default function VoiceAgentSettingsPage() {
             <span className="text-[11px] font-medium text-[var(--primary)] uppercase tracking-wider">Outreach</span>
           </div>
           <h1 className="text-xl font-bold text-[var(--foreground)]">Voice Agent Settings</h1>
-          <p className="text-sm text-[var(--muted-foreground)] mt-0.5">Tune the greeting, persona, and conversation safeguards for the AI voice agent</p>
+          <p className="text-sm text-[var(--muted-foreground)] mt-0.5">Tune the greeting, persona, and conversation safeguards for the AI voice agent (Telugu)</p>
         </div>
-        <select
-          value={lang}
-          onChange={(e) => setLang(e.target.value)}
-          className="h-9 rounded-lg border border-[var(--border)] bg-[var(--background)] px-2 text-sm text-[var(--foreground)]"
-        >
-          {LANGUAGES.map((l) => <option key={l.code} value={l.code}>{l.label}</option>)}
-        </select>
       </div>
 
       <div className="rounded-lg bg-[var(--card)] border border-[var(--border)] p-5 shadow-[var(--shadow-sm)] flex items-center justify-between">

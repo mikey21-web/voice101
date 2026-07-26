@@ -13,7 +13,7 @@ export class VoiceAgentService {
     private dograh: DograhService,
   ) {}
 
-  async callLead(leadId: string, userId: string, language = 'en'): Promise<{ success: boolean; callSid?: string; message?: string }> {
+  async callLead(leadId: string, userId: string, language = 'te'): Promise<{ success: boolean; callSid?: string; message?: string }> {
     const lead = await this.prisma.lead.findUnique({ where: { id: leadId }, include: { contact: true } });
     if (!lead?.contact?.phone) return { success: false, message: 'Lead has no phone number' };
 
@@ -23,6 +23,7 @@ export class VoiceAgentService {
         first_name: lead.contact.name || 'there',
         interest: lead.interest || 'properties',
         lead_id: lead.id,
+        company_name: this.config.get('COMPANY_NAME', 'Diyaa'),
       });
       const callSid = String(call.workflow_run_id);
 
@@ -41,7 +42,7 @@ export class VoiceAgentService {
     return this.prisma.callLog.findMany({ where: { tenantId }, orderBy: { createdAt: 'desc' }, take: limit, include: { lead: { include: { contact: { select: { name: true, phone: true } } } } } });
   }
 
-  async getSettings(language = 'en') {
+  async getSettings(language = 'te') {
     return this.dograh.getSettings(language);
   }
 
@@ -68,7 +69,7 @@ export class VoiceAgentService {
     tenantId: string,
     name: string,
     leadIds: string[],
-    language = 'en',
+    language = 'te',
     options?: {
       maxConcurrency?: number;
       retryConfig?: { enabled: boolean; maxRetries: number; retryDelaySeconds: number; retryOnBusy: boolean; retryOnNoAnswer: boolean; retryOnVoicemail: boolean };
@@ -77,17 +78,19 @@ export class VoiceAgentService {
     },
   ): Promise<{ campaignId: number; leadCount: number }> {
     let rows: string[][];
+    const companyName = this.config.get('COMPANY_NAME', 'Diyaa');
 
     if (options?.contacts && options.contacts.length > 0) {
       const valid = options.contacts.filter((c) => c.phone && c.phone.trim());
       if (valid.length === 0) throw new BadRequestException('No contacts with a phone number found in the upload');
-      rows = [['phone_number', 'first_name', 'lead_id', 'interest']];
+      rows = [['phone_number', 'first_name', 'lead_id', 'interest', 'company_name']];
       for (const c of valid) {
         rows.push([
           this.normalizePhone(c.phone),
           (c.name || 'there').replace(/,/g, ' '),
           '',
           'properties',
+          companyName,
         ]);
       }
     } else {
@@ -98,13 +101,14 @@ export class VoiceAgentService {
       const callable = leads.filter((l) => l.contact?.phone);
       if (callable.length === 0) throw new BadRequestException('None of the selected leads have a phone number');
 
-      rows = [['phone_number', 'first_name', 'lead_id', 'interest']];
+      rows = [['phone_number', 'first_name', 'lead_id', 'interest', 'company_name']];
       for (const lead of callable) {
         rows.push([
           lead.contact!.phone!,
           (lead.contact!.name || 'there').replace(/,/g, ' '),
           lead.id,
           (lead.interest || 'properties').replace(/,/g, ' '),
+          companyName,
         ]);
       }
     }
@@ -215,7 +219,7 @@ export class VoiceAgentService {
     };
   }
 
-  async uploadKnowledgeBaseDocument(file: { originalname: string; mimetype: string; buffer: Buffer }, language = 'en') {
+  async uploadKnowledgeBaseDocument(file: { originalname: string; mimetype: string; buffer: Buffer }, language = 'te') {
     const doc = await this.dograh.uploadKnowledgeBaseDocument(file.originalname, file.mimetype, file.buffer);
     await this.dograh.setWorkflowKnowledgeBase(language, doc.document_uuid, true);
     return doc;
@@ -230,7 +234,7 @@ export class VoiceAgentService {
     return { deleted: true };
   }
 
-  async getCustomFields(language = 'en') {
+  async getCustomFields(language = 'te') {
     return this.dograh.getCustomFields(language);
   }
 
