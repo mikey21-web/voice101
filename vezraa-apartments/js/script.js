@@ -10,7 +10,7 @@ let sectionHistory = [];
 
 const tooltip = document.querySelector(".tooltip");
 
-const spimLogo = document.getElementById("spimLogo");
+const vezraaLogo = document.getElementById("vezraaLogo");
 
 const liveBtnWrapper = document.getElementById("liveBtnWrapper");
 const bgAudioWrapper = document.getElementById("bgAudioWrapper");
@@ -2901,8 +2901,8 @@ const tabsCondition = (tab) => {
             homeBtn.classList.add("flex");
             backBtn.classList.remove("hidden");
             backBtn.classList.add("flex");
-            spimLogo.classList.add("hidden");
-            spimLogo.classList.remove("inline-flex");
+            vezraaLogo.classList.add("hidden");
+            vezraaLogo.classList.remove("inline-flex");
             features.classList.add("translate-x-full");
 
             break;
@@ -3087,8 +3087,8 @@ const featuresCondition = (featureType) => {
             leftPanel.classList.add("hidden");
             leftPanel.classList.remove("block");
 
-            spimLogo.classList.add("inline-flex");
-            spimLogo.classList.remove("hidden");
+            vezraaLogo.classList.add("inline-flex");
+            vezraaLogo.classList.remove("hidden");
 
             bgAudioWrapper.classList.remove("block");
             bgAudioWrapper.classList.add("hidden");
@@ -3193,8 +3193,8 @@ const featuresCondition = (featureType) => {
             webverseFilters.classList.add('hidden');
             leftPanel.classList.remove("hidden");
             leftPanel.classList.add("block");
-            spimLogo.classList.add("hidden");
-            spimLogo.classList.remove("inline-flex");
+            vezraaLogo.classList.add("hidden");
+            vezraaLogo.classList.remove("inline-flex");
             bgAudioWrapper.classList.add("block");
             bgAudioWrapper.classList.remove("hidden");
             liveBtnWrapper.classList.add("block");
@@ -3257,8 +3257,8 @@ const featuresCondition = (featureType) => {
             webverseFilters.classList.remove('-translate-x-full');
             leftPanel.classList.remove("hidden");
             leftPanel.classList.add("block");
-            spimLogo.classList.add("hidden");
-            spimLogo.classList.remove("inline-flex");
+            vezraaLogo.classList.add("hidden");
+            vezraaLogo.classList.remove("inline-flex");
             bgAudioWrapper.classList.add("block");
             bgAudioWrapper.classList.remove("hidden");
             liveBtnWrapper.classList.remove("block");
@@ -3320,8 +3320,8 @@ const featuresCondition = (featureType) => {
             leftPanel.classList.remove("hidden");
             leftPanel.classList.add("block");
 
-            spimLogo.classList.add("hidden");
-            spimLogo.classList.remove("inline-flex");
+            vezraaLogo.classList.add("hidden");
+            vezraaLogo.classList.remove("inline-flex");
 
             bgAudioWrapper.classList.add("block");
             bgAudioWrapper.classList.remove("hidden");
@@ -3391,8 +3391,8 @@ const featuresCondition = (featureType) => {
             leftPanel.classList.add("hidden");
             leftPanel.classList.remove("block");
 
-            spimLogo.classList.add("hidden");
-            spimLogo.classList.remove("inline-flex");
+            vezraaLogo.classList.add("hidden");
+            vezraaLogo.classList.remove("inline-flex");
 
             bgAudioWrapper.classList.add("block");
             bgAudioWrapper.classList.remove("hidden");
@@ -3457,8 +3457,8 @@ const featuresCondition = (featureType) => {
             leftPanel.classList.add("hidden");
             leftPanel.classList.remove("block");
 
-            spimLogo.classList.add("hidden");
-            spimLogo.classList.remove("inline-flex");
+            vezraaLogo.classList.add("hidden");
+            vezraaLogo.classList.remove("inline-flex");
 
             bgAudioWrapper.classList.add("block");
             bgAudioWrapper.classList.remove("hidden");
@@ -3519,8 +3519,8 @@ const featuresCondition = (featureType) => {
             leftPanel.classList.add("hidden");
             leftPanel.classList.remove("block");
 
-            spimLogo.classList.add("hidden");
-            spimLogo.classList.remove("inline-flex");
+            vezraaLogo.classList.add("hidden");
+            vezraaLogo.classList.remove("inline-flex");
 
             bgAudioWrapper.classList.add("block");
             bgAudioWrapper.classList.remove("hidden");
@@ -3604,8 +3604,8 @@ const featuresCondition = (featureType) => {
             backBtn.classList.remove("hidden");
             backBtn.classList.add("flex");
 
-            spimLogo.classList.add("hidden");   
-            spimLogo.classList.remove("inline-flex");
+            vezraaLogo.classList.add("hidden");   
+            vezraaLogo.classList.remove("inline-flex");
 
             features.classList.add("translate-x-full");
 
@@ -3633,8 +3633,8 @@ const featuresCondition = (featureType) => {
             webverseFilters.classList.add('hidden');
             leftPanel.classList.add("hidden");
             leftPanel.classList.remove("block");
-            spimLogo.classList.add("hidden");
-            spimLogo.classList.remove("inline-flex");
+            vezraaLogo.classList.add("hidden");
+            vezraaLogo.classList.remove("inline-flex");
             bgAudioWrapper.classList.add("block");
             bgAudioWrapper.classList.remove("hidden");
             liveBtnWrapper.classList.remove("block");
@@ -3694,8 +3694,8 @@ const featuresCondition = (featureType) => {
             leftPanel.classList.remove("hidden");
             leftPanel.classList.add("block");
 
-            spimLogo.classList.add("hidden");
-            spimLogo.classList.remove("inline-flex");
+            vezraaLogo.classList.add("hidden");
+            vezraaLogo.classList.remove("inline-flex");
 
             bgAudioWrapper.classList.add("block");
             bgAudioWrapper.classList.remove("hidden");
@@ -3728,8 +3728,8 @@ const featuresCondition = (featureType) => {
             homeBtn.classList.add("flex");
             backBtn.classList.remove("hidden");
             backBtn.classList.add("flex");
-            spimLogo.classList.add("hidden");
-            spimLogo.classList.remove("inline-flex");
+            vezraaLogo.classList.add("hidden");
+            vezraaLogo.classList.remove("inline-flex");
             features.classList.add("translate-x-full");
             break;
         case 'googlemap':
@@ -3765,8 +3765,8 @@ const featuresCondition = (featureType) => {
             webverseFilters.classList.add('hidden');
             leftPanel.classList.remove("hidden");
             leftPanel.classList.add("block");
-            spimLogo.classList.add("hidden");
-            spimLogo.classList.remove("inline-flex");
+            vezraaLogo.classList.add("hidden");
+            vezraaLogo.classList.remove("inline-flex");
             bgAudioWrapper.classList.add("block");
             bgAudioWrapper.classList.remove("hidden");
             liveBtnWrapper.classList.remove("block");
@@ -3826,8 +3826,8 @@ const featuresCondition = (featureType) => {
             leftPanel.classList.add("hidden");
             leftPanel.classList.remove("block");
 
-            spimLogo.classList.add("hidden");
-            spimLogo.classList.remove("inline-flex");
+            vezraaLogo.classList.add("hidden");
+            vezraaLogo.classList.remove("inline-flex");
 
             bgAudioWrapper.classList.add("block");
             bgAudioWrapper.classList.remove("hidden");
@@ -3895,8 +3895,8 @@ const featuresCondition = (featureType) => {
             leftPanel.classList.add("hidden");
             leftPanel.classList.remove("block");
 
-            spimLogo.classList.add("hidden");
-            spimLogo.classList.remove("inline-flex");
+            vezraaLogo.classList.add("hidden");
+            vezraaLogo.classList.remove("inline-flex");
 
             bgAudioWrapper.classList.add("block");
             bgAudioWrapper.classList.remove("hidden");
@@ -3946,8 +3946,8 @@ const featuresCondition = (featureType) => {
             webverseFilters.classList.add('hidden');
             leftPanel.classList.add("hidden");
             leftPanel.classList.remove("block");
-            spimLogo.classList.add("hidden");
-            spimLogo.classList.remove("inline-flex");
+            vezraaLogo.classList.add("hidden");
+            vezraaLogo.classList.remove("inline-flex");
             bgAudioWrapper.classList.remove("block");
             bgAudioWrapper.classList.add("hidden");
             liveBtnWrapper.classList.remove("block");
@@ -3993,8 +3993,8 @@ const featuresCondition = (featureType) => {
             webverseFilters.classList.add('hidden');
             leftPanel.classList.add("hidden");
             leftPanel.classList.remove("block");
-            spimLogo.classList.add("hidden");
-            spimLogo.classList.remove("inline-flex");
+            vezraaLogo.classList.add("hidden");
+            vezraaLogo.classList.remove("inline-flex");
             bgAudioWrapper.classList.add("block");
             bgAudioWrapper.classList.remove("hidden");
             liveBtnWrapper.classList.remove("block");
@@ -4074,8 +4074,8 @@ const featuresCondition = (featureType) => {
             backBtn.classList.remove("hidden");
             backBtn.classList.add("flex");
 
-            spimLogo.classList.add("hidden");   
-            spimLogo.classList.remove("inline-flex");
+            vezraaLogo.classList.add("hidden");   
+            vezraaLogo.classList.remove("inline-flex");
 
             features.classList.add("translate-x-full");
             break; 
@@ -4134,8 +4134,8 @@ const featuresCondition = (featureType) => {
             backBtn.classList.remove("hidden");
             backBtn.classList.add("flex");
 
-            spimLogo.classList.add("hidden");   
-            spimLogo.classList.remove("inline-flex");
+            vezraaLogo.classList.add("hidden");   
+            vezraaLogo.classList.remove("inline-flex");
 
             features.classList.add("translate-x-full");
             break;  
@@ -5136,8 +5136,8 @@ const homeBtnCallback = () => {
 
     leftPanel.classList.add("hidden");
     leftPanel.classList.remove("block");
-    spimLogo.classList.add("inline-flex");
-    spimLogo.classList.remove("hidden");
+    vezraaLogo.classList.add("inline-flex");
+    vezraaLogo.classList.remove("hidden");
     liveBtnWrapper.classList.remove("block");
     liveBtnWrapper.classList.add("hidden");
     bgAudioWrapper.classList.remove("block");
@@ -5650,8 +5650,8 @@ window.addEventListener("load", async () => {
                 webverseFilters.classList.add('hidden');
                 leftPanel.classList.add("hidden");
                 leftPanel.classList.remove("block");
-                spimLogo.classList.add("hidden");
-                spimLogo.classList.remove("inline-flex");
+                vezraaLogo.classList.add("hidden");
+                vezraaLogo.classList.remove("inline-flex");
                 bgAudioWrapper.classList.add("block");
                 bgAudioWrapper.classList.remove("hidden");
                 liveBtnWrapper.classList.remove("block");

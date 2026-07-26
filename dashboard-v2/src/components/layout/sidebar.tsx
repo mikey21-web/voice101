@@ -376,7 +376,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: { co
                   {group.items.map((item) => {
                     const isExternal = item.path === "/webverse" || item.path === "/villa-webverse";
                     const isActive = !isExternal && (activeHash.split('?')[0] === `#${item.path}` || (!activeHash && item.path === "/"));
-                    const externalUrl = item.path === "/webverse" ? "../webverse-clone/index.html" : "../zenvistas-clone/index.html";
+                    const externalUrl = item.path === "/webverse" ? "../vezraa-apartments/index.html" : "../vezraa-villas/index.html";
                     return (
                       <a
                         key={item.path}

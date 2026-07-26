@@ -31,7 +31,7 @@ const villasInfo = document.getElementById("villasInfo");
 const villasOptions = document.getElementById("villasOptions");
 const tooltipText = document.getElementById("tooltipText");
 
-// window.location.origin alone drops the current directory (e.g. /zenvistas-clone)
+// window.location.origin alone drops the current directory (e.g. /vezraa-villas)
 // when this site is deployed under a subpath instead of a domain root.
 const baseUrl = window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '');
 const urlParams = new URLSearchParams(window.location.search);
