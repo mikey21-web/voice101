@@ -4,8 +4,9 @@ import { fetchLeads, getLeadTimeline } from '../lib/data';
 import { consumePendingFilter, PENDING_FILTER_APPLIED_EVENT } from '../lib/pendingSearch';
 import { startExplainFlow } from '../lib/explainMode';
 import { useApp } from '../context/AppContext';
-import { Search, RefreshCw, Phone, Mail, Calendar, Users, Play, Sparkles, X, Plus, ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, RefreshCw, Phone, Mail, Calendar, Users, Play, Sparkles, X, Plus, ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight, Download } from 'lucide-react';
 import { api } from '../lib/api';
+import { toCsv, downloadCsv } from '../lib/csv';
 import toast from 'react-hot-toast';
 import type { Lead } from '../lib/types';
 import CustomFieldsSection from '../components/CustomFieldsSection';
@@ -305,6 +306,19 @@ export default function LeadsPage() {
           >
             Import
           </a>
+          <button
+            onClick={() => downloadCsv(labelPlural.toLowerCase(), toCsv(data.map(l => ({
+              name: l.contact?.name, phone: l.contact?.phone, email: l.contact?.email,
+              status: l.status, segment: l.segment, source: l.source, score: l.score,
+              interest: l.interest, budget: l.budget, dealValue: l.dealValue,
+              assignedAgent: l.assignedAgent?.name, createdAt: l.createdAt,
+            }))))}
+            disabled={!data.length}
+            title={data.length ? `Export ${data.length} loaded ${labelPlural.toLowerCase()} on this page as CSV` : 'No rows to export'}
+            className="inline-flex items-center gap-1.5 h-9 px-4 rounded-lg border border-[var(--border)] text-sm font-medium text-[var(--foreground)] hover:bg-[var(--accent)] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <Download size={15} /> Export
+          </button>
           <button
             onClick={() => setShowAddLead(true)}
             className="inline-flex items-center gap-1.5 h-9 px-4 rounded-lg bg-[var(--primary)] text-white text-sm font-medium hover:opacity-90 transition-opacity"

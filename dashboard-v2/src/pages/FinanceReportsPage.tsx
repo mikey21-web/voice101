@@ -1,24 +1,8 @@
 import React, { useState } from 'react';
 import { fetchProfitAndLoss, fetchCashFlow, fetchBalanceSheet, fetchTaxReport, fetchVendorPaymentsReport, fetchEventProfitability } from '../lib/data';
+import { toCsv, downloadCsv } from '../lib/csv';
 import { TrendingUp, Waves, Scale, Percent, Truck, PieChart } from 'lucide-react';
 import toast from 'react-hot-toast';
-
-function toCsv(obj: any): string {
-  if (Array.isArray(obj)) {
-    if (obj.length === 0) return '';
-    const keys = Object.keys(obj[0]);
-    return [keys.join(','), ...obj.map((row: any) => keys.map(k => row[k]).join(','))].join('\n');
-  }
-  return Object.entries(obj).map(([k, v]) => `${k},${v}`).join('\n');
-}
-
-function download(name: string, content: string) {
-  const blob = new Blob([content], { type: 'text/csv' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = `${name}.csv`; a.click();
-  URL.revokeObjectURL(url);
-}
 
 const REPORTS = [
   { label: 'Profit & Loss', fetch: fetchProfitAndLoss, icon: TrendingUp, description: 'Income vs. expenses and net profit' },
@@ -37,7 +21,7 @@ export default function FinanceReportsPage() {
     setLoading(label);
     try {
       const data = await fn();
-      download(label.toLowerCase().replace(/\s+/g, '-'), toCsv(data));
+      downloadCsv(label.toLowerCase().replace(/\s+/g, '-'), toCsv(data));
       setLastRun(prev => ({ ...prev, [label]: new Date() }));
       toast.success(`${label} downloaded`);
     } catch (err: any) { toast.error(err.message); }

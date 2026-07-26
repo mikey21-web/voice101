@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { api } from "../lib/api";
 import { useSocket } from "../hooks";
 import toast from "react-hot-toast";
-import { Phone, PhoneIncoming, PhoneOutgoing, PhoneMissed, Smartphone, Plus, Check } from "lucide-react";
+import { Phone, PhoneIncoming, PhoneOutgoing, PhoneMissed, Smartphone, Plus, Check, Download } from "lucide-react";
+import { toCsv, downloadCsv } from "../lib/csv";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/ui/table";
 import { Badge } from "../components/ui/badge";
@@ -71,9 +72,22 @@ export default function CallsPage() {
     <div className="space-y-4 animate-fade-in">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-[var(--foreground)]">Calls</h1>
-        <button onClick={() => setShowPair(true)} className="inline-flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--card)] px-4 py-2 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--accent)] transition-colors">
-          <Smartphone size={16} className="text-[var(--primary)]" /> Pair a device
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => downloadCsv('calls', toCsv(filteredCalls.map((c: any) => ({
+              time: c.createdAt, contact: c.contact?.name, phone: c.fromNumber,
+              direction: c.direction, durationSec: c.durationSec, source: c.source,
+              disposition: c.disposition, notes: c.notes,
+            }))))}
+            disabled={!filteredCalls.length}
+            className="inline-flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--card)] px-4 py-2 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--accent)] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <Download size={16} /> Export
+          </button>
+          <button onClick={() => setShowPair(true)} className="inline-flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--card)] px-4 py-2 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--accent)] transition-colors">
+            <Smartphone size={16} className="text-[var(--primary)]" /> Pair a device
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

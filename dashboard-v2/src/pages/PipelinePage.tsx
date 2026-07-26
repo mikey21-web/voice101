@@ -5,8 +5,9 @@ import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-
 import { CSS } from "@dnd-kit/utilities";
 import { api } from "../lib/api";
 import { fetchPipelineDeals, createTask, updateTask, fetchLeadTasks } from "../lib/data";
+import { toCsv, downloadCsv } from "../lib/csv";
 import toast from "react-hot-toast";
-import { Plus, CheckCircle2, Circle, Clock, Bot, User, Target, Building2, CalendarDays, ListTodo, X } from "lucide-react";
+import { Plus, CheckCircle2, Circle, Clock, Bot, User, Target, Building2, CalendarDays, ListTodo, X, Download } from "lucide-react";
 
 interface Deal {
   id: string;
@@ -342,6 +343,24 @@ export default function PipelinePage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2">
         <h1 className="text-xl font-bold text-[var(--foreground)]">Deal Pipeline</h1>
         <div className="flex items-center gap-2">
+          <a
+            href="#/import?entity=lead"
+            className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--accent)] transition-colors"
+          >
+            Import
+          </a>
+          <button
+            onClick={() => downloadCsv('pipeline-deals', toCsv(Object.values(data?.deals || {}).flat().map((d: Deal) => ({
+              name: d.contact?.name, phone: d.contact?.phone, email: d.contact?.email,
+              stage: d.status, segment: d.segment, score: d.score, dealValue: d.dealValue,
+              interest: d.interest, budget: d.budget, project: d.unit?.projectName,
+              assignedAgent: d.assignedAgent?.name, updatedAt: d.updatedAt,
+            }))))}
+            disabled={!data}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--accent)] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <Download size={15} /> Export
+          </button>
           <button onClick={fetchData} className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--accent)] transition-colors">Refresh</button>
           <button onClick={() => setManageOpen(!manageOpen)} className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--accent)] transition-colors">Manage Stages</button>
         </div>
