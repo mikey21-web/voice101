@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { fetchQuotations, createQuotation, fetchContacts, fetchProperties, fetchProjects } from '../lib/data';
 import { Plus, FileText, X, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -63,7 +64,12 @@ function QuotationBuilder({ contacts, properties, projects, onClose, onCreated }
   const field = 'h-9 w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)]';
   const label = 'text-xs font-medium tracking-wide text-[var(--muted-foreground)] uppercase';
 
-  return (
+  // Portaled to document.body: the page wrapper's animate-fade-in animation
+  // uses `forwards` fill-mode, which locks in a transform after it ends and
+  // creates a new containing block — that clips `position: fixed` overlays
+  // rendered inside it instead of covering the real viewport (same bug the
+  // Drawer component works around).
+  return createPortal(
     <div className="fixed inset-0 z-50 bg-[var(--background)] flex flex-col">
       <div className="flex items-center justify-between border-b border-[var(--border)] px-6 py-4">
         <div className="flex items-center gap-4">
@@ -192,7 +198,8 @@ function QuotationBuilder({ contacts, properties, projects, onClose, onCreated }
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
