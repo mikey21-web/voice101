@@ -42,7 +42,9 @@ const videoWrapperCloseBtn = document.getElementById("videoWrapperCloseBtn");
 const zoomContainer = document.getElementById('zoomContainer');
 
 // Global Variables
-const baseUrl = window.location.origin;
+// window.location.origin alone drops the current directory (e.g. /zenvistas-clone)
+// when this site is deployed under a subpath instead of a domain root.
+const baseUrl = window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '');
 let villaID;
 let fileName = "vezraa_layout";
 let timeOfDay = "night";
