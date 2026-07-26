@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Mic, MicOff, Sparkles, Ear, EarOff } from 'lucide-react';
 import { setPendingFilter } from '../lib/pendingSearch';
-import { api, apiUpload } from '../lib/api';
+import { apiUpload } from '../lib/api';
 import { useVoiceInput } from '../lib/useVoiceInput';
 import { PAGE_MAP, PAGE_ALIASES, fuzzyPageMatch, resolvePage, canonical } from '../lib/pageMap';
-import { speakStreamed } from '../lib/streamingAudioPlayer';
+import { speakStreamed, resetSpeech, queueSpeechSegment } from '../lib/streamingAudioPlayer';
+import { chatStream } from '../lib/streamingChat';
 
 // MediaRecorder only produces WebM/Opus (or MP4 on Safari), but the self-hosted
 // Moonshine transcriber decodes with libsndfile, which cannot read either
@@ -183,10 +184,16 @@ export default function VoiceCommandUI() {
     }
 
     // Fallback to copilot — it handles messy phrases and multi-step actions.
-    api('/copilot/chat', {
-      method: 'POST',
-      body: JSON.stringify({ message: text }),
-    }).then((res: any) => {
+    // Streamed: sentence-sized segments get spoken as they arrive (queueSpeechSegment)
+    // instead of waiting for the whole reply. resetSpeech() once up front interrupts
+    // whatever Mikey was already saying and starts a fresh generation; each segment
+    // after that queues onto it rather than cutting the previous one off.
+    if (localStorage.getItem('mikeyVoiceOn') !== 'false') resetSpeech();
+    chatStream(text, undefined, {
+      onSegment: (segment) => {
+        if (localStorage.getItem('mikeyVoiceOn') !== 'false') queueSpeechSegment(segment);
+      },
+    }).then((res) => {
       const nav = (res.actions || []).find((a: any) => a.tool === 'navigate_ui' && a.status !== 'error');
       if (nav) {
         const page = resolvePage(nav.args.page);
@@ -194,11 +201,9 @@ export default function VoiceCommandUI() {
         window.location.hash = PAGE_MAP[page] || '/' + page;
         const summary = nav.args.summary || `Navigated to ${page}`;
         setResult(`${transcriptLine}\n→ ${summary}`);
-        speakReply(summary);
       } else {
         const reply = res.reply || 'Done';
         setResult(`${transcriptLine}\n→ ${reply}`);
-        speakReply(reply);
       }
     }).catch(() => {
       setResult(`${transcriptLine}\n→ Couldn't reach Mikey just now. Check your connection and try again.`);

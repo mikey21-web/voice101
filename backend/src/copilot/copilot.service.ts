@@ -118,14 +118,11 @@ export class CopilotService {
       .trim();
   }
 
-  async chat(
-    userId: string,
-    userRole: string,
-    tenantId: string,
-    message: string,
-    conversationId?: string,
-    outcomeCtx?: { outcomeId: string; stepId: string },
-  ) {
+  /** Shared setup for chat()/chatStream(): feature flag + daily-limit checks, find-or-create
+   * the conversation, gather business/memory/Khoj context, persist the user's message, and
+   * build the conversationHistory payload agent-service expects. Throws on flag/limit checks
+   * exactly as before the streaming split — callers let that propagate unchanged. */
+  private async prepareChat(userId: string, tenantId: string, message: string, conversationId?: string) {
     const agentServiceUrl = this.config.get<string>('AGENT_SERVICE_URL') || 'http://agent-service:8000';
     const agentInboundKey = this.config.get<string>('AGENT_INBOUND_KEY') || '';
 
@@ -193,40 +190,43 @@ export class CopilotService {
       tool_call_id: m.role === 'tool' ? `tc_${m.id}` : undefined,
     }));
 
-    let pythonResult: any;
-    try {
-      const res = await fetchWithTimeout(`${agentServiceUrl}/agent/copilot/chat`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-agent-key': agentInboundKey,
-        },
-        body: JSON.stringify({
-          tenantId,
-          message,
-          conversationHistory,
-          businessSettings: {
-            businessName: businessSettings?.businessName || '',
-            industry: businessSettings?.industry || '',
-            toneExamples: businessSettings?.toneExamples || [],
-            goals: businessSettings?.goals || [],
-            compliance: businessSettings?.compliance || [],
-          },
-          khojContext,
-          memoryContext,
-        }),
-      });
-      pythonResult = await res.json();
-      if (!res.ok) throw new Error(pythonResult?.detail || `HTTP ${res.status}`);
-    } catch (err: any) {
-      this.logger.error('Python copilot call failed', err.message);
-      const fallback = `I'm having trouble connecting to the AI service right now. Please try again in a moment.`;
-      await this.prisma.copilotMessage.create({
-        data: { conversationId: conversation.id, role: 'assistant', content: fallback },
-      });
-      return { conversationId: conversation.id, reply: fallback, actions: [] };
-    }
+    const requestBody = {
+      tenantId,
+      message,
+      conversationHistory,
+      businessSettings: {
+        businessName: businessSettings?.businessName || '',
+        industry: businessSettings?.industry || '',
+        toneExamples: businessSettings?.toneExamples || [],
+        goals: businessSettings?.goals || [],
+        compliance: businessSettings?.compliance || [],
+      },
+      khojContext,
+      memoryContext,
+    };
 
+    return { agentServiceUrl, agentInboundKey, conversation, requestBody };
+  }
+
+  private async persistFallback(conversation: { id: string }) {
+    const fallback = `I'm having trouble connecting to the AI service right now. Please try again in a moment.`;
+    await this.prisma.copilotMessage.create({
+      data: { conversationId: conversation.id, role: 'assistant', content: fallback },
+    });
+    return { conversationId: conversation.id, reply: fallback, actions: [] };
+  }
+
+  /** Shared postamble for chat()/chatStream(): sanitize the reply, open an approval request
+   * for any high-impact ("pending") action, and persist the assistant's message. Identical
+   * for both callers regardless of whether pythonResult arrived in one shot or was streamed
+   * and accumulated. */
+  private async finalizeChat(
+    conversation: { id: string },
+    tenantId: string,
+    userId: string,
+    pythonResult: { response?: string; actions?: any[] },
+    outcomeCtx?: { outcomeId: string; stepId: string },
+  ) {
     const reply = this.sanitizeReply(pythonResult.response || 'Done.');
 
     const actions: any[] = [];
@@ -255,6 +255,106 @@ export class CopilotService {
     });
 
     return { conversationId: conversation.id, reply, actions };
+  }
+
+  async chat(
+    userId: string,
+    userRole: string,
+    tenantId: string,
+    message: string,
+    conversationId?: string,
+    outcomeCtx?: { outcomeId: string; stepId: string },
+  ) {
+    const { agentServiceUrl, agentInboundKey, conversation, requestBody } =
+      await this.prepareChat(userId, tenantId, message, conversationId);
+
+    let pythonResult: any;
+    try {
+      const res = await fetchWithTimeout(`${agentServiceUrl}/agent/copilot/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-agent-key': agentInboundKey,
+        },
+        body: JSON.stringify(requestBody),
+      });
+      pythonResult = await res.json();
+      if (!res.ok) throw new Error(pythonResult?.detail || `HTTP ${res.status}`);
+    } catch (err: any) {
+      this.logger.error('Python copilot call failed', err.message);
+      return this.persistFallback(conversation);
+    }
+
+    return this.finalizeChat(conversation, tenantId, userId, pythonResult, outcomeCtx);
+  }
+
+  /** Same as chat(), but relays agent-service's token stream through onToken as it arrives
+   * (for incremental speech — see agent-service's /agent/copilot/chat/stream and
+   * operator_voice_node's streaming branch) instead of waiting for the whole reply. The
+   * final persisted message and return shape are identical to chat() either way: onToken
+   * failing partway through (e.g. the caller's HTTP response already closed) doesn't stop
+   * accumulation or persistence — a client disconnecting mid-reply must not mean the
+   * conversation history silently loses that turn. */
+  async chatStream(
+    userId: string,
+    userRole: string,
+    tenantId: string,
+    message: string,
+    conversationId: string | undefined,
+    onToken: (text: string) => void,
+  ) {
+    const { agentServiceUrl, agentInboundKey, conversation, requestBody } =
+      await this.prepareChat(userId, tenantId, message, conversationId);
+
+    let pythonResult: { response?: string; actions?: any[] };
+    try {
+      const res = await fetchWithTimeout(`${agentServiceUrl}/agent/copilot/chat/stream`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-agent-key': agentInboundKey,
+        },
+        body: JSON.stringify(requestBody),
+      });
+      if (!res.ok || !res.body) throw new Error(`HTTP ${res.status}`);
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffered = '';
+      let finalResponse = '';
+      let finalActions: any[] = [];
+      let sawDone = false;
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffered += decoder.decode(value, { stream: true });
+        const frames = buffered.split('\n\n');
+        buffered = frames.pop() || '';
+        for (const frame of frames) {
+          const line = frame.split('\n').find(l => l.startsWith('data: '));
+          if (!line) continue;
+          let msg: any;
+          try { msg = JSON.parse(line.slice(6)); } catch { continue; }
+          if (msg.type === 'token' && msg.text) {
+            try { onToken(msg.text); } catch {}
+          } else if (msg.type === 'done') {
+            finalResponse = msg.response || '';
+            finalActions = msg.actions || [];
+            sawDone = true;
+          } else if (msg.type === 'error') {
+            throw new Error(msg.message || 'Streaming failed');
+          }
+        }
+      }
+      if (!sawDone) throw new Error('Stream ended without a completion frame');
+      pythonResult = { response: finalResponse, actions: finalActions };
+    } catch (err: any) {
+      this.logger.error('Python copilot stream call failed', err.message);
+      return this.persistFallback(conversation);
+    }
+
+    return this.finalizeChat(conversation, tenantId, userId, pythonResult, undefined);
   }
 
   /** Checkpoint recovery: a step left 'in_progress' means runOutcome's in-memory

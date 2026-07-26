@@ -227,9 +227,26 @@ def build_supervisor(
         actions_taken = state.get("actions_taken", [])
         steps = 0
 
+        # Set only by the streaming /agent/copilot/chat/stream endpoint (passed through
+        # config rather than state, since it's a runtime callback, not serializable graph
+        # data). Every other caller of this node — WhatsApp/lead-agent turns, and the
+        # non-streaming /agent/copilot/chat — is unaffected and keeps the plain ainvoke path.
+        stream_callback = (config.get("configurable") or {}).get("stream_callback")
+
         while steps < settings.max_agent_steps:
             steps += 1
-            response = await model_with_tools.ainvoke(messages)
+            if stream_callback:
+                # AIMessageChunk supports __add__, which LangChain uses to accumulate
+                # streamed deltas (including fragmented tool-call-argument JSON) into the
+                # same complete message ainvoke() would have returned in one shot — the
+                # rest of this loop treats `response` identically either way.
+                response = None
+                async for chunk in model_with_tools.astream(messages):
+                    response = chunk if response is None else response + chunk
+                    if chunk.content:
+                        stream_callback(chunk.content)
+            else:
+                response = await model_with_tools.ainvoke(messages)
             messages.append(response)
 
             if hasattr(response, "tool_calls") and response.tool_calls:
@@ -393,7 +410,7 @@ def build_supervisor(
                     if isinstance(m, ToolMessage) and getattr(m, "tool_call_id", None) == act.get("id"):
                         status = "success" if not str(m.content).startswith("error:") else "error"
                         break
-            if act.get("tool") == "send_message" and status == "success":
+            if act.get("tool") in ("send_message", "send_options", "send_listing_link", "send_listing_collection") and status == "success":
                 has_send = True
             resolved.append({**act, "status": status})
 

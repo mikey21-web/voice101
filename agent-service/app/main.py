@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import sys
 import uuid as _uuid
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, BackgroundTasks, HTTPException, Header
+from fastapi.responses import StreamingResponse
 
 from app.logging_config import setup_logging, new_run_id
 from app.config import Settings
@@ -150,15 +152,18 @@ async def agent_chat(req: AgentRunRequest, x_agent_key: str = Header(None)):
         return await _agent_test_response_fallback(req.messageText or "")
 
 
-@app.post("/agent/copilot/chat")
-async def agent_copilot_chat(body: dict, x_agent_key: str = Header(None)):
-    """Unified copilot chat — routes staff dashboard queries through the supervisor graph."""
-    if settings.agent_inbound_key and x_agent_key != settings.agent_inbound_key:
-        raise HTTPException(status_code=401, detail="Invalid agent key")
-
+async def _build_copilot_run(body: dict):
+    """Shared setup for /agent/copilot/chat and its streaming twin: builds the LangChain
+    message history, a BackendClient/MemoryClient pair, the compiled supervisor graph, and
+    the initial graph state. Callers own closing client/memory and building the per-call
+    `config` dict (the streaming endpoint needs to add a stream_callback the non-streaming
+    one doesn't)."""
     from app.supervisor_graph import build_supervisor
     from app.backend_client import BackendClient
     from app.memory_client import MemoryClient
+    from app.schemas import SharedMikeyState
+    from app.logging_config import utc_now_iso
+    from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
 
     tenant_id = body.get("tenantId", "default")
     message = body.get("message", "")
@@ -167,8 +172,6 @@ async def agent_copilot_chat(body: dict, x_agent_key: str = Header(None)):
     khoj_context = body.get("khojContext", "")
     memory_context = body.get("memoryContext", "")
     benchmark_context = body.get("benchmarkContext", "")
-
-    from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
 
     messages_lc = []
     for msg in conversation_history:
@@ -188,38 +191,65 @@ async def agent_copilot_chat(body: dict, x_agent_key: str = Header(None)):
     # the one channel where memory never fired, even though the same rules
     # already flow into lead_voice conversations via runner.py.
     memory = MemoryClient(settings, tenant_id)
+    graph = build_supervisor(settings=settings, client=client, tenant_id=tenant_id, memory=memory)
+
+    initial_state: SharedMikeyState = {
+        "tenant_id": tenant_id,
+        "lead_id": f"copilot-{tenant_id}",
+        "trigger": "copilot_chat",
+        "channel": "DASHBOARD",
+        "messages": messages_lc,
+        "incoming_text": message,
+        "copilot_context": {
+            "business_name": business_settings.get("businessName", ""),
+            "industry": business_settings.get("industry", ""),
+            "tone_examples": business_settings.get("toneExamples", []),
+            "goals": business_settings.get("goals", []),
+            "compliance": business_settings.get("compliance", []),
+            "khoj_context": khoj_context,
+            "memory_context": memory_context,
+            "benchmark_context": benchmark_context,
+        },
+        "run_id": str(_uuid.uuid4()),
+        "started_at": utc_now_iso(),
+    }
+
+    return client, memory, graph, initial_state, tenant_id
+
+
+def _extract_response_and_actions(final_state: dict) -> tuple[str, list[dict]]:
+    response_text = ""
+    for m in reversed(final_state.get("messages", [])):
+        if hasattr(m, "type") and m.type == "ai" and m.content and not (hasattr(m, "tool_calls") and m.tool_calls):
+            response_text = m.content
+            break
+
+    if not response_text:
+        response_text = "Done."
+
+    actions = []
+    for a in final_state.get("actions_taken", []):
+        tool_name = a.get("tool", "")
+        if not tool_name:
+            continue
+        status = "pending" if a.get("status") == "pending_confirmation" else a.get("status", "success")
+        actions.append({
+            "tool": tool_name,
+            "args": a.get("args", {}),
+            "status": status,
+            "result": a.get("result", ""),
+        })
+    return response_text, actions
+
+
+@app.post("/agent/copilot/chat")
+async def agent_copilot_chat(body: dict, x_agent_key: str = Header(None)):
+    """Unified copilot chat — routes staff dashboard queries through the supervisor graph."""
+    if settings.agent_inbound_key and x_agent_key != settings.agent_inbound_key:
+        raise HTTPException(status_code=401, detail="Invalid agent key")
+
+    client, memory, graph, initial_state, tenant_id = await _build_copilot_run(body)
     try:
-        graph = build_supervisor(
-            settings=settings,
-            client=client,
-            tenant_id=tenant_id,
-            memory=memory,
-        )
-
-        from app.schemas import SharedMikeyState
-        from app.logging_config import utc_now_iso
-
-        initial_state: SharedMikeyState = {
-            "tenant_id": tenant_id,
-            "lead_id": f"copilot-{tenant_id}",
-            "trigger": "copilot_chat",
-            "channel": "DASHBOARD",
-            "messages": messages_lc,
-            "incoming_text": message,
-            "copilot_context": {
-                "business_name": business_settings.get("businessName", ""),
-                "industry": business_settings.get("industry", ""),
-                "tone_examples": business_settings.get("toneExamples", []),
-                "goals": business_settings.get("goals", []),
-                "compliance": business_settings.get("compliance", []),
-                "khoj_context": khoj_context,
-                "memory_context": memory_context,
-                "benchmark_context": benchmark_context,
-            },
-            "run_id": str(_uuid.uuid4()),
-            "started_at": utc_now_iso(),
-        }
-
         config = {
             "configurable": {
                 "settings": settings,
@@ -227,39 +257,73 @@ async def agent_copilot_chat(body: dict, x_agent_key: str = Header(None)):
                 "thread_id": f"copilot-{tenant_id}",
             },
         }
-
         final_state = await graph.ainvoke(initial_state, config)
-
-        response_text = ""
-        for m in reversed(final_state.get("messages", [])):
-            if hasattr(m, "type") and m.type == "ai" and m.content and not (hasattr(m, "tool_calls") and m.tool_calls):
-                response_text = m.content
-                break
-
-        if not response_text:
-            response_text = "Done."
-
-        actions = []
-        for a in final_state.get("actions_taken", []):
-            tool_name = a.get("tool", "")
-            if not tool_name:
-                continue
-            status = "pending" if a.get("status") == "pending_confirmation" else a.get("status", "success")
-            actions.append({
-                "tool": tool_name,
-                "args": a.get("args", {}),
-                "status": status,
-                "result": a.get("result", ""),
-            })
-
+        response_text, actions = _extract_response_and_actions(final_state)
         return {"response": response_text, "actions": actions}
 
-    except Exception as e:
+    except Exception:
         logger.exception("copilot_chat_failed")
         return {"response": "I'm having trouble connecting to the AI service. Please try again.", "actions": []}
     finally:
         await client.close()
         await memory.close()
+
+
+@app.post("/agent/copilot/chat/stream")
+async def agent_copilot_chat_stream(body: dict, x_agent_key: str = Header(None)):
+    """Same as /agent/copilot/chat, but relays text deltas as Server-Sent Events while the
+    graph runs (see operator_voice_node's streaming branch in supervisor_graph.py), instead
+    of waiting for the whole reply. Final frame carries the same {response, actions} shape
+    the non-streaming endpoint returns in one shot."""
+    if settings.agent_inbound_key and x_agent_key != settings.agent_inbound_key:
+        raise HTTPException(status_code=401, detail="Invalid agent key")
+
+    client, memory, graph, initial_state, tenant_id = await _build_copilot_run(body)
+
+    async def event_stream():
+        # A queue bridges the graph's plain async/await execution (graph.ainvoke runs to
+        # completion, it doesn't yield mid-run) to this generator: the streamed token
+        # callback and the final result both just push onto the same queue, this generator
+        # only has to drain it in order.
+        queue: asyncio.Queue = asyncio.Queue()
+        DONE = object()
+
+        def on_token(text: str):
+            queue.put_nowait({"type": "token", "text": text})
+
+        config = {
+            "configurable": {
+                "settings": settings,
+                "client": client,
+                "thread_id": f"copilot-{tenant_id}",
+                "stream_callback": on_token,
+            },
+        }
+
+        async def run_graph():
+            try:
+                final_state = await graph.ainvoke(initial_state, config)
+                response_text, actions = _extract_response_and_actions(final_state)
+                queue.put_nowait({"type": "done", "response": response_text, "actions": actions})
+            except Exception:
+                logger.exception("copilot_chat_stream_failed")
+                queue.put_nowait({"type": "error", "message": "I'm having trouble connecting to the AI service. Please try again."})
+            finally:
+                queue.put_nowait(DONE)
+
+        task = asyncio.create_task(run_graph())
+        try:
+            while True:
+                item = await queue.get()
+                if item is DONE:
+                    break
+                yield f"data: {json.dumps(item)}\n\n"
+        finally:
+            await task
+            await client.close()
+            await memory.close()
+
+    return StreamingResponse(event_stream(), media_type="text/event-stream")
 
 
 @app.post("/agent/test")

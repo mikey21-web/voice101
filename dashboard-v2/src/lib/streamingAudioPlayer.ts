@@ -10,8 +10,17 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 // streaming makes possible if each caller owned its own queue.
 let audioCtx: AudioContext | null = null;
 let nextStartTime = 0;
-let activeAbort: AbortController | null = null;
 let activeSources: AudioBufferSourceNode[] = [];
+
+// A streamed reply arrives as multiple sentence-sized segments (see the
+// frontend's sentence segmenter), each fetched and spoken in turn — segment 2
+// must continue after segment 1, not interrupt it, so segments run through a
+// serial queue rather than each cancelling whatever came before. `generation`
+// only bumps on an actual reset (a genuinely new reply, or an explicit stop),
+// so an in-flight segment fetch that's been superseded can tell and skip
+// scheduling audio nobody should hear anymore.
+let generation = 0;
+let segmentQueue: Promise<void> = Promise.resolve();
 
 function getCtx(): AudioContext {
   if (!audioCtx) audioCtx = new ((window as any).AudioContext || (window as any).webkitAudioContext)();
@@ -19,11 +28,14 @@ function getCtx(): AudioContext {
   return audioCtx;
 }
 
-function stopActive() {
-  activeAbort?.abort();
-  activeAbort = null;
+/** Stops whatever's currently playing/queued and starts a fresh generation —
+ * call this once at the start of a new reply, before queuing its segments. */
+export function resetSpeech(): void {
+  generation++;
   for (const src of activeSources) { try { src.stop(); } catch {} }
   activeSources = [];
+  segmentQueue = Promise.resolve();
+  nextStartTime = getCtx().currentTime;
 }
 
 export function base64ToBytes(b64: string): Uint8Array {
@@ -59,7 +71,8 @@ export function parseSSEFrames(buffered: string): { messages: any[]; remainder: 
   return { messages, remainder };
 }
 
-function scheduleChunk(ctx: AudioContext, bytes: Uint8Array) {
+function scheduleChunk(ctx: AudioContext, bytes: Uint8Array, myGeneration: number) {
+  if (myGeneration !== generation) return; // superseded — don't speak over the new reply
   const float32 = pcm16BytesToFloat32(bytes);
   const buffer = ctx.createBuffer(1, float32.length, 44100);
   buffer.copyToChannel(float32, 0);
@@ -76,18 +89,9 @@ function scheduleChunk(ctx: AudioContext, bytes: Uint8Array) {
   src.onended = () => { activeSources = activeSources.filter(s => s !== src); };
 }
 
-/** Streams a Mikey reply from Cartesia and plays it as chunks arrive, instead
- * of waiting for the whole clip. Interrupts any speech already playing.
- * Silently no-ops on any failure — voice is a nice-to-have, never something
- * a caller should have to handle an error for. */
-export async function speakStreamed(text: string): Promise<void> {
-  if (!text?.trim()) return;
-  stopActive();
+async function fetchAndScheduleSegment(text: string, myGeneration: number): Promise<void> {
+  if (!text?.trim() || myGeneration !== generation) return;
   const ctx = getCtx();
-  nextStartTime = ctx.currentTime;
-
-  const controller = new AbortController();
-  activeAbort = controller;
 
   let res: Response;
   try {
@@ -96,18 +100,18 @@ export async function speakStreamed(text: string): Promise<void> {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...(t ? { Authorization: `Bearer ${t}` } : {}) },
       body: JSON.stringify({ text }),
-      signal: controller.signal,
     });
   } catch {
     return;
   }
-  if (!res.ok || !res.body) return;
+  if (!res.ok || !res.body || myGeneration !== generation) return;
 
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
   let buffered = '';
   try {
     while (true) {
+      if (myGeneration !== generation) { try { await reader.cancel(); } catch {} return; }
       const { value, done } = await reader.read();
       if (done) break;
       buffered += decoder.decode(value, { stream: true });
@@ -115,17 +119,33 @@ export async function speakStreamed(text: string): Promise<void> {
       buffered = remainder;
       for (const msg of messages) {
         if (msg.error || msg.final || !msg.audioBase64) continue;
-        scheduleChunk(ctx, base64ToBytes(msg.audioBase64));
+        scheduleChunk(ctx, base64ToBytes(msg.audioBase64), myGeneration);
       }
     }
   } catch {
-    // Aborted (interrupted by a newer reply) or a mid-stream network hiccup —
-    // whatever already got scheduled keeps playing either way.
-  } finally {
-    if (activeAbort === controller) activeAbort = null;
+    // Network hiccup mid-stream — whatever already got scheduled keeps playing.
   }
 }
 
+/** Queues one segment of Mikey's reply to speak after whatever's already
+ * queued in the current generation, instead of interrupting it — call
+ * resetSpeech() first for a new reply, then this once per sentence/segment
+ * as they become available. Silently no-ops on any failure — voice is a
+ * nice-to-have, never something a caller should have to handle an error for. */
+export function queueSpeechSegment(text: string): void {
+  if (!text?.trim()) return;
+  const myGeneration = generation;
+  segmentQueue = segmentQueue.then(() => fetchAndScheduleSegment(text, myGeneration)).catch(() => {});
+}
+
+/** Speaks a single complete reply, streamed. Equivalent to resetSpeech() (interrupting
+ * anything already playing) followed by one queueSpeechSegment() call — for callers
+ * with the whole reply text up front rather than incremental segments. */
+export function speakStreamed(text: string): void {
+  resetSpeech();
+  queueSpeechSegment(text);
+}
+
 export function stopSpeaking(): void {
-  stopActive();
+  resetSpeech();
 }

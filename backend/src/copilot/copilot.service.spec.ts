@@ -33,6 +33,30 @@ function pythonResponse(response: string, actions: any[] = []) {
   } as Response;
 }
 
+// chatStream() reads agent-service's reply as SSE frames instead of one JSON blob —
+// this fakes the ReadableStream reader with each string already in wire format
+// ("data: {...}\n\n"), split however the caller wants to simulate chunking arriving
+// mid-frame across multiple reads.
+function pythonStreamResponse(frames: string[]) {
+  const encoder = new TextEncoder();
+  let i = 0;
+  return {
+    ok: true,
+    body: {
+      getReader: () => ({
+        read: async () => {
+          if (i < frames.length) return { value: encoder.encode(frames[i++]), done: false };
+          return { value: undefined, done: true };
+        },
+      }),
+    },
+  } as any as Response;
+}
+
+function sseFrame(msg: any): string {
+  return `data: ${JSON.stringify(msg)}\n\n`;
+}
+
 describe('CopilotService', () => {
   let service: CopilotService;
   let prisma: any;
@@ -269,6 +293,60 @@ describe('CopilotService', () => {
         expect.objectContaining({ leadId: 'lead-1', channel: 'WHATSAPP', text: 'hi', direction: 'OUTBOUND' }),
         'user-1',
       );
+    });
+  });
+
+  describe('chatStream (Phase 2: streamed replies)', () => {
+    it('relays token frames via onToken and resolves with the same shape chat() returns in one shot', async () => {
+      fetchMock.mockResolvedValueOnce(pythonStreamResponse([
+        sseFrame({ type: 'token', text: 'Found ' }),
+        sseFrame({ type: 'token', text: '3 leads.' }),
+        sseFrame({ type: 'done', response: 'Found 3 leads.', actions: [] }),
+      ]));
+
+      const tokens: string[] = [];
+      const result = await service.chatStream('user-1', 'SALES_AGENT', 'default-tenant', 'how many leads', undefined, (t) => tokens.push(t));
+
+      expect(tokens).toEqual(['Found ', '3 leads.']);
+      expect(result.reply).toBe('Found 3 leads.');
+      expect(result.actions).toEqual([]);
+      expect(result.conversationId).toBe(mockConversation.id);
+    });
+
+    it('still opens an approval request for a pending high-impact action from the done frame', async () => {
+      fetchMock.mockResolvedValueOnce(pythonStreamResponse([
+        sseFrame({ type: 'token', text: 'Sending now.' }),
+        sseFrame({
+          type: 'done',
+          response: 'Sending now.',
+          actions: [{ tool: 'send_message', args: { leadId: 'lead-1', channel: 'WHATSAPP', text: 'hi' }, status: 'pending' }],
+        }),
+      ]));
+
+      const result = await service.chatStream('user-1', 'SALES_AGENT', 'default-tenant', 'message lead-1', undefined, () => {});
+
+      expect(result.actions[0].status).toBe('pending');
+      expect(result.actions[0].requiresConfirmation).toBe(true);
+      expect(result.actions[0].pendingActionId).toMatch(/^pa_/);
+    });
+
+    it('falls back to the friendly error message on a stream error frame', async () => {
+      fetchMock.mockResolvedValueOnce(pythonStreamResponse([
+        sseFrame({ type: 'error', message: 'DeepSeek timed out' }),
+      ]));
+
+      const result = await service.chatStream('user-1', 'SALES_AGENT', 'default-tenant', 'hello', undefined, () => {});
+      expect(result.reply).toContain('trouble connecting');
+    });
+
+    it('a broken onToken callback does not abort accumulation or persistence', async () => {
+      fetchMock.mockResolvedValueOnce(pythonStreamResponse([
+        sseFrame({ type: 'token', text: 'Hi' }),
+        sseFrame({ type: 'done', response: 'Hi there.', actions: [] }),
+      ]));
+
+      const result = await service.chatStream('user-1', 'SALES_AGENT', 'default-tenant', 'hi', undefined, () => { throw new Error('client gone'); });
+      expect(result.reply).toBe('Hi there.');
     });
   });
 

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
-import { api } from "../lib/api";
-import { speakStreamed } from "../lib/streamingAudioPlayer";
+import { resetSpeech, queueSpeechSegment } from "../lib/streamingAudioPlayer";
+import { chatStream } from "../lib/streamingChat";
 import { runUIActions, confirmPendingAction, type CopilotAction } from "../lib/copilotActions";
 import MarkdownMessage from "./MarkdownMessage";
 import toast from "react-hot-toast";
@@ -23,15 +23,6 @@ export default function MikeyWidget() {
     if (bottomRef.current) bottomRef.current.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Shares the "mikeyVoiceOn" preference used everywhere else Mikey talks
-  // (voice commands, the daily briefing) — this widget replied in text only
-  // and never spoke a word, regardless of that setting or Cartesia config.
-  // Streams via speakStreamed() instead of waiting for the whole clip.
-  const speakReply = (text: string) => {
-    if (localStorage.getItem('mikeyVoiceOn') === 'false' || !text?.trim()) return;
-    speakStreamed(text);
-  };
-
   const send = async () => {
     if (!input.trim() || sending) return;
     const text = input;
@@ -39,17 +30,30 @@ export default function MikeyWidget() {
     setSending(true);
     setMessages(prev => [...prev, { id: `u-${Date.now()}`, role: "user", content: text, createdAt: new Date().toISOString() }]);
 
+    // Placeholder bubble filled in as text streams — replaces the old
+    // "Mikey is thinking..." indicator, which had nothing to update
+    // incrementally back when replies only arrived as one finished blob.
+    const assistantId = `m-${Date.now()}`;
+    setMessages(prev => [...prev, { id: assistantId, role: "assistant", content: "", createdAt: new Date().toISOString() }]);
+
+    // Shares the "mikeyVoiceOn" preference used everywhere else Mikey talks
+    // (voice commands, the daily briefing) — this widget replied in text only
+    // and never spoke a word, regardless of that setting or Cartesia config.
+    const voiceOn = localStorage.getItem('mikeyVoiceOn') !== 'false';
+    if (voiceOn) resetSpeech();
+
     try {
-      const res = await api("/copilot/chat", {
-        method: "POST",
-        body: JSON.stringify({ message: text, conversationId: convId }),
+      const res = await chatStream(text, convId ?? undefined, {
+        onTextUpdate: (fullText) => {
+          setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, content: fullText } : m));
+        },
+        onSegment: (segment) => { if (voiceOn) queueSpeechSegment(segment); },
       });
       if (res.conversationId && res.conversationId !== convId) setConvId(res.conversationId);
-      setMessages(prev => [...prev, { id: `m-${Date.now()}`, role: "assistant", content: res.reply, createdAt: new Date().toISOString(), toolCalls: res.actions || [] }]);
+      setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, content: res.reply, toolCalls: res.actions || [] } : m));
       runUIActions(res.actions, res.reply);
-      speakReply(res.reply);
     } catch (e: any) {
-      setMessages(prev => [...prev, { id: `e-${Date.now()}`, role: "assistant", content: `Error: ${e.message}`, createdAt: new Date().toISOString() }]);
+      setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, content: `Error: ${e.message}` } : m));
     }
     setSending(false);
   };
@@ -106,17 +110,18 @@ export default function MikeyWidget() {
                       </button>
                     </div>
                   ))}
-                  {m.role === "user" ? m.content : <MarkdownMessage content={m.content} />}
+                  {m.role === "user" ? (
+                    m.content
+                  ) : m.content ? (
+                    <MarkdownMessage content={m.content} />
+                  ) : (
+                    <span className="flex items-center gap-2 text-[var(--muted-foreground)]">
+                      <Loader2 size={13} className="animate-spin" /> Mikey is thinking...
+                    </span>
+                  )}
                 </div>
               </div>
             ))}
-            {sending && (
-              <div className="flex justify-start">
-                <div className="bg-[var(--muted)] rounded-xl rounded-bl-md px-3.5 py-2.5 text-sm text-[var(--muted-foreground)] flex items-center gap-2">
-                  <Loader2 size={13} className="animate-spin" /> Mikey is thinking...
-                </div>
-              </div>
-            )}
             <div ref={bottomRef} />
           </div>
 

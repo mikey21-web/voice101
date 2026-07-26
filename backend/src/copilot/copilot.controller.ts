@@ -54,6 +54,33 @@ export class CopilotController {
     return this.service.chat(req.user.sub, req.user.role, req.user.tenantId || 'default-tenant', dto.message, dto.conversationId);
   }
 
+  /** Same as chat(), but relays the reply as it's generated (SSE) instead of waiting for
+   * the whole thing — so the frontend can start speaking the first sentence before later
+   * ones exist. Final frame carries the same {conversationId, reply, actions} shape chat()
+   * returns in one shot, so callers that only care about the end result can ignore the
+   * token frames entirely. */
+  @Post('chat-stream')
+  @Roles('OWNER', 'ADMIN', 'MANAGER', 'SALES_AGENT', 'SUPPORT_AGENT', 'VIEWER')
+  @ApiOperation({ summary: 'Send a chat message to the CRM copilot, streamed as it generates' })
+  async chatStream(@Body() dto: ChatDto, @Req() req, @Res() res: Response) {
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.flushHeaders();
+
+    try {
+      const result = await this.service.chatStream(
+        req.user.sub, req.user.role, req.user.tenantId || 'default-tenant', dto.message, dto.conversationId,
+        (text) => { try { res.write(`data: ${JSON.stringify({ type: 'token', text })}\n\n`); } catch {} },
+      );
+      res.write(`data: ${JSON.stringify({ type: 'done', ...result })}\n\n`);
+    } catch (err: any) {
+      res.write(`data: ${JSON.stringify({ type: 'error', message: err.message || 'Chat failed' })}\n\n`);
+    } finally {
+      res.end();
+    }
+  }
+
   @Post('confirm-action')
   @Roles('OWNER', 'ADMIN', 'MANAGER', 'SALES_AGENT', 'SUPPORT_AGENT')
   @ApiOperation({ summary: 'Confirm a pending high-impact action' })
