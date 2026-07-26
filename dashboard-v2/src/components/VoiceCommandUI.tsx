@@ -4,6 +4,7 @@ import { setPendingFilter } from '../lib/pendingSearch';
 import { api, apiUpload } from '../lib/api';
 import { useVoiceInput } from '../lib/useVoiceInput';
 import { PAGE_MAP, PAGE_ALIASES, fuzzyPageMatch, resolvePage, canonical } from '../lib/pageMap';
+import { speakStreamed } from '../lib/streamingAudioPlayer';
 
 // MediaRecorder only produces WebM/Opus (or MP4 on Safari), but the self-hosted
 // Moonshine transcriber decodes with libsndfile, which cannot read either
@@ -121,23 +122,15 @@ export default function VoiceCommandUI() {
 
   const [wakeWordOn, setWakeWordOn] = useState(() => localStorage.getItem('mikeyWakeWordOn') === 'true');
   const wakeWord = useVoiceInput();
-  const speakAudioRef = useRef<HTMLAudioElement | null>(null);
 
   // Reuses the same voice-on preference the Mikey chat page uses, so turning
-  // voice on/off in one place applies everywhere Mikey talks.
-  // Voice is on unless explicitly turned off — a voice command that answers
-  // silently reads as "nothing happened".
+  // voice on/off in one place applies everywhere Mikey talks. Voice is on
+  // unless explicitly turned off — a voice command that answers silently
+  // reads as "nothing happened". Streams via speakStreamed() instead of
+  // waiting for the whole clip — see lib/streamingAudioPlayer.ts.
   const speakReply = useCallback((text: string) => {
     if (localStorage.getItem('mikeyVoiceOn') === 'false' || !text?.trim()) return;
-    api('/copilot/speak', { method: 'POST', body: JSON.stringify({ text }) })
-      .then((res: any) => {
-        if (!res?.audioBase64) return;
-        speakAudioRef.current?.pause();
-        const audio = new Audio(`data:${res.mimeType};base64,${res.audioBase64}`);
-        speakAudioRef.current = audio;
-        audio.play().catch(() => {});
-      })
-      .catch(() => {});
+    speakStreamed(text);
   }, []);
 
   useEffect(() => {
@@ -165,7 +158,7 @@ export default function VoiceCommandUI() {
   const handleTranscript = useCallback((text: string) => {
     setMode('copilot');
 
-    const transcriptLine = `🗣️ You said: "${text}"`;
+    const transcriptLine = `You said: "${text}"`;
 
     const cmd = matchCommand(text);
     if (cmd) {

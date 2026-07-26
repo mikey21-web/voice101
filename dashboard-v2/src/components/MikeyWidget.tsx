@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { api } from "../lib/api";
+import { speakStreamed } from "../lib/streamingAudioPlayer";
 import { runUIActions, confirmPendingAction, type CopilotAction } from "../lib/copilotActions";
 import MarkdownMessage from "./MarkdownMessage";
 import toast from "react-hot-toast";
@@ -17,7 +18,6 @@ export default function MikeyWidget() {
   const [convId, setConvId] = useState<string | null>(null);
   const [hasOpened, setHasOpened] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
-  const speakAudioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     if (bottomRef.current) bottomRef.current.scrollIntoView({ behavior: "smooth" });
@@ -26,17 +26,10 @@ export default function MikeyWidget() {
   // Shares the "mikeyVoiceOn" preference used everywhere else Mikey talks
   // (voice commands, the daily briefing) — this widget replied in text only
   // and never spoke a word, regardless of that setting or Cartesia config.
+  // Streams via speakStreamed() instead of waiting for the whole clip.
   const speakReply = (text: string) => {
     if (localStorage.getItem('mikeyVoiceOn') === 'false' || !text?.trim()) return;
-    api('/copilot/speak', { method: 'POST', body: JSON.stringify({ text }) })
-      .then((res: any) => {
-        if (!res?.audioBase64) return;
-        speakAudioRef.current?.pause();
-        const audio = new Audio(`data:${res.mimeType};base64,${res.audioBase64}`);
-        speakAudioRef.current = audio;
-        audio.play().catch(() => {});
-      })
-      .catch(() => {});
+    speakStreamed(text);
   };
 
   const send = async () => {

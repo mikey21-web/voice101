@@ -19,6 +19,8 @@ import { OutcomeEngineService } from '../mikey/outcome-engine.service';
 import { MemoryService } from '../mikey/memory.service';
 import { ApprovalsService } from '../approvals/approvals.service';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { randomUUID } from 'crypto';
+import WebSocket from 'ws';
 
 const MAX_COPILOT_MESSAGES_PER_TENANT_PER_DAY = 500;
 // A step stuck 'in_progress' this long means the process died mid-runOutcome
@@ -305,6 +307,61 @@ export class CopilotService {
     if (!res.ok) throw new BadRequestException(`Cartesia TTS ${res.status}: ${await res.text()}`);
     const buf = Buffer.from(await res.arrayBuffer());
     return { audioBase64: buf.toString('base64'), mimeType: 'audio/mpeg' };
+  }
+
+  /** Same voice/text as speak(), but delivers audio as raw PCM16 chunks over Cartesia's
+   * streaming websocket instead of waiting for the whole mp3 — cuts the "silence while
+   * the full clip finishes generating" tail latency for long replies. Raw PCM (not mp3)
+   * because chunk boundaries from a websocket don't align to mp3 frame boundaries, but
+   * do line up cleanly for the frontend's Web Audio buffer queue with no decode step. */
+  async speakStream(text: string, onChunk: (buf: Buffer) => void): Promise<void> {
+    const apiKey = this.config.get<string>('CARTESIA_API_KEY');
+    if (!apiKey) throw new BadRequestException('CARTESIA_API_KEY not configured');
+    const clean = (text || '').replace(/[#*`]/g, '').slice(0, 1000);
+    if (!clean.trim()) return;
+
+    const contextId = randomUUID();
+    const url = `wss://api.cartesia.ai/tts/websocket?api_key=${encodeURIComponent(apiKey)}&cartesia_version=2026-03-01`;
+
+    await new Promise<void>((resolve, reject) => {
+      const socket = new WebSocket(url);
+      let settled = false;
+      const finish = (err?: Error) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timeout);
+        try { socket.close(); } catch {}
+        if (err) reject(err); else resolve();
+      };
+      const timeout = setTimeout(() => finish(new Error('Cartesia stream timeout')), HTTP_TIMEOUT_MS);
+
+      socket.on('open', () => {
+        socket.send(JSON.stringify({
+          model_id: 'sonic-3',
+          transcript: clean,
+          voice: { mode: 'id', id: this.config.get<string>('COPILOT_VOICE_ID') || 'db6b0ed5-d5d3-463d-ae85-518a07d3c2b4' },
+          language: 'en',
+          context_id: contextId,
+          output_format: { container: 'raw', encoding: 'pcm_s16le', sample_rate: 44100 },
+          continue: false,
+        }));
+      });
+
+      socket.on('message', (data: any) => {
+        let msg: any;
+        try { msg = JSON.parse(data.toString()); } catch { return; }
+        if (msg.type === 'chunk' && msg.data) {
+          onChunk(Buffer.from(msg.data, 'base64'));
+        } else if (msg.type === 'done') {
+          finish();
+        } else if (msg.type === 'error') {
+          finish(new Error(msg.error || 'Cartesia streaming error'));
+        }
+      });
+
+      socket.on('error', (err: Error) => finish(err));
+      socket.on('close', () => finish());
+    });
   }
 
   async confirmAction(userId: string, userRole: string, pendingActionId: string) {

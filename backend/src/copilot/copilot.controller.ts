@@ -1,5 +1,6 @@
-import { Controller, Post, Get, Body, Param, UseGuards, Req, UseInterceptors, UploadedFile, BadRequestException } from '@nestjs/common';
+import { Controller, Post, Get, Body, Param, UseGuards, Req, Res, UseInterceptors, UploadedFile, BadRequestException } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import type { Response } from 'express';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiConsumes } from '@nestjs/swagger';
 import * as fs from 'fs';
 import * as os from 'os';
@@ -67,6 +68,33 @@ export class CopilotController {
   @ApiOperation({ summary: 'Synthesize speech for a Mikey reply' })
   speak(@Body() dto: { text: string }) {
     return this.service.speak(dto.text);
+  }
+
+  /** Same as speak(), but delivers audio progressively over Server-Sent Events as raw
+   * PCM16 chunks instead of waiting for the whole clip to finish generating — see
+   * CopilotService.speakStream() for why raw PCM instead of mp3. Frontend reads this
+   * with fetch()+ReadableStream (not native EventSource, which can't send the
+   * Authorization header the rest of the app already relies on). */
+  @Post('speak-stream')
+  @Roles('OWNER', 'ADMIN', 'MANAGER', 'SALES_AGENT', 'SUPPORT_AGENT', 'VIEWER')
+  @ApiOperation({ summary: 'Synthesize speech for a Mikey reply, streamed as it generates' })
+  async speakStream(@Body() dto: { text: string }, @Res() res: Response) {
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.flushHeaders();
+
+    let seq = 0;
+    try {
+      await this.service.speakStream(dto.text, (chunk) => {
+        res.write(`data: ${JSON.stringify({ seq: seq++, audioBase64: chunk.toString('base64'), final: false })}\n\n`);
+      });
+      res.write(`data: ${JSON.stringify({ seq: seq++, final: true })}\n\n`);
+    } catch (err: any) {
+      res.write(`data: ${JSON.stringify({ error: err.message || 'Speech synthesis failed' })}\n\n`);
+    } finally {
+      res.end();
+    }
   }
 
   /** Jarvis: decompose a goal into steps and start chaining tool calls through
