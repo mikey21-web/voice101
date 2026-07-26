@@ -30,7 +30,7 @@ export class TeamOpsService {
   async listPayroll() {
     const [users, records] = await Promise.all([
       this.prisma.user.findMany({ where: { monthlySalary: { not: null } }, select: { id: true, name: true, monthlySalary: true, salaryType: true } }),
-      this.prisma.salaryRecord.findMany({ orderBy: { createdAt: 'desc' } }),
+      this.prisma.salaryRecord.findMany({ orderBy: { createdAt: 'desc' }, include: { user: { select: { id: true, name: true } } } }),
     ]);
     const totalMonthlyPayroll = users.reduce((s, u) => s + (u.monthlySalary || 0), 0);
     return { employees: users, records, totalMonthlyPayroll, onPayroll: users.length };

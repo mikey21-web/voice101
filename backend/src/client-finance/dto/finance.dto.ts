@@ -3,14 +3,22 @@ import { Type } from 'class-transformer';
 
 class LineItemDto {
   @IsString() description!: string;
+  @IsString() @IsOptional() unit?: string;
   @IsNumber() @IsOptional() qty?: number;
   @IsNumber() unitPrice!: number;
-  @IsNumber() total!: number;
+  @IsNumber() @IsOptional() gstPercent?: number;
+  @IsString() @IsOptional() notes?: string;
+  @IsNumber() @IsOptional() total?: number;
 }
 
 export class CreateInvoiceDto {
   @IsString() @IsOptional() contactId?: string;
   @IsString() @IsOptional() eventId?: string;
+  @IsString() @IsOptional() propertyId?: string;
+  @IsString() @IsOptional() projectId?: string;
+  @IsString() @IsOptional() invoiceNumber?: string;
+  @IsDateString() @IsOptional() dueDate?: string;
+  @IsString() @IsOptional() notes?: string;
   @IsNumber() @IsOptional() gstPercent?: number;
   @IsIn(['DRAFT', 'SENT', 'PAID', 'OVERDUE', 'PENDING']) @IsOptional() status?: string;
   @IsArray() @ValidateNested({ each: true }) @Type(() => LineItemDto) @IsOptional() lineItems?: LineItemDto[];
@@ -19,6 +27,7 @@ export class CreateInvoiceDto {
 export class UpdateInvoiceDto {
   @IsIn(['DRAFT', 'SENT', 'PAID', 'OVERDUE', 'PENDING']) @IsOptional() status?: string;
   @IsDateString() @IsOptional() paidAt?: string;
+  @IsDateString() @IsOptional() dueDate?: string;
 }
 
 class QuoteSectionDto {
@@ -30,6 +39,8 @@ class QuoteSectionDto {
 export class CreateQuotationDto {
   @IsString() @IsOptional() contactId?: string;
   @IsString() @IsOptional() eventId?: string;
+  @IsString() @IsOptional() propertyId?: string;
+  @IsString() @IsOptional() projectId?: string;
   @IsDateString() @IsOptional() validUntil?: string;
   @IsString() @IsOptional() notes?: string;
   @IsString() @IsOptional() termsAndPaymentSchedule?: string;
@@ -65,4 +76,5 @@ export class CreateTransactionDto {
   @IsIn(['RECEIVED', 'PAID', 'PENDING', 'OVERDUE']) @IsOptional() status?: string;
   @IsString() @IsOptional() invoiceRef?: string;
   @IsString() @IsOptional() eventId?: string;
+  @IsString() @IsOptional() receiptMediaId?: string;
 }

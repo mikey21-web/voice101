@@ -74,7 +74,8 @@ export class CollectionsService {
 
     const [data, total] = await Promise.all([
       this.prisma.paymentReceipt.findMany({
-        where, skip: (+page - 1) * +limit, take: +limit, orderBy: { receivedAt: 'desc' }, include: { allocations: true },
+        where, skip: (+page - 1) * +limit, take: +limit, orderBy: { receivedAt: 'desc' },
+        include: { allocations: true, lead: { select: { id: true, contact: { select: { name: true } } } } },
       }),
       this.prisma.paymentReceipt.count({ where }),
     ]);

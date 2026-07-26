@@ -22,6 +22,21 @@ export default function AccountingPage() {
   const [eventProfit, setEventProfit] = useState<any[]>([]);
   const [showAddTxn, setShowAddTxn] = useState(false);
   const [txnForm, setTxnForm] = useState({ description: '', type: 'INCOME', amount: '', category: '', status: 'PENDING' });
+  const [overview, setOverview] = useState<{ receivables: number; taxNetPayable: number; monthIncome: number } | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const [sentInvoices, taxReport, allTxns] = await Promise.all([fetchInvoices({ status: 'SENT' }), fetchTaxReport(), fetchTransactions()]);
+        const receivables = sentInvoices.data.reduce((s: number, i: any) => s + (i.grandTotal || 0), 0);
+        const now = new Date();
+        const monthIncome = allTxns.data
+          .filter((t: any) => t.type === 'INCOME' && t.status !== 'PENDING' && new Date(t.date).getMonth() === now.getMonth() && new Date(t.date).getFullYear() === now.getFullYear())
+          .reduce((s: number, t: any) => s + t.amount, 0);
+        setOverview({ receivables, taxNetPayable: taxReport.netPayable || 0, monthIncome });
+      } catch { /* overview is non-critical */ }
+    })();
+  }, []);
 
   const load = async (t: string) => {
     setTab(t);
@@ -57,6 +72,23 @@ export default function AccountingPage() {
           <Plus size={16} /> Add transaction
         </Button>
       </div>
+
+      {overview && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
+            <div className="text-xs text-[var(--muted-foreground)] uppercase tracking-wide">Outstanding receivables</div>
+            <div className="text-xl font-bold text-[var(--foreground)] mt-1">{money(overview.receivables)}</div>
+          </div>
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
+            <div className="text-xs text-[var(--muted-foreground)] uppercase tracking-wide">Income confirmed this month</div>
+            <div className="text-xl font-bold text-emerald-600 mt-1">{money(overview.monthIncome)}</div>
+          </div>
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
+            <div className="text-xs text-[var(--muted-foreground)] uppercase tracking-wide">Net GST payable</div>
+            <div className="text-xl font-bold text-[var(--foreground)] mt-1">{money(overview.taxNetPayable)}</div>
+          </div>
+        </div>
+      )}
 
       <div className="flex gap-1 border-b border-[var(--border)]">
         {SUB_TABS.map(t => (

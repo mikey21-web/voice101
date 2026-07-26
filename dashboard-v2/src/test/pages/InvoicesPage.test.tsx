@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AppContext, type NicheConfig } from '../../context/AppContext';
 import { vi } from 'vitest';
@@ -36,8 +36,12 @@ vi.mock('../../lib/data', () => ({
     { id: '2', invoiceNumber: 'INV-002', contact: null, grandTotal: 120000, status: 'PAID' },
   ] }),
   fetchContacts: vi.fn().mockResolvedValue({ data: [] }),
+  fetchProperties: vi.fn().mockResolvedValue({ data: [] }),
+  fetchProjects: vi.fn().mockResolvedValue({ data: [] }),
   createInvoice: vi.fn(),
   updateInvoice: vi.fn(),
+  getInvoicePdf: vi.fn(),
+  sendInvoice: vi.fn(),
 }));
 
 const InvoicesPage = (await import('../../pages/InvoicesPage')).default;
@@ -65,5 +69,18 @@ describe('InvoicesPage', () => {
     render(<InvoicesPage />, { wrapper: Wrapper });
     const markPaidButtons = await screen.findAllByText('Mark paid');
     expect(markPaidButtons).toHaveLength(1);
+  });
+
+  it('opens the invoice builder and computes the grand total live from line items', async () => {
+    render(<InvoicesPage />, { wrapper: Wrapper });
+    fireEvent.click(await screen.findByText('Create invoice'));
+
+    fireEvent.change(screen.getByPlaceholderText('Qty'), { target: { value: '2' } });
+    fireEvent.change(screen.getByPlaceholderText('Rate'), { target: { value: '500' } });
+    fireEvent.change(screen.getByPlaceholderText('GST %'), { target: { value: '18' } });
+
+    expect((await screen.findAllByText('₹1,000')).length).toBeGreaterThan(0); // line amount + subtotal
+    expect(await screen.findByText('₹180')).toBeInTheDocument(); // gst total
+    expect(await screen.findByText('₹1,180')).toBeInTheDocument(); // grand total
   });
 });

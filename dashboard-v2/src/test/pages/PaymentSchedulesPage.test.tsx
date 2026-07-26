@@ -37,8 +37,8 @@ import { api } from '../../lib/api';
 const PaymentSchedulesPage = (await import('../../pages/PaymentSchedulesPage')).default;
 
 const mockSchedules = [
-  { id: '1', lead: { contact: { name: 'John Doe' } }, label: 'Booking Amount', amount: 500000, currency: 'INR', dueDate: '2024-02-15', status: 'PENDING' },
-  { id: '2', lead: null, label: 'Registration', amount: 250000, currency: 'INR', dueDate: '2024-03-01', status: 'PAID' },
+  { id: '1', leadId: 'lead-1', lead: { contact: { name: 'John Doe' } }, label: 'Booking Amount', amount: 500000, currency: 'INR', dueDate: '2024-02-15', status: 'PENDING' },
+  { id: '2', leadId: 'lead-1', lead: { contact: { name: 'John Doe' } }, label: 'Registration', amount: 250000, currency: 'INR', dueDate: '2024-03-01', status: 'PAID' },
 ];
 
 describe('PaymentSchedulesPage', () => {
@@ -84,5 +84,11 @@ describe('PaymentSchedulesPage', () => {
     await waitFor(() => {
       expect(screen.getByText('Add Milestone')).toBeInTheDocument();
     });
+  });
+
+  it('groups milestones by buyer and shows a collection progress percentage', async () => {
+    render(<PaymentSchedulesPage />, { wrapper: Wrapper });
+    // ₹2.5L paid of ₹7.5L total = 33%
+    expect(await screen.findByText(/33%/)).toBeInTheDocument();
   });
 });

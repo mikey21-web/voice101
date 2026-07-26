@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Plus, X, Wallet, TrendingUp, MapPin, Percent, Building2, Scale, MoreHorizontal, Search, Loader2, Download } from 'lucide-react';
+import { Plus, X, Wallet, TrendingUp, MapPin, Percent, Building2, Scale, MoreHorizontal, Search, Loader2, Download, Paperclip } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Input } from '../components/ui/input';
 import { Select } from '../components/ui/select';
 import { Button } from '../components/ui/button';
-import { api } from '../lib/api';
+import { api, apiUpload, resolveMediaUrl } from '../lib/api';
 
 const EXPENSE_CATEGORIES = [
   'Marketing & Ads',
@@ -38,6 +38,8 @@ export default function MyExpensesPage() {
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [form, setForm] = useState({ description: '', amount: '', category: 'Miscellaneous', date: '' });
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [uploadingReceipt, setUploadingReceipt] = useState(false);
 
   const fetchExpenses = async () => {
     setLoading(true);
@@ -54,6 +56,16 @@ export default function MyExpensesPage() {
   const createExpense = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      let receiptMediaId: string | undefined;
+      if (receiptFile) {
+        setUploadingReceipt(true);
+        const fd = new FormData();
+        fd.append('file', receiptFile);
+        fd.append('category', 'EXPENSE_RECEIPT');
+        try { receiptMediaId = (await apiUpload('/media/upload', fd)).id; }
+        catch { toast.error('Receipt upload failed — expense saved without it'); }
+        setUploadingReceipt(false);
+      }
       await api('/client-finance/transactions', {
         method: 'POST',
         body: JSON.stringify({
@@ -63,10 +75,12 @@ export default function MyExpensesPage() {
           category: form.category,
           date: form.date || undefined,
           status: 'PAID',
+          receiptMediaId,
         }),
       });
       setShowForm(false);
       setForm({ description: '', amount: '', category: 'Miscellaneous', date: '' });
+      setReceiptFile(null);
       fetchExpenses();
       toast.success('Expense added');
     } catch (err: any) { toast.error(err.message); }
@@ -167,8 +181,13 @@ export default function MyExpensesPage() {
             </Select>
             <Input label="Date" type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} />
           </div>
+          <div>
+            <label className="text-sm font-medium block mb-1 text-[var(--foreground)]">Receipt (optional)</label>
+            <input type="file" accept="image/*,application/pdf" onChange={e => setReceiptFile(e.target.files?.[0] || null)}
+              className="text-sm text-[var(--foreground)]" />
+          </div>
           <div className="flex gap-2 pt-1">
-            <Button type="submit">Add Expense</Button>
+            <Button type="submit" disabled={uploadingReceipt}>{uploadingReceipt ? 'Uploading receipt…' : 'Add Expense'}</Button>
             <Button variant="outline" type="button" onClick={() => setShowForm(false)}>Cancel</Button>
           </div>
         </form>
@@ -204,7 +223,15 @@ export default function MyExpensesPage() {
                     </div>
                     <div className="min-w-0">
                       <div className="font-medium text-[var(--foreground)] truncate">{e.description}</div>
-                      <div className="text-xs text-[var(--muted-foreground)]">{e.category}{d ? ` · ${new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}` : ''}</div>
+                      <div className="text-xs text-[var(--muted-foreground)] flex items-center gap-1">
+                        {e.category}{d ? ` · ${new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}` : ''}
+                        {e.receiptMedia && (
+                          <a href={resolveMediaUrl(e.receiptMedia.publicUrl)} target="_blank" rel="noreferrer"
+                            className="inline-flex items-center gap-0.5 text-[var(--primary)] hover:underline ml-1">
+                            <Paperclip size={11} /> Receipt
+                          </a>
+                        )}
+                      </div>
                     </div>
                   </div>
                   <div className="text-red-600 font-medium shrink-0 ml-3">-{money(e.amount)}</div>

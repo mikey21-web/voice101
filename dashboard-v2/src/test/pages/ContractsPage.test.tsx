@@ -32,11 +32,13 @@ function Wrapper({ children }: { children: React.ReactNode }) {
 
 vi.mock('../../lib/data', () => ({
   fetchContracts: vi.fn().mockResolvedValue({ data: [
-    { id: '1', contractNumber: 'CT-001', amount: 5000000, status: 'ACTIVE' },
-    { id: '2', contractNumber: 'CT-002', amount: 7500000, status: 'DRAFT' },
+    { id: '1', contractNumber: 'CT-001', amount: 5000000, status: 'SIGNED', contact: { name: 'Client A' } },
+    { id: '2', contractNumber: 'CT-002', amount: 7500000, status: 'DRAFT', contact: null },
   ] }),
   fetchQuotations: vi.fn().mockResolvedValue({ data: [] }),
+  fetchContacts: vi.fn().mockResolvedValue({ data: [] }),
   createContract: vi.fn(),
+  updateContract: vi.fn(),
 }));
 
 const ContractsPage = (await import('../../pages/ContractsPage')).default;
@@ -54,9 +56,15 @@ describe('ContractsPage', () => {
 
   it('loads and displays contracts list with numbers and statuses', async () => {
     render(<ContractsPage />, { wrapper: Wrapper });
-    expect(await screen.findByText('CT-001')).toBeInTheDocument();
-    expect(await screen.findByText('CT-002')).toBeInTheDocument();
-    expect(await screen.findByText('ACTIVE')).toBeInTheDocument();
+    expect(await screen.findByText('CT-001 — Client A')).toBeInTheDocument();
+    expect(await screen.findByText('CT-002 — No customer linked')).toBeInTheDocument();
+    expect(await screen.findByText('SIGNED')).toBeInTheDocument();
     expect(await screen.findByText('DRAFT')).toBeInTheDocument();
+  });
+
+  it('shows Mark signed only for contracts not yet signed or cancelled', async () => {
+    render(<ContractsPage />, { wrapper: Wrapper });
+    const signButtons = await screen.findAllByText('Mark signed');
+    expect(signButtons).toHaveLength(1);
   });
 });

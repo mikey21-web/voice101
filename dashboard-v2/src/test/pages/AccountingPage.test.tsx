@@ -71,4 +71,11 @@ describe('AccountingPage', () => {
     render(<AccountingPage />, { wrapper: Wrapper });
     expect(await screen.findByText('Add transaction')).toBeInTheDocument();
   });
+
+  it('shows an overview KPI strip with outstanding receivables from SENT invoices', async () => {
+    render(<AccountingPage />, { wrapper: Wrapper });
+    expect(await screen.findByText('Outstanding receivables')).toBeInTheDocument();
+    // the single mocked SENT invoice has grandTotal 59000
+    expect(await screen.findByText('₹59,000')).toBeInTheDocument();
+  });
 });

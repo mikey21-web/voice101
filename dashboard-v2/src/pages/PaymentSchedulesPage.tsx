@@ -126,64 +126,72 @@ export default function PaymentSchedulesPage() {
         </select>
       </div>
 
-      <div className="rounded-lg border border-[var(--border)] overflow-hidden">
-        <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-[var(--border)] bg-[var(--muted)]/30">
-              <th className="text-left px-4 py-3 text-xs font-semibold text-[var(--muted-foreground)] uppercase">Buyer</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-[var(--muted-foreground)] uppercase">Milestone</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-[var(--muted-foreground)] uppercase">Amount</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-[var(--muted-foreground)] uppercase">Due Date</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-[var(--muted-foreground)] uppercase">Status</th>
-              <th className="text-right px-4 py-3 text-xs font-semibold text-[var(--muted-foreground)] uppercase">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr><td colSpan={6} className="text-center py-8 text-[var(--muted-foreground)]">Loading...</td></tr>
-            ) : schedules.length === 0 ? (
-              <tr><td colSpan={6} className="text-center py-8 text-[var(--muted-foreground)]">No payment milestones yet</td></tr>
-            ) : schedules.map((s: any) => {
-              const meta = statusMeta[s.status] || statusMeta.PENDING;
-              const Icon = meta.icon;
-              return (
-                <tr key={s.id} className="border-b border-[var(--border)] hover:bg-[var(--muted)]/20 transition-colors">
-                  <td className="px-4 py-3 text-sm">{s.lead?.contact?.name || "-"}</td>
-                  <td className="px-4 py-3 font-medium text-[var(--foreground)]">{s.label}</td>
-                  <td className="px-4 py-3 text-sm font-mono">{formatMoney(s.amount, s.currency)}</td>
-                  <td className="px-4 py-3 text-sm">{formatDate(s.dueDate)}</td>
-                  <td className="px-4 py-3">
-                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${meta.color}`}>
-                      <Icon className="h-3 w-3" /> {meta.label}
-                    </span>
-                  </td>
-                    <td className="px-4 py-3 text-right">
-                      <div className="flex gap-1 justify-end">
-                        {["PENDING", "OVERDUE"].includes(s.status) && (
-                          <button onClick={() => genDemandLetter(s.id)} className="text-xs px-2 py-1 rounded bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 hover:opacity-80 inline-flex items-center gap-1">
-                            <FileText className="h-3 w-3" /> Demand letter
-                          </button>
-                        )}
-                        {s.status === "PENDING" && (
-                          <>
+      {loading ? (
+        <div className="text-center py-8 text-[var(--muted-foreground)]">Loading...</div>
+      ) : schedules.length === 0 ? (
+        <div className="text-center py-8 text-[var(--muted-foreground)]">No payment milestones yet</div>
+      ) : (
+        <div className="space-y-4">
+          {Object.entries(
+            schedules.reduce<Record<string, any[]>>((groups, s: any) => {
+              const key = s.leadId || "unknown";
+              (groups[key] ||= []).push(s);
+              return groups;
+            }, {})
+          ).map(([leadId, group]) => {
+            const buyerName = group[0]?.lead?.contact?.name || "Unknown buyer";
+            const total = group.reduce((sum, s) => sum + s.amount, 0);
+            const paid = group.filter(s => s.status === "PAID").reduce((sum, s) => sum + s.amount, 0);
+            const pct = total > 0 ? Math.round((paid / total) * 100) : 0;
+            const ordered = [...group].sort((a, b) => (a.dueDate || "").localeCompare(b.dueDate || ""));
+
+            return (
+              <div key={leadId} className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="font-medium text-[var(--foreground)]">{buyerName}</div>
+                  <div className="text-sm text-[var(--muted-foreground)]">{formatMoney(paid)} / {formatMoney(total)} collected ({pct}%)</div>
+                </div>
+                <div className="h-2 rounded-full bg-[var(--muted)] overflow-hidden">
+                  <div className="h-full bg-emerald-500 transition-all" style={{ width: `${pct}%` }} />
+                </div>
+
+                <div className="flex flex-wrap gap-3 pt-1">
+                  {ordered.map((s: any) => {
+                    const meta = statusMeta[s.status] || statusMeta.PENDING;
+                    const Icon = meta.icon;
+                    return (
+                      <div key={s.id} className="min-w-[200px] flex-1 rounded-lg border border-[var(--border)] p-3 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-[var(--foreground)]">{s.label}</span>
+                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${meta.color}`}>
+                            <Icon className="h-3 w-3" /> {meta.label}
+                          </span>
+                        </div>
+                        <div className="text-sm font-mono text-[var(--foreground)]">{formatMoney(s.amount, s.currency)}</div>
+                        <div className="text-xs text-[var(--muted-foreground)]">Due {formatDate(s.dueDate)}</div>
+                        <div className="flex gap-1 flex-wrap">
+                          {["PENDING", "OVERDUE"].includes(s.status) && (
+                            <button onClick={() => genDemandLetter(s.id)} className="text-xs px-2 py-1 rounded bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 hover:opacity-80 inline-flex items-center gap-1">
+                              <FileText className="h-3 w-3" /> Demand letter
+                            </button>
+                          )}
+                          {(s.status === "PENDING" || s.status === "OVERDUE") && (
                             <button onClick={() => markPaid(s.id)} className="text-xs px-2 py-1 rounded bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 hover:opacity-80">Mark paid</button>
+                          )}
+                          {s.status === "PENDING" && (
                             <button onClick={() => waive(s.id)} className="text-xs px-2 py-1 rounded bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 hover:opacity-80">Waive</button>
-                          </>
-                        )}
-                        {s.status === "OVERDUE" && (
-                          <button onClick={() => markPaid(s.id)} className="text-xs px-2 py-1 rounded bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 hover:opacity-80">Mark paid</button>
-                        )}
-                        <button onClick={() => handleDelete(s.id)} className="p-1.5 hover:bg-red-100 dark:hover:bg-red-900 rounded text-red-500"><X className="h-4 w-4" /></button>
+                          )}
+                          <button onClick={() => handleDelete(s.id)} className="p-1.5 hover:bg-red-100 dark:hover:bg-red-900 rounded text-red-500"><X className="h-4 w-4" /></button>
+                        </div>
                       </div>
-                    </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
         </div>
-      </div>
+      )}
 
       {demandLetter && (
         <Dialog

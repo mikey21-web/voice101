@@ -1137,6 +1137,7 @@ model MediaFile {
   generatedDocuments    GeneratedDocument[]
   paymentReceipts       PaymentReceipt[]
   physicalDocumentScans PhysicalDocumentCustody[] @relation("PhysicalDocumentScanMedia")
+  expenseReceipts       Transaction[]
 
   @@index([category])
   @@index([fileType])
@@ -1343,8 +1344,10 @@ model Property {
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 
-  images   PropertyImage[]
-  bookings Booking[]
+  images      PropertyImage[]
+  bookings    Booking[]
+  invoices    Invoice[]
+  quotations  Quotation[]
 
   @@index([tenantId])
   @@index([propertyType])
@@ -1428,6 +1431,8 @@ model Project {
   salesTargets                 SalesTarget[]
   buyerSessions                BuyerSession[]
   adSpendImports               AdSpendImport[]
+  invoices                     Invoice[]
+  quotations                   Quotation[]
 
   @@index([tenantId])
   @@index([status])
@@ -3444,7 +3449,13 @@ model Invoice {
   contactId     String?
   contact       Contact?      @relation(fields: [contactId], references: [id])
   eventId       String?
+  propertyId    String?
+  property      Property?     @relation(fields: [propertyId], references: [id])
+  projectId     String?
+  project       Project?      @relation(fields: [projectId], references: [id])
   invoiceNumber String        @unique
+  dueDate       DateTime?
+  notes         String?
   subtotal      Float         @default(0)
   gstPercent    Float?
   gstTotal      Float         @default(0)
@@ -3460,6 +3471,8 @@ model Invoice {
   @@index([tenantId])
   @@index([contactId])
   @@index([eventId])
+  @@index([propertyId])
+  @@index([projectId])
   @@index([status])
   @@map("invoices")
 }
@@ -3469,8 +3482,11 @@ model InvoiceLineItem {
   invoiceId   String
   invoice     Invoice @relation(fields: [invoiceId], references: [id])
   description String
+  unit        String?
   qty         Float   @default(1)
   unitPrice   Float
+  gstPercent  Float?
+  notes       String?
   total       Float
 
   @@index([invoiceId])
@@ -3483,6 +3499,10 @@ model Quotation {
   contactId               String?
   contact                 Contact?        @relation(fields: [contactId], references: [id])
   eventId                 String?
+  propertyId              String?
+  property                Property?       @relation(fields: [propertyId], references: [id])
+  projectId               String?
+  project                 Project?        @relation(fields: [projectId], references: [id])
   quoteNumber             String          @unique
   validUntil              DateTime?
   status                  QuotationStatus @default(DRAFT)
@@ -3497,6 +3517,8 @@ model Quotation {
   @@index([tenantId])
   @@index([contactId])
   @@index([eventId])
+  @@index([propertyId])
+  @@index([projectId])
   @@index([status])
   @@map("quotations")
 }
@@ -3553,19 +3575,21 @@ model Contract {
 }
 
 model Transaction {
-  id          String               @id @default(uuid())
-  tenantId    String               @map("tenant_id")
-  description String
-  partyType   TransactionPartyType @default(INTERNAL)
-  type        TransactionType
-  amount      Float
-  category    String?
-  gstPercent  Float?
-  date        DateTime             @default(now())
-  status      TransactionStatus    @default(PENDING)
-  invoiceRef  String?
-  eventId     String?
-  createdAt   DateTime             @default(now())
+  id              String               @id @default(uuid())
+  tenantId        String               @map("tenant_id")
+  description     String
+  partyType       TransactionPartyType @default(INTERNAL)
+  type            TransactionType
+  amount          Float
+  category        String?
+  gstPercent      Float?
+  date            DateTime             @default(now())
+  status          TransactionStatus    @default(PENDING)
+  invoiceRef      String?
+  eventId         String?
+  receiptMediaId  String?
+  receiptMedia    MediaFile?           @relation(fields: [receiptMediaId], references: [id])
+  createdAt       DateTime             @default(now())
 
   @@index([tenantId])
   @@index([type])

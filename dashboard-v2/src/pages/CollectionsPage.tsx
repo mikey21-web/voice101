@@ -83,6 +83,10 @@ export default function CollectionsPage() {
 
   useEffect(() => { loadPolicies(); }, [loadPolicies]);
 
+  const totalConfirmed = receipts.filter(r => r.status === "CONFIRMED").reduce((s, r) => s + Number(r.amountPaise || 0), 0);
+  const totalPending = receipts.filter(r => r.status === "PENDING_RECONCILIATION").reduce((s, r) => s + Number(r.amountPaise || 0), 0);
+  const reversedCount = receipts.filter(r => r.status === "REVERSED").length;
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
@@ -96,6 +100,21 @@ export default function CollectionsPage() {
         >
           <Plus size={16} /> Record payment
         </button>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
+          <div className="text-xs text-[var(--muted-foreground)] uppercase tracking-wide">Confirmed collections</div>
+          <div className="text-xl font-bold text-emerald-600 mt-1">{formatPaise(totalConfirmed)}</div>
+        </div>
+        <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
+          <div className="text-xs text-[var(--muted-foreground)] uppercase tracking-wide">Pending reconciliation</div>
+          <div className="text-xl font-bold text-amber-600 mt-1">{formatPaise(totalPending)}</div>
+        </div>
+        <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
+          <div className="text-xs text-[var(--muted-foreground)] uppercase tracking-wide">Reversed payments</div>
+          <div className="text-xl font-bold text-red-600 mt-1">{reversedCount}</div>
+        </div>
       </div>
 
       <Table>
@@ -132,7 +151,7 @@ export default function CollectionsPage() {
             receipts.map(r => (
               <TableRow key={r.id}>
                 <TableCell className="text-xs text-[var(--foreground)] whitespace-nowrap">{new Date(r.receivedAt).toLocaleString()}</TableCell>
-                <TableCell className="text-xs text-[var(--muted-foreground)]">{r.leadId}</TableCell>
+                <TableCell className="text-xs text-[var(--muted-foreground)]">{r.lead?.contact?.name || r.leadId}</TableCell>
                 <TableCell className="text-sm font-medium text-[var(--foreground)]">{formatPaise(r.amountPaise)}</TableCell>
                 <TableCell className="text-xs text-[var(--muted-foreground)]">{r.mode}</TableCell>
                 <TableCell><Badge variant={statusVariant[r.status] || "secondary"}>{r.status.replace(/_/g, " ")}</Badge></TableCell>
@@ -165,7 +184,12 @@ export default function CollectionsPage() {
         </div>
         {ledger && (
           <div className="space-y-2">
-            <div className="text-sm font-medium text-[var(--foreground)]">Balance: {formatPaise(ledger.balancePaise)}</div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-[var(--foreground)]">Balance: {formatPaise(ledger.balancePaise)}</span>
+              {Number(ledger.balancePaise) > 0 && (
+                <Badge variant="warning">Outstanding</Badge>
+              )}
+            </div>
             <Table>
               <TableHeader>
                 <TableRow>

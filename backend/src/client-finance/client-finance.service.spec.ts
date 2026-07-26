@@ -1,6 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { ConfigService } from '@nestjs/config';
 import { ClientFinanceService } from './client-finance.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { InvoicePdfService } from './invoice-pdf.service';
+import { EmailAdapter } from '../shared/adapters/email.adapter';
+import { WhatsAppCloudAdapter } from '../shared/adapters/messaging.adapter';
 import { NotFoundException } from '@nestjs/common';
 
 describe('ClientFinanceService', () => {
@@ -25,7 +29,7 @@ describe('ClientFinanceService', () => {
       },
       quotation: {
         findMany: jest.fn().mockResolvedValue([]),
-        findFirst: jest.fn().mockResolvedValue({ id: 'q-1', sections: [{ lineItems: [{ total: 500 }, { total: 250 }] }] }),
+        findFirst: jest.fn().mockResolvedValue({ id: 'q-1', contactId: 'contact-9', sections: [{ lineItems: [{ total: 500 }, { total: 250 }] }] }),
         create: jest.fn().mockImplementation(({ data }) => Promise.resolve({ id: 'q-1', ...data })),
         update: jest.fn().mockImplementation(({ data }) => Promise.resolve({ id: 'q-1', ...data })),
         count: jest.fn().mockResolvedValue(0),
@@ -46,7 +50,14 @@ describe('ClientFinanceService', () => {
     };
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [ClientFinanceService, { provide: PrismaService, useValue: prisma }],
+      providers: [
+        ClientFinanceService,
+        { provide: PrismaService, useValue: prisma },
+        { provide: ConfigService, useValue: { get: jest.fn() } },
+        { provide: InvoicePdfService, useValue: { generate: jest.fn() } },
+        { provide: EmailAdapter, useValue: { send: jest.fn() } },
+        { provide: WhatsAppCloudAdapter, useValue: { send: jest.fn() } },
+      ],
     }).compile();
 
     service = module.get<ClientFinanceService>(ClientFinanceService);
@@ -58,6 +69,22 @@ describe('ClientFinanceService', () => {
       expect(prisma.invoice.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({ subtotal: 1000, gstTotal: 180, grandTotal: 1180 }),
+        }),
+      );
+    });
+
+    it('should use each line item\'s own gstPercent over the invoice-level fallback', async () => {
+      await service.createInvoice(tenantId, {
+        contactId: 'contact-1',
+        gstPercent: 18,
+        lineItems: [
+          { description: 'Booking amount', qty: 1, unitPrice: 100000, gstPercent: 1 },
+          { description: 'Club membership', qty: 1, unitPrice: 20000 },
+        ],
+      });
+      expect(prisma.invoice.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ subtotal: 120000, gstTotal: 1000 + 3600, grandTotal: 120000 + 1000 + 3600 }),
         }),
       );
     });
@@ -94,6 +121,20 @@ describe('ClientFinanceService', () => {
     it('should derive amount from the quotation when not provided', async () => {
       const c = await service.createContract(tenantId, { quotationId: 'q-1' });
       expect(c.amount).toBe(750);
+    });
+
+    it('should derive the contact from the quotation when not provided directly', async () => {
+      const c = await service.createContract(tenantId, { quotationId: 'q-1' });
+      expect(c.contactId).toBe('contact-9');
+    });
+  });
+
+  describe('updateContract', () => {
+    it('should stamp signedAt when status transitions to SIGNED', async () => {
+      await service.updateContract(tenantId, 'c-1', { status: 'SIGNED' });
+      expect(prisma.contract.update).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ status: 'SIGNED', signedAt: expect.any(Date) }) }),
+      );
     });
   });
 

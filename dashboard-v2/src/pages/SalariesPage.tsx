@@ -82,6 +82,28 @@ export default function SalariesPage() {
           ))}
         </div>
       )}
+
+      <div>
+        <h2 className="text-sm font-semibold text-[var(--foreground)] mb-2">Payroll entries</h2>
+        {(payroll.records?.length || 0) === 0 ? (
+          <p className="text-center py-8 text-sm text-[var(--muted-foreground)]">No salary or advance entries yet.</p>
+        ) : (
+          <div className="space-y-2">
+            {payroll.records.map((r: any) => (
+              <div key={r.id} className="flex items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--card)] p-3 text-sm">
+                <div>
+                  <span className="text-[var(--foreground)] font-medium">{r.user?.name || 'Unknown'}</span>
+                  <span className="text-[var(--muted-foreground)] ml-2">{r.month}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${r.type === 'ADVANCE' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'}`}>{r.type}</span>
+                  <span className="text-[var(--foreground)] font-medium">{money(r.amount)}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

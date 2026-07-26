@@ -23,36 +23,62 @@ export class ClientFinanceService {
 
   // --- Invoices ---
   findInvoices(tenantId: string, query: any = {}) {
-    const { status, contactId, eventId, page = 1, limit = 20 } = query;
+    const { status, contactId, eventId, propertyId, projectId, page = 1, limit = 20 } = query;
     const where: any = { tenantId };
     if (status) where.status = status;
     if (contactId) where.contactId = contactId;
     if (eventId) where.eventId = eventId;
+    if (propertyId) where.propertyId = propertyId;
+    if (projectId) where.projectId = projectId;
     return Promise.all([
-      this.prisma.invoice.findMany({ where, skip: (+page - 1) * +limit, take: +limit, orderBy: { createdAt: 'desc' }, include: { lineItems: true, contact: { select: { id: true, name: true } } } }),
+      this.prisma.invoice.findMany({
+        where, skip: (+page - 1) * +limit, take: +limit, orderBy: { createdAt: 'desc' },
+        include: {
+          lineItems: true,
+          contact: { select: { id: true, name: true } },
+          property: { select: { id: true, title: true, address: true } },
+          project: { select: { id: true, name: true, location: true } },
+        },
+      }),
       this.prisma.invoice.count({ where }),
     ]).then(([data, total]) => ({ data, meta: { total, page: +page, limit: +limit } }));
   }
 
   async findInvoice(tenantId: string, id: string) {
-    const inv = await this.prisma.invoice.findFirst({ where: { id, tenantId }, include: { lineItems: true, contact: true } });
+    const inv = await this.prisma.invoice.findFirst({
+      where: { id, tenantId },
+      include: { lineItems: true, contact: true, property: true, project: true },
+    });
     if (!inv) throw new NotFoundException('Invoice not found');
     return inv;
   }
 
+  // Per-line gstPercent (if given) drives that line's tax; the invoice-level
+  // gstPercent is only a fallback for lines that don't specify their own.
   createInvoice(tenantId: string, data: any) {
-    const { lineItems = [], ...rest } = data;
-    const subtotal = lineItems.reduce((s: number, li: any) => s + (li.total ?? li.qty * li.unitPrice), 0);
-    const gstTotal = rest.gstPercent ? subtotal * (rest.gstPercent / 100) : 0;
+    const { lineItems = [], invoiceNumber, ...rest } = data;
+    const lines = lineItems.map((li: any) => {
+      const total = li.total ?? li.qty * li.unitPrice;
+      const gstPercent = li.gstPercent ?? rest.gstPercent;
+      const gst = gstPercent ? total * (gstPercent / 100) : 0;
+      return { ...li, total, gst };
+    });
+    const subtotal = lines.reduce((s: number, li: any) => s + li.total, 0);
+    const gstTotal = lines.reduce((s: number, li: any) => s + li.gst, 0);
     return this.prisma.invoice.create({
       data: {
         ...rest,
         tenantId,
-        invoiceNumber: genNumber('INV'),
+        invoiceNumber: invoiceNumber || genNumber('INV'),
         subtotal,
         gstTotal,
         grandTotal: subtotal + gstTotal,
-        lineItems: { create: lineItems.map((li: any) => ({ description: li.description, qty: li.qty ?? 1, unitPrice: li.unitPrice, total: li.total ?? li.qty * li.unitPrice })) },
+        lineItems: {
+          create: lines.map((li: any) => ({
+            description: li.description, unit: li.unit, qty: li.qty ?? 1, unitPrice: li.unitPrice,
+            gstPercent: li.gstPercent, notes: li.notes, total: li.total,
+          })),
+        },
       },
       include: { lineItems: true },
     });
@@ -130,19 +156,32 @@ export class ClientFinanceService {
 
   // --- Quotations ---
   findQuotations(tenantId: string, query: any = {}) {
-    const { status, contactId, eventId, page = 1, limit = 20 } = query;
+    const { status, contactId, eventId, propertyId, projectId, page = 1, limit = 20 } = query;
     const where: any = { tenantId };
     if (status) where.status = status;
     if (contactId) where.contactId = contactId;
     if (eventId) where.eventId = eventId;
+    if (propertyId) where.propertyId = propertyId;
+    if (projectId) where.projectId = projectId;
     return Promise.all([
-      this.prisma.quotation.findMany({ where, skip: (+page - 1) * +limit, take: +limit, orderBy: { createdAt: 'desc' }, include: { sections: { include: { lineItems: true } }, contact: { select: { id: true, name: true } } } }),
+      this.prisma.quotation.findMany({
+        where, skip: (+page - 1) * +limit, take: +limit, orderBy: { createdAt: 'desc' },
+        include: {
+          sections: { include: { lineItems: true } },
+          contact: { select: { id: true, name: true } },
+          property: { select: { id: true, title: true, address: true } },
+          project: { select: { id: true, name: true, location: true } },
+        },
+      }),
       this.prisma.quotation.count({ where }),
     ]).then(([data, total]) => ({ data, meta: { total, page: +page, limit: +limit } }));
   }
 
   async findQuotation(tenantId: string, id: string) {
-    const q = await this.prisma.quotation.findFirst({ where: { id, tenantId }, include: { sections: { include: { lineItems: true } }, contact: true } });
+    const q = await this.prisma.quotation.findFirst({
+      where: { id, tenantId },
+      include: { sections: { include: { lineItems: true } }, contact: true, property: true, project: true },
+    });
     if (!q) throw new NotFoundException('Quotation not found');
     return q;
   }
@@ -169,32 +208,49 @@ export class ClientFinanceService {
   async updateQuotation(tenantId: string, id: string, data: any) { await this.findQuotation(tenantId, id); return this.prisma.quotation.update({ where: { id }, data }); }
 
   // --- Contracts (own "New contract" flow, or convert an accepted quotation) ---
+  private contractInclude() {
+    return {
+      contact: { select: { id: true, name: true } },
+      quotation: { select: { id: true, quoteNumber: true, property: { select: { title: true } }, project: { select: { name: true } } } },
+    } as const;
+  }
+
   findContracts(tenantId: string, query: any = {}) {
     const { status, page = 1, limit = 20 } = query;
     const where: any = { tenantId };
     if (status) where.status = status;
     return Promise.all([
-      this.prisma.contract.findMany({ where, skip: (+page - 1) * +limit, take: +limit, orderBy: { createdAt: 'desc' } }),
+      this.prisma.contract.findMany({ where, skip: (+page - 1) * +limit, take: +limit, orderBy: { createdAt: 'desc' }, include: this.contractInclude() }),
       this.prisma.contract.count({ where }),
     ]).then(([data, total]) => ({ data, meta: { total, page: +page, limit: +limit } }));
   }
 
   async findContract(tenantId: string, id: string) {
-    const c = await this.prisma.contract.findFirst({ where: { id, tenantId } });
+    const c = await this.prisma.contract.findFirst({ where: { id, tenantId }, include: this.contractInclude() });
     if (!c) throw new NotFoundException('Contract not found');
     return c;
   }
 
   async createContract(tenantId: string, data: any) {
     let amount = data.amount ?? 0;
-    if (data.quotationId && !data.amount) {
+    let contactId = data.contactId;
+    if (data.quotationId) {
       const q = await this.prisma.quotation.findFirst({ where: { id: data.quotationId, tenantId }, include: { sections: { include: { lineItems: true } } } });
-      amount = q?.sections.reduce((s, sec) => s + sec.lineItems.reduce((ss, li) => ss + li.total, 0), 0) ?? 0;
+      if (!data.amount) amount = q?.sections.reduce((s, sec) => s + sec.lineItems.reduce((ss, li) => ss + li.total, 0), 0) ?? 0;
+      if (!contactId) contactId = q?.contactId ?? undefined;
     }
-    return this.prisma.contract.create({ data: { ...data, tenantId, amount, contractNumber: genNumber('C') } });
+    return this.prisma.contract.create({ data: { ...data, contactId, tenantId, amount, contractNumber: genNumber('C') }, include: this.contractInclude() });
   }
 
-  async updateContract(tenantId: string, id: string, data: any) { await this.findContract(tenantId, id); return this.prisma.contract.update({ where: { id }, data }); }
+  // Client acceptance and internal signing are tracked as two distinct
+  // timestamps because a contract can be accepted by the client before
+  // the business countersigns it — collapsing them would lose that gap.
+  async updateContract(tenantId: string, id: string, data: any) {
+    await this.findContract(tenantId, id);
+    const patch: any = { ...data };
+    if (data.status === 'SIGNED' && !data.signedAt) patch.signedAt = new Date();
+    return this.prisma.contract.update({ where: { id }, data: patch, include: this.contractInclude() });
+  }
 
   // --- Transactions ---
   findTransactions(tenantId: string, query: any = {}) {
@@ -204,7 +260,10 @@ export class ClientFinanceService {
     if (status) where.status = status;
     if (eventId) where.eventId = eventId;
     return Promise.all([
-      this.prisma.transaction.findMany({ where, skip: (+page - 1) * +limit, take: +limit, orderBy: { date: 'desc' } }),
+      this.prisma.transaction.findMany({
+        where, skip: (+page - 1) * +limit, take: +limit, orderBy: { date: 'desc' },
+        include: { receiptMedia: { select: { id: true, publicUrl: true, fileName: true } } },
+      }),
       this.prisma.transaction.count({ where }),
     ]).then(([data, total]) => ({ data, meta: { total, page: +page, limit: +limit } }));
   }

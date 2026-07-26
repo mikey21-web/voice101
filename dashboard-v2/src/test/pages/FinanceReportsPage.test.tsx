@@ -49,7 +49,7 @@ describe('FinanceReportsPage', () => {
 
   it('shows click to download subtitle', () => {
     render(<FinanceReportsPage />, { wrapper: Wrapper });
-    expect(screen.getByText('Click to download CSV')).toBeInTheDocument();
+    expect(screen.getByText('Click a report to download it as CSV')).toBeInTheDocument();
   });
 
   it('renders all 6 report cards', () => {
@@ -64,5 +64,16 @@ describe('FinanceReportsPage', () => {
     const buttons = screen.getAllByRole('button');
     expect(buttons).toHaveLength(6);
     buttons.forEach(b => expect(b).not.toBeDisabled());
+  });
+
+  it('shows a last-downloaded timestamp only after a report has been run', async () => {
+    const { fetchProfitAndLoss } = await import('../../lib/data');
+    vi.mocked(fetchProfitAndLoss).mockResolvedValue({ income: 1000, expenses: 400, netProfit: 600 });
+
+    render(<FinanceReportsPage />, { wrapper: Wrapper });
+    expect(screen.queryByText(/Last downloaded/)).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByText('Profit & Loss'));
+    expect(await screen.findByText(/Last downloaded/)).toBeInTheDocument();
   });
 });

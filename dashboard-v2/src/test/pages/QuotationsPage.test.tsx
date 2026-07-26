@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AppContext, type NicheConfig } from '../../context/AppContext';
 import { vi } from 'vitest';
@@ -33,6 +33,8 @@ function Wrapper({ children }: { children: React.ReactNode }) {
 vi.mock('../../lib/data', () => ({
   fetchQuotations: vi.fn(),
   fetchContacts: vi.fn().mockResolvedValue({ data: [] }),
+  fetchProperties: vi.fn().mockResolvedValue({ data: [] }),
+  fetchProjects: vi.fn().mockResolvedValue({ data: [] }),
   createQuotation: vi.fn(),
 }));
 
@@ -72,5 +74,15 @@ describe('QuotationsPage', () => {
     vi.mocked(fetchQuotations).mockResolvedValue({ data: [] });
     render(<QuotationsPage />, { wrapper: Wrapper });
     expect(await screen.findByText('No quotations yet.')).toBeInTheDocument();
+  });
+
+  it('opens the quotation builder and computes the grand total live from section line items', async () => {
+    render(<QuotationsPage />, { wrapper: Wrapper });
+    fireEvent.click(await screen.findByText('New quotation'));
+
+    fireEvent.change(screen.getByPlaceholderText('Qty'), { target: { value: '3' } });
+    fireEvent.change(screen.getByPlaceholderText('Unit price'), { target: { value: '200' } });
+
+    expect((await screen.findAllByText('₹600')).length).toBeGreaterThan(0); // line amount + grand total
   });
 });

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { fetchPurchaseOrders, createPurchaseOrder, updatePurchaseOrder, fetchPartners } from '../lib/data';
-import { Plus, Package } from 'lucide-react';
+import { Plus, Package, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Drawer } from '../components/ui/drawer';
 import { Input } from '../components/ui/input';
@@ -10,23 +10,43 @@ import { Button } from '../components/ui/button';
 function money(n: number | undefined) { return `₹${(n || 0).toLocaleString('en-IN')}`; }
 const STATUSES = ['DRAFT', 'SUBMITTED', 'PARTIAL', 'RECEIVED', 'CANCELLED'];
 
+type POLine = { description: string; qty: string; unitCost: string };
+const emptyLine = (): POLine => ({ description: '', qty: '1', unitCost: '' });
+function lineTotal(li: POLine) { return (Number(li.qty) || 0) * (Number(li.unitCost) || 0); }
+
 export default function PurchaseOrdersPage() {
   const [pos, setPos] = useState<any[]>([]);
   const [partners, setPartners] = useState<any[]>([]);
   const [statusFilter, setStatusFilter] = useState('');
   const [showCreate, setShowCreate] = useState(false);
-  const [form, setForm] = useState({ partnerId: '', description: '', qty: '1', unitCost: '' });
+  const [partnerId, setPartnerId] = useState('');
+  const [expectedDelivery, setExpectedDelivery] = useState('');
+  const [notes, setNotes] = useState('');
+  const [lines, setLines] = useState<POLine[]>([emptyLine()]);
 
   const refresh = () => fetchPurchaseOrders(statusFilter ? { status: statusFilter } : {}).then(r => setPos(r.data)).catch(() => {});
   useEffect(() => { refresh(); }, [statusFilter]);
   useEffect(() => { fetchPartners({ type: 'SUPPLIER' }).then(r => setPartners(r.data || [])).catch(() => {}); }, []);
 
+  const updateLine = (i: number, patch: Partial<POLine>) => setLines(ls => ls.map((li, idx) => idx === i ? { ...li, ...patch } : li));
+  const addLine = () => setLines(ls => [...ls, emptyLine()]);
+  const removeLine = (i: number) => setLines(ls => ls.length > 1 ? ls.filter((_, idx) => idx !== i) : ls);
+  const resetForm = () => { setPartnerId(''); setExpectedDelivery(''); setNotes(''); setLines([emptyLine()]); };
+  const orderTotal = lines.reduce((s, li) => s + lineTotal(li), 0);
+
   const create = async (e: React.FormEvent) => {
     e.preventDefault();
+    const validLines = lines.filter(li => li.description.trim());
+    if (!validLines.length) { toast.error('Add at least one line item'); return; }
     try {
-      await createPurchaseOrder({ partnerId: form.partnerId, lineItems: [{ description: form.description, qty: Number(form.qty), unitCost: Number(form.unitCost) }] });
+      await createPurchaseOrder({
+        partnerId,
+        expectedDelivery: expectedDelivery || undefined,
+        notes: notes || undefined,
+        lineItems: validLines.map(li => ({ description: li.description, qty: Number(li.qty) || 1, unitCost: Number(li.unitCost) || 0 })),
+      });
       setShowCreate(false);
-      setForm({ partnerId: '', description: '', qty: '1', unitCost: '' });
+      resetForm();
       refresh();
       toast.success('Purchase order created');
     } catch (err: any) { toast.error(err.message); }
@@ -84,14 +104,37 @@ export default function PurchaseOrdersPage() {
         }
       >
         <form id="create-po-form" onSubmit={create} className="space-y-4">
-          <Select label="Supplier" value={form.partnerId} onChange={e => setForm({ ...form, partnerId: e.target.value })} required>
+          <Select label="Supplier" value={partnerId} onChange={e => setPartnerId(e.target.value)} required>
             <option value="">Select supplier</option>
             {partners.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}
           </Select>
-          <Input label="Item / description" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} required />
-          <div className="grid grid-cols-2 gap-3">
-            <Input label="Qty" type="number" value={form.qty} onChange={e => setForm({ ...form, qty: e.target.value })} />
-            <Input label="Unit cost" type="number" value={form.unitCost} onChange={e => setForm({ ...form, unitCost: e.target.value })} required />
+          <Input label="Expected delivery" type="date" value={expectedDelivery} onChange={e => setExpectedDelivery(e.target.value)} />
+
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium tracking-wide text-[var(--muted-foreground)] uppercase">Line items</span>
+              <button type="button" onClick={addLine} className="inline-flex items-center gap-1 text-xs text-[var(--primary)] hover:underline"><Plus size={13} /> Add line</button>
+            </div>
+            {lines.map((li, i) => (
+              <div key={i} className="grid grid-cols-12 gap-2 items-end border-t border-[var(--border)] pt-3 first:border-t-0 first:pt-0">
+                <div className="col-span-6"><Input id={`po-desc-${i}`} label="Item / description" value={li.description} onChange={e => updateLine(i, { description: e.target.value })} /></div>
+                <div className="col-span-2"><Input id={`po-qty-${i}`} label="Qty" type="number" value={li.qty} onChange={e => updateLine(i, { qty: e.target.value })} /></div>
+                <div className="col-span-3"><Input id={`po-cost-${i}`} label="Unit cost" type="number" value={li.unitCost} onChange={e => updateLine(i, { unitCost: e.target.value })} /></div>
+                <button type="button" onClick={() => removeLine(i)} className="col-span-1 h-9 flex items-center justify-center text-[var(--muted-foreground)] hover:text-red-500">
+                  <Trash2 size={15} />
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex justify-between text-sm font-semibold text-[var(--foreground)] pt-2 border-t border-[var(--border)]">
+            <span>Order total</span><span>{money(orderTotal)}</span>
+          </div>
+
+          <div>
+            <label className="text-xs font-medium tracking-wide text-[var(--muted-foreground)] uppercase">Notes</label>
+            <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2}
+              className="w-full mt-1 rounded-lg border border-[var(--border)] bg-[var(--background)] p-2 text-sm text-[var(--foreground)]" />
           </div>
         </form>
       </Drawer>

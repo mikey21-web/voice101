@@ -180,6 +180,9 @@ export async function fetchRevenue() { return api('/revenue') as Promise<any>; }
 export async function fetchProjects(params: Record<string, string> = {}) {
   const q = new URLSearchParams(params); return api(`/projects?${q}`) as Promise<{ data: any[]; meta: any }>;
 }
+export async function fetchProperties(params: Record<string, string> = {}) {
+  const q = new URLSearchParams(params); return api(`/properties?${q}`) as Promise<{ data: any[]; meta: any }>;
+}
 export async function fetchUnits(params: Record<string, string> = {}) {
   const q = new URLSearchParams(params); return api(`/projects/units?${q}`) as Promise<{ data: any[]; meta: any }>;
 }
