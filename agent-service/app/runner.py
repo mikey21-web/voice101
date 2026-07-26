@@ -22,12 +22,12 @@ USE_CHECKPOINTING = os.environ.get("MIKEY_USE_CHECKPOINTING", "true").lower() ==
 DATABASE_URL = os.environ.get("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/virtual-assistant")
 
 
-async def _build_checkpointer():
-    """Best-effort Postgres checkpointer. Returns None (in-memory-only run) if
-    Postgres is unreachable or setup fails — logged as an error, not a warning,
-    since silently losing durability shouldn't look like a routine fallback."""
+async def _build_checkpointer() -> tuple[object | None, str | None]:
+    """Best-effort Postgres checkpointer. Returns (None, error) if Postgres is
+    unreachable or setup fails — the caller surfaces the error in the run
+    summary so a persistent outage is visible in ops, not just agent-service logs."""
     if not USE_CHECKPOINTING:
-        return None
+        return None, None
     try:
         from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
         from psycopg_pool import AsyncConnectionPool
@@ -40,10 +40,11 @@ async def _build_checkpointer():
         await checkpointer.setup()
         await checkpointer.aget_tuple({"configurable": {"thread_id": "probe"}})
         logger.info("checkpointer_enabled", db_url=DATABASE_URL.split("@")[-1] if "@" in DATABASE_URL else "local")
-        return checkpointer
+        return checkpointer, None
     except Exception as e:
+        error = f"{type(e).__name__}: {e}"
         logger.error("checkpointer_failed_fallback_to_none", error=str(e), error_type=type(e).__name__)
-        return None
+        return None, error
 
 
 async def execute_run(settings: Settings, req: AgentRunRequest) -> str:
@@ -65,9 +66,10 @@ async def execute_run(settings: Settings, req: AgentRunRequest) -> str:
     memory = MemoryClient(settings, req.tenantId) if req.messageText else None
     ctx = ToolContext(client=client, lead_id=req.leadId, tenant_id=req.tenantId, channel=req.channel)
 
+    checkpointer_error: str | None = None
     try:
         if USE_SUPERVISOR:
-            checkpointer = await _build_checkpointer()
+            checkpointer, checkpointer_error = await _build_checkpointer()
 
             graph = build_supervisor(
                 settings=settings,
@@ -88,11 +90,13 @@ async def execute_run(settings: Settings, req: AgentRunRequest) -> str:
                 "started_at": started_at,
             }
 
+            # Stable per-conversation thread so the checkpointer (when up) actually
+            # accumulates state across turns instead of starting a fresh thread every run.
             config = {
                 "configurable": {
                     "settings": settings,
                     "client": client,
-                    "thread_id": f"{req.tenantId}:{req.leadId}:{run_id}",
+                    "thread_id": f"{req.tenantId}:{req.leadId}",
                 },
             }
             final_state = await graph.ainvoke(initial_state, config)
@@ -122,6 +126,8 @@ async def execute_run(settings: Settings, req: AgentRunRequest) -> str:
             final_state = await graph.ainvoke(initial_state, config)
 
         logger.info("run_completed", leadId=req.leadId)
+        if checkpointer_error:
+            logger.error("run_completed_degraded_no_checkpointing", leadId=req.leadId, reason=checkpointer_error)
         await mark_done(req.triggerId, success=True)
 
         if memory and final_state:
@@ -165,9 +171,10 @@ async def execute_run_and_get_response(settings: Settings, req: AgentRunRequest)
     memory = MemoryClient(settings, req.tenantId)
     ctx = ToolContext(client=client, lead_id=req.leadId, tenant_id=req.tenantId, channel=req.channel)
 
+    checkpointer_error: str | None = None
     try:
         if USE_SUPERVISOR:
-            checkpointer = await _build_checkpointer()
+            checkpointer, checkpointer_error = await _build_checkpointer()
 
             graph = build_supervisor(
                 settings=settings,
@@ -188,11 +195,13 @@ async def execute_run_and_get_response(settings: Settings, req: AgentRunRequest)
                 "started_at": started_at,
             }
 
+            # Stable per-conversation thread so the checkpointer (when up) actually
+            # accumulates state across turns instead of starting a fresh thread every run.
             config = {
                 "configurable": {
                     "settings": settings,
                     "client": client,
-                    "thread_id": f"{req.tenantId}:{req.leadId}:{run_id}",
+                    "thread_id": f"{req.tenantId}:{req.leadId}",
                 },
             }
             final_state = await graph.ainvoke(initial_state, config)
@@ -251,6 +260,9 @@ async def execute_run_and_get_response(settings: Settings, req: AgentRunRequest)
 
         if not response_text:
             response_text = "Thanks for reaching out! I'm here to help. What can I assist you with today?"
+
+        if checkpointer_error:
+            logger.error("run_completed_degraded_no_checkpointing", leadId=req.leadId, reason=checkpointer_error)
 
         return response_text
 

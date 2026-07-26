@@ -460,9 +460,10 @@ def build_supervisor(
     graph.add_edge("operator_voice", "persist")
     graph.add_edge("persist", END)
 
-    compiled = graph.compile(
-        checkpointer=checkpointer,
-        interrupt_before=["operator_voice"] if checkpointer else None,
-    )
+    # No interrupt_before: operator_voice already gates high-impact tools inline
+    # (see the pending_confirmation handling above) via the real ApprovalRequest
+    # flow in copilot.service.ts. A graph-level interrupt here has no resumer —
+    # it would just strand the run before operator_voice ever executes.
+    compiled = graph.compile(checkpointer=checkpointer)
 
     return compiled
