@@ -91,6 +91,19 @@ services:
     depends_on:
       - backend
 
+  tourproxy:
+    build:
+      context: ./tour-proxy
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.25'
+    ports:
+      - "127.0.0.1:4010:4010"
+
 volumes:
   pgdata:
   redisdata:

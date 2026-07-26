@@ -16,5 +16,8 @@ realestate.deploysafe.in {
 	handle /assets/* {
 		reverse_proxy localhost:4001
 	}
+	handle_path /tourproxy/* {
+		reverse_proxy localhost:4010
+	}
 	file_server
 }
