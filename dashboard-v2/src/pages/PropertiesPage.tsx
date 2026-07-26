@@ -49,13 +49,15 @@ export default function PropertiesPage() {
       id: "vezraa-apartments", title: "Vezraa Apartments", propertyType: "APARTMENT", status: "AVAILABLE",
       price: 75000000, bedrooms: 4, bathrooms: 4, areaSqft: 3090,
       location: "Mokila, Hyderabad", description: "3D interactive tour of Vezraa Apartments",
-      images: [], brochureUrl: null, featured: true, webverse: "../webverse-clone/index.html",
+      images: [{ url: "https://realestate.deploysafe.in/webverse-clone/assets/gallery/entrance%20gate.webp" }],
+      brochureUrl: null, featured: true, webverse: "../webverse-clone/index.html",
     },
     {
       id: "vezraa-villas", title: "Vezraa Villas", propertyType: "VILLA", status: "AVAILABLE",
       price: 120000000, bedrooms: 4, bathrooms: 5, areaSqft: 4500,
       location: "Coming Soon", description: "3D interactive tour of Vezraa Villas",
-      images: [], brochureUrl: null, featured: true, webverse: "../zenvistas-clone/index.html",
+      images: [{ url: "https://realestate.deploysafe.in/zenvistas-clone/assets/frontview/11.0_north.webp" }],
+      brochureUrl: null, featured: true, webverse: "../zenvistas-clone/index.html",
     },
   ];
 
