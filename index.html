@@ -1,40 +1,592 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="en" class="scroll-smooth">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vezraa Properties</title>
-    <link rel="icon" href="./zenvistas-clone/assets/logos/Vezraa_logo.webp" type="image/png">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; background: #0f0f0f; color: #fff; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem; }
-    </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lead Auto — Meet Mikey, Your AI Business Operating System</title>
+  <meta name="description" content="Mikey runs your leads, team, operations, and finances — one AI brain that connects everything. Like Jarvis, for your business." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Caveat:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --color-dark-bg: #0f0f0f;
+      --color-cream: #FAFAF8;
+      --color-dark-surface: #1a1a1a;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; overflow-x: clip; }
+    body { overflow-x: clip; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; background: var(--color-cream); color: #111; -webkit-font-smoothing: antialiased; }
+    .font-script { font-family: 'Caveat', cursive; }
+    .nav-blur { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+    .reveal { opacity: 0; transform: translateY(28px); transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1); }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    .reveal-delay-1 { transition-delay: 0.1s; }
+    .reveal-delay-2 { transition-delay: 0.2s; }
+    .reveal-delay-3 { transition-delay: 0.3s; }
+    .reveal-delay-4 { transition-delay: 0.4s; }
+    .reveal-delay-5 { transition-delay: 0.5s; }
+    @keyframes glow {
+      0%, 100% { text-shadow: 0 0 16px rgba(16,185,129,0.15), 0 0 48px rgba(16,185,129,0.08); }
+      50% { text-shadow: 0 0 28px rgba(16,185,129,0.3), 0 0 64px rgba(16,185,129,0.12); }
+    }
+    .mikey-glow { animation: glow 3s ease-in-out infinite; }
+    @keyframes float-particle {
+      0% { transform: translateY(0) translateX(0); opacity: 0; }
+      10% { opacity: 0.5; }
+      90% { opacity: 0.5; }
+      100% { transform: translateY(-120px) translateX(40px); opacity: 0; }
+    }
+    .particle { position: absolute; width: 4px; height: 4px; border-radius: 50%; background: rgba(0,0,0,0.08); animation: float-particle linear infinite; }
+    .faq-content { max-height: 0; overflow: hidden; transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+    .faq-item.active .faq-icon { transform: rotate(180deg); }
+  </style>
 </head>
 <body>
-    <div class="text-center mb-12">
-        <img src="./zenvistas-clone/assets/logos/Vezraa_logo.webp" alt="Vezraa" class="h-16 w-16 mx-auto mb-4 object-contain">
-        <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight">Vezraa Properties</h1>
-        <p class="text-gray-400 mt-2 text-sm">Select a property to explore</p>
-    </div>
 
-    <div class="grid md:grid-cols-2 gap-6 max-w-3xl w-full">
-        <a href="./webverse-clone/index.html"
-           class="group block bg-[#1a1a1a] rounded-2xl border border-white/10 p-8 hover:border-[#F3E299]/50 hover:-translate-y-1 transition-all duration-300">
-            <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-[#F3E299] to-[#BE9B42] flex items-center justify-center text-xl font-bold text-black mb-5">A</div>
-            <h2 class="text-xl font-bold mb-2">Vezraa Apartments</h2>
-            <p class="text-sm text-gray-400 leading-relaxed">4 BHK premium apartments with modern layouts, amenities, and 360° virtual tours. Block D showcase.</p>
-            <span class="inline-block mt-5 text-[#F3E299] text-sm font-semibold group-hover:translate-x-1 transition-transform">Explore &rarr;</span>
-        </a>
+  <!-- NAV -->
+  <nav class="nav-blur fixed top-0 left-0 right-0 z-50 border-b border-black/5" style="background:rgba(250,250,248,0.95);">
+    <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-2.5 font-bold text-[15px] text-[#111]">
+        <span class="w-7 h-7 rounded-lg bg-emerald-500 flex items-center justify-center text-white text-xs font-bold">L</span>
+        Lead Auto
+      </div>
+      <div class="hidden md:flex items-center gap-8">
+        <a href="#how-it-works" class="text-[13px] font-semibold text-gray-500 hover:text-gray-900 transition">Capabilities</a>
+        <a href="#features" class="text-[13px] font-semibold text-gray-500 hover:text-gray-900 transition">What Mikey Runs</a>
+        <a href="#testimonials" class="text-[13px] font-semibold text-gray-500 hover:text-gray-900 transition">Case Studies</a>
+        <a href="#faq" class="text-[13px] font-semibold text-gray-500 hover:text-gray-900 transition">FAQ</a>
+        <a href="#" class="text-[13px] font-semibold text-gray-500 hover:text-gray-900 transition">Pricing</a>
 
-        <a href="./zenvistas-clone/index.html"
-           class="group block bg-[#1a1a1a] rounded-2xl border border-white/10 p-8 hover:border-[#F3E299]/50 hover:-translate-y-1 transition-all duration-300">
-            <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-[#F3E299] to-[#BE9B42] flex items-center justify-center text-xl font-bold text-black mb-5">V</div>
-            <h2 class="text-xl font-bold mb-2">Vezraa Villas</h2>
-            <p class="text-sm text-gray-400 leading-relaxed">Luxury villas with 59 plots, interactive SVG maps, gallery, and immersive WebVerse experience.</p>
-            <span class="inline-block mt-5 text-[#F3E299] text-sm font-semibold group-hover:translate-x-1 transition-transform">Explore &rarr;</span>
-        </a>
+        <a href="/login.html" class="bg-[#111] text-white px-5 py-2.5 rounded-full font-bold text-[13px] hover:bg-gray-800 hover:-translate-y-0.5 transition-all shadow-sm inline-block">Talk to Mikey</a>
+      </div>
     </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="pt-32 pb-20 px-6" style="background:var(--color-cream);">
+    <div class="max-w-7xl mx-auto grid md:grid-cols-2 gap-16 items-center">
+      <div>
+        <span class="inline-block bg-emerald-100 text-emerald-700 text-[11px] font-bold px-4 py-1.5 rounded-full uppercase tracking-wider mb-6">Meet Mikey — AI Business Operating System</span>
+        <h1 class="text-[2.5rem] md:text-[3.5rem] font-extrabold tracking-[-0.03em] text-[#111] leading-[1.05] mb-5">
+          Meet <span class="font-script text-emerald-500 text-[3rem] md:text-[4.2rem] tracking-normal mikey-glow">Mikey</span>.<br />Your Business Operating System.
+        </h1>
+        <p class="text-[15px] text-gray-500 font-medium leading-relaxed max-w-[500px] mb-8">
+          Not another tool. Mikey runs your leads, your team, your operations, and your finances — one AI brain that understands your entire business. Like Jarvis, for your company.
+        </p>
+        <div class="flex flex-col sm:flex-row items-center gap-4">
+          <a href="/login.html" class="w-full sm:w-auto bg-[#111] text-white px-8 py-4 rounded-full font-bold text-[15px] hover:bg-gray-800 hover:-translate-y-0.5 transition-all shadow-sm inline-block text-center">Hire Mikey Free →</a>
+          <a href="/login.html" class="w-full sm:w-auto border border-gray-200 text-gray-900 px-8 py-4 rounded-full font-bold text-[15px] hover:bg-gray-50 hover:-translate-y-0.5 transition-all inline-block text-center">Talk to Mikey</a>
+        </div>
+        <div class="flex items-center gap-4 mt-10 pt-8 border-t border-gray-200">
+          <div class="flex">
+            <div class="w-9 h-9 rounded-full border-2 border-[#FAFAF8] -mr-2 bg-gray-200"></div>
+            <div class="w-9 h-9 rounded-full border-2 border-[#FAFAF8] -mr-2 bg-gray-300"></div>
+            <div class="w-9 h-9 rounded-full border-2 border-[#FAFAF8] -mr-2 bg-gray-400"></div>
+            <div class="w-9 h-9 rounded-full border-2 border-[#FAFAF8] bg-emerald-500 text-white flex items-center justify-center text-[11px] font-bold">2k+</div>
+          </div>
+          <div>
+            <p class="font-bold text-[14px] text-gray-900">Trusted by 2,000+ teams</p>
+            <p class="text-[12px] text-gray-400 font-medium">Mikey runs $140M+ in business operations daily</p>
+          </div>
+        </div>
+      </div>
+      <div class="relative">
+        <div class="rounded-[28px] border border-gray-100 overflow-hidden bg-white shadow-[0_8px_30px_rgba(0,0,0,0.03)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.08)] transition-all duration-300">
+          <div class="px-5 py-4 border-b border-gray-100 flex items-center gap-3 text-[13px]">
+            <span class="w-3 h-3 rounded-full bg-red-400"></span>
+            <span class="w-3 h-3 rounded-full bg-yellow-400"></span>
+            <span class="w-3 h-3 rounded-full bg-emerald-400"></span>
+            <span class="font-bold text-gray-700 ml-2">Mikey Dashboard</span>
+          </div>
+          <div class="p-6">
+            <div class="grid grid-cols-2 gap-4 mb-4">
+              <div class="bg-white rounded-[16px] border border-gray-100 p-4 shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
+                <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Leads Captured</p>
+                <p class="text-[22px] font-extrabold tracking-[-0.02em] text-[#111] mt-1">284</p>
+                <p class="text-[12px] text-emerald-600 font-semibold">+12.5% this week</p>
+              </div>
+              <div class="bg-white rounded-[16px] border border-gray-100 p-4 shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
+                <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Team Tasks</p>
+                <p class="text-[22px] font-extrabold tracking-[-0.02em] text-[#111] mt-1">47</p>
+                <p class="text-[12px] text-cyan-600 font-semibold">18 due today</p>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4 mb-4">
+              <div class="bg-white rounded-[16px] border border-gray-100 p-4 shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
+                <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Ops Flows</p>
+                <p class="text-[22px] font-extrabold tracking-[-0.02em] text-[#111] mt-1">12</p>
+                <p class="text-[12px] text-violet-600 font-semibold">All active</p>
+              </div>
+              <div class="bg-white rounded-[16px] border border-gray-100 p-4 shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
+                <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Revenue</p>
+                <p class="text-[22px] font-extrabold tracking-[-0.02em] text-[#111] mt-1">$284.5k</p>
+              </div>
+            </div>
+            <div class="rounded-[16px] border border-gray-100 p-4 flex items-center justify-between bg-white">
+              <div>
+                <p class="text-[13px] font-bold text-gray-900">Mikey just closed a deal</p>
+                <p class="text-[12px] text-gray-400 font-medium">E-Commerce Redesign · AI lead → AI nurture → AI book → Won</p>
+              </div>
+              <span class="text-[11px] font-bold px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 uppercase tracking-wider">Won</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS BANNER -->
+  <section class="border-t border-b border-white/10 py-12 px-6" style="background:var(--color-dark-bg);">
+    <div class="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
+      <div class="text-center reveal reveal-delay-1">
+        <p class="text-[2rem] font-extrabold tracking-[-0.03em] text-white"><span class="counter" data-target="98.7" data-suffix="%">0</span></p>
+        <p class="text-[13px] text-gray-400 font-semibold">Uptime SLA</p>
+      </div>
+      <div class="text-center reveal reveal-delay-2">
+        <p class="text-[2rem] font-extrabold tracking-[-0.03em] text-white"><span class="counter" data-target="3.2" data-suffix="×">0</span></p>
+        <p class="text-[13px] text-gray-400 font-semibold">Avg. productivity uplift</p>
+      </div>
+      <div class="text-center reveal reveal-delay-3">
+        <p class="text-[2rem] font-extrabold tracking-[-0.03em] text-white"><span class="counter" data-target="14" data-suffix="k">0</span></p>
+        <p class="text-[13px] text-gray-400 font-semibold">Operations automated/day</p>
+      </div>
+      <div class="text-center reveal reveal-delay-4">
+        <p class="text-[2rem] font-extrabold tracking-[-0.03em] text-white"><span class="counter" data-target="50" data-suffix="+">0</span></p>
+        <p class="text-[13px] text-gray-400 font-semibold">Integrations</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS — MIKEY CAPABILITIES -->
+  <section id="how-it-works" class="py-28 px-6" style="background:var(--color-cream);">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-16 reveal">
+        <span class="inline-block bg-[#111] text-white text-[11px] font-bold px-4 py-1.5 rounded-full uppercase tracking-wider mb-5">What Mikey Runs</span>
+        <h2 class="text-[2.5rem] md:text-[3.2rem] font-extrabold tracking-[-0.03em] text-[#111] mb-4">Your Entire Business, One AI Brain</h2>
+        <p class="text-[15px] text-gray-500 font-medium max-w-[500px] mx-auto">Mikey doesn't do one thing. Mikey does everything — connects, learns, and runs your business so you don't have to.</p>
+      </div>
+      <div class="grid md:grid-cols-3 gap-6">
+        <div class="reveal bg-white rounded-[28px] border border-black/5 p-8 shadow-[0_8px_30px_rgba(0,0,0,0.03)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-300">
+          <p class="text-[11px] font-bold text-emerald-500 uppercase tracking-wider mb-5">Phase 01</p>
+          <h3 class="text-[18px] font-extrabold text-[#111] mb-3">Connect Everything</h3>
+          <p class="text-[14px] text-gray-500 font-medium leading-relaxed mb-6">Link your CRM, team chat, email, calendars, accounting, and lead channels. Mikey ingests it all in minutes.</p>
+          <div class="bg-[#FAFAF8] rounded-[16px] p-4 border border-black/5">
+            <div class="flex items-center gap-2 text-[12px] font-bold text-gray-700 mb-3">
+              <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Connected
+            </div>
+            <p class="text-[12px] text-gray-500 font-medium">Salesforce · Slack · Gmail · Stripe</p>
+            <p class="text-[12px] text-gray-500 font-medium">WhatsApp · Calendly · QuickBooks</p>
+            <p class="text-[12px] text-gray-500 font-medium">12 active integrations</p>
+          </div>
+        </div>
+        <div class="reveal bg-white rounded-[28px] border border-black/5 p-8 shadow-[0_8px_30px_rgba(0,0,0,0.03)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-300">
+          <p class="text-[11px] font-bold text-emerald-500 uppercase tracking-wider mb-5">Phase 02</p>
+          <h3 class="text-[18px] font-extrabold text-[#111] mb-3">Mikey Learns</h3>
+          <p class="text-[14px] text-gray-500 font-medium leading-relaxed mb-6">AI maps your workflows, team structure, customer patterns, and revenue cycles. Mikey understands how your business works.</p>
+          <div class="bg-[#FAFAF8] rounded-[16px] p-4 border border-black/5">
+            <div class="flex items-center gap-2 text-[12px] font-bold text-gray-700 mb-3">
+              <span class="w-2 h-2 rounded-full bg-cyan-500"></span> Learning
+            </div>
+            <p class="text-[12px] text-gray-500 font-medium">Lead scoring model → 87% accuracy</p>
+            <p class="text-[12px] text-gray-500 font-medium">Team workflows → 34 patterns mapped</p>
+            <p class="text-[12px] text-gray-500 font-medium">Revenue cycles → 6 pipelines active</p>
+          </div>
+        </div>
+        <div class="reveal bg-white rounded-[28px] border border-black/5 p-8 shadow-[0_8px_30px_rgba(0,0,0,0.03)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-300">
+          <p class="text-[11px] font-bold text-emerald-500 uppercase tracking-wider mb-5">Phase 03</p>
+          <h3 class="text-[18px] font-extrabold text-[#111] mb-3">Mikey Runs</h3>
+          <p class="text-[14px] text-gray-500 font-medium leading-relaxed mb-6">Proactive automation across every domain — leads, team, ops, finance. Mikey doesn't wait for instructions.</p>
+          <div class="bg-[#FAFAF8] rounded-[16px] p-4 border border-black/5">
+            <div class="flex items-center gap-2 text-[12px] font-bold text-gray-700 mb-3">
+              <span class="w-2 h-2 rounded-full bg-violet-500"></span> Running
+            </div>
+            <p class="text-[12px] text-gray-500 font-medium">Leads: 284 captured, 67 qualified</p>
+            <p class="text-[12px] text-gray-500 font-medium">Team: 12 tasks assigned, 3 meetings booked</p>
+            <p class="text-[12px] text-gray-500 font-medium">Finance: 4 invoices sent, $12k collected</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES — WHAT MIKEY DOES -->
+  <section id="features" class="py-28 px-6" style="background:var(--color-dark-bg);border-top:1px solid rgba(255,255,255,0.08);border-bottom:1px solid rgba(255,255,255,0.08);">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-16 reveal">
+        <span class="inline-block bg-white/10 text-white text-[11px] font-bold px-4 py-1.5 rounded-full uppercase tracking-wider mb-5">Modules</span>
+        <h2 class="text-[2.5rem] md:text-[3.2rem] font-extrabold tracking-[-0.03em] text-white mb-4">Six Brains, One Mikey</h2>
+        <p class="text-[15px] text-gray-400 font-medium max-w-[500px] mx-auto">Every business has moving parts. Mikey connects them all into one operating system.</p>
+      </div>
+      <div class="grid md:grid-cols-3 gap-6">
+        <div class="reveal bg-[#1A1A1A] rounded-[28px] border border-white/10 p-8 shadow-[0_8px_30px_rgba(0,0,0,0.3)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.5)] hover:-translate-y-1 transition-all duration-300">
+          <div class="w-10 h-10 rounded-[12px] bg-emerald-500/20 flex items-center justify-center text-emerald-400 mb-5">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+          </div>
+          <h3 class="text-[18px] font-extrabold text-white mb-3">AI Lead Engine</h3>
+          <p class="text-[14px] text-gray-400 font-medium leading-relaxed">Voice agents, WhatsApp, web forms — capture from everywhere. Mikey qualifies, scores, and routes hot leads instantly.</p>
+        </div>
+        <div class="reveal bg-[#1A1A1A] rounded-[28px] border border-white/10 p-8 shadow-[0_8px_30px_rgba(0,0,0,0.3)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.5)] hover:-translate-y-1 transition-all duration-300">
+          <div class="w-10 h-10 rounded-[12px] bg-cyan-500/20 flex items-center justify-center text-cyan-400 mb-5">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <h3 class="text-[18px] font-extrabold text-white mb-3">Team Command</h3>
+          <p class="text-[14px] text-gray-400 font-medium leading-relaxed">Internal comms, task management, meeting scheduling, and coordination. Mikey keeps your team aligned without the noise.</p>
+        </div>
+        <div class="reveal bg-[#1A1A1A] rounded-[28px] border border-white/10 p-8 shadow-[0_8px_30px_rgba(0,0,0,0.3)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.5)] hover:-translate-y-1 transition-all duration-300">
+          <div class="w-10 h-10 rounded-[12px] bg-violet-500/20 flex items-center justify-center text-violet-400 mb-5">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+          </div>
+          <h3 class="text-[18px] font-extrabold text-white mb-3">Operations Core</h3>
+          <p class="text-[14px] text-gray-400 font-medium leading-relaxed">SOP automation, workflow orchestration, approval chains. Mikey runs your processes so nothing slips through.</p>
+        </div>
+        <div class="reveal bg-[#1A1A1A] rounded-[28px] border border-white/10 p-8 shadow-[0_8px_30px_rgba(0,0,0,0.3)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.5)] hover:-translate-y-1 transition-all duration-300">
+          <div class="w-10 h-10 rounded-[12px] bg-amber-500/20 flex items-center justify-center text-amber-400 mb-5">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </div>
+          <h3 class="text-[18px] font-extrabold text-white mb-3">Business Intelligence</h3>
+          <p class="text-[14px] text-gray-400 font-medium leading-relaxed">Real-time dashboards, revenue forecasts, trend detection. Mikey surfaces insights before you think to ask.</p>
+        </div>
+        <div class="reveal bg-[#1A1A1A] rounded-[28px] border border-white/10 p-8 shadow-[0_8px_30px_rgba(0,0,0,0.3)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.5)] hover:-translate-y-1 transition-all duration-300">
+          <div class="w-10 h-10 rounded-[12px] bg-pink-500/20 flex items-center justify-center text-pink-400 mb-5">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+          <h3 class="text-[18px] font-extrabold text-white mb-3">Customer Cloud</h3>
+          <p class="text-[14px] text-gray-400 font-medium leading-relaxed">Full CRM with relationship tracking, smart follow-ups, and account health scoring. No contact ever goes cold.</p>
+        </div>
+        <div class="reveal bg-[#1A1A1A] rounded-[28px] border border-white/10 p-8 shadow-[0_8px_30px_rgba(0,0,0,0.3)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.5)] hover:-translate-y-1 transition-all duration-300">
+          <div class="w-10 h-10 rounded-[12px] bg-emerald-500/20 flex items-center justify-center text-emerald-400 mb-5">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          </div>
+          <h3 class="text-[18px] font-extrabold text-white mb-3">Financial Ops</h3>
+          <p class="text-[14px] text-gray-400 font-medium leading-relaxed">Invoicing, expense tracking, revenue reconciliation, payroll. Mikey keeps your books clean and your cash flow healthy.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ANALYTICS SHOWCASE -->
+  <section class="py-28 px-6" style="background:var(--color-cream);">
+    <div class="max-w-7xl mx-auto grid md:grid-cols-2 gap-16 items-center">
+      <div class="reveal">
+        <span class="inline-block bg-[#111] text-white text-[11px] font-bold px-4 py-1.5 rounded-full uppercase tracking-wider mb-5">Mikey Intelligence</span>
+        <h2 class="text-[2.5rem] md:text-[3.2rem] font-extrabold tracking-[-0.03em] text-[#111] mb-4">One Dashboard,<br />Full Command</h2>
+        <p class="text-[15px] text-gray-500 font-medium leading-relaxed mb-6">Every metric, every conversation, every workflow — all in one place. Talk to Mikey or use the dashboard. Same power.</p>
+        <ul class="space-y-3">
+          <li class="flex items-center gap-3 text-[14px] text-gray-500 font-medium">
+            <span class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-[11px] font-bold">✓</span>
+            Real-time lead and pipeline alerts
+          </li>
+          <li class="flex items-center gap-3 text-[14px] text-gray-500 font-medium">
+            <span class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-[11px] font-bold">✓</span>
+            AI conversation transcripts & summaries
+          </li>
+          <li class="flex items-center gap-3 text-[14px] text-gray-500 font-medium">
+            <span class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-[11px] font-bold">✓</span>
+            Automated task and workflow creation
+          </li>
+          <li class="flex items-center gap-3 text-[14px] text-gray-500 font-medium">
+            <span class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-[11px] font-bold">✓</span>
+            Custom reports, forecasts & exports
+          </li>
+        </ul>
+      </div>
+      <div class="relative reveal">
+        <div class="rounded-[28px] border border-black/5 overflow-hidden bg-white shadow-[0_8px_30px_rgba(0,0,0,0.03)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.08)] transition-all duration-300">
+          <div class="px-5 py-4 border-b border-gray-100 flex items-center gap-3 text-[13px]">
+            <span class="w-3 h-3 rounded-full bg-red-400"></span>
+            <span class="w-3 h-3 rounded-full bg-yellow-400"></span>
+            <span class="w-3 h-3 rounded-full bg-emerald-400"></span>
+            <span class="font-bold text-gray-700 ml-2">Mikey Analytics</span>
+          </div>
+          <div class="p-6">
+            <div class="h-[180px] rounded-[16px] bg-gradient-to-b from-emerald-50 to-white flex items-end justify-around p-4 mb-4">
+              <div class="w-8 h-[60%] rounded-t-lg bg-emerald-400/60"></div>
+              <div class="w-8 h-[40%] rounded-t-lg bg-emerald-400/70"></div>
+              <div class="w-8 h-[80%] rounded-t-lg bg-emerald-400/80"></div>
+              <div class="w-8 h-[50%] rounded-t-lg bg-emerald-400/60"></div>
+              <div class="w-8 h-[70%] rounded-t-lg bg-emerald-400/70"></div>
+              <div class="w-8 h-[90%] rounded-t-lg bg-emerald-500"></div>
+              <div class="w-8 h-[45%] rounded-t-lg bg-emerald-400/50"></div>
+            </div>
+            <div class="grid grid-cols-3 gap-3">
+              <div class="rounded-[12px] bg-gray-50 p-3 text-center">
+                <p class="text-[11px] text-gray-400 font-bold uppercase tracking-wider">Total Leads</p>
+                <p class="text-[18px] font-extrabold text-[#111]">1,847</p>
+              </div>
+              <div class="rounded-[12px] bg-gray-50 p-3 text-center">
+                <p class="text-[11px] text-gray-400 font-bold uppercase tracking-wider">Ops Flows</p>
+                <p class="text-[18px] font-extrabold text-[#111]">34</p>
+              </div>
+              <div class="rounded-[12px] bg-gray-50 p-3 text-center">
+                <p class="text-[11px] text-gray-400 font-bold uppercase tracking-wider">Revenue</p>
+                <p class="text-[18px] font-extrabold text-[#111]">$62.4k</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TESTIMONIALS -->
+  <section id="testimonials" class="py-28 px-6" style="background:var(--color-dark-bg);border-top:1px solid rgba(255,255,255,0.08);border-bottom:1px solid rgba(255,255,255,0.08);">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-16 reveal">
+        <span class="inline-block bg-white/10 text-white text-[11px] font-bold px-4 py-1.5 rounded-full uppercase tracking-wider mb-5">Case Studies</span>
+        <h2 class="text-[2.5rem] md:text-[3.2rem] font-extrabold tracking-[-0.03em] text-white mb-4">Teams That Run on Mikey</h2>
+        <p class="text-[15px] text-gray-400 font-medium max-w-[450px] mx-auto">2,000+ businesses already trust Mikey to run operations, leads, and finances.</p>
+      </div>
+      <div class="grid md:grid-cols-3 gap-6">
+        <div class="reveal bg-[#1A1A1A] rounded-[28px] border border-white/10 p-8 shadow-[0_8px_30px_rgba(0,0,0,0.3)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.5)] hover:-translate-y-1 transition-all duration-300">
+          <div class="flex gap-0.5 mb-5">
+            <svg class="w-4 h-4 fill-amber-400 text-amber-400" viewBox="0 0 24 24"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/></svg>
+            <svg class="w-4 h-4 fill-amber-400 text-amber-400" viewBox="0 0 24 24"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/></svg>
+            <svg class="w-4 h-4 fill-amber-400 text-amber-400" viewBox="0 0 24 24"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/></svg>
+            <svg class="w-4 h-4 fill-amber-400 text-amber-400" viewBox="0 0 24 24"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/></svg>
+            <svg class="w-4 h-4 fill-amber-400 text-amber-400" viewBox="0 0 24 24"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/></svg>
+          </div>
+          <p class="text-[15px] text-gray-300 font-medium leading-relaxed mb-6">"Mikey handled 200 leads while we slept, assigned 34 tasks across the team, and sent 12 invoices. That used to be three people's jobs."</p>
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center font-bold text-[14px] text-gray-300">SC</div>
+            <div>
+              <p class="font-bold text-[14px] text-white">Sarah Chen</p>
+              <p class="text-[12px] text-gray-400 font-medium">CEO, PixelForge Studios</p>
+            </div>
+          </div>
+        </div>
+        <div class="reveal bg-[#1A1A1A] rounded-[28px] border border-white/10 p-8 shadow-[0_8px_30px_rgba(0,0,0,0.3)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.5)] hover:-translate-y-1 transition-all duration-300">
+          <div class="flex gap-0.5 mb-5">
+            <svg class="w-4 h-4 fill-amber-400 text-amber-400" viewBox="0 0 24 24"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/></svg>
+            <svg class="w-4 h-4 fill-amber-400 text-amber-400" viewBox="0 0 24 24"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/></svg>
+            <svg class="w-4 h-4 fill-amber-400 text-amber-400" viewBox="0 0 24 24"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/></svg>
+            <svg class="w-4 h-4 fill-amber-400 text-amber-400" viewBox="0 0 24 24"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/></svg>
+            <svg class="w-4 h-4 fill-amber-400 text-amber-400" viewBox="0 0 24 24"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/></svg>
+          </div>
+          <p class="text-[15px] text-gray-300 font-medium leading-relaxed mb-6">"We went from 47 leads to 284 in 90 days. Mikey also automated our ops workflows — onboarding alone went from 3 days to 4 hours."</p>
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-gray-500 flex items-center justify-center font-bold text-[14px] text-gray-300">MR</div>
+            <div>
+              <p class="font-bold text-[14px] text-white">Marcus Rivera</p>
+              <p class="text-[12px] text-gray-400 font-medium">Founder, GrowthStack Agency</p>
+            </div>
+          </div>
+        </div>
+        <div class="reveal bg-[#1A1A1A] rounded-[28px] border border-white/10 p-8 shadow-[0_8px_30px_rgba(0,0,0,0.3)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.5)] hover:-translate-y-1 transition-all duration-300">
+          <div class="flex gap-0.5 mb-5">
+            <svg class="w-4 h-4 fill-amber-400 text-amber-400" viewBox="0 0 24 24"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/></svg>
+            <svg class="w-4 h-4 fill-amber-400 text-amber-400" viewBox="0 0 24 24"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/></svg>
+            <svg class="w-4 h-4 fill-amber-400 text-amber-400" viewBox="0 0 24 24"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/></svg>
+            <svg class="w-4 h-4 fill-amber-400 text-amber-400" viewBox="0 0 24 24"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/></svg>
+            <svg class="w-4 h-4 fill-amber-400 text-amber-400" viewBox="0 0 24 24"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/></svg>
+          </div>
+          <p class="text-[15px] text-gray-300 font-medium leading-relaxed mb-6">"Real estate deals have 47 steps. Mikey runs them all — site visits, holds, KYC, invoices. We went from 5 closes/month to 18."</p>
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-gray-500 flex items-center justify-center font-bold text-[14px] text-gray-300">EL</div>
+            <div>
+              <p class="font-bold text-[14px] text-white">Emma Larsson</p>
+              <p class="text-[12px] text-gray-400 font-medium">COO, Nordic Digital</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq" class="py-28 px-6" style="background:var(--color-cream);">
+    <div class="max-w-3xl mx-auto">
+      <div class="text-center mb-16 reveal">
+        <span class="inline-block bg-[#111] text-white text-[11px] font-bold px-4 py-1.5 rounded-full uppercase tracking-wider mb-5">FAQ</span>
+        <h2 class="text-[2.5rem] md:text-[3.2rem] font-extrabold tracking-[-0.03em] text-[#111] mb-4">Questions About Mikey</h2>
+      </div>
+      <div class="flex flex-col gap-3">
+        <div class="faq-item reveal bg-white rounded-[20px] border border-black/5 overflow-hidden transition-all duration-300">
+          <button class="faq-btn w-full text-left px-7 py-5 flex justify-between items-center gap-4">
+            <span class="text-[15px] font-bold text-gray-900">What is Mikey exactly?</span>
+            <svg class="faq-icon w-5 h-5 text-gray-400 flex-shrink-0 transition-transform duration-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="faq-content">
+            <p class="px-7 pb-5 text-[14px] text-gray-500 font-medium leading-relaxed">Mikey is an AI business operating system. Not a tool, not a dashboard — an AI brain that connects your leads, team, operations, and finances into one intelligent system. Think Jarvis for your business.</p>
+          </div>
+        </div>
+        <div class="faq-item reveal bg-white rounded-[20px] border border-black/5 overflow-hidden transition-all duration-300">
+          <button class="faq-btn w-full text-left px-7 py-5 flex justify-between items-center gap-4">
+            <span class="text-[15px] font-bold text-gray-900">What can Mikey actually do?</span>
+            <svg class="faq-icon w-5 h-5 text-gray-400 flex-shrink-0 transition-transform duration-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="faq-content">
+            <p class="px-7 pb-5 text-[14px] text-gray-500 font-medium leading-relaxed">Capture and qualify leads across every channel. Automate team workflows and task management. Run business operations end-to-end. Track finances, invoices, and revenue. Provide real-time analytics and forecasts. And connect everything into one unified dashboard — or just talk to Mikey directly.</p>
+          </div>
+        </div>
+        <div class="faq-item reveal bg-white rounded-[20px] border border-black/5 overflow-hidden transition-all duration-300">
+          <button class="faq-btn w-full text-left px-7 py-5 flex justify-between items-center gap-4">
+            <span class="text-[15px] font-bold text-gray-900">How is this different from other platforms?</span>
+            <svg class="faq-icon w-5 h-5 text-gray-400 flex-shrink-0 transition-transform duration-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="faq-content">
+            <p class="px-7 pb-5 text-[14px] text-gray-500 font-medium leading-relaxed">Most platforms do one thing — leads, or CRM, or project management. Mikey is an operating system that does everything. It connects, learns, and runs proactively. You don't manage Mikey. Mikey manages your business.</p>
+          </div>
+        </div>
+        <div class="faq-item reveal bg-white rounded-[20px] border border-black/5 overflow-hidden transition-all duration-300">
+          <button class="faq-btn w-full text-left px-7 py-5 flex justify-between items-center gap-4">
+            <span class="text-[15px] font-bold text-gray-900">How long does setup take?</span>
+            <svg class="faq-icon w-5 h-5 text-gray-400 flex-shrink-0 transition-transform duration-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="faq-content">
+            <p class="px-7 pb-5 text-[14px] text-gray-500 font-medium leading-relaxed">Minutes, not days. Connect your tools (CRM, chat, email, calendar, accounting), and Mikey starts mapping your business immediately. Most teams are operational in under an hour.</p>
+          </div>
+        </div>
+        <div class="faq-item reveal bg-white rounded-[20px] border border-black/5 overflow-hidden transition-all duration-300">
+          <button class="faq-btn w-full text-left px-7 py-5 flex justify-between items-center gap-4">
+            <span class="text-[15px] font-bold text-gray-900">Can I try Mikey before committing?</span>
+            <svg class="faq-icon w-5 h-5 text-gray-400 flex-shrink-0 transition-transform duration-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="faq-content">
+            <p class="px-7 pb-5 text-[14px] text-gray-500 font-medium leading-relaxed">Yes! Connect up to 5 tools, run unlimited operations, and manage your team — all free. No credit card required. Mikey starts working the moment you connect your first tool.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="py-28 px-6 relative overflow-hidden" style="background:var(--color-dark-bg);">
+    <div class="particle" style="left:10%;bottom:20%;animation-duration:8s;animation-delay:0s;background:rgba(255,255,255,0.15);"></div>
+    <div class="particle" style="left:25%;bottom:40%;animation-duration:10s;animation-delay:2s;width:3px;height:3px;background:rgba(255,255,255,0.15);"></div>
+    <div class="particle" style="left:50%;bottom:15%;animation-duration:9s;animation-delay:4s;background:rgba(255,255,255,0.15);"></div>
+    <div class="particle" style="left:70%;bottom:35%;animation-duration:11s;animation-delay:1s;width:5px;height:5px;background:rgba(255,255,255,0.15);"></div>
+    <div class="particle" style="left:85%;bottom:25%;animation-duration:7s;animation-delay:3s;width:3px;height:3px;background:rgba(255,255,255,0.15);"></div>
+    <div class="max-w-4xl mx-auto text-center reveal">
+      <h2 class="text-[2.5rem] md:text-[3.5rem] font-extrabold tracking-[-0.03em] text-white mb-4">Hire Mikey</h2>
+      <p class="text-gray-400 max-w-[450px] mx-auto text-[1.05rem] font-medium mb-8">Join 2,000+ businesses running on Mikey. Your AI operations brain is one click away.</p>
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+        <a href="/login.html" class="w-full sm:w-auto bg-white text-[#111] px-8 py-4 rounded-full font-bold text-[15px] hover:bg-gray-100 hover:-translate-y-0.5 transition-all shadow-sm inline-block text-center">Get Mikey Free →</a>
+        <a href="/login.html" class="w-full sm:w-auto bg-white/10 text-white px-8 py-4 rounded-full font-bold text-[15px] hover:bg-white/15 hover:-translate-y-0.5 transition-all border border-white/10 inline-block text-center">Talk to Mikey</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer style="background:var(--color-dark-bg);" class="text-white pt-20 pb-8 px-6">
+    <div class="max-w-6xl mx-auto border-t border-white/10 pt-12">
+      <div class="grid md:grid-cols-4 gap-10 mb-12">
+        <div>
+          <div class="flex items-center gap-2.5 font-bold text-[15px] mb-4">
+            <span class="w-5 h-5 rounded bg-emerald-500 flex items-center justify-center text-white text-[10px] font-bold">L</span>
+            Lead Auto
+          </div>
+          <p class="text-gray-500 text-[13px] font-medium leading-relaxed">Mikey — the AI business operating system. Runs your business so you can build it.</p>
+        </div>
+        <div>
+          <h4 class="font-bold text-[13px] mb-4 text-white/60 uppercase tracking-wider">Platform</h4>
+          <ul class="flex flex-col gap-2.5">
+            <li><a href="#" class="text-gray-500 hover:text-white transition text-[13px] font-medium">Capabilities</a></li>
+            <li><a href="#" class="text-gray-500 hover:text-white transition text-[13px] font-medium">Pricing</a></li>
+            <li><a href="#" class="text-gray-500 hover:text-white transition text-[13px] font-medium">Integrations</a></li>
+            <li><a href="#" class="text-gray-500 hover:text-white transition text-[13px] font-medium">Changelog</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-bold text-[13px] mb-4 text-white/60 uppercase tracking-wider">Resources</h4>
+          <ul class="flex flex-col gap-2.5">
+            <li><a href="#" class="text-gray-500 hover:text-white transition text-[13px] font-medium">Blog</a></li>
+            <li><a href="#" class="text-gray-500 hover:text-white transition text-[13px] font-medium">Case Studies</a></li>
+            <li><a href="#" class="text-gray-500 hover:text-white transition text-[13px] font-medium">Documentation</a></li>
+            <li><a href="#" class="text-gray-500 hover:text-white transition text-[13px] font-medium">Support</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-bold text-[13px] mb-4 text-white/60 uppercase tracking-wider">Company</h4>
+          <ul class="flex flex-col gap-2.5">
+            <li><a href="#" class="text-gray-500 hover:text-white transition text-[13px] font-medium">About</a></li>
+            <li><a href="#" class="text-gray-500 hover:text-white transition text-[13px] font-medium">Careers</a></li>
+            <li><a href="#" class="text-gray-500 hover:text-white transition text-[13px] font-medium">Contact</a></li>
+            <li><a href="#" class="text-gray-500 hover:text-white transition text-[13px] font-medium">Privacy</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="border-t border-white/10 pt-8 text-center text-[12px] text-gray-500 font-medium">
+        &copy; 2026 Lead Auto. Mikey AI Business Operating System.
+      </div>
+    </div>
+  </footer>
+
+<script>
+(function(){
+  var observer = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){ e.target.classList.add('visible'); }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+  document.querySelectorAll('.reveal').forEach(function(el){ observer.observe(el); });
+
+  var counterObserver = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting && !e.target.dataset.counted){
+        e.target.dataset.counted = '1';
+        var el = e.target;
+        var target = parseFloat(el.dataset.target);
+        var suffix = el.dataset.suffix || '';
+        var isFloat = target % 1 !== 0;
+        var duration = 1400;
+        var start = performance.now();
+        function tick(now){
+          var p = Math.min((now - start) / duration, 1);
+          var eased = 1 - Math.pow(1 - p, 3);
+          var val = target * eased;
+          el.textContent = (isFloat ? val.toFixed(1) : Math.floor(val)) + suffix;
+          if(p < 1) requestAnimationFrame(tick);
+        }
+        requestAnimationFrame(tick);
+      }
+    });
+  }, { threshold: 0.5 });
+  document.querySelectorAll('.counter').forEach(function(el){ counterObserver.observe(el); });
+
+  document.querySelectorAll('.faq-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var item = btn.closest('.faq-item');
+      var content = item.querySelector('.faq-content');
+      var isActive = item.classList.contains('active');
+      document.querySelectorAll('.faq-item.active').forEach(function(a){
+        a.classList.remove('active');
+        a.querySelector('.faq-content').style.maxHeight = '0px';
+      });
+      if(!isActive){
+        item.classList.add('active');
+        content.style.maxHeight = content.scrollHeight + 'px';
+      }
+    });
+  });
+
+  (function(){
+    var rows = document.querySelectorAll('.rounded-\\[28px\\] .bg-white .text-\\[22px\\]');
+    if(rows.length < 2) return;
+    var leadEl = rows[0], taskEl = rows[1];
+    var baseLeads = 284, baseTasks = 47;
+    setInterval(function(){
+      var inc = Math.floor(Math.random() * 3);
+      if(Math.random() > 0.6){
+        leadEl.textContent = (baseLeads + inc);
+        baseLeads += inc;
+      }
+      if(Math.random() > 0.7){
+        var taskInc = Math.random() > 0.5 ? 1 : -1;
+        taskEl.textContent = Math.max(0, baseTasks + taskInc);
+        baseTasks = parseInt(taskEl.textContent);
+      }
+    }, 5000);
+  })();
+
+  var nav = document.querySelector('nav');
+  if(nav){
+    window.addEventListener('scroll', function(){
+      nav.style.background = window.scrollY > 20 ? 'rgba(250,250,248,0.98)' : 'rgba(250,250,248,0.95)';
+    });
+  }
+})();
+</script>
 </body>
 </html>
