@@ -17,10 +17,27 @@ export default function MikeyWidget() {
   const [convId, setConvId] = useState<string | null>(null);
   const [hasOpened, setHasOpened] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const speakAudioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     if (bottomRef.current) bottomRef.current.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // Shares the "mikeyVoiceOn" preference used everywhere else Mikey talks
+  // (voice commands, the daily briefing) — this widget replied in text only
+  // and never spoke a word, regardless of that setting or Cartesia config.
+  const speakReply = (text: string) => {
+    if (localStorage.getItem('mikeyVoiceOn') === 'false' || !text?.trim()) return;
+    api('/copilot/speak', { method: 'POST', body: JSON.stringify({ text }) })
+      .then((res: any) => {
+        if (!res?.audioBase64) return;
+        speakAudioRef.current?.pause();
+        const audio = new Audio(`data:${res.mimeType};base64,${res.audioBase64}`);
+        speakAudioRef.current = audio;
+        audio.play().catch(() => {});
+      })
+      .catch(() => {});
+  };
 
   const send = async () => {
     if (!input.trim() || sending) return;
@@ -37,6 +54,7 @@ export default function MikeyWidget() {
       if (res.conversationId && res.conversationId !== convId) setConvId(res.conversationId);
       setMessages(prev => [...prev, { id: `m-${Date.now()}`, role: "assistant", content: res.reply, createdAt: new Date().toISOString(), toolCalls: res.actions || [] }]);
       runUIActions(res.actions, res.reply);
+      speakReply(res.reply);
     } catch (e: any) {
       setMessages(prev => [...prev, { id: `e-${Date.now()}`, role: "assistant", content: `Error: ${e.message}`, createdAt: new Date().toISOString() }]);
     }
