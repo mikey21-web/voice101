@@ -1,6 +1,11 @@
+// Deliberately excludes "mikey": it's the assistant's own name, so it shows
+// up constantly in ordinary conversational phrases ("hi mikey", "thanks
+// mikey") that have nothing to do with navigation — treating any of those as
+// "go to the mikey page" is wrong on its face, and the standalone /mikey page
+// is feature-gated off for niches like real estate anyway, so it 404s besides.
 export const PAGE_MAP: Record<string, string> = {
   leads: '/leads', contacts: '/contacts', tickets: '/tickets',
-  campaigns: '/campaigns', analytics: '/analytics', mikey: '/mikey',
+  campaigns: '/campaigns', analytics: '/analytics',
   pipeline: '/pipeline', overview: '/', crm: '/crm', inbox: '/messages',
   'qr-codes': '/qr-codes', qr: '/qr-codes', qrcodes: '/qr-codes',
   settings: '/settings', events: '/events', bookings: '/bookings',

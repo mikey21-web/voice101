@@ -84,4 +84,15 @@ describe('matchCommand', () => {
     expect(matchCommand('draft a follow up for the sharma family')).toBeNull();
     expect(matchCommand('remind me to send the brochure tomorrow')).toBeNull();
   });
+
+  it('does not treat addressing the assistant by name as navigation', () => {
+    // Reproduces a live bug: "hi mikey" fuzzy-matched the word "mikey" itself
+    // against a "mikey" PAGE_MAP entry pointing at a standalone page that's
+    // feature-gated off for this niche, landing on a real "Page not found".
+    // "mikey" is the assistant's own name, not a page — it should never be
+    // a nav target, whatever page or feature state a niche is in.
+    expect(matchCommand('hi mikey')).toBeNull();
+    expect(matchCommand('thanks mikey')).toBeNull();
+    expect(matchCommand('mikey are you there')).toBeNull();
+  });
 });
