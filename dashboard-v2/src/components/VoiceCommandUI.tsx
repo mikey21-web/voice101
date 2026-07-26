@@ -11,7 +11,7 @@ const PAGE_MAP: Record<string, string> = {
   'qr-codes': '/qr-codes', qr: '/qr-codes', qrcodes: '/qr-codes',
   settings: '/settings', events: '/events', bookings: '/bookings',
   conversions: '/conversions', reports: '/reports', tasks: '/tasks',
-  properties: '/properties', shipments: '/shipments',
+  properties: '/properties', shipments: '/shipments', flows: '/flows',
   invoices: '/invoices', quotations: '/quotations', contracts: '/contracts',
   team: '/team', timesheet: '/timesheet', inventory: '/inventory',
   'purchase-orders': '/purchase-orders', 'vendor-bookings': '/vendor-bookings',

@@ -17,4 +17,5 @@ export class UpdateBusinessSettingsDto {
   @IsString() @IsOptional() primaryColor?: string;
   @IsObject() @IsOptional() labels?: Record<string, string>;
   @IsString() @IsOptional() industry?: string;
+  @IsString() @IsOptional() agentMode?: string; // AI | FLOW
 }

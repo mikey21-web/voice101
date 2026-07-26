@@ -8,9 +8,10 @@ import { LeadsModule } from '../leads/leads.module';
 import { ConversationsModule } from '../conversations/conversations.module';
 import { AgentModule } from '../agent/agent.module';
 import { DocumentsModule } from '../documents/documents.module';
+import { FlowsModule } from '../flows/flows.module';
 
 @Module({
-  imports: [MonitoringModule, PrismaModule, ContactsModule, LeadsModule, ConversationsModule, AgentModule, DocumentsModule],
+  imports: [MonitoringModule, PrismaModule, ContactsModule, LeadsModule, ConversationsModule, AgentModule, DocumentsModule, FlowsModule],
   controllers: [WebhooksController],
   providers: [WebhooksService],
   exports: [WebhooksService],

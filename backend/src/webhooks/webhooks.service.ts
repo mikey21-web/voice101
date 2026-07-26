@@ -10,6 +10,7 @@ import { TimelineService } from '../timeline/timeline.service';
 import { envelopeDecrypt } from '../shared/crypto.util';
 import { OutboundWebhookDispatchService } from '../shared/outbound-webhook-dispatch.service';
 import { ConfigService } from '@nestjs/config';
+import { FlowRuntimeService } from '../flows/flow-runtime.service';
 import * as crypto from 'crypto';
 
 @Injectable()
@@ -25,7 +26,24 @@ export class WebhooksService {
     private timeline: TimelineService,
     private outboundDispatch: OutboundWebhookDispatchService,
     private config: ConfigService,
+    private flowRuntime: FlowRuntimeService,
   ) {}
+
+  // The "off switch" for the freeform AI agent — when a business has flipped to
+  // FLOW mode, a configured flow drives the conversation instead of the LLM.
+  // Falls back to the AI agent if FLOW mode is on but no flow actually handled
+  // it (e.g. nothing configured yet), so a lead is never left hanging.
+  private async tryFlow(leadId: string, contactId: string, channel: string, text: string): Promise<boolean> {
+    const settings = await this.prisma.businessSettings.findFirst();
+    if (settings?.agentMode !== 'FLOW') return false;
+    return this.flowRuntime.handleInbound(leadId, contactId, channel, text);
+  }
+
+  private dispatchInbound(leadId: string, contactId: string, channel: string, text: string, triggerId: string, tenantId: string): void {
+    this.tryFlow(leadId, contactId, channel, text)
+      .then(handled => { if (!handled) this.agentClient.trigger(leadId, triggerId, channel, text, tenantId); })
+      .catch(() => this.agentClient.trigger(leadId, triggerId, channel, text, tenantId));
+  }
 
   // Stops the tap-loading spinner on the lead's phone; failure here shouldn't block the message flow.
   private async answerTelegramCallback(callbackQueryId: string): Promise<void> {
@@ -135,7 +153,7 @@ export class WebhooksService {
       data: { provider, eventType: 'whatsapp_message', idempotencyKey: key, rawPayload: payload, processedResult: result },
     });
 
-    this.agentClient.trigger(lead.id, msgId, 'WHATSAPP', text, lead.tenantId || contact.tenantId);
+    this.dispatchInbound(lead.id, contact.id, 'WHATSAPP', text, msgId, lead.tenantId || contact.tenantId);
 
     this.metrics.incrementCounter('webhooks_processed_total', { provider, status: 'success' });
     return { data: result };
@@ -280,7 +298,7 @@ export class WebhooksService {
       data: { provider: 'telegram', eventType: 'telegram_message', idempotencyKey: key, rawPayload: payload, processedResult: result },
     });
 
-    this.agentClient.trigger(lead.id, msgId || key, 'TELEGRAM', text, lead.tenantId || contact.tenantId);
+    this.dispatchInbound(lead.id, contact.id, 'TELEGRAM', text, msgId || key, lead.tenantId || contact.tenantId);
 
     this.metrics.incrementCounter('webhooks_processed_total', { provider: 'telegram', status: 'success' });
     return { data: result };
@@ -557,7 +575,7 @@ export class WebhooksService {
         data: { provider: 'wasender', eventType: 'messages.upsert', idempotencyKey: key, rawPayload: payload, processedResult: result },
       });
 
-      this.agentClient.trigger(lead.id, msgId || key, 'WHATSAPP', text, lead.tenantId || contact.tenantId);
+      this.dispatchInbound(lead.id, contact.id, 'WHATSAPP', text, msgId || key, lead.tenantId || contact.tenantId);
       this.metrics.incrementCounter('webhooks_processed_total', { provider: 'wasender', status: 'success' });
       return { data: result };
     }
@@ -655,7 +673,7 @@ export class WebhooksService {
         data: { provider: 'openwa', eventType: event, idempotencyKey: key, rawPayload: payload, processedResult: result },
       });
 
-      this.agentClient.trigger(lead.id, msgId || key, 'WHATSAPP', text, lead.tenantId || contact.tenantId);
+      this.dispatchInbound(lead.id, contact.id, 'WHATSAPP', text, msgId || key, lead.tenantId || contact.tenantId);
       this.metrics.incrementCounter('webhooks_processed_total', { provider: 'openwa', status: 'success' });
       return { data: result };
     }

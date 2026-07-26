@@ -32,6 +32,7 @@ import { TeamOpsModule } from './team-ops/team-ops.module';
 import { ModulePermissionsModule } from './module-permissions/module-permissions.module';
 import { TeamInvitesModule } from './team-invites/team-invites.module';
 import { PublicProfileModule } from './public-profile/public-profile.module';
+import { FlowsModule } from './flows/flows.module';
 import { ConversionsModule } from './conversions/conversions.module';
 import { IntegrationsModule } from './integrations/integrations.module';
 import { CrmMappingsModule } from './crm-mappings/crm-mappings.module';
@@ -157,6 +158,7 @@ import { StateTaxModule } from './state-tax/state-tax.module';
     ModulePermissionsModule,
     TeamInvitesModule,
     PublicProfileModule,
+    FlowsModule,
     ConversionsModule,
     BookingsModule,
     SiteVisitsModule,

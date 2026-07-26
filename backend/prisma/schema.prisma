@@ -676,10 +676,57 @@ model BusinessSettings {
   goals                 String[] @default([])
   compliance            String[] @default([])
   inventoryEnforcement  String   @default("ADVISORY") // ADVISORY | STRICT — governs event inventory over-allocation
+  // AI: every inbound message goes straight to the LangGraph agent (current default behavior).
+  // FLOW: inbound messages are driven by the active Flow's nodes/buttons instead — the "off
+  // switch" for the freeform AI agent when staff want a fixed, predictable script.
+  agentMode             String   @default("AI") // AI | FLOW
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
 
   @@map("business_settings")
+}
+
+/// A visual, node-based conversation script (the AiSensy/Interakt-style "flow
+/// builder") — an alternative to the freeform LangGraph agent for teams who want
+/// a fixed, predictable script instead of an LLM improvising. Only used when
+/// BusinessSettings.agentMode = "FLOW".
+model Flow {
+  id              String         @id @default(uuid())
+  tenantId        String         @map("tenant_id")
+  name            String
+  active          Boolean        @default(true)
+  isDefault       Boolean        @default(false)
+  triggerKeywords String[]       @default([])
+  // React Flow's own node/edge shape, stored as-is — no need to normalize into
+  // relational rows for something that's read/written as one document per edit.
+  nodes           Json           @default("[]")
+  edges           Json           @default("[]")
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  progress        FlowProgress[]
+
+  @@index([tenantId])
+  @@map("flows")
+}
+
+/// Tracks exactly one lead's position inside one Flow — which node they're
+/// waiting at, and any values collected along the way (e.g. their button taps).
+model FlowProgress {
+  id            String    @id @default(uuid())
+  leadId        String
+  lead          Lead      @relation(fields: [leadId], references: [id])
+  flowId        String
+  flow          Flow      @relation(fields: [flowId], references: [id])
+  currentNodeId String?
+  variables     Json      @default("{}")
+  status        String    @default("active") // active | completed | abandoned
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([leadId, flowId])
+  @@index([leadId])
+  @@map("flow_progress")
 }
 
 model Contact {
@@ -763,6 +810,7 @@ model Lead {
   conversations               ConversationMessage[]
   mediaFiles                  MediaFile[]                  @relation("LeadMedia")
   nurtureProgress             NurtureProgress[]
+  flowProgress                FlowProgress[]
   tasks                       Task[]
   conversions                 Conversion[]
   scoreLogs                   ScoreLog[]

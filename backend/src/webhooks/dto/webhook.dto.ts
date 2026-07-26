@@ -47,6 +47,13 @@ export class TelegramWebhookDto {
     text?: string;
     date: number;
   };
+  // A tapped inline-keyboard button (send_options) arrives as this instead of `message`.
+  @ApiPropertyOptional() @IsOptional() @IsObject() callback_query?: {
+    id: string;
+    from?: { id: number; first_name?: string; last_name?: string; username?: string };
+    message?: { message_id: number; chat: { id: number; type?: string; first_name?: string; username?: string }; date?: number };
+    data?: string;
+  };
 }
 
 export class SocialWebhookDto {

@@ -116,6 +116,7 @@ const rawNavGroups = [
       { label: "Rules", icon: Target, path: "/rules" },
       { label: "AI Campaigns", icon: Sparkles, path: "/ai-campaigns" },
       { label: "AI Agent", icon: Bot, path: "/ai-agent" },
+      { label: "Flow Builder", icon: GitBranch, path: "/flows" },
       { label: "Mikey", icon: MessageCircle, path: "/copilot" },
     ],
   },

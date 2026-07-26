@@ -83,8 +83,11 @@ export class WebhooksController {
   ) {
     const botToken = this.configService.get<string>('TELEGRAM_BOT_TOKEN');
     if (botToken) {
-      // Validate the update came from the correct bot: chat_id must be accessible by our token
-      if (!d.message?.chat?.id) return { status: 'ignored', reason: 'no chat message' };
+      // Validate the update came from the correct bot: chat_id must be accessible by our token.
+      // A tapped inline-keyboard button arrives as callback_query, not message.
+      if (!d.message?.chat?.id && !d.callback_query?.message?.chat?.id) {
+        return { status: 'ignored', reason: 'no chat message' };
+      }
       // Simple sanity: no further token-based verification needed since Telegram
       // sends to the URL configured per-bot. We rely on the secret URL pattern.
     } else {

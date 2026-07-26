@@ -354,4 +354,10 @@ export async function fetchMyPublicProfile() { return api('/public-profile/mine'
 export async function updateMyPublicProfile(data: any) { return api('/public-profile/mine', { method: 'PATCH', body: JSON.stringify(data) }); }
 export async function fetchPublicProfileBySlug(slug: string) { return api(`/public-profile/org/${slug}`); }
 export async function fetchPublicListingBySlug(slug: string) { return api(`/properties/public/${slug}`); }
+
+export async function fetchFlows() { return api('/flows'); }
+export async function fetchFlow(id: string) { return api(`/flows/${id}`); }
+export async function createFlow(data: any) { return api('/flows', { method: 'POST', body: JSON.stringify(data) }); }
+export async function updateFlow(id: string, data: any) { return api(`/flows/${id}`, { method: 'PATCH', body: JSON.stringify(data) }); }
+export async function deleteFlow(id: string) { return api(`/flows/${id}`, { method: 'DELETE' }); }
 export async function fetchPublicCollection(slugs: string[]) { return api(`/properties/public/collection?slugs=${slugs.join(',')}`); }
