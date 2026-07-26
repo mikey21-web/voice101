@@ -54,6 +54,17 @@ export class SalienceEngineService {
     });
   }
 
+  /** Shadow mode: logs the action Mikey would have taken (same decision, same args) without writing anything or queuing an approval, so an owner can watch a category's real-world decisions before trusting it enough to flip it to autonomous. */
+  private async logShadowAction(finding: SchedulerFinding, tool: string, args: Record<string, unknown>, leadId?: string): Promise<{ acted: boolean; summary: string }> {
+    await this.events.emit({
+      type: 'mikey.shadow_action',
+      source: 'salience-engine',
+      leadId,
+      payload: { tool, ...args, findingType: finding.type },
+    });
+    return { acted: false, summary: `[SHADOW] Would have run ${tool} for ${finding.type} — logged only, not executed.` };
+  }
+
   /** When in observe mode, create an ApprovalRequest instead of executing the real action — surfaces in the approval UI for one-tap approve/reject. */
   private async draftToApprovalQueue(finding: SchedulerFinding, tool: string, args: Record<string, unknown>, leadId?: string): Promise<{ acted: boolean; summary: string }> {
     await this.approvals.request(DEFAULT_TENANT_ID, {
@@ -96,6 +107,9 @@ export class SalienceEngineService {
     if (gate.mode === 'observe') {
       return this.draftToApprovalQueue(finding, 'assign_lead_to_agent', { leadIds }, leadIds[0]);
     }
+    if (gate.mode === 'shadow') {
+      return this.logShadowAction(finding, 'assign_lead_to_agent', { leadIds }, leadIds[0]);
+    }
 
     const agents = await this.prisma.user.findMany({
       where: { role: 'SALES_AGENT', active: true },
@@ -136,6 +150,9 @@ export class SalienceEngineService {
     const firstGate = leadIds.length > 0 ? await this.guardrails.canMessageLeadAutonomously(DEFAULT_TENANT_ID, 'lead_messaging', leadIds[0]) : { allowed: false, mode: undefined };
     if (firstGate.mode === 'observe') {
       return this.draftToApprovalQueue(finding, 'send_message', { leadIds, channel: 'WHATSAPP' }, leadIds[0]);
+    }
+    if (firstGate.mode === 'shadow') {
+      return this.logShadowAction(finding, 'send_message', { leadIds, channel: 'WHATSAPP' }, leadIds[0]);
     }
 
     let sent = 0;
@@ -191,6 +208,9 @@ export class SalienceEngineService {
     if (gate.mode === 'observe') {
       return this.draftToApprovalQueue(finding, 'assign_lead_to_agent', { leadIds, reason: 'stale_new_lead' }, leadIds[0]);
     }
+    if (gate.mode === 'shadow') {
+      return this.logShadowAction(finding, 'assign_lead_to_agent', { leadIds, reason: 'stale_new_lead' }, leadIds[0]);
+    }
 
     const leads = await this.prisma.lead.findMany({ where: { id: { in: leadIds } } });
     const alreadyAssigned = leads.filter((l) => l.assignedAgentId).map((l) => l.id);
@@ -244,6 +264,9 @@ export class SalienceEngineService {
 
     if (gate.mode === 'observe') {
       return this.draftToApprovalQueue(finding, 'escalate_task_priority', { taskIds, priority: 'high' });
+    }
+    if (gate.mode === 'shadow') {
+      return this.logShadowAction(finding, 'escalate_task_priority', { taskIds, priority: 'high' });
     }
 
     const tasks = await this.prisma.task.findMany({ where: { id: { in: taskIds }, priority: { not: 'high' } } });

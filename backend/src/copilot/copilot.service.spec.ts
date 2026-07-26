@@ -38,6 +38,7 @@ describe('CopilotService', () => {
   let prisma: any;
   let conversationsService: any;
   let featureFlags: any;
+  let memoryService: any;
   let fetchMock: jest.Mock;
   let originalFetch: typeof global.fetch;
 
@@ -58,6 +59,8 @@ describe('CopilotService', () => {
       },
       copilotMessage: { create: jest.fn().mockResolvedValue({}), count: jest.fn().mockResolvedValue(0) },
       businessSettings: { findFirst: jest.fn().mockResolvedValue(null) },
+      jarvisOutcome: { findMany: jest.fn().mockResolvedValue([]) },
+      user: { findUnique: jest.fn() },
       approvalRequest: {
         findUnique: jest.fn(({ where: { id } }: any) => Promise.resolve(approvalStore.get(id) ?? null)),
         update: jest.fn(({ where: { id }, data }: any) => {
@@ -90,7 +93,14 @@ describe('CopilotService', () => {
         { provide: KhojClientService, useValue: { query: jest.fn().mockResolvedValue(null) } },
         { provide: MikeyService, useValue: { runAutonomousAction: jest.fn() } },
         { provide: OutcomeEngineService, useValue: { defineOutcome: jest.fn() } },
-        { provide: MemoryService, useValue: { recallRecent: jest.fn().mockResolvedValue([]) } },
+        {
+          provide: MemoryService,
+          useValue: (memoryService = {
+            recallRecent: jest.fn().mockResolvedValue([]),
+            getRelevantRules: jest.fn().mockResolvedValue([]),
+            applyRule: jest.fn().mockResolvedValue({}),
+          }),
+        },
         {
           provide: ApprovalsService,
           useValue: {
@@ -150,6 +160,53 @@ describe('CopilotService', () => {
       fetchMock.mockResolvedValueOnce(pythonResponse('ok'));
       await service.chat('user-1', 'SALES_AGENT', 'default-tenant', 'hello');
       expect(fetchMock).toHaveBeenCalled();
+    });
+  });
+
+  describe('learned rules (closing the reflexion loop)', () => {
+    it('surfaces active procedural rules to the agent-service as memoryContext and marks them applied', async () => {
+      memoryService.getRelevantRules.mockResolvedValueOnce([
+        { id: 'rule-1', rule: 'Send pricing within 5 minutes for hot leads', rationale: 'Converts 2x better' },
+      ]);
+      fetchMock.mockResolvedValueOnce(pythonResponse('ok'));
+      await service.chat('user-1', 'SALES_AGENT', 'default-tenant', 'a hot lead just came in');
+
+      const body = JSON.parse(fetchMock.mock.calls[0][1].body);
+      expect(body.memoryContext).toContain('Send pricing within 5 minutes for hot leads');
+      expect(memoryService.applyRule).toHaveBeenCalledWith('rule-1');
+    });
+
+    it('leaves memoryContext untouched when no rules are relevant', async () => {
+      fetchMock.mockResolvedValueOnce(pythonResponse('ok'));
+      await service.chat('user-1', 'SALES_AGENT', 'default-tenant', 'hello');
+      const body = JSON.parse(fetchMock.mock.calls[0][1].body);
+      expect(body.memoryContext).toBe('');
+      expect(memoryService.applyRule).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('resumeStuckOutcomes (checkpoint recovery)', () => {
+    it('resumes an outcome whose step is stuck in_progress past the stall threshold', async () => {
+      prisma.jarvisOutcome.findMany.mockResolvedValue([
+        { id: 'outcome-1', tenantId: 'default-tenant', userId: 'user-1', steps: [{ id: 's1', status: 'in_progress' }] },
+      ]);
+      prisma.user.findUnique.mockResolvedValue({ role: 'SALES_AGENT' });
+      const runOutcomeSpy = jest.spyOn(service, 'runOutcome').mockResolvedValue({} as any);
+
+      await service.resumeStuckOutcomes();
+
+      expect(runOutcomeSpy).toHaveBeenCalledWith('outcome-1', 'user-1', 'SALES_AGENT', 'default-tenant');
+    });
+
+    it('skips outcomes with no step stuck in_progress (e.g. legitimately still pending)', async () => {
+      prisma.jarvisOutcome.findMany.mockResolvedValue([
+        { id: 'outcome-2', tenantId: 'default-tenant', userId: 'user-1', steps: [{ id: 's1', status: 'pending' }] },
+      ]);
+      const runOutcomeSpy = jest.spyOn(service, 'runOutcome').mockResolvedValue({} as any);
+
+      await service.resumeStuckOutcomes();
+
+      expect(runOutcomeSpy).not.toHaveBeenCalled();
     });
   });
 

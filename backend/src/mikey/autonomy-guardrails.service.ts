@@ -11,8 +11,8 @@ const DEFAULT_AUTO_SEND_MODE = 'enabled';
 export type AutonomyCategory = 'lead_assignment' | 'lead_messaging' | 'task_escalation' | 'jarvis_tools';
 export const AUTONOMY_CATEGORIES: AutonomyCategory[] = ['lead_assignment', 'lead_messaging', 'task_escalation', 'jarvis_tools'];
 
-/** off: never acts, only reports. observe: drafts every action to the approval queue for one-tap approve/reject. autonomous: acts on its own, subject to the other guardrails below. */
-export type AutonomyLevel = 'off' | 'observe' | 'autonomous';
+/** off: never acts, only reports. shadow: runs the same decision as autonomous but only logs what it would have done — no write, no approval-queue entry, so an owner can validate a category before trusting it live. observe: drafts every action to the approval queue for one-tap approve/reject. autonomous: acts on its own, subject to the other guardrails below. */
+export type AutonomyLevel = 'off' | 'shadow' | 'observe' | 'autonomous';
 
 /**
  * Deterministic, pre-LLM checks that gate every autonomous (unprompted)
@@ -87,6 +87,7 @@ export class AutonomyGuardrailsService {
     const level = await this.getCategoryLevel(tenantId, category);
     if (level === 'off') return { allowed: false, reason: `${category} autonomy is turned off` };
     if (level === 'observe') return { allowed: true, mode: 'observe', reason: `${category} is in observe-only mode — drafting for approval` };
+    if (level === 'shadow') return { allowed: true, mode: 'shadow', reason: `${category} is in shadow mode — logging what would happen, not acting` };
     if (!(await this.isUnderDailyCap(tenantId))) return { allowed: false, reason: 'daily autonomous action cap reached' };
     return { allowed: true, mode: 'autonomous' };
   }
@@ -112,6 +113,7 @@ export class AutonomyGuardrailsService {
     const level = await this.getCategoryLevel(tenantId, category);
     if (level === 'off') return { allowed: false, reason: `${category} autonomy is turned off` };
     if (level === 'observe') return { allowed: false, mode: 'observe', reason: `${category} is in observe-only mode — drafting for approval` };
+    if (level === 'shadow') return { allowed: true, mode: 'shadow', reason: `${category} is in shadow mode — logging what would happen, not acting` };
     if (await this.isQuietHours(tenantId)) return { allowed: false, reason: 'quiet hours' };
     if (!(await this.isUnderDailyCap(tenantId))) return { allowed: false, reason: 'daily autonomous action cap reached' };
     if (!(await this.isLeadOffCooldown(tenantId, leadId))) return { allowed: false, reason: 'lead was already actioned autonomously within the cooldown window' };

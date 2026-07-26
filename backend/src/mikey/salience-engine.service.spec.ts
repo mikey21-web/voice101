@@ -13,6 +13,7 @@ describe('SalienceEngineService', () => {
   let prisma: any;
   let guardrails: any;
   let actions: any;
+  let events: any;
 
   beforeEach(async () => {
     prisma = {
@@ -38,7 +39,7 @@ describe('SalienceEngineService', () => {
         SalienceEngineService,
         { provide: PrismaService, useValue: prisma },
         { provide: ConversationsService, useValue: { create: jest.fn() } },
-        { provide: EventsService, useValue: { emit: jest.fn().mockResolvedValue(undefined) } },
+        { provide: EventsService, useValue: (events = { emit: jest.fn().mockResolvedValue(undefined) }) },
         { provide: AutonomyGuardrailsService, useValue: guardrails },
         { provide: AutonomousActionService, useValue: actions },
         { provide: ApprovalsService, useValue: { request: jest.fn(), decide: jest.fn() } },
@@ -87,6 +88,37 @@ describe('SalienceEngineService', () => {
 
     expect(result.acted).toBe(false);
     expect(prisma.task.findMany).not.toHaveBeenCalled();
+  });
+
+  it('shadow mode logs what it would have done instead of escalating the task', async () => {
+    guardrails.canActInternally.mockResolvedValueOnce({ allowed: true, mode: 'shadow' });
+
+    const result = await service.route({
+      type: 'overdue_tasks', severity: 'warning', title: 'Overdue', description: 'desc', count: 1,
+      metadata: { taskIds: ['t1'] },
+    } as any);
+
+    expect(result.acted).toBe(false);
+    expect(result.summary).toContain('SHADOW');
+    expect(prisma.task.findMany).not.toHaveBeenCalled();
+    expect(prisma.task.update).not.toHaveBeenCalled();
+    expect(events.emit).toHaveBeenCalledWith(expect.objectContaining({
+      type: 'mikey.shadow_action',
+      payload: expect.objectContaining({ tool: 'escalate_task_priority', findingType: 'overdue_tasks' }),
+    }));
+  });
+
+  it('shadow mode logs what it would have done instead of assigning an unassigned hot lead', async () => {
+    guardrails.canActInternally.mockResolvedValueOnce({ allowed: true, mode: 'shadow' });
+
+    const result = await service.route({
+      type: 'unassigned_hot_leads', severity: 'warning', title: '', description: '', count: 1,
+      metadata: { leadIds: ['l1'] },
+    } as any);
+
+    expect(result.acted).toBe(false);
+    expect(prisma.lead.update).not.toHaveBeenCalled();
+    expect(events.emit).toHaveBeenCalledWith(expect.objectContaining({ type: 'mikey.shadow_action' }));
   });
 
   it('auto-assigns stale new leads that have no agent yet, skipping ones already assigned', async () => {

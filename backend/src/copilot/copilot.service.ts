@@ -18,8 +18,12 @@ import { MikeyService } from '../mikey/mikey.service';
 import { OutcomeEngineService } from '../mikey/outcome-engine.service';
 import { MemoryService } from '../mikey/memory.service';
 import { ApprovalsService } from '../approvals/approvals.service';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 const MAX_COPILOT_MESSAGES_PER_TENANT_PER_DAY = 500;
+// A step stuck 'in_progress' this long means the process died mid-runOutcome
+// (crash/restart) rather than a slow tool call — safe to resume.
+const STUCK_OUTCOME_THRESHOLD_MS = 10 * 60 * 1000;
 import { PERMISSION_MATRIX } from '../permissions/permissions.matrix';
 
 const HTTP_TIMEOUT_MS = parseInt(process.env.COPILOT_HTTP_TIMEOUT || '30000', 10);
@@ -157,6 +161,18 @@ export class CopilotService {
         memoryContext = recentMemory.map((m: any) => `- [${m.type}] ${m.summary || m.value}`).join('\n');
       }
     } catch {}
+    try {
+      // Closes the reflexion loop: rules learned from past outcomes (memory.reflectOnOutcome
+      // -> proposeRule -> human approveRule) were previously only used to score their own
+      // impact after the fact, never consulted before acting. Surfacing them here means an
+      // approved rule actually changes what Mikey says/does on matching conversations.
+      const rules = await this.memory.getRelevantRules(tenantId, message, undefined, 3);
+      if (rules?.length) {
+        const rulesText = rules.map((r: any) => `- ${r.rule} (${r.rationale})`).join('\n');
+        memoryContext = memoryContext ? `${memoryContext}\n\nLearned rules to apply:\n${rulesText}` : `Learned rules to apply:\n${rulesText}`;
+        for (const r of rules) await this.memory.applyRule(r.id).catch(() => {});
+      }
+    } catch {}
     let khojContext = '';
     try {
       const khojResult = await this.khoj.query(message);
@@ -237,6 +253,31 @@ export class CopilotService {
     });
 
     return { conversationId: conversation.id, reply, actions };
+  }
+
+  /** Checkpoint recovery: a step left 'in_progress' means runOutcome's in-memory
+   * chain died (backend crash/restart) before it could mark the step completed,
+   * failed, or awaiting_approval — the DB row is the only surviving state.
+   * Finds those and re-enters runOutcome, which resumes from nextPendingStep(). */
+  @Cron(CronExpression.EVERY_10_MINUTES)
+  async resumeStuckOutcomes(): Promise<void> {
+    const cutoff = new Date(Date.now() - STUCK_OUTCOME_THRESHOLD_MS);
+    const stuck = await this.prisma.jarvisOutcome.findMany({
+      where: { status: 'active', updatedAt: { lt: cutoff } },
+      select: { id: true, tenantId: true, userId: true, steps: true },
+    });
+    for (const row of stuck) {
+      const steps = row.steps as any[];
+      if (!steps.some(s => s.status === 'in_progress')) continue;
+      try {
+        const user = await this.prisma.user.findUnique({ where: { id: row.userId }, select: { role: true } });
+        if (!user) continue;
+        this.logger.warn(`Resuming stuck outcome ${row.id} (stalled since last update before ${cutoff.toISOString()})`);
+        await this.runOutcome(row.id, row.userId, user.role, row.tenantId);
+      } catch (err: any) {
+        this.logger.error(`Failed to resume stuck outcome ${row.id}: ${err.message}`);
+      }
+    }
   }
 
   /** Cartesia TTS for a Mikey reply, base64-encoded so the frontend can play it
