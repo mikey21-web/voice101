@@ -11,6 +11,10 @@ import { OffersModule } from '../offers/offers.module';
 import { DocumentsModule } from '../documents/documents.module';
 import { ChannelPartnerClaimsModule } from '../channel-partner-claims/channel-partner-claims.module';
 import { TicketsModule } from '../tickets/tickets.module';
+import { PropertiesModule } from '../properties/properties.module';
+import { ProjectsModule } from '../projects/projects.module';
+import { ChannelPartnersModule } from '../channel-partners/channel-partners.module';
+import { CampaignsModule } from '../campaigns/campaigns.module';
 import { JarvisToolsService } from './jarvis-tools.service';
 import { JarvisToolsController } from './jarvis-tools.controller';
 import { MikeySchedulerService } from './mikey-scheduler.service';
@@ -36,6 +40,7 @@ import { GuardrailsController } from './guardrails.controller';
   imports: [
     BookingsModule, AnalyticsModule, ConversationsModule, SiteVisitsModule, UnitHoldsModule, SlaModule,
     CostSheetsModule, OffersModule, DocumentsModule, ChannelPartnerClaimsModule, TicketsModule, ApprovalsModule,
+    PropertiesModule, ProjectsModule, ChannelPartnersModule, CampaignsModule,
   ],
   controllers: [MikeyController, MemoryController, AutonomousActionController, JarvisToolsController, GuardrailsController],
   providers: [

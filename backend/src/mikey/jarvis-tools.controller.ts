@@ -69,4 +69,69 @@ export class JarvisToolsController {
   createPartnerLeadRegistration(@Body() body: { channelPartnerId: string; phone: string; leadId?: string }, @Req() req: any) {
     return this.tools.createPartnerLeadRegistration(req.user.tenantId, body);
   }
+
+  @Post('search-properties')
+  searchProperties(@Body() body: any, @Req() req: any) {
+    return this.tools.searchProperties(req.user.tenantId, body);
+  }
+
+  @Post('create-property')
+  createProperty(@Body() body: any, @Req() req: any) {
+    return this.tools.createProperty(req.user.tenantId, body);
+  }
+
+  @Post('update-property')
+  updateProperty(@Body() body: { propertyId: string; data: Record<string, unknown> }, @Req() req: any) {
+    return this.tools.updateProperty(req.user.tenantId, body);
+  }
+
+  @Post('search-projects')
+  searchProjects(@Body() body: any, @Req() req: any) {
+    return this.tools.searchProjects(req.user.tenantId, body);
+  }
+
+  @Post('create-project')
+  createProject(@Body() body: any, @Req() req: any) {
+    return this.tools.createProject(req.user.tenantId, body);
+  }
+
+  @Post('update-project')
+  updateProject(@Body() body: { projectId: string; data: Record<string, unknown> }, @Req() req: any) {
+    return this.tools.updateProject(req.user.tenantId, body);
+  }
+
+  @Post('search-channel-partners')
+  searchChannelPartners(@Body() body: any, @Req() req: any) {
+    return this.tools.searchChannelPartners(req.user.tenantId, body);
+  }
+
+  @Post('create-channel-partner')
+  createChannelPartner(@Body() body: any, @Req() req: any) {
+    return this.tools.createChannelPartner(req.user.tenantId, body);
+  }
+
+  @Post('update-channel-partner')
+  updateChannelPartner(@Body() body: { partnerId: string; data: Record<string, unknown> }, @Req() req: any) {
+    return this.tools.updateChannelPartner(req.user.tenantId, body);
+  }
+
+  @Post('search-campaigns')
+  searchCampaigns(@Body() body: any, @Req() req: any) {
+    return this.tools.searchCampaigns(req.user.tenantId, body);
+  }
+
+  @Post('create-campaign')
+  createCampaign(@Body() body: any, @Req() req: any) {
+    return this.tools.createCampaign(req.user.tenantId, body);
+  }
+
+  @Post('update-campaign')
+  updateCampaign(@Body() body: { campaignId: string; data: Record<string, unknown> }, @Req() req: any) {
+    return this.tools.updateCampaign(req.user.tenantId, body);
+  }
+
+  @Post('update-ticket')
+  updateTicket(@Body() body: { ticketId: string; data: Record<string, unknown> }, @Req() req: any) {
+    return this.tools.updateTicket(req.user.tenantId, body);
+  }
 }

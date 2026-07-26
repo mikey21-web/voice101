@@ -10,6 +10,10 @@ import { TicketsService } from '../tickets/tickets.service';
 import { ApprovalsService } from '../approvals/approvals.service';
 import { AutonomousActionService } from './autonomous-action.service';
 import { AutonomyGuardrailsService } from './autonomy-guardrails.service';
+import { PropertiesService } from '../properties/properties.service';
+import { ProjectsService } from '../projects/projects.service';
+import { ChannelPartnersService } from '../channel-partners/channel-partners.service';
+import { CampaignsService } from '../campaigns/campaigns.service';
 
 export type JarvisToolResult =
   | { status: 'COMPLETED'; data: unknown }
@@ -41,6 +45,10 @@ export class JarvisToolsService {
     private approvals: ApprovalsService,
     private autonomousActions: AutonomousActionService,
     private guardrails: AutonomyGuardrailsService,
+    private properties: PropertiesService,
+    private projects: ProjectsService,
+    private channelPartners: ChannelPartnersService,
+    private campaigns: CampaignsService,
   ) {}
 
   async createSiteVisit(tenantId: string, args: { leadId: string; projectId: string; unitId?: string; startAt: string }): Promise<JarvisToolResult> {
@@ -120,6 +128,97 @@ export class JarvisToolsService {
     return this.run(tenantId, 'create_partner_lead_registration', args.leadId, async () => {
       const claim = await this.partnerClaims.registerClaim(tenantId, args);
       return { claimId: claim.id, status: claim.status };
+    });
+  }
+
+  async searchProperties(tenantId: string, args: { text?: string; propertyType?: string; minPrice?: number; maxPrice?: number; bedrooms?: number; location?: string; status?: string; limit?: number }): Promise<JarvisToolResult> {
+    return this.run(tenantId, 'search_properties', undefined, async () => {
+      const results = await this.properties.search(tenantId, args);
+      return { results };
+    });
+  }
+
+  async createProperty(tenantId: string, args: { title: string; description?: string; propertyType?: string; price?: number; bedrooms?: number; bathrooms?: number; areaSqft?: number; location?: string; address?: string; reraId?: string }): Promise<JarvisToolResult> {
+    return this.run(tenantId, 'create_property', undefined, async () => {
+      const property = await this.properties.create({ tenantId, ...args } as any);
+      return { propertyId: property.id };
+    });
+  }
+
+  async updateProperty(tenantId: string, args: { propertyId: string; data: Record<string, unknown> }): Promise<JarvisToolResult> {
+    return this.run(tenantId, 'update_property', undefined, async () => {
+      const property = await this.properties.update(args.propertyId, args.data);
+      return { propertyId: property.id };
+    });
+  }
+
+  async searchProjects(tenantId: string, args: { status?: string; page?: number; limit?: number }): Promise<JarvisToolResult> {
+    return this.run(tenantId, 'search_projects', undefined, async () => {
+      const results = await this.projects.findAll({ tenantId, ...args });
+      return results;
+    });
+  }
+
+  async createProject(tenantId: string, args: { name: string; description?: string; location?: string; address?: string; reraId?: string; status?: string; possessionDate?: string }): Promise<JarvisToolResult> {
+    return this.run(tenantId, 'create_project', undefined, async () => {
+      const project = await this.projects.create({ tenantId, ...args });
+      return { projectId: project.id };
+    });
+  }
+
+  async updateProject(tenantId: string, args: { projectId: string; data: Record<string, unknown> }): Promise<JarvisToolResult> {
+    return this.run(tenantId, 'update_project', undefined, async () => {
+      const project = await this.projects.update(args.projectId, args.data);
+      return { projectId: project.id };
+    });
+  }
+
+  async searchChannelPartners(tenantId: string, args: { status?: string; search?: string; page?: number; limit?: number }): Promise<JarvisToolResult> {
+    return this.run(tenantId, 'search_channel_partners', undefined, async () => {
+      const results = await this.channelPartners.findAll(args);
+      return results;
+    });
+  }
+
+  async createChannelPartner(tenantId: string, args: { name: string; company?: string; phone?: string; email?: string; reraId?: string; commissionRate?: number; notes?: string }): Promise<JarvisToolResult> {
+    return this.run(tenantId, 'create_channel_partner', undefined, async () => {
+      const partner = await this.channelPartners.create({ tenantId, ...args });
+      return { partnerId: partner.id };
+    });
+  }
+
+  async updateChannelPartner(tenantId: string, args: { partnerId: string; data: Record<string, unknown> }): Promise<JarvisToolResult> {
+    return this.run(tenantId, 'update_channel_partner', undefined, async () => {
+      const partner = await this.channelPartners.update(args.partnerId, args.data);
+      return { partnerId: partner.id };
+    });
+  }
+
+  async searchCampaigns(tenantId: string, args: { status?: string; campaignType?: string; search?: string; page?: number; limit?: number }): Promise<JarvisToolResult> {
+    return this.run(tenantId, 'search_campaigns', undefined, async () => {
+      const results = await this.campaigns.findAll(args as any, tenantId);
+      return results;
+    });
+  }
+
+  async createCampaign(tenantId: string, args: { name: string; description?: string; campaignType?: string; sourceType?: string; totalBudget?: number }): Promise<JarvisToolResult> {
+    return this.run(tenantId, 'create_campaign', undefined, async () => {
+      const campaign = await this.campaigns.create({ tenantId, ...args }, 'jarvis');
+      return { campaignId: campaign.id };
+    });
+  }
+
+  async updateCampaign(tenantId: string, args: { campaignId: string; data: Record<string, unknown> }): Promise<JarvisToolResult> {
+    return this.run(tenantId, 'update_campaign', undefined, async () => {
+      const campaign = await this.campaigns.update(args.campaignId, args.data, 'jarvis');
+      return { campaignId: campaign.id };
+    });
+  }
+
+  async updateTicket(tenantId: string, args: { ticketId: string; data: Record<string, unknown> }): Promise<JarvisToolResult> {
+    return this.run(tenantId, 'update_ticket', undefined, async () => {
+      const ticket = await this.tickets.update(args.ticketId, args.data as any, 'jarvis');
+      return { ticketId: ticket.id };
     });
   }
 

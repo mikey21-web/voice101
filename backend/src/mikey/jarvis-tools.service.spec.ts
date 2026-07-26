@@ -11,6 +11,10 @@ import { TicketsService } from '../tickets/tickets.service';
 import { AutonomousActionService } from './autonomous-action.service';
 import { AutonomyGuardrailsService } from './autonomy-guardrails.service';
 import { ApprovalsService } from '../approvals/approvals.service';
+import { PropertiesService } from '../properties/properties.service';
+import { ProjectsService } from '../projects/projects.service';
+import { ChannelPartnersService } from '../channel-partners/channel-partners.service';
+import { CampaignsService } from '../campaigns/campaigns.service';
 
 describe('JarvisToolsService', () => {
   let service: JarvisToolsService;
@@ -37,6 +41,10 @@ describe('JarvisToolsService', () => {
         { provide: ApprovalsService, useValue: { request: jest.fn(), decide: jest.fn() } },
         { provide: AutonomousActionService, useValue: autonomousActions },
         { provide: AutonomyGuardrailsService, useValue: guardrails },
+        { provide: PropertiesService, useValue: { search: jest.fn(), create: jest.fn(), update: jest.fn() } },
+        { provide: ProjectsService, useValue: { findAll: jest.fn(), create: jest.fn(), update: jest.fn() } },
+        { provide: ChannelPartnersService, useValue: { findAll: jest.fn(), create: jest.fn(), update: jest.fn() } },
+        { provide: CampaignsService, useValue: { findAll: jest.fn(), create: jest.fn(), update: jest.fn() } },
       ],
     }).compile();
 
@@ -68,5 +76,13 @@ describe('JarvisToolsService', () => {
     const result = await service.sendPaymentReminder('t1', { leadId: 'lead-1', paymentScheduleId: 'ps-1' });
     expect(result.status).toBe('COMPLETED');
     expect((result as any).data.taskId).toBe('task-1');
+  });
+
+  it('updateProperty goes through the same gate/record envelope as the pre-existing tools', async () => {
+    const properties: any = (service as any).properties;
+    properties.update.mockResolvedValue({ id: 'prop-1' });
+    const result = await service.updateProperty('t1', { propertyId: 'prop-1', data: { status: 'SOLD' } });
+    expect(result.status).toBe('COMPLETED');
+    expect(properties.update).toHaveBeenCalledWith('prop-1', { status: 'SOLD' });
   });
 });
