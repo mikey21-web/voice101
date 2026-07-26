@@ -1,6 +1,7 @@
 import { setPendingFilter } from './pendingSearch';
 import { api } from './api';
 import { startExplainFlow } from './explainMode';
+import { PAGE_MAP, resolvePage } from './pageMap';
 
 export interface CopilotAction {
   tool: string;
@@ -18,10 +19,14 @@ export function runUIAction(action: CopilotAction) {
     return;
   }
   if (action.tool !== 'navigate_ui') return;
-  const { page, filters, highlightId } = action.args || {};
-  if (!page) return;
+  const { page: rawPage, filters, highlightId } = action.args || {};
+  if (!rawPage) return;
+  // Raw model output ("qr_codes", "qr codes") rarely matches a PAGE_MAP key
+  // exactly. Using it as the hash unresolved silently left the page exactly
+  // where it was while Mikey still reported success.
+  const page = resolvePage(rawPage);
   setPendingFilter(page, { filters, highlightId });
-  window.location.hash = '/' + page;
+  window.location.hash = PAGE_MAP[page] || '/' + page;
 }
 
 const NAV_PHRASES = [

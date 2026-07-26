@@ -1,5 +1,18 @@
 import { describe, it, expect } from 'vitest';
 import { matchCommand, encodeWav } from './VoiceCommandUI';
+import { resolvePage } from '../lib/pageMap';
+
+describe('resolvePage', () => {
+  it('resolves the exact slugs the AI actually returns for navigate_ui', () => {
+    // Reproduces a live bug: the model returned "qr_codes" (underscore), which
+    // isn't a PAGE_MAP key, so the raw string was used as the hash directly —
+    // an unmatched route that left the page exactly where it was while Mikey
+    // still reported "You're now on the QR codes page."
+    expect(resolvePage('qr_codes')).toBe('qr-codes');
+    expect(resolvePage('QR Codes')).toBe('qr-codes');
+    expect(resolvePage('leads')).toBe('leads');
+  });
+});
 
 describe('encodeWav', () => {
   const rate = 16000;
