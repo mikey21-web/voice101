@@ -31,43 +31,111 @@ const PAGE_ALIASES: Record<string, string> = {
   dashboard: 'overview', home: 'overview', inbox: 'inbox',
 };
 
-// Fuzzy match a potentially messy transcript against known page names.
-// Handles typos, slurred speech, abbreviations, and partial matches.
-function fuzzyPageMatch(text: string): string | null {
-  const known = Object.entries(PAGE_MAP);
-  const lower = text.toLowerCase().replace(/[^a-z0-9\s-]/g, '');
-  const words = lower.split(/\s+/).filter(Boolean);
+// Edit distance, capped: anything past `max` is "not a match" so we bail early.
+function withinEditDistance(a: string, b: string, max: number): boolean {
+  if (Math.abs(a.length - b.length) > max) return false;
+  let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    const row = [i];
+    let best = i;
+    for (let j = 1; j <= b.length; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      row[j] = Math.min(prev[j] + 1, row[j - 1] + 1, prev[j - 1] + cost);
+      best = Math.min(best, row[j]);
+    }
+    if (best > max) return false;
+    prev = row;
+  }
+  return prev[b.length] <= max;
+}
 
-  // Direct or alias match first
+// Match a transcript word against a known page name. Tolerates typos and
+// mispronunciation ("campain", "analitycs") without the old character-overlap
+// heuristic, which matched almost any word to some page and sent people to
+// random screens.
+// Several keys share a path ("qr", "qrcodes", "qr-codes"). Downstream consumers
+// key pending filters by page name, so always hand back one canonical name.
+function canonical(page: string): string {
+  const path = PAGE_MAP[page];
+  return Object.keys(PAGE_MAP).find(k => PAGE_MAP[k] === path && '/' + k === path) || page;
+}
+
+function fuzzyPageMatch(text: string): string | null {
+  const names = Object.keys(PAGE_MAP);
+  const words = text.toLowerCase().replace(/[^a-z0-9\s-]/g, '').split(/\s+/).filter(Boolean);
+
   for (const w of words) {
     if (PAGE_MAP[w]) return w;
     const aliased = PAGE_ALIASES[w];
     if (aliased && PAGE_MAP[aliased]) return aliased;
   }
-
-  // Fuzzy: for each known page name, check if the input text contains
-  // a word with high character overlap (handles "whsirpflow" -> "workflow")
-  for (const [name] of known) {
-    const normalized = name.replace(/[^a-z0-9]/g, '');
-    if (normalized.length < 2) continue;
-    for (const w of words) {
-      if (w.length < 2) continue;
-      // word is substring of page name or vice versa
-      if (normalized.includes(w) || w.includes(normalized)) return name;
-      // character overlap > 60% = likely typo/mispronunciation
-      const overlap = [...new Set([...w])].filter(c => normalized.includes(c)).length;
-      const maxLen = Math.max(w.length, normalized.length);
-      if (overlap / maxLen > 0.6) return name;
-    }
-    // Check if most characters of the page name appear in order in the text
-    let ci = 0;
-    for (const ch of lower) {
-      if (ch === normalized[ci]) ci++;
-      if (ci === normalized.length) return name;
+  // Two-word pages ("qr codes", "purchase orders") and their aliases.
+  for (let i = 0; i < words.length - 1; i++) {
+    const pair = `${words[i]} ${words[i + 1]}`;
+    const hyphen = `${words[i]}-${words[i + 1]}`;
+    if (PAGE_MAP[hyphen]) return hyphen;
+    const aliased = PAGE_ALIASES[pair];
+    if (aliased && PAGE_MAP[aliased]) return aliased;
+  }
+  // Typo tolerance: 1 edit for short names, 2 for longer ones.
+  for (const w of words) {
+    if (w.length < 4) continue;
+    for (const name of names) {
+      const flat = name.replace(/-/g, '');
+      if (withinEditDistance(w, flat, flat.length > 6 ? 2 : 1)) return name;
     }
   }
-
   return null;
+}
+
+// MediaRecorder only produces WebM/Opus (or MP4 on Safari), but the self-hosted
+// Moonshine transcriber decodes with libsndfile, which cannot read either
+// container — so every voice command failed at the first transcription hop and
+// only recovered if a paid Sarvam/OpenAI key was configured. Decoding to 16 kHz
+// mono PCM WAV here (the rate ASR models want anyway) makes the free, always-on
+// path work and shrinks the upload about 3x.
+export function encodeWav(samples: Float32Array, rate: number): ArrayBuffer {
+  const view = new DataView(new ArrayBuffer(44 + samples.length * 2));
+  const ascii = (offset: number, s: string) => {
+    for (let i = 0; i < s.length; i++) view.setUint8(offset + i, s.charCodeAt(i));
+  };
+  ascii(0, 'RIFF');
+  view.setUint32(4, 36 + samples.length * 2, true);
+  ascii(8, 'WAVEfmt ');
+  view.setUint32(16, 16, true);          // PCM header size
+  view.setUint16(20, 1, true);           // format: PCM
+  view.setUint16(22, 1, true);           // mono
+  view.setUint32(24, rate, true);
+  view.setUint32(28, rate * 2, true);    // byte rate
+  view.setUint16(32, 2, true);           // block align
+  view.setUint16(34, 16, true);          // bits per sample
+  ascii(36, 'data');
+  view.setUint32(40, samples.length * 2, true);
+  for (let i = 0; i < samples.length; i++) {
+    const s = Math.max(-1, Math.min(1, samples[i]));
+    view.setInt16(44 + i * 2, s < 0 ? s * 0x8000 : s * 0x7fff, true);
+  }
+  return view.buffer;
+}
+
+async function toWav16k(blob: Blob): Promise<Blob> {
+  const AudioCtx = (window as any).AudioContext || (window as any).webkitAudioContext;
+  const ctx = new AudioCtx();
+  let decoded: AudioBuffer;
+  try {
+    decoded = await ctx.decodeAudioData(await blob.arrayBuffer());
+  } finally {
+    ctx.close().catch(() => {});
+  }
+
+  const rate = 16000;
+  const offline = new OfflineAudioContext(1, Math.max(1, Math.ceil(decoded.duration * rate)), rate);
+  const src = offline.createBufferSource();
+  src.buffer = decoded;
+  src.connect(offline.destination);
+  src.start();
+  const samples = (await offline.startRendering()).getChannelData(0);
+  return new Blob([encodeWav(samples, rate)], { type: 'audio/wav' });
 }
 
 function navigateTo(page: string) {
@@ -85,22 +153,29 @@ function navigateTo(page: string) {
 // silently treating it as "show me leads".
 const QUESTION_PATTERN = /\?\s*$|^(how|what|why|when|who|which|is|are|do|does|can|could|will|should|would)\b/i;
 
-function matchCommand(text: string): { page: string; filter?: string } | null {
+const NAV_VERB = /^(?:show\s+me|show|go\s+to|go|open|navigate\s+to|navigate|take\s+me\s+to|jump\s+to|switch\s+to|pull\s+up|bring\s+up|view)\s+/i;
+
+export function matchCommand(text: string): { page: string; filter?: string } | null {
   if (QUESTION_PATTERN.test(text.trim())) return null;
-  const t = text.toLowerCase().trim().replace(/^(?:show\s+me|go\s+to|open|navigate\s+to|navigate|take\s+me\s+to)\s+/i, '');
+  const raw = text.toLowerCase().trim().replace(/[.!,]+$/, '');
+  const t = raw.replace(NAV_VERB, '').replace(/^(?:the|my|all)\s+/, '');
   const words = t.split(/\s+/);
+  // Only shortcut past the AI for an explicit navigation phrase or a bare page
+  // name. Anything else ("call ravi back", "draft a follow up") is a real
+  // request the copilot should reason about, not a page to jump to.
+  if (!NAV_VERB.test(raw) && words.length > 2) return null;
 
   // Check for "[filter] [page]" pattern
   const filters = ['hot', 'warm', 'cold', 'new', 'open', 'converted', 'lost', 'qualified', 'urgent', 'high', 'medium', 'low'];
   if (words.length >= 2 && filters.includes(words[0])) {
     const page = words.slice(1).join(' ');
     const fuzzy = fuzzyPageMatch(page);
-    if (fuzzy) return { page: fuzzy, filter: words[0] };
+    if (fuzzy) return { page: canonical(fuzzy), filter: words[0] };
   }
 
   // Try fuzzy matching the whole thing
   const fuzzy = fuzzyPageMatch(t);
-  if (fuzzy) return { page: fuzzy };
+  if (fuzzy) return { page: canonical(fuzzy) };
 
   return null;
 }
@@ -122,6 +197,10 @@ export default function VoiceCommandUI() {
   const silenceTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const maxTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const rafRef = useRef<number>(0);
+  // Browser recognizer running in parallel with the recording, as a fallback
+  // transcript source when server transcription yields nothing.
+  const shadowRef = useRef<any>(null);
+  const shadowTextRef = useRef<string>('');
 
   const [wakeWordOn, setWakeWordOn] = useState(() => localStorage.getItem('mikeyWakeWordOn') === 'true');
   const wakeWord = useVoiceInput();
@@ -129,8 +208,10 @@ export default function VoiceCommandUI() {
 
   // Reuses the same voice-on preference the Mikey chat page uses, so turning
   // voice on/off in one place applies everywhere Mikey talks.
+  // Voice is on unless explicitly turned off — a voice command that answers
+  // silently reads as "nothing happened".
   const speakReply = useCallback((text: string) => {
-    if (localStorage.getItem('mikeyVoiceOn') !== 'true' || !text?.trim()) return;
+    if (localStorage.getItem('mikeyVoiceOn') === 'false' || !text?.trim()) return;
     api('/copilot/speak', { method: 'POST', body: JSON.stringify({ text }) })
       .then((res: any) => {
         if (!res?.audioBase64) return;
@@ -174,9 +255,12 @@ export default function VoiceCommandUI() {
       }
       setPendingFilter(cmd.page, { filters: Object.keys(filters).length ? filters : undefined });
       window.location.hash = PAGE_MAP[cmd.page];
-      setResult(`${transcriptLine}\n→ Showing ${cmd.page}${cmd.filter ? ' (' + cmd.filter + ')' : ''}`);
+      const spoken = `Showing ${cmd.page}${cmd.filter ? ', ' + cmd.filter : ''}`;
+      setResult(`${transcriptLine}\n→ ${spoken}`);
+      speakReply(spoken);
       setMode('idle');
       setListening(false);
+      if (wakeWordOn) wakeWord.start();
       return;
     }
 
@@ -198,7 +282,7 @@ export default function VoiceCommandUI() {
         speakReply(reply);
       }
     }).catch(() => {
-      setResult(`${transcriptLine}\n→ I didn't understand that. Try 'show me leads' or 'go to qr'.`);
+      setResult(`${transcriptLine}\n→ Couldn't reach Mikey just now. Check your connection and try again.`);
     }).finally(() => {
       setMode('idle');
       setListening(false);
@@ -226,9 +310,34 @@ export default function VoiceCommandUI() {
 
   // Press-to-talk + Whisper: a clean start/stop recording is transcribed
   // server-side, which catches full sentences the browser's live recognizer
-  // routinely cuts off or mishears. Auto-stops ~1.5s after you stop talking,
-  // and hard-stops at 15s so it can never hang open.
+  // routinely cuts off or mishears. Auto-stops ~2.5s after you stop talking,
+  // and hard-stops at 20s so it can never hang open.
+  //
+  // The browser recognizer runs *alongside* the recording as a safety net:
+  // if server transcription is unconfigured, times out, or comes back empty,
+  // we use whatever the browser heard instead of telling the user
+  // "didn't catch that" when they in fact spoke perfectly clearly.
   const startWhisperRecording = useCallback(async () => {
+    const startShadowRecognition = () => {
+      const Ctor = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (!Ctor) return;
+      shadowTextRef.current = '';
+      try {
+        const sr = new Ctor();
+        sr.continuous = true;
+        sr.interimResults = true;
+        sr.lang = 'en-US';
+        sr.onresult = (e: any) => {
+          let text = '';
+          for (let i = 0; i < e.results.length; i++) text += e.results[i][0].transcript + ' ';
+          shadowTextRef.current = text.trim();
+        };
+        sr.onerror = () => {};
+        shadowRef.current = sr;
+        sr.start();
+      } catch { shadowRef.current = null; }
+    };
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
@@ -244,44 +353,55 @@ export default function VoiceCommandUI() {
         audioCtxRef.current = null;
         streamRef.current?.getTracks().forEach(t => t.stop());
         streamRef.current = null;
+        try { shadowRef.current?.stop(); } catch {}
+        shadowRef.current = null;
         setMode('copilot');
+
         const blob = new Blob(chunksRef.current, { type: recorder.mimeType || 'audio/webm' });
-        // Nothing captured (instant stop / muted mic) — bail cleanly.
-        if (blob.size < 1000) {
-          setResult("Didn't catch that — tap the mic and speak.");
-          setListening(false);
-          setMode('idle');
-          return;
+        let text = '';
+        // Server transcription first (better accuracy), browser recognizer as
+        // the fallback whenever it returns nothing or fails outright.
+        if (blob.size >= 500) {
+          try {
+            // If the browser can't decode its own recording, send the raw blob
+            // and let the server's Sarvam/Whisper fallbacks try it.
+            let upload = blob;
+            let name = 'command.webm';
+            try {
+              upload = await toWav16k(blob);
+              name = 'command.wav';
+            } catch { /* keep the original container */ }
+            const formData = new FormData();
+            formData.append('audio', upload, name);
+            const res = await apiUpload('/copilot/voice-transcribe', formData);
+            text = (res?.text || '').trim();
+          } catch { /* fall through to the browser transcript */ }
         }
-        const formData = new FormData();
-        formData.append('audio', blob, 'command.webm');
-        try {
-          const { text } = await apiUpload('/copilot/voice-transcribe', formData);
-          if (text?.trim()) {
-            handleTranscript(text.trim());
-          } else {
-            setResult("Didn't catch that — try again.");
-            setListening(false);
-            setMode('idle');
-          }
-        } catch {
-          setResult('Transcription failed. Check your connection.');
+        // Give a final browser result a beat to land if it hasn't yet.
+        if (!text && !shadowTextRef.current) await new Promise(r => setTimeout(r, 600));
+        if (!text) text = shadowTextRef.current.trim();
+
+        if (text) {
+          handleTranscript(text);
+        } else {
+          setResult("Didn't catch that — tap the mic and speak.");
           setListening(false);
           setMode('idle');
         }
       };
       recorderRef.current = recorder;
       recorder.start();
+      startShadowRecognition();
       setListening(true);
       setMode('listening');
 
-      // Hard cap: stop after 15s no matter what.
+      // Hard cap: stop after 20s no matter what.
       maxTimerRef.current = setTimeout(() => {
         if (recorderRef.current && recorderRef.current.state !== 'inactive') {
           recorderRef.current.stop();
           recorderRef.current = null;
         }
-      }, 15000);
+      }, 20000);
 
       // Silence detection: watch the mic level, and once it stays quiet for
       // ~1.5s (after the person has actually started talking), auto-stop.
@@ -306,19 +426,22 @@ export default function VoiceCommandUI() {
             sum += v * v;
           }
           const rms = Math.sqrt(sum / data.length);
-          const SPEAKING = rms > 0.04;
+          // Low threshold on purpose: quiet mics and soft speakers were never
+          // registering as "spoken", so the clip only ended at the hard cap.
+          const SPEAKING = rms > 0.015;
 
           if (SPEAKING) {
             hasSpoken = true;
             if (silenceTimerRef.current) { clearTimeout(silenceTimerRef.current); silenceTimerRef.current = undefined; }
           } else if (hasSpoken && !silenceTimerRef.current) {
-            // Gone quiet after speaking — arm the auto-stop.
+            // Gone quiet after speaking — arm the auto-stop. 2.5s so a pause
+            // mid-sentence doesn't truncate the command.
             silenceTimerRef.current = setTimeout(() => {
               if (recorderRef.current && recorderRef.current.state !== 'inactive') {
                 recorderRef.current.stop();
                 recorderRef.current = null;
               }
-            }, 1500);
+            }, 2500);
           }
           rafRef.current = requestAnimationFrame(tick);
         };

@@ -97,7 +97,7 @@ export default function VendorBookingsPage() {
             {events.map((ev: any) => <option key={ev.id} value={ev.id}>{ev.title}</option>)}
           </Select>
           <Input label="Title" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} required />
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Input label="Agreed fee" type="number" value={form.agreedFee} onChange={e => setForm({ ...form, agreedFee: e.target.value })} />
             <Input label="Advance amount" type="number" value={form.advanceAmount} onChange={e => setForm({ ...form, advanceAmount: e.target.value })} />
           </div>

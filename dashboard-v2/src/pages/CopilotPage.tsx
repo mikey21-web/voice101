@@ -25,7 +25,7 @@ export default function CopilotPage() {
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [voiceOn, setVoiceOn] = useState(() => localStorage.getItem("mikeyVoiceOn") === "true");
+  const [voiceOn, setVoiceOn] = useState(() => localStorage.getItem("mikeyVoiceOn") !== "false");
   const bottomRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 

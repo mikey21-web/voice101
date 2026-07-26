@@ -80,7 +80,7 @@ export default function LeaveLogPage() {
             <option value="">Select</option>
             {users.map((u: any) => <option key={u.id} value={u.id}>{u.name}</option>)}
           </Select>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Input
               label="Start"
               type="date"

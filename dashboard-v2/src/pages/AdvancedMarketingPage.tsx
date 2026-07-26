@@ -138,16 +138,18 @@ export default function AdvancedMarketingPage() {
         <CardContent>
           <p className="text-xs text-[var(--muted-foreground)] mb-3">CSV format: source, date (YYYY-MM-DD), amount, campaign (optional), currency (optional)</p>
           {spend.length === 0 ? <p className="text-sm text-muted-foreground">No ad spend imported yet.</p> : (
-            <table className="w-full text-sm"><thead><tr className="border-b text-left"><th className="pb-2 font-medium">Source</th><th className="pb-2 font-medium">Spend</th><th className="pb-2 font-medium">Leads</th><th className="pb-2 font-medium">Cost/Lead</th></tr></thead><tbody>
-              {spend.map((s: any) => (
-                <tr key={s.source} className="border-b last:border-0">
-                  <td className="py-2">{s.source}</td>
-                  <td className="py-2">₹{(s.spendPaise / 100).toLocaleString()}</td>
-                  <td className="py-2">{s.leadCount}</td>
-                  <td className="py-2">{s.costPerLeadPaise ? `₹${(s.costPerLeadPaise / 100).toLocaleString()}` : '—'}</td>
-                </tr>
-              ))}
-            </tbody></table>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm"><thead><tr className="border-b text-left"><th className="pb-2 font-medium">Source</th><th className="pb-2 font-medium">Spend</th><th className="pb-2 font-medium">Leads</th><th className="pb-2 font-medium">Cost/Lead</th></tr></thead><tbody>
+                {spend.map((s: any) => (
+                  <tr key={s.source} className="border-b last:border-0">
+                    <td className="py-2">{s.source}</td>
+                    <td className="py-2">₹{(s.spendPaise / 100).toLocaleString()}</td>
+                    <td className="py-2">{s.leadCount}</td>
+                    <td className="py-2">{s.costPerLeadPaise ? `₹${(s.costPerLeadPaise / 100).toLocaleString()}` : '—'}</td>
+                  </tr>
+                ))}
+              </tbody></table>
+            </div>
           )}
         </CardContent>
       </Card>

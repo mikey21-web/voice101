@@ -75,7 +75,7 @@ export default function PartnersPage() {
         }
       >
         <form id="create-partner-form" onSubmit={create} className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Input label="Name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required />
             <Select label="Type" value={form.type} onChange={e => setForm({ ...form, type: e.target.value })}>
               <option value="VENDOR">Vendor</option>

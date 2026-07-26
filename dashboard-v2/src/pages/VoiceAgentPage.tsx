@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../lib/api';
 import { fetchLeads, fetchVoiceDashboardStats, VoiceDashboardStats } from '../lib/data';
-import { Phone, PhoneOff, Clock, Loader2, ChevronRight, PhoneCall, CheckCircle2, Timer } from 'lucide-react';
+import { Phone, PhoneOff, Clock, Loader2, ChevronRight, PhoneCall, CheckCircle2, Timer, UserPlus } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 
 const DISPOSITION_COLORS: Record<string, string> = {
@@ -16,6 +16,9 @@ export default function VoiceAgentPage() {
   const [stats, setStats] = useState<VoiceDashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [calling, setCalling] = useState<string | null>(null);
+  const [newName, setNewName] = useState('');
+  const [newPhone, setNewPhone] = useState('');
+  const [adding, setAdding] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -33,6 +36,21 @@ export default function VoiceAgentPage() {
       else alert('Call failed: ' + (r.message || r.error));
     } catch (e: any) { alert('Error: ' + e.message); }
     setCalling(null);
+  };
+
+  const addAndCall = async () => {
+    if (!newName.trim() || !newPhone.trim()) return;
+    setAdding(true);
+    try {
+      const lead = await api('/leads/manual', {
+        method: 'POST',
+        body: JSON.stringify({ name: newName.trim(), phone: newPhone.trim() }),
+      });
+      setLeads(prev => [{ ...lead, contact: { name: newName.trim(), phone: newPhone.trim() } }, ...prev]);
+      setNewName(''); setNewPhone('');
+      await call(lead.id);
+    } catch (e: any) { alert('Error: ' + e.message); }
+    setAdding(false);
   };
 
   if (loading) return <div className="p-6 text-center text-[var(--muted-foreground)]"><Loader2 size={20} className="animate-spin inline mr-2" />Loading...</div>;
@@ -100,6 +118,17 @@ export default function VoiceAgentPage() {
       <div>
         <div className="flex items-center gap-3 mb-3">
           <h2 className="text-sm font-semibold text-[var(--foreground)]">Ready to call</h2>
+        </div>
+        <div className="flex items-center gap-2 p-3 rounded-xl border border-dashed border-[var(--border)] bg-[var(--card)] mb-3">
+          <input value={newName} onChange={e => setNewName(e.target.value)} placeholder="Name"
+            className="flex-1 min-w-0 px-3 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--background)] text-sm" />
+          <input value={newPhone} onChange={e => setNewPhone(e.target.value)} placeholder="+91..."
+            className="w-36 px-3 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--background)] text-sm" />
+          <button onClick={addAndCall} disabled={adding || !newName.trim() || !newPhone.trim()}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--primary)] text-white text-xs font-medium hover:opacity-90 disabled:opacity-50 shrink-0">
+            {adding ? <Loader2 size={13} className="animate-spin" /> : <UserPlus size={13} />}
+            {adding ? 'Calling...' : 'Add & Call'}
+          </button>
         </div>
         <div className="grid gap-3">
           {leads.length === 0 && <p className="text-sm text-[var(--muted-foreground)]">No leads ready for voice outreach.</p>}

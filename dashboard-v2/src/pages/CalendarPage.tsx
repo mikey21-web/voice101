@@ -47,7 +47,8 @@ export default function CalendarPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-7 gap-px rounded-xl border border-[var(--border)] bg-[var(--border)] overflow-hidden">
+      <div className="overflow-x-auto -mx-4 sm:mx-0">
+        <div className="grid grid-cols-7 gap-px rounded-xl border border-[var(--border)] bg-[var(--border)] overflow-hidden min-w-[560px] sm:min-w-0">
         {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(d => (
           <div key={d} className="bg-[var(--card)] p-2 text-center text-xs font-medium text-[var(--muted-foreground)]">{d}</div>
         ))}
@@ -66,6 +67,7 @@ export default function CalendarPage() {
             </div>
           );
         })}
+        </div>
       </div>
 
       {selectedDay && (

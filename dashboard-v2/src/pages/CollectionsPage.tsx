@@ -117,6 +117,7 @@ export default function CollectionsPage() {
         </div>
       </div>
 
+      <div className="overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow>
@@ -170,6 +171,7 @@ export default function CollectionsPage() {
           )}
         </TableBody>
       </Table>
+      </div>
 
       <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
         <h2 className="text-sm font-semibold text-[var(--foreground)] mb-3">Buyer ledger lookup</h2>
@@ -190,6 +192,7 @@ export default function CollectionsPage() {
                 <Badge variant="warning">Outstanding</Badge>
               )}
             </div>
+            <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -212,6 +215,7 @@ export default function CollectionsPage() {
                 ))}
               </TableBody>
             </Table>
+            </div>
           </div>
         )}
       </div>

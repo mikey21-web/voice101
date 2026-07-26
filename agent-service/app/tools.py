@@ -62,7 +62,17 @@ def build_tools(ctx: ToolContext) -> list:
             if not field_map:
                 return _err("no valid fields to store")
             await ctx.client.update_custom_fields(ctx.lead_id, field_map)
-            return _ok(f"stored {len(field_map)} field(s)")
+            # Re-score here rather than relying on the model to remember a follow-up
+            # update_score call; it skips it often enough that leads were sitting at
+            # score 0 with a fully qualified profile. Scoring failure must not fail
+            # the save that already succeeded.
+            score_note = ""
+            try:
+                scored = await ctx.client.update_score(ctx.lead_id)
+                score_note = f", score={scored.get('score', '?')}, segment={scored.get('segment', '?')}"
+            except BackendError:
+                pass
+            return _ok(f"stored {len(field_map)} field(s){score_note}")
         except BackendError as e:
             return _err(str(e))
 

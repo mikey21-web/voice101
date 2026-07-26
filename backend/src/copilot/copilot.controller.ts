@@ -32,7 +32,11 @@ export class CopilotController {
   @UseInterceptors(FileInterceptor('audio', { limits: { fileSize: 10 * 1024 * 1024 } }))
   async transcribeVoice(@UploadedFile() file: Express.Multer.File) {
     if (!file) throw new BadRequestException('No audio file provided');
-    const tmpPath = path.join(os.tmpdir(), `voice-${crypto.randomBytes(8).toString('hex')}.webm`);
+    // Keep the client's container extension: Whisper and Sarvam both infer the
+    // audio format from the filename, so a hardcoded .webm mislabels the 16 kHz
+    // WAV the dashboard now uploads and makes them reject a valid clip.
+    const ext = (path.extname(file.originalname || '') || '.webm').toLowerCase();
+    const tmpPath = path.join(os.tmpdir(), `voice-${crypto.randomBytes(8).toString('hex')}${ext}`);
     fs.writeFileSync(tmpPath, file.buffer);
     try {
       const text = await this.callSummary.transcribe(tmpPath);

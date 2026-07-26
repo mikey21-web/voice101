@@ -17,9 +17,10 @@ export class VoiceAgentService {
     const lead = await this.prisma.lead.findUnique({ where: { id: leadId }, include: { contact: true } });
     if (!lead?.contact?.phone) return { success: false, message: 'Lead has no phone number' };
 
+    const toNumber = this.normalizePhone(lead.contact.phone);
     try {
       const workflowUuid = this.dograh.workflowUuidFor(language);
-      const call = await this.dograh.triggerCall(workflowUuid, lead.contact.phone, {
+      const call = await this.dograh.triggerCall(workflowUuid, toNumber, {
         first_name: lead.contact.name || 'there',
         interest: lead.interest || 'properties',
         lead_id: lead.id,
@@ -28,9 +29,9 @@ export class VoiceAgentService {
       const callSid = String(call.workflow_run_id);
 
       await this.prisma.callLog.create({
-        data: { leadId, tenantId: lead.tenantId, direction: 'OUTBOUND', fromNumber: this.config.get('TWILIO_PHONE_NUMBER', ''), toNumber: lead.contact.phone, status: 'INITIATED', providerSid: callSid, agentId: userId },
+        data: { leadId, tenantId: lead.tenantId, direction: 'OUTBOUND', fromNumber: this.config.get('TWILIO_PHONE_NUMBER', ''), toNumber, status: 'INITIATED', providerSid: callSid, agentId: userId },
       });
-      this.logger.log(`Dograh call initiated to ${lead.contact.name} (${lead.contact.phone}) — run ${callSid}`);
+      this.logger.log(`Dograh call initiated to ${lead.contact.name} (${toNumber}) — run ${callSid}`);
       return { success: true, callSid };
     } catch (e: any) {
       this.logger.error(`Dograh call failed: ${e.message}`);

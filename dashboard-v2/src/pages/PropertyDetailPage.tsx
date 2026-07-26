@@ -171,7 +171,7 @@ export default function PropertyDetailPage() {
       </div>
 
       {/* Specs */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4 text-center">
           <BedDouble className="h-5 w-5 mx-auto text-[var(--primary)]" />
           <div className="mt-1.5 text-lg font-bold text-[var(--foreground)]">{property.bedrooms ?? "-"}</div>

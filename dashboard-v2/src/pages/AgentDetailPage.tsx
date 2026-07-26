@@ -92,7 +92,7 @@ export default function AgentDetailPage() {
 
       {/* Performance stats */}
       {performance && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
             <div className="flex items-center gap-1.5 text-xs text-[var(--muted-foreground)] uppercase">
               <Users className="h-3.5 w-3.5" /> Leads Sourced

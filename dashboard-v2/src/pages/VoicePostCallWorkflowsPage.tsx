@@ -80,7 +80,7 @@ export default function VoicePostCallWorkflowsPage() {
       </div>
 
       {!showForm && (
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <button
             onClick={() => { setShowForm('sheets'); setUrl(''); }}
             className="rounded-lg bg-[var(--card)] border border-[var(--border)] p-4 text-left hover:border-[var(--primary)] transition-colors"

@@ -27,14 +27,37 @@
   background-color: #F3E299; 
 }
 
-.device-rotation {
-  display: none;
-}
-
 @media screen and (max-width: 768px) and (orientation: portrait) {
   .device-rotation {
-    display: flex;
+    display: none;
   }
+}
+
+@media (max-width: 1024px) {
+  .button-tooltip { display: none !important; }
+}
+
+@media (max-width: 768px) {
+  .feature-panel-content { 
+    max-height: 60vh !important;
+    overflow-y: auto !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .feature-panel-content {
+    max-height: 50vh !important;
+  }
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+@media (max-width: 640px) {
+  h1, .hero-title { font-size: clamp(1.5rem, 6vw, 2.5rem) !important; }
+  h2 { font-size: clamp(1.25rem, 5vw, 2rem) !important; }
 }
 
 .gm-style .gm-style-iw-c {

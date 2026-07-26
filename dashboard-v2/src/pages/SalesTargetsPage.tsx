@@ -71,7 +71,7 @@ export default function SalesTargetsPage() {
             <option value="LEAD_RESPONSE">Lead Response %</option>
             <option value="AGREEMENT_VALUE_PAISE">Agreement Value</option><option value="COLLECTIONS_PAISE">Collections</option>
           </select>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Input type="date" value={form.periodStart} onChange={e => setForm({ ...form, periodStart: e.target.value })} />
             <Input type="date" value={form.periodEnd} onChange={e => setForm({ ...form, periodEnd: e.target.value })} />
           </div>

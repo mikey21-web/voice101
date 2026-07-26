@@ -645,7 +645,7 @@ export default function MikeyPage() {
                     <p className="text-xs text-[var(--muted-foreground)]">conversion</p>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                   <div className="p-2.5 rounded-lg bg-[var(--background)]">
                     <p className="text-xs text-[var(--muted-foreground)]">Leads handled</p>
                     <p className="font-semibold">{agent.totalLeadsHandled}</p>

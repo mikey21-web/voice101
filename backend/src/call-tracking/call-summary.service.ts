@@ -5,6 +5,7 @@ import { RealtimeGateway } from '../realtime/realtime.gateway';
 import { MoonshineService } from '../shared/moonshine.service';
 import OpenAI from 'openai';
 import * as fs from 'fs';
+import * as path from 'path';
 
 @Injectable()
 export class CallSummaryService {
@@ -33,7 +34,7 @@ export class CallSummaryService {
   async transcribe(filePath: string): Promise<string> {
     try {
       const buf = fs.readFileSync(filePath);
-      return await this.moonshine.transcribe(buf);
+      return await this.moonshine.transcribe(buf, path.basename(filePath));
     } catch (e: any) {
       this.logger.warn(`Moonshine failed (${e.message}), falling back to Sarvam`);
     }
@@ -55,7 +56,7 @@ export class CallSummaryService {
 
   private async transcribeWithSarvam(filePath: string, apiKey: string): Promise<string> {
     const form = new FormData();
-    form.append('file', new Blob([fs.readFileSync(filePath)]), 'audio.webm');
+    form.append('file', new Blob([fs.readFileSync(filePath)]), path.basename(filePath));
     form.append('model', 'saaras:v3');
     form.append('mode', 'transcribe');
     form.append('language_code', 'unknown');

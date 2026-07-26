@@ -59,6 +59,7 @@ export default function SourceHealthPage() {
         <p className="text-sm text-[var(--muted-foreground)] mt-1">Portal webhook connectors — failures are tracked and replayable</p>
       </div>
 
+      <div className="overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow>
@@ -114,6 +115,7 @@ export default function SourceHealthPage() {
           )}
         </TableBody>
       </Table>
+    </div>
     </div>
   );
 }

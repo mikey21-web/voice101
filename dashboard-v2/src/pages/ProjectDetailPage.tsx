@@ -375,7 +375,7 @@ export default function ProjectDetailPage() {
                 {grid.towers.map((t: any) => t.towerId && <option key={t.towerId} value={t.towerId}>{t.towerName}</option>)}
               </select>
             )}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Input value={unitForm.unitNumber} onChange={e => setUnitForm((f: any) => ({ ...f, unitNumber: e.target.value }))} placeholder="Unit no. e.g. 502" />
               <Input type="number" value={unitForm.floor} onChange={e => setUnitForm((f: any) => ({ ...f, floor: e.target.value }))} placeholder="Floor" />
               <Input value={unitForm.unitType} onChange={e => setUnitForm((f: any) => ({ ...f, unitType: e.target.value }))} placeholder="e.g. 3BHK" />
@@ -496,7 +496,7 @@ function UnitDetailDrawer({ unitId, onClose, onStatusChanged }: { unitId: string
             </div>
 
             {/* Quick attributes */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {unit.tower?.name && <div className="rounded-lg bg-[var(--background)] p-3"><div className="text-[10px] text-[var(--muted-foreground)] uppercase tracking-wide">Tower</div><div className="text-sm font-medium text-[var(--foreground)] mt-0.5">{unit.tower.name}</div></div>}
               {unit.floor != null && <div className="rounded-lg bg-[var(--background)] p-3"><div className="text-[10px] text-[var(--muted-foreground)] uppercase tracking-wide">Floor</div><div className="text-sm font-medium text-[var(--foreground)] mt-0.5">{unit.floor}</div></div>}
               {unit.unitType && <div className="rounded-lg bg-[var(--background)] p-3"><div className="text-[10px] text-[var(--muted-foreground)] uppercase tracking-wide">Type</div><div className="text-sm font-medium text-[var(--foreground)] mt-0.5">{unit.unitType}</div></div>}

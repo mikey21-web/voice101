@@ -112,10 +112,10 @@ export default function BuilderDeskPage() {
     return (
       <div className="space-y-5">
         <div className="h-24 animate-pulse rounded-lg bg-[var(--card)]" />
-        <div className="grid gap-4 md:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
           {[1, 2, 3, 4].map(i => <div key={i} className="h-24 animate-pulse rounded-lg bg-[var(--card)]" />)}
         </div>
-        <div className="grid gap-4 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
           {[1, 2, 3].map(i => <div key={i} className="h-80 animate-pulse rounded-lg bg-[var(--card)]" />)}
         </div>
       </div>
@@ -147,13 +147,13 @@ export default function BuilderDeskPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <KpiCard icon={Users} label="Active leads" value={kpis.activeLeads || 0} />
         <KpiCard icon={AlertTriangle} label="Unassigned leads" value={kpis.unassignedLeads || 0} tone={kpis.unassignedLeads > 0 ? "danger" : "good"} />
         <KpiCard icon={CalendarCheck} label="Visits today" value={kpis.todayVisits || 0} />
         <KpiCard icon={IndianRupee} label="Overdue collections" value={kpis.overduePayments || 0} tone={kpis.overduePayments > 0 ? "danger" : "good"} />
       </div>
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
         <KpiCard icon={Clock} label="Missed calls today" value={kpis.missedCallsToday || 0} tone={kpis.missedCallsToday > 0 ? "danger" : "good"} />
         <KpiCard icon={Ban} label="No-shows this month" value={kpis.noShowsThisMonth || 0} tone={kpis.noShowsThisMonth > 5 ? "danger" : "default"} />
         <KpiCard icon={CheckCircle2} label="Bookings this month" value={kpis.bookingsThisMonth || 0} tone="good" />

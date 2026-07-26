@@ -739,7 +739,7 @@ export default function LeadsPage() {
           placeholder="Full name" autoFocus
           className="w-full h-10 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20"
         />
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <input
             value={addLeadForm.phone} onChange={e => setAddLeadForm(f => ({ ...f, phone: e.target.value }))}
             placeholder="Phone"
@@ -758,7 +758,7 @@ export default function LeadsPage() {
           <option value="MANUAL">Manual entry</option>
           <option value="REFERRAL">Referral</option>
         </select>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <input
             value={addLeadForm.interest} onChange={e => setAddLeadForm(f => ({ ...f, interest: e.target.value }))}
             placeholder="Interest (e.g. 3BHK)"

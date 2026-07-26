@@ -75,6 +75,7 @@ export default function CostSheetsPage() {
         </button>
       </div>
 
+      <div className="overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow>
@@ -125,6 +126,7 @@ export default function CostSheetsPage() {
           )}
         </TableBody>
       </Table>
+      </div>
 
       {showCreate && <CreateCostSheetModal onClose={() => setShowCreate(false)} onCreated={() => { setShowCreate(false); load(); }} />}
       {openSheet && <CostSheetDrawer sheet={openSheet} onClose={() => setOpenSheet(null)} onChanged={async () => { load(); setOpenSheet(await api(`/cost-sheets/${openSheet.id}`)); }} onStartBooking={() => setBookingTarget(openSheet)} />}

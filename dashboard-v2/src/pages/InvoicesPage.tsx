@@ -103,7 +103,7 @@ function InvoiceBuilder({ contacts, properties, projects, onClose, onCreated }: 
                 {contacts.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className={label}>Property (unit)</label>
                 <select value={propertyId} onChange={e => setPropertyId(e.target.value)} className={field}>
@@ -119,7 +119,7 @@ function InvoiceBuilder({ contacts, properties, projects, onClose, onCreated }: 
                 </select>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className={label}>Invoice #</label>
                 <input placeholder="Auto-generated" value={invoiceNumber} onChange={e => setInvoiceNumber(e.target.value)} className={field} />
@@ -182,7 +182,7 @@ function InvoiceBuilder({ contacts, properties, projects, onClose, onCreated }: 
               <div className="text-xl font-bold tracking-tight text-[var(--primary)]">INVOICE</div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 mt-6 text-sm">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6 text-sm">
               <div>
                 <div className="text-xs font-semibold text-[var(--primary)] uppercase">Prepared for</div>
                 <div className="font-medium text-[var(--foreground)] mt-1">{contact?.name || 'Customer not selected'}</div>

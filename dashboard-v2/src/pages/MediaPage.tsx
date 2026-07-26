@@ -235,7 +235,7 @@ export default function MediaPage() {
                 </div>
               )}
             </div>
-            <div className="px-4 py-3 border-t border-[var(--border)] grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
+            <div className="px-4 py-3 border-t border-[var(--border)] grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
               <div><span className="text-[var(--muted-foreground)]">Name:</span> <span className="text-[var(--foreground)]">{previewFile.originalName}</span></div>
               <div><span className="text-[var(--muted-foreground)]">Type:</span> <span className="text-[var(--foreground)]">{previewFile.mimeType || previewFile.fileType}</span></div>
               <div><span className="text-[var(--muted-foreground)]">Size:</span> <span className="text-[var(--foreground)]">{(previewFile.fileSize / 1024).toFixed(0)} KB</span></div>

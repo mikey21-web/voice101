@@ -65,17 +65,17 @@ export default function InventoryPage() {
       >
         <form id="create-item-form" onSubmit={create} className="space-y-4">
           <Input label="Name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required />
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Select label="Category" value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>
               {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
             </Select>
             <Input label="SKU" value={form.sku} onChange={e => setForm({ ...form, sku: e.target.value })} />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Input label="Quantity" type="number" value={form.quantity} onChange={e => setForm({ ...form, quantity: e.target.value })} required />
             <Input label="Min stock" type="number" value={form.minStock} onChange={e => setForm({ ...form, minStock: e.target.value })} />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Input label="Unit" value={form.unit} onChange={e => setForm({ ...form, unit: e.target.value })} />
             <Select label="Location" value={form.locationId} onChange={e => setForm({ ...form, locationId: e.target.value })}>
               <option value="">No location</option>

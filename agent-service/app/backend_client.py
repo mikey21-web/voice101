@@ -1,9 +1,20 @@
 from __future__ import annotations
 
 from typing import Any, Coroutine
+import re
 import httpx
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception
 from app.config import Settings
+
+
+def strip_dashes(text: str) -> str:
+    """The "never use em/en dashes" prompt rule isn't reliably obeyed by the model, and
+    several send paths (tools, supervisor auto-send, flow runtime) reach the backend
+    independently. This is the one choke point every outbound message passes through,
+    so enforce it here rather than trusting each caller to remember."""
+    if not text:
+        return text
+    return re.sub(r' {2,}', ' ', text.replace('—', ', ').replace('–', ', '))
 
 
 class BackendError(Exception):
@@ -127,6 +138,8 @@ class BackendClient:
         caption: str | None = None,
         options: list[dict] | None = None,
     ) -> dict:
+        text = strip_dashes(text)
+        caption = strip_dashes(caption) if caption else caption
         body = {
             "leadId": lead_id,
             "channel": channel,

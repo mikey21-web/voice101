@@ -72,7 +72,7 @@ export default function VoiceCampaignDetailPage() {
         </div>
       )}
 
-      <div className="rounded-lg border border-[var(--border)] bg-[var(--card)] overflow-hidden">
+      <div className="rounded-lg border border-[var(--border)] bg-[var(--card)] overflow-x-auto">
         <h2 className="text-sm font-semibold text-[var(--foreground)] p-4 pb-0">Contacts</h2>
         {runs.length === 0 ? (
           <div className="p-10 text-center text-sm text-[var(--muted-foreground)]">No calls placed yet.</div>

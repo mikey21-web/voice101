@@ -69,7 +69,7 @@ export default function TemplatesPage() {
             onChange={e => setForm({ ...form, name: e.target.value })}
             required
           />
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Select label="Type" value={form.type} onChange={e => setForm({ ...form, type: e.target.value })}>
               {['WELCOME', 'FOLLOW_UP', 'QUALIFICATION_QUESTION', 'RECONNECT', 'APPOINTMENT_LINK', 'THANK_YOU'].map(t => (
                 <option key={t} value={t}>{t}</option>

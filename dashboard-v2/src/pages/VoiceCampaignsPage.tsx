@@ -373,7 +373,7 @@ export default function VoiceCampaignsPage() {
                       Auto-retry unanswered calls (busy / no-answer / voicemail)
                     </label>
                     {retry.enabled && (
-                      <div className="mt-3 grid grid-cols-2 gap-3 pl-6">
+                      <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3 pl-6">
                         <div>
                           <label className="block text-[11px] text-[var(--muted-foreground)] mb-1">Max retries per contact</label>
                           <input type="number" min={1} max={10} value={retry.maxRetries} onChange={(e) => setRetry((r) => ({ ...r, maxRetries: parseInt(e.target.value, 10) || 1 }))} className="w-full h-8 rounded-lg border border-[var(--border)] bg-[var(--background)] px-2 text-sm text-[var(--foreground)]" />
@@ -392,7 +392,7 @@ export default function VoiceCampaignsPage() {
                       Only call during specific hours
                     </label>
                     {callingHoursEnabled && (
-                      <div className="mt-3 grid grid-cols-2 gap-3 pl-6">
+                      <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3 pl-6">
                         <div>
                           <label className="block text-[11px] text-[var(--muted-foreground)] mb-1">From</label>
                           <input type="time" value={callingHoursStart} onChange={(e) => setCallingHoursStart(e.target.value)} className="w-full h-8 rounded-lg border border-[var(--border)] bg-[var(--background)] px-2 text-sm text-[var(--foreground)]" />

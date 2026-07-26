@@ -51,6 +51,7 @@ export default function ApprovalsPage() {
         <p className="text-sm text-[var(--muted-foreground)] mt-1">{items.length} awaiting a decision</p>
       </div>
 
+      <div className="overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow>
@@ -98,6 +99,7 @@ export default function ApprovalsPage() {
           )}
         </TableBody>
       </Table>
+    </div>
     </div>
   );
 }

@@ -93,6 +93,7 @@ export default function SyncLogPage() {
         </div>
       </div>
 
+      <div className="overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow>
@@ -160,6 +161,7 @@ export default function SyncLogPage() {
           )}
         </TableBody>
       </Table>
+      </div>
 
       {/* Pagination */}
       <div className="flex items-center justify-between">

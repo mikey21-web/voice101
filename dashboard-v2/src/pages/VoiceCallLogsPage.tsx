@@ -29,7 +29,7 @@ export default function VoiceCallLogsPage() {
         <p className="text-sm text-[var(--muted-foreground)] mt-0.5">Every call the voice agent has made, across all campaigns and languages</p>
       </div>
 
-      <div className="rounded-lg border border-[var(--border)] bg-[var(--card)] overflow-hidden">
+      <div className="rounded-lg border border-[var(--border)] bg-[var(--card)] overflow-x-auto">
         {loading ? (
           <div className="p-10 text-center text-[var(--muted-foreground)]"><Loader2 size={20} className="animate-spin inline mr-2" />Loading...</div>
         ) : runs.length === 0 ? (

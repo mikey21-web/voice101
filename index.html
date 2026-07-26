@@ -52,6 +52,10 @@
         <span class="w-7 h-7 rounded-lg bg-emerald-500 flex items-center justify-center text-white text-xs font-bold">L</span>
         Lead Auto
       </div>
+      <button id="mobileMenuBtn" class="md:hidden w-9 h-9 rounded-lg border border-black/10 flex items-center justify-center text-gray-600 hover:bg-black/5 transition" aria-label="Menu">
+        <svg id="menuIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
+        <svg id="closeIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="hidden"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
       <div class="hidden md:flex items-center gap-8">
         <a href="#how-it-works" class="text-[13px] font-semibold text-gray-500 hover:text-gray-900 transition">Capabilities</a>
         <a href="#features" class="text-[13px] font-semibold text-gray-500 hover:text-gray-900 transition">What Mikey Runs</a>
@@ -61,6 +65,14 @@
 
         <a href="/login.html" class="bg-[#111] text-white px-5 py-2.5 rounded-full font-bold text-[13px] hover:bg-gray-800 hover:-translate-y-0.5 transition-all shadow-sm inline-block">Talk to Mikey</a>
       </div>
+    </div>
+    <div id="mobileNav" class="md:hidden hidden border-t border-black/5 bg-[#FAFAF8] px-6 py-5 flex flex-col gap-3">
+      <a href="#how-it-works" class="text-[14px] font-semibold text-gray-600 hover:text-gray-900 transition py-2">Capabilities</a>
+      <a href="#features" class="text-[14px] font-semibold text-gray-600 hover:text-gray-900 transition py-2">What Mikey Runs</a>
+      <a href="#testimonials" class="text-[14px] font-semibold text-gray-600 hover:text-gray-900 transition py-2">Case Studies</a>
+      <a href="#faq" class="text-[14px] font-semibold text-gray-600 hover:text-gray-900 transition py-2">FAQ</a>
+      <a href="#" class="text-[14px] font-semibold text-gray-600 hover:text-gray-900 transition py-2">Pricing</a>
+      <a href="/login.html" class="bg-[#111] text-white text-center px-5 py-3 rounded-full font-bold text-[14px] hover:bg-gray-800 transition mt-2">Talk to Mikey</a>
     </div>
   </nav>
 
@@ -586,6 +598,28 @@
       nav.style.background = window.scrollY > 20 ? 'rgba(250,250,248,0.98)' : 'rgba(250,250,248,0.95)';
     });
   }
+
+  (function(){
+    var menuBtn = document.getElementById('mobileMenuBtn');
+    var mobileNav = document.getElementById('mobileNav');
+    var menuIcon = document.getElementById('menuIcon');
+    var closeIcon = document.getElementById('closeIcon');
+    if(menuBtn && mobileNav){
+      menuBtn.addEventListener('click', function(){
+        var isOpen = !mobileNav.classList.contains('hidden');
+        mobileNav.classList.toggle('hidden');
+        menuIcon.classList.toggle('hidden');
+        closeIcon.classList.toggle('hidden');
+      });
+      mobileNav.querySelectorAll('a').forEach(function(link){
+        link.addEventListener('click', function(){
+          mobileNav.classList.add('hidden');
+          menuIcon.classList.remove('hidden');
+          closeIcon.classList.add('hidden');
+        });
+      });
+    }
+  })();
 })();
 </script>
 </body>

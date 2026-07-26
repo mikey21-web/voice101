@@ -128,6 +128,7 @@ export default function SiteVisitsPage() {
         <CalendarView visits={visits} onReschedule={setRescheduleFor} />
       ) : (
 
+      <div className="overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow>
@@ -204,6 +205,7 @@ export default function SiteVisitsPage() {
           )}
         </TableBody>
       </Table>
+      </div>
       )}
 
       {showCreate && <CreateVisitModal onClose={() => setShowCreate(false)} onCreated={() => { setShowCreate(false); load(); }} />}
@@ -522,7 +524,8 @@ function CalendarView({ visits, onReschedule }: { visits: any[]; onReschedule: (
   }
 
   return (
-    <div className="grid grid-cols-7 gap-px rounded-xl border border-[var(--border)] bg-[var(--border)] overflow-hidden">
+    <div className="overflow-x-auto -mx-4 sm:mx-0">
+      <div className="grid grid-cols-7 gap-px rounded-xl border border-[var(--border)] bg-[var(--border)] overflow-hidden min-w-[420px] sm:min-w-0">
       {weekDays.map((day, i) => {
         const key = day.toDateString();
         const dayVisits = grouped[key] || [];
@@ -542,6 +545,7 @@ function CalendarView({ visits, onReschedule }: { visits: any[]; onReschedule: (
           </div>
         );
       })}
+      </div>
     </div>
   );
 }

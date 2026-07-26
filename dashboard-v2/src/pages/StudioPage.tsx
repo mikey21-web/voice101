@@ -116,7 +116,7 @@ export default function StudioPage() {
           </div>
         ) : (
           <>
-            <div className="hidden sm:block">
+            <div className="hidden sm:block overflow-x-auto">
               <table className="w-full text-left text-sm">
                 <thead>
                   <tr className="border-b border-[var(--border)] bg-[var(--muted)]">
@@ -233,7 +233,7 @@ export default function StudioPage() {
           <summary className="px-4 py-3 text-sm font-medium text-[var(--muted-foreground)] cursor-pointer hover:text-[var(--foreground)] transition-colors">
             Archived Fields ({archivedFields.length})
           </summary>
-          <div className="hidden sm:block">
+          <div className="hidden sm:block overflow-x-auto">
             <table className="w-full text-left text-sm">
               <tbody>
                 {archivedFields.map(field => (

@@ -113,7 +113,7 @@ export default function AccountingPage() {
       >
         <form id="add-txn-form" onSubmit={addTxn} className="space-y-4">
           <Input label="Description" value={txnForm.description} onChange={e => setTxnForm({ ...txnForm, description: e.target.value })} required />
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Select label="Type" value={txnForm.type} onChange={e => setTxnForm({ ...txnForm, type: e.target.value })}>
               <option value="INCOME">Income</option>
               <option value="EXPENSE">Expense</option>
@@ -165,7 +165,7 @@ export default function AccountingPage() {
         )}
 
         {tab === 'Tax' && tax && (
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="rounded-lg border border-[var(--border)] p-3">
               <div className="text-xs text-[var(--muted-foreground)]">Tax collected</div>
               <div className="text-lg font-semibold text-emerald-600">{money(tax.taxCollected)}</div>

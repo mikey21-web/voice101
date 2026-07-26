@@ -69,7 +69,7 @@ export default function RevenueSharePage() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-3 gap-4 text-sm">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
                 <div><p className="text-muted-foreground">Share</p><p className="font-semibold">{a.sharePercent}%</p></div>
                 <div><p className="text-muted-foreground">Estimated</p><p className="font-semibold">₹{(Number(a.estimatedTotalSharePaise) / 100).toLocaleString()}</p></div>
                 <div><p className="text-muted-foreground">Paid to Date</p><p className="font-semibold">₹{(Number(a.paidToDatePaise) / 100).toLocaleString()}</p></div>

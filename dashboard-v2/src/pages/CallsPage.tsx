@@ -124,6 +124,7 @@ export default function CallsPage() {
         />
       </div>
 
+      <div className="overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow>
@@ -203,6 +204,7 @@ export default function CallsPage() {
           )}
         </TableBody>
       </Table>
+      </div>
 
       {showPair && <PairDeviceModal onClose={() => setShowPair(false)} />}
     </div>
