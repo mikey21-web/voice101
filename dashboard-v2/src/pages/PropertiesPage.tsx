@@ -44,6 +44,21 @@ export default function PropertiesPage() {
   const imageInputRef = useRef<HTMLInputElement>(null);
   const brochureInputRef = useRef<HTMLInputElement>(null);
 
+  const webverseProperties = [
+    {
+      id: "vezraa-apartments", title: "Vezraa Apartments", propertyType: "APARTMENT", status: "AVAILABLE",
+      price: 75000000, bedrooms: 4, bathrooms: 4, areaSqft: 3090,
+      location: "Mokila, Hyderabad", description: "3D interactive tour of Vezraa Apartments",
+      images: [], brochureUrl: null, featured: true, webverse: "../webverse-clone/index.html",
+    },
+    {
+      id: "vezraa-villas", title: "Vezraa Villas", propertyType: "VILLA", status: "AVAILABLE",
+      price: 120000000, bedrooms: 4, bathrooms: 5, areaSqft: 4500,
+      location: "Coming Soon", description: "3D interactive tour of Vezraa Villas",
+      images: [], brochureUrl: null, featured: true, webverse: "../zenvistas-clone/index.html",
+    },
+  ];
+
   const fetchProperties = useCallback(async () => {
     setLoading(true);
     try {
@@ -53,8 +68,9 @@ export default function PropertiesPage() {
       if (filters.status) params.set("status", filters.status);
       if (filters.bedrooms) params.set("bedrooms", filters.bedrooms);
       const res = await api(`/properties?${params}`);
-      setProperties(res.data || []);
-      setTotal(res.meta?.total || 0);
+      const apiProperties = res.data || [];
+      setProperties([...webverseProperties, ...apiProperties]);
+      setTotal((res.meta?.total || 0) + 2);
     } catch { toast.error("Failed to load properties"); }
     finally { setLoading(false); }
   }, [page, search, filters, groupByArea]);
@@ -206,7 +222,7 @@ export default function PropertiesPage() {
   const renderCard = (p: any) => (
     <div
       key={p.id}
-      onClick={() => { window.location.hash = `/properties/${p.id}`; }}
+      onClick={() => { if (p.webverse) { window.open(p.webverse, "_blank"); } else { window.location.hash = `/properties/${p.id}`; } }}
       className="rounded-xl border border-[var(--border)] bg-[var(--card)] overflow-hidden group cursor-pointer hover:border-[var(--primary)]/40 transition-colors"
     >
       <div className="relative h-44 bg-[var(--muted)]">
@@ -214,12 +230,13 @@ export default function PropertiesPage() {
           <img src={resolveMediaUrl(p.images[0].url)} alt={p.title} className="h-full w-full object-cover" />
         ) : (
           <div className="h-full w-full flex items-center justify-center">
-            <Building2 className="h-10 w-10 text-[var(--muted-foreground-light)]" />
+            <ExternalLink className="h-10 w-10 text-[var(--muted-foreground-light)]" />
           </div>
         )}
         <span className={`absolute top-3 left-3 inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${statusColors[p.status] || ""}`}>
           {p.status?.replace("_", " ")}
         </span>
+        {!p.webverse && (
         <button
           onClick={(e) => { e.stopPropagation(); toggleFeatured(p.id, p.featured); }}
           title={p.featured ? "Featured" : "Mark as featured"}
@@ -227,16 +244,12 @@ export default function PropertiesPage() {
         >
           {p.featured ? <ToggleRight className="h-4 w-4 text-[var(--primary)]" /> : <ToggleLeft className="h-4 w-4 text-[var(--muted-foreground)]" />}
         </button>
-        <a
-          href={`../${p.propertyType === "VILLA" ? "zenvistas-clone" : "webverse-clone"}/index.html`}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={(e) => e.stopPropagation()}
-          title="View in WebVerse"
-          className="absolute bottom-3 right-3 h-8 w-8 rounded-full bg-black/70 flex items-center justify-center shadow-sm hover:bg-black transition-colors"
-        >
-          <ExternalLink className="h-4 w-4 text-white" />
-        </a>
+        )}
+        {p.webverse && (
+        <span className="absolute top-3 right-3 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
+          3D Tour
+        </span>
+        )}
       </div>
 
       <div className="p-4">
@@ -267,10 +280,12 @@ export default function PropertiesPage() {
 
         <div className="mt-4 flex items-center justify-between">
           <span className="font-mono text-base font-bold text-[var(--foreground)]">{formatPrice(p.price)}</span>
+          {!p.webverse && (
           <div className="flex gap-1">
             <button onClick={(e) => { e.stopPropagation(); editProperty(p); }} className="p-1.5 hover:bg-[var(--accent)] rounded-lg"><Edit2 className="h-4 w-4" /></button>
             <button onClick={(e) => { e.stopPropagation(); handleDelete(p.id); }} className="p-1.5 hover:bg-red-50 rounded-lg text-red-500"><Trash2 className="h-4 w-4" /></button>
           </div>
+          )}
         </div>
       </div>
     </div>
