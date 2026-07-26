@@ -347,6 +347,17 @@ export default function App() {
     );
   }
 
+  // Public collection page — several properties bundled into one shareable link.
+  if (publicRoute.startsWith('/collection/')) {
+    const PublicCollectionPage = lazy(() => import('./pages/PublicCollectionPage'));
+    const slugs = publicRoute.slice('/collection/'.length).split(',').filter(Boolean);
+    return (
+      <Suspense fallback={<PageFallback />}>
+        <PublicCollectionPage slugs={slugs} />
+      </Suspense>
+    );
+  }
+
   // Public form renderer — embeddable multi-step form
   if (publicRoute.startsWith('/form/')) {
     const FormRendererPage = lazy(() => import('./pages/FormRendererPage'));

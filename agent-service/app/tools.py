@@ -295,6 +295,20 @@ def build_tools(ctx: ToolContext) -> list:
             return _err(str(e))
 
     @tool
+    async def send_listing_collection(property_ids: list[str]):
+        """Send the lead one shareable link bundling 2-3 properties together (a "collection") when they're comparing several options rather than fixed on one. Use instead of calling send_listing_link repeatedly for each — one link, all the properties, easier for the lead to browse and forward. Sends at most 6 properties."""
+        if not (ctx.features and ctx.features.get("properties")):
+            return _err("properties feature is not enabled for this niche")
+        try:
+            url = await ctx.client.get_property_collection_link(property_ids[:6])
+            if not url:
+                return _err("could not generate a collection link")
+            await ctx.client.send_message(ctx.lead_id, ctx.channel, f"Here are the options together: {url}")
+            return _ok(f"sent collection link: {url}")
+        except BackendError as e:
+            return _err(str(e))
+
+    @tool
     async def send_property_photos(property_ids: list[str]):
         """Send photos of one or more properties to the lead over WhatsApp, each with a caption (title, price, location). Use after search_properties finds good matches and the lead seems interested. Sends at most 2 photos per property and 3 properties per call to avoid spamming."""
         if not (ctx.features and ctx.features.get("properties")):
@@ -483,6 +497,7 @@ def build_tools(ctx: ToolContext) -> list:
         search_properties,
         search_units,
         send_listing_link,
+        send_listing_collection,
         send_property_photos,
         send_unit_photos,
         send_area_collection,

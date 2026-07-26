@@ -18,7 +18,14 @@ import { SearchPropertyDto } from './dto/search-property.dto';
 export class PropertiesController {
   constructor(private service: PropertiesService, private config: ConfigService) {}
 
-  // Public, unauthenticated listing page — the link Mikey shares with leads.
+  // Public, unauthenticated listing page(s) — the link(s) Mikey shares with leads.
+  // The literal "collection" route must come before the ":slug" catch-all below.
+  @Public()
+  @Get('properties/public/collection')
+  getPublicCollection(@Query('slugs') slugs: string) {
+    return this.service.getPublicCollection((slugs || '').split(',').map(s => s.trim()).filter(Boolean));
+  }
+
   @Public()
   @Get('properties/public/:slug')
   getPublicListing(@Param('slug') slug: string) {
@@ -31,6 +38,14 @@ export class PropertiesController {
     const dashboardUrl = this.config.get<string>('DASHBOARD_PUBLIC_URL')
       || this.config.get<string>('PUBLIC_URL', '').replace(/\/api\/?$/, '');
     return this.service.getPublicLink(id, dashboardUrl);
+  }
+
+  @Post('properties/collection-link')
+  @Roles('OWNER', 'ADMIN', 'MANAGER', 'SALES_AGENT')
+  getCollectionLink(@Body('propertyIds') propertyIds: string[]) {
+    const dashboardUrl = this.config.get<string>('DASHBOARD_PUBLIC_URL')
+      || this.config.get<string>('PUBLIC_URL', '').replace(/\/api\/?$/, '');
+    return this.service.getPublicCollectionLink(propertyIds || [], dashboardUrl);
   }
 
   @Post('properties')

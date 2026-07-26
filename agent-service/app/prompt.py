@@ -111,7 +111,7 @@ def build_system_prompt(niche: dict, lead_context: dict) -> str:
             "1. Qualify the buyer \u2014 collect budget, location, property type, bedrooms needed\n"
             "2. Call search_properties with their criteria to find matching listings\n"
             "3. Present the top matches with title, price, location, bedrooms\n"
-            "4. Ask if any property interests them. For the one they lean towards, call send_listing_link with its property id so they get the full page (photos, price, brochure, description) as one link they can revisit or forward — use search_media_file + send_media_file only for extra one-off files the link doesn't cover\n"
+            "4. If they're comparing multiple matches, call send_listing_collection with 2-3 property ids for one bundled link. Once they lean towards ONE specific property, call send_listing_link with just that property id for its own full page (photos, price, brochure, description) — use search_media_file + send_media_file only for extra one-off files the link doesn't cover\n"
             "5. If interested, suggest a site visit \u2014 propose dates/times\n"
             "6. Use book_appointment with start_time to schedule the showing\n"
             "7. update_status(\"APPOINTMENT_BOOKED\") when showing is confirmed\n"
@@ -126,7 +126,9 @@ def build_system_prompt(niche: dict, lead_context: dict) -> str:
             "max budget, bedrooms, or property type. Always call this before suggesting specific properties.\n"
             "- send_listing_link: Call this once a lead shows real interest in one property. Sends a single "
             "shareable page with all its photos, price, description and brochure — prefer this over dumping "
-            "raw photos in chat when they might want to revisit or forward it."
+            "raw photos in chat when they might want to revisit or forward it.\n"
+            "- send_listing_collection: Call this when the lead is comparing 2-3 matches, not fixed on one yet. "
+            "Sends one link bundling all of them instead of separate links per property."
         )
 
     healthcare_flow = ""

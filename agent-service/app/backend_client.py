@@ -267,6 +267,11 @@ class BackendClient:
         data = result.get('data', result)
         return data.get('url', '')
 
+    async def get_property_collection_link(self, property_ids: list[str]) -> str:
+        result = await self._post("/properties/collection-link", {"propertyIds": property_ids})
+        data = result.get('data', result)
+        return data.get('url', '')
+
     async def get_property(self, property_id: str) -> dict:
         return await self._retry_get(f"/properties/{property_id}")
 

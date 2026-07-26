@@ -248,4 +248,36 @@ export class PropertiesService {
     })).slug;
     return { url: `${dashboardUrl.replace(/\/$/, '')}/#/listing/${slug}` };
   }
+
+  // A "collection" is just several properties' slugs joined in one URL — no
+  // separate table, so there's nothing to name/manage/rename later. If that
+  // becomes a real ask (saved, editable collections), add a Collection model then.
+  async getPublicCollectionLink(propertyIds: string[], dashboardUrl: string) {
+    const slugs: string[] = [];
+    for (const id of propertyIds.slice(0, 6)) {
+      const property = await this.prisma.property.findUnique({ where: { id } });
+      if (!property) continue;
+      const slug = property.slug ?? (await this.prisma.property.update({
+        where: { id },
+        data: { slug: slugify(property.title) },
+      })).slug;
+      slugs.push(slug!);
+    }
+    if (!slugs.length) throw new NotFoundException('No valid properties found');
+    return { url: `${dashboardUrl.replace(/\/$/, '')}/#/collection/${slugs.join(',')}` };
+  }
+
+  async getPublicCollection(slugs: string[]) {
+    const properties = await this.prisma.property.findMany({
+      where: { slug: { in: slugs }, deletedAt: null },
+      include: { images: { orderBy: { orderIndex: 'asc' }, take: 1 } },
+    });
+    if (!properties.length) throw new NotFoundException('No listings found');
+    await this.prisma.property.updateMany({
+      where: { id: { in: properties.map(p => p.id) } },
+      data: { viewCount: { increment: 1 } },
+    });
+    // Preserve the order the slugs were requested in, not DB order.
+    return slugs.map(s => properties.find(p => p.slug === s)).filter(Boolean);
+  }
 }
