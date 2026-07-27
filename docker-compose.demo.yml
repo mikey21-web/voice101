@@ -69,6 +69,7 @@ services:
       AGENT_MODEL: ${AGENT_MODEL:-deepseek-v4-flash}
       DEEPSEEK_BASE_URL: ${DEEPSEEK_BASE_URL:-https://api.deepseek.com/v1}
       CARTESIA_API_KEY: ${CARTESIA_API_KEY:-}
+      DEEPGRAM_API_KEY: ${DEEPGRAM_API_KEY:-}
     volumes:
       - uploads:/app/uploads
       - ${NICHE_CONFIG_FILE}:/app/niche.config.yaml:ro
