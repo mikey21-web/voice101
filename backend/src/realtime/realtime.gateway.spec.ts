@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { RealtimeGateway } from './realtime.gateway';
 import { ConfigService } from '@nestjs/config';
+import { DeepgramService } from '../shared/deepgram.service';
 
 describe('RealtimeGateway', () => {
   let gateway: RealtimeGateway;
@@ -9,14 +10,20 @@ describe('RealtimeGateway', () => {
   const mockConfigService = {
     get: jest.fn(),
   };
+  const mockDeepgramService = {
+    isConfigured: jest.fn().mockReturnValue(false),
+    connect: jest.fn(),
+  };
 
   beforeEach(async () => {
     jest.clearAllMocks();
+    mockDeepgramService.isConfigured.mockReturnValue(false);
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         RealtimeGateway,
         { provide: ConfigService, useValue: mockConfigService },
+        { provide: DeepgramService, useValue: mockDeepgramService },
       ],
     }).compile();
 
@@ -124,6 +131,89 @@ describe('RealtimeGateway', () => {
     it('should accept ConfigService in constructor', () => {
       expect(gateway['config']).toBeDefined();
       expect(gateway['config']).toBe(configService);
+    });
+  });
+
+  describe('voice sessions (Phase 3: continuous listening)', () => {
+    function fakeClient(id = 'socket-1') {
+      return { id, emit: jest.fn() } as any;
+    }
+
+    it('refuses to start a session and tells the client when Deepgram is not configured', () => {
+      mockDeepgramService.isConfigured.mockReturnValue(false);
+      const client = fakeClient();
+
+      gateway.handleVoiceStart(client);
+
+      expect(client.emit).toHaveBeenCalledWith('voice:error', expect.objectContaining({ message: expect.any(String) }));
+      expect(mockDeepgramService.connect).not.toHaveBeenCalled();
+    });
+
+    it('opens a Deepgram session and confirms it to the client when configured', () => {
+      mockDeepgramService.isConfigured.mockReturnValue(true);
+      const fakeSession = { sendAudio: jest.fn(), close: jest.fn() };
+      mockDeepgramService.connect.mockReturnValue(fakeSession);
+      const client = fakeClient();
+
+      gateway.handleVoiceStart(client);
+
+      expect(client.emit).toHaveBeenCalledWith('voice:started', {});
+      expect(gateway['voiceSessions'].get(client.id)).toBe(fakeSession);
+    });
+
+    it('forwards audio chunks only to a session that actually exists for that socket', () => {
+      const client = fakeClient();
+      // No session started — must not throw just because audio arrived anyway
+      // (e.g. a stray frame after voice:stop already fired).
+      expect(() => gateway.handleVoiceAudio(client, Buffer.from([1, 2, 3]))).not.toThrow();
+
+      mockDeepgramService.isConfigured.mockReturnValue(true);
+      const fakeSession = { sendAudio: jest.fn(), close: jest.fn() };
+      mockDeepgramService.connect.mockReturnValue(fakeSession);
+      gateway.handleVoiceStart(client);
+
+      gateway.handleVoiceAudio(client, Buffer.from([4, 5, 6]));
+      expect(fakeSession.sendAudio).toHaveBeenCalledWith(Buffer.from([4, 5, 6]));
+    });
+
+    it('closes and forgets the session on voice:stop', () => {
+      mockDeepgramService.isConfigured.mockReturnValue(true);
+      const fakeSession = { sendAudio: jest.fn(), close: jest.fn() };
+      mockDeepgramService.connect.mockReturnValue(fakeSession);
+      const client = fakeClient();
+      gateway.handleVoiceStart(client);
+
+      gateway.handleVoiceStop(client);
+
+      expect(fakeSession.close).toHaveBeenCalled();
+      expect(gateway['voiceSessions'].has(client.id)).toBe(false);
+    });
+
+    it('closes a dangling session on disconnect — a dropped socket must not leave Deepgram billing for a dead mic', () => {
+      mockDeepgramService.isConfigured.mockReturnValue(true);
+      const fakeSession = { sendAudio: jest.fn(), close: jest.fn() };
+      mockDeepgramService.connect.mockReturnValue(fakeSession);
+      const client = fakeClient();
+      gateway.handleVoiceStart(client);
+
+      gateway.handleDisconnect(client);
+
+      expect(fakeSession.close).toHaveBeenCalled();
+      expect(gateway['voiceSessions'].has(client.id)).toBe(false);
+    });
+
+    it('starting a new session for the same socket closes whatever was already open', () => {
+      mockDeepgramService.isConfigured.mockReturnValue(true);
+      const firstSession = { sendAudio: jest.fn(), close: jest.fn() };
+      const secondSession = { sendAudio: jest.fn(), close: jest.fn() };
+      mockDeepgramService.connect.mockReturnValueOnce(firstSession).mockReturnValueOnce(secondSession);
+      const client = fakeClient();
+
+      gateway.handleVoiceStart(client);
+      gateway.handleVoiceStart(client);
+
+      expect(firstSession.close).toHaveBeenCalled();
+      expect(gateway['voiceSessions'].get(client.id)).toBe(secondSession);
     });
   });
 });

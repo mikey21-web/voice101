@@ -56,7 +56,7 @@ function emitError(message: string) {
 // PCM16 conversion happens once per ~256ms audio buffer (4096 samples @ 16kHz) —
 // cheap enough to not need a worklet; see startMicPipeline() for why
 // ScriptProcessorNode (despite being deprecated) is used over AudioWorklet here.
-function float32ToPCM16(input: Float32Array): ArrayBuffer {
+export function float32ToPCM16(input: Float32Array): ArrayBuffer {
   const buffer = new ArrayBuffer(input.length * 2);
   const view = new DataView(buffer);
   for (let i = 0; i < input.length; i++) {
@@ -66,7 +66,7 @@ function float32ToPCM16(input: Float32Array): ArrayBuffer {
   return buffer;
 }
 
-function rms(input: Float32Array): number {
+export function rms(input: Float32Array): number {
   let sum = 0;
   for (let i = 0; i < input.length; i++) sum += input[i] * input[i];
   return Math.sqrt(sum / input.length);
