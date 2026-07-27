@@ -355,9 +355,9 @@ export default function IntegrationsPage() {
           </div>
         </div>
 
-        <div className="flex items-center justify-between gap-3 mt-5 pt-4 border-t border-[var(--border)]">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-5 pt-4 border-t border-[var(--border)]">
           <p className="text-xs text-[var(--muted-foreground)]">Changes may require a server restart to take effect.</p>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <button onClick={handleTest} disabled={testing}
               className="px-4 py-2 rounded-lg text-sm font-medium border border-[var(--border)] bg-[var(--card)] text-[var(--foreground)] hover:bg-[var(--accent)] disabled:opacity-50 transition-colors cursor-pointer">
               {testing ? 'Testing...' : 'Test Connection'}
@@ -420,7 +420,7 @@ export default function IntegrationsPage() {
                     )}
                   </div>
                   <p className="text-sm text-[var(--muted-foreground)] flex-1">{provider.desc}</p>
-                  <div className="flex items-center gap-2 mt-4 pt-3 border-t border-[var(--border)]">
+                  <div className="flex items-center gap-2 mt-4 pt-3 border-t border-[var(--border)] flex-wrap">
                     {connected ? (
                       <>
                         <button

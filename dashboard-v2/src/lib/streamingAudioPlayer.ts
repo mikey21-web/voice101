@@ -21,6 +21,11 @@ let activeSources: AudioBufferSourceNode[] = [];
 // scheduling audio nobody should hear anymore.
 let generation = 0;
 let segmentQueue: Promise<void> = Promise.resolve();
+// Real AbortControllers for in-flight segment fetches — resetSpeech() aborts these,
+// which the backend detects (req.on('close')) and uses to cancel the upstream Cartesia
+// call too. Without this, "resetting" only stopped scheduling audio client-side while
+// the backend kept synthesizing (and paying for) speech nobody would ever hear.
+let activeControllers: Set<AbortController> = new Set();
 
 function getCtx(): AudioContext {
   if (!audioCtx) audioCtx = new ((window as any).AudioContext || (window as any).webkitAudioContext)();
@@ -34,6 +39,8 @@ export function resetSpeech(): void {
   generation++;
   for (const src of activeSources) { try { src.stop(); } catch {} }
   activeSources = [];
+  for (const c of activeControllers) { try { c.abort(); } catch {} }
+  activeControllers.clear();
   segmentQueue = Promise.resolve();
   nextStartTime = getCtx().currentTime;
 }
@@ -92,6 +99,8 @@ function scheduleChunk(ctx: AudioContext, bytes: Uint8Array, myGeneration: numbe
 async function fetchAndScheduleSegment(text: string, myGeneration: number): Promise<void> {
   if (!text?.trim() || myGeneration !== generation) return;
   const ctx = getCtx();
+  const controller = new AbortController();
+  activeControllers.add(controller);
 
   let res: Response;
   try {
@@ -100,11 +109,13 @@ async function fetchAndScheduleSegment(text: string, myGeneration: number): Prom
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...(t ? { Authorization: `Bearer ${t}` } : {}) },
       body: JSON.stringify({ text }),
+      signal: controller.signal,
     });
   } catch {
+    activeControllers.delete(controller);
     return;
   }
-  if (!res.ok || !res.body || myGeneration !== generation) return;
+  if (!res.ok || !res.body || myGeneration !== generation) { activeControllers.delete(controller); return; }
 
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
@@ -123,7 +134,10 @@ async function fetchAndScheduleSegment(text: string, myGeneration: number): Prom
       }
     }
   } catch {
-    // Network hiccup mid-stream — whatever already got scheduled keeps playing.
+    // Aborted (barge-in) or a network hiccup mid-stream — whatever already got
+    // scheduled keeps playing either way.
+  } finally {
+    activeControllers.delete(controller);
   }
 }
 

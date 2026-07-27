@@ -180,7 +180,7 @@ export default function MikeyPage() {
 
   return (
     <div className="p-4 lg:p-6 space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <Brain className="w-7 h-7 text-[var(--primary)]" />
@@ -327,10 +327,10 @@ export default function MikeyPage() {
                 Mikey scans every 5 minutes for stale leads, conversion anomalies, and source shifts. Critical findings auto-trigger actions.
               </p>
               <div className="mt-3 flex gap-2 flex-wrap">
-                <span className="text-xs px-2 py-1 rounded-full bg-red-500/10 text-red-600">Stale hot leads</span>
-                <span className="text-xs px-2 py-1 rounded-full bg-yellow-500/10 text-yellow-600">Conversion anomalies</span>
-                <span className="text-xs px-2 py-1 rounded-full bg-blue-500/10 text-blue-600">Lead source shifts</span>
-                <span className="text-xs px-2 py-1 rounded-full bg-green-500/10 text-green-600">Staff performance</span>
+                <span className="text-xs px-2 py-1 rounded-full border border-[var(--border)] text-[var(--muted-foreground)]">Stale hot leads</span>
+                <span className="text-xs px-2 py-1 rounded-full border border-[var(--border)] text-[var(--muted-foreground)]">Conversion anomalies</span>
+                <span className="text-xs px-2 py-1 rounded-full border border-[var(--border)] text-[var(--muted-foreground)]">Lead source shifts</span>
+                <span className="text-xs px-2 py-1 rounded-full border border-[var(--border)] text-[var(--muted-foreground)]">Staff performance</span>
               </div>
               <p className="text-xs text-[var(--muted-foreground)] mt-3">
                 Findings emit via Socket.IO on <code className="text-[var(--primary)]">mikey.*</code> channels.

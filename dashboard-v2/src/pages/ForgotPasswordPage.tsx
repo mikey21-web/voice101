@@ -156,7 +156,7 @@ export function ForgotPasswordPage() {
           </p>
           <div className="mt-10 space-y-5">
             {[
-              { stat: "24/7", label: "AI Lead Engagement" },
+              { stat: "24×7", label: "AI Lead Engagement" },
               { stat: "85%", label: "Avg. Response Rate" },
               { stat: "3x", label: "More Bookings" },
             ].map((item) => (

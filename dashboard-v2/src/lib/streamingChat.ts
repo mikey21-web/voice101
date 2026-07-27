@@ -48,56 +48,71 @@ export interface ChatStreamCallbacks {
  * of waiting for the whole thing — segments get handed to onSegment as sentence
  * boundaries arrive so a caller can start speaking before the reply is complete.
  * Resolves with the same {conversationId, reply, actions} shape /copilot/chat
- * returns in one shot, so callers can treat both the same way once this settles. */
+ * returns in one shot, so callers can treat both the same way once this settles.
+ *
+ * `signal` is barge-in support (Phase 3): aborting it doesn't just stop reading here,
+ * it closes the underlying fetch, which the backend detects (req.on('close')) and uses
+ * to cancel the upstream agent-service generation too — so interrupting Mikey actually
+ * stops the LLM call, not just the frontend's relay of it. On abort this resolves
+ * (doesn't throw) with whatever text had streamed in so far, since the backend already
+ * persists that partial turn — the caller doesn't need special abort-vs-error handling. */
 export async function chatStream(
   message: string,
   conversationId: string | undefined,
   callbacks: ChatStreamCallbacks = {},
+  signal?: AbortSignal,
 ): Promise<ChatStreamResult> {
   const t = getToken();
-  const res = await fetch(`${API_URL}/copilot/chat-stream`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...(t ? { Authorization: `Bearer ${t}` } : {}) },
-    body: JSON.stringify({ message, conversationId }),
-  });
-  if (!res.ok || !res.body) throw new Error('Chat request failed');
-
-  const reader = res.body.getReader();
-  const decoder = new TextDecoder();
-  let sseBuffered = '';
   let fullText = '';
   let segmentBuffer = '';
-  let result: ChatStreamResult | null = null;
-  let errorMessage: string | null = null;
 
-  while (true) {
-    const { value, done } = await reader.read();
-    if (done) break;
-    sseBuffered += decoder.decode(value, { stream: true });
-    const { messages, remainder } = parseSSEFrames(sseBuffered);
-    sseBuffered = remainder;
-    for (const msg of messages) {
-      if (msg.type === 'token' && msg.text) {
-        fullText += msg.text;
-        segmentBuffer += msg.text;
-        callbacks.onTextUpdate?.(fullText);
-        const extracted = extractSpeakableSegment(segmentBuffer, false);
-        if (extracted) {
-          callbacks.onSegment?.(extracted.segment);
-          segmentBuffer = extracted.rest;
+  try {
+    const res = await fetch(`${API_URL}/copilot/chat-stream`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(t ? { Authorization: `Bearer ${t}` } : {}) },
+      body: JSON.stringify({ message, conversationId }),
+      signal,
+    });
+    if (!res.ok || !res.body) throw new Error('Chat request failed');
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let sseBuffered = '';
+    let result: ChatStreamResult | null = null;
+    let errorMessage: string | null = null;
+
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      sseBuffered += decoder.decode(value, { stream: true });
+      const { messages, remainder } = parseSSEFrames(sseBuffered);
+      sseBuffered = remainder;
+      for (const msg of messages) {
+        if (msg.type === 'token' && msg.text) {
+          fullText += msg.text;
+          segmentBuffer += msg.text;
+          callbacks.onTextUpdate?.(fullText);
+          const extracted = extractSpeakableSegment(segmentBuffer, false);
+          if (extracted) {
+            callbacks.onSegment?.(extracted.segment);
+            segmentBuffer = extracted.rest;
+          }
+        } else if (msg.type === 'done') {
+          result = { conversationId: msg.conversationId, reply: msg.reply, actions: msg.actions || [] };
+        } else if (msg.type === 'error') {
+          errorMessage = msg.message || 'Chat failed';
         }
-      } else if (msg.type === 'done') {
-        result = { conversationId: msg.conversationId, reply: msg.reply, actions: msg.actions || [] };
-      } else if (msg.type === 'error') {
-        errorMessage = msg.message || 'Chat failed';
       }
     }
+
+    const final = extractSpeakableSegment(segmentBuffer, true);
+    if (final) callbacks.onSegment?.(final.segment);
+
+    if (errorMessage) throw new Error(errorMessage);
+    if (!result) throw new Error('Stream ended without a result');
+    return result;
+  } catch (err: any) {
+    if (signal?.aborted) return { conversationId: conversationId || '', reply: fullText, actions: [] };
+    throw err;
   }
-
-  const final = extractSpeakableSegment(segmentBuffer, true);
-  if (final) callbacks.onSegment?.(final.segment);
-
-  if (errorMessage) throw new Error(errorMessage);
-  if (!result) throw new Error('Stream ended without a result');
-  return result;
 }

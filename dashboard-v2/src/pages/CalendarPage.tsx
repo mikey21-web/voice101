@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { CalendarDays, CheckCircle2 } from 'lucide-react';
 import { fetchEventCalendar } from '../lib/data';
 
 function monthRange(year: number, month: number) {
@@ -35,7 +36,7 @@ export default function CalendarPage() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-[var(--foreground)]">Calendar</h1>
           <p className="text-sm text-[var(--muted-foreground)] mt-1">All your events and tasks in one place</p>
@@ -78,7 +79,10 @@ export default function CalendarPage() {
           ) : (
             <ul className="space-y-1">
               {(byDay[selectedDay] || []).map((it: any) => (
-                <li key={it.id} className="text-sm text-[var(--foreground)]">{it.kind === 'event' ? '📅' : '✅'} {it.title}</li>
+                <li key={it.id} className="flex items-center gap-1.5 text-sm text-[var(--foreground)]">
+                  {it.kind === 'event' ? <CalendarDays size={13} className="text-[var(--muted-foreground)]" /> : <CheckCircle2 size={13} className="text-[var(--muted-foreground)]" />}
+                  {it.title}
+                </li>
               ))}
             </ul>
           )}

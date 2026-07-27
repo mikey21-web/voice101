@@ -3,7 +3,7 @@ import { fetchLead, getLeadTimeline, fetchContacts, holdUnit, createBooking, fet
 import { api } from '../lib/api';
 import toast from 'react-hot-toast';
 import { startExplainFlow } from '../lib/explainMode';
-import { ArrowLeft, Phone, MessageSquare, Calendar, FileText, X, AlertTriangle, Sparkles, Play, Send, Lock, ShoppingCart, MessageCircle, UserPlus, TrendingUp, Tag, UserCheck, CheckCircle, Database, Star, Bot, DollarSign, Clock, ChevronRight, ChevronLeft, Zap } from 'lucide-react';
+import { ArrowLeft, Phone, MessageSquare, Calendar, FileText, X, AlertTriangle, Sparkles, Play, Send, Lock, ShoppingCart, MessageCircle, UserPlus, TrendingUp, Tag, UserCheck, CheckCircle, Database, Star, Bot, DollarSign, Clock, ChevronRight, ChevronLeft, Zap, Pin, Pencil, Trash2 } from 'lucide-react';
 import CustomFieldsSection from '../components/CustomFieldsSection';
 import LeadPaymentMilestones from '../components/LeadPaymentMilestones';
 import PreVisitBrief from '../components/PreVisitBrief';
@@ -29,6 +29,16 @@ const segmentStyles: Record<string, string> = {
   WARM: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
   COLD: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
   UNQUALIFIED: 'bg-gray-100 text-gray-400 dark:bg-gray-800',
+};
+
+// <option> elements ignore Tailwind classes in most browsers, so the open dropdown
+// needs actual inline colors per choice, matching the closed pill's statusStyles/segmentStyles above.
+const statusOptionColors: Record<string, string> = {
+  NEW: '#1d4ed8', CONTACTED: '#b45309', ENGAGED: '#4338ca', QUALIFYING: '#0e7490',
+  QUALIFIED: '#047857', CONVERTED: '#15803d', LOST: '#b91c1c', COLD: '#4b5563', SPAM: '#be123c',
+};
+const segmentOptionColors: Record<string, string> = {
+  HOT: '#b91c1c', WARM: '#b45309', COLD: '#4b5563', UNQUALIFIED: '#9ca3af',
 };
 
 const SLA_DONE_STATUSES = new Set(['CONVERTED', 'LOST', 'SPAM']);
@@ -408,7 +418,7 @@ export default function LeadWorkbenchPage() {
   const noteTimelineEntries = notes.map((n: any) => ({
     id: `note-${n.id}`,
     type: 'note',
-    title: n.pinned ? '📌 Pinned note' : 'Note',
+    title: n.pinned ? 'Pinned note' : 'Note',
     description: n.text,
     metadata: {},
     createdAt: n.createdAt,
@@ -546,7 +556,7 @@ export default function LeadWorkbenchPage() {
             <div><span className="text-[var(--foreground)] font-medium">Source:</span> <span className="text-[var(--muted-foreground)]">{lead.source?.replace(/_/g, ' ')}</span></div>
             {lead.interest && <div><span className="text-[var(--foreground)] font-medium">Interest:</span> <span className="text-[var(--muted-foreground)]">{lead.interest}</span></div>}
             {lead.budget && <div><span className="text-[var(--foreground)] font-medium">Budget:</span> <span className="text-[var(--muted-foreground)]">{lead.budget}</span></div>}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className="text-[var(--foreground)] font-medium">Deal Value:</span>
               <input type="number" defaultValue={lead.dealValue ?? ''} placeholder="Not set"
                 onBlur={e => { const v = e.target.value.trim(); if (v) updateField('dealValue', Number(v)); }}
@@ -557,7 +567,7 @@ export default function LeadWorkbenchPage() {
               <select value={lead.status} onChange={e => updateField('status', e.target.value)}
                 className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium border-0 cursor-pointer ${statusStyles[lead.status] || ''}`}>
                 {['NEW','CONTACTED','ENGAGED','QUALIFYING','QUALIFIED','CONVERTED','LOST','COLD','SPAM'].map(s => (
-                  <option key={s} value={s}>{s}</option>
+                  <option key={s} value={s} style={{ color: statusOptionColors[s], backgroundColor: '#fff' }}>{s}</option>
                 ))}
               </select>
             </div>
@@ -566,7 +576,7 @@ export default function LeadWorkbenchPage() {
               <select value={lead.segment} onChange={e => updateField('segment', e.target.value)}
                 className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium border-0 cursor-pointer ${segmentStyles[lead.segment] || ''}`}>
                 {['HOT','WARM','COLD','UNQUALIFIED'].map(s => (
-                  <option key={s} value={s}>{s}</option>
+                  <option key={s} value={s} style={{ color: segmentOptionColors[s], backgroundColor: '#fff' }}>{s}</option>
                 ))}
               </select>
             </div>
@@ -638,12 +648,12 @@ export default function LeadWorkbenchPage() {
                           <div className="flex items-center gap-0.5 shrink-0">
                             <button onClick={() => handleTogglePinNote(n.id, n.pinned)} title={n.pinned ? 'Unpin' : 'Pin'}
                               className="p-0.5 rounded hover:bg-[var(--muted)] transition-colors">
-                              <span className={`text-[10px] ${n.pinned ? 'text-amber-500' : 'text-[var(--muted-foreground)]'}`}>{n.pinned ? '📌' : '📍'}</span>
+                              <Pin size={12} className={n.pinned ? 'text-amber-500' : 'text-[var(--muted-foreground)]'} />
                             </button>
                             <button onClick={() => { setEditingNoteId(n.id); setEditingNoteText(n.text); }} title="Edit"
-                              className="p-0.5 rounded hover:bg-[var(--muted)] transition-colors text-[10px] text-[var(--muted-foreground)]">✏️</button>
+                              className="p-0.5 rounded hover:bg-[var(--muted)] transition-colors text-[var(--muted-foreground)]"><Pencil size={12} /></button>
                             <button onClick={() => handleDeleteNote(n.id)} title="Delete"
-                              className="p-0.5 rounded hover:bg-[var(--muted)] transition-colors text-[10px] text-red-500">🗑️</button>
+                              className="p-0.5 rounded hover:bg-[var(--muted)] transition-colors text-red-500"><Trash2 size={12} /></button>
                           </div>
                         </div>
                         <div className="flex items-center gap-2 mt-1">

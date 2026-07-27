@@ -91,7 +91,7 @@ export default function AICampaignManager() {
       if (result.image) {
         toast.success('Image generated!');
       } else {
-        toast(result.message || 'Could not generate image', { icon: '⚠️' });
+        toast(result.message || 'Could not generate image');
       }
     } catch (e: any) {
       toast.error(e.message || 'Image generation failed');

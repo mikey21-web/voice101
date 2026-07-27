@@ -66,9 +66,6 @@ const rawNavGroups = [
       { label: "Today", icon: LayoutDashboard, path: "/" },
       { label: "My Queue", icon: CheckSquare, path: "/queue" },
       { label: "Builder Desk", icon: Building2, path: "/builder-desk" },
-      { label: "Portfolio", icon: BarChart3, path: "/portfolio" },
-      { label: "Launch Control", icon: Activity, path: "/launch-control" },
-      { label: "Onboarding", icon: CheckSquare, path: "/onboarding-progress" },
     ],
   },
   {
@@ -81,7 +78,6 @@ const rawNavGroups = [
       { label: "Campaigns", icon: Megaphone, path: "/campaigns" },
       { label: "Forms", icon: FormInput, path: "/forms" },
       { label: "QR Codes", icon: QrCode, path: "/qr-codes" },
-      { label: "NRI Buyers", icon: Globe, path: "/nri-profiles" },
     ],
   },
   {
@@ -156,6 +152,14 @@ const rawNavGroups = [
       { label: "Approvals", icon: CheckSquare, path: "/approvals" },
       { label: "Payments & Collections", icon: ClipboardList, path: "/payment-schedules" },
       { label: "Collections Ledger", icon: ClipboardList, path: "/collections" },
+      { label: "Portfolio", icon: BarChart3, path: "/portfolio" },
+      { label: "Launch Control", icon: Activity, path: "/launch-control" },
+      { label: "Onboarding", icon: CheckSquare, path: "/onboarding-progress" },
+      { label: "NRI Buyers", icon: Globe, path: "/nri-profiles" },
+      { label: "Construction ERP", icon: HardDrive, path: "/construction-erp" },
+      { label: "Cash Flow Forecast", icon: BarChart3, path: "/cash-flow-forecast" },
+      { label: "Revenue Share", icon: DollarSign, path: "/revenue-share" },
+      { label: "Sales Targets", icon: Target, path: "/sales-targets" },
       { label: "Vezraa Apartments", icon: ExternalLink, path: "/webverse" },
       { label: "Vezraa Villas", icon: ExternalLink, path: "/villa-webverse" },
     ],
@@ -171,7 +175,6 @@ const rawNavGroups = [
     items: [
       { label: "Events", icon: Calendar, path: "/events" },
       { label: "Calendar", icon: Calendar, path: "/calendar" },
-      { label: "Construction ERP", icon: HardDrive, path: "/construction-erp" },
     ],
   },
   {
@@ -183,8 +186,6 @@ const rawNavGroups = [
       { label: "Sale Agreements", icon: FileText, path: "/contracts" },
       { label: "Invoices", icon: FileText, path: "/invoices" },
       { label: "Finance Reports", icon: BarChart3, path: "/finance-reports" },
-      { label: "Cash Flow Forecast", icon: BarChart3, path: "/cash-flow-forecast" },
-      { label: "Revenue Share", icon: DollarSign, path: "/revenue-share" },
     ],
   },
   {
@@ -210,7 +211,6 @@ const rawNavGroups = [
       { label: "Leave Log", icon: Calendar, path: "/leave-log" },
       { label: "Salaries", icon: BarChart3, path: "/salaries" },
       { label: "Timesheet", icon: CheckSquare, path: "/timesheet" },
-      { label: "Sales Targets", icon: Target, path: "/sales-targets" },
     ],
   },
   {
@@ -404,7 +404,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: { co
 
         <div className="border-t border-[var(--sidebar-border)] p-3">
           <div className="flex items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-[var(--sidebar-hover)] transition-all duration-150 cursor-pointer active:scale-[0.99]">
-            <div className="h-7 w-7 rounded-full bg-[var(--sidebar-active-fg)] flex items-center justify-center text-xs font-semibold text-[#08130f] shrink-0">
+            <div className="h-7 w-7 rounded-full bg-slate-700 flex items-center justify-center text-xs font-semibold text-white shrink-0">
               {profile?.name?.[0] || 'U'}
             </div>
             {!collapsed && (

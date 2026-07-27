@@ -109,7 +109,7 @@ export default function PaymentSchedulesPage() {
 
   return (
     <div className="p-4 lg:p-6 space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-[var(--foreground)]">Payments & Collections</h1>
           <p className="text-sm text-[var(--muted-foreground)]">Booking, registration & possession milestones — automated reminders 3 days before and on the due date</p>

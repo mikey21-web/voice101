@@ -999,7 +999,7 @@ export default function FormsPage() {
   return (
     <div className="animate-fade-in">
       {/* Page header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-[var(--foreground)]">Forms</h1>
           <p className="text-sm text-[var(--muted-foreground)] mt-1">{forms.length} total forms</p>

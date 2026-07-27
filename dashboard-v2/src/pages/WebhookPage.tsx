@@ -16,21 +16,21 @@ interface CustomWebhook {
 
 const EVENT_OPTIONS = ['call.synced', 'call.recorded', 'call.summarized'];
 
-const endpointInfo: Record<string, { label: string; description: string; auth: string; icon: string }> = {
-  whatsapp: { label: 'WhatsApp', description: 'Meta WhatsApp Cloud API messages', auth: 'HMAC Signature (x-hub-signature-256)', icon: '💬' },
-  telegram: { label: 'Telegram', description: 'Bot API updates', auth: 'Bot Token', icon: '✈️' },
-  social: { label: 'Social Media', description: 'Facebook, Instagram, LinkedIn leads', auth: 'API Key (x-api-key)', icon: '📱' },
-  voice: { label: 'Voice (Twilio)', description: 'Incoming call handling', auth: 'Twilio Signature', icon: '📞' },
-  forms: { label: 'Forms', description: 'Custom form submissions', auth: 'API Key (x-api-key)', icon: '📝' },
-  chatbot: { label: 'Chatbot', description: 'Chat widget messages', auth: 'API Key (x-api-key)', icon: '🤖' },
-  'mobile-app': { label: 'Mobile App', description: 'App event forwarding', auth: 'API Key (x-api-key)', icon: '📲' },
-  payments: { label: 'Payments', description: 'Stripe payment events', auth: 'Stripe Signature', icon: '💳' },
-  indiamart: { label: 'IndiaMART', description: 'B2B buyer enquiries', auth: 'API Key or HMAC', icon: '🏭' },
-  '99acres': { label: '99acres', description: 'Property enquiries', auth: 'API Key or HMAC', icon: '🏠' },
-  justdial: { label: 'JustDial', description: 'Business enquiries', auth: 'API Key or HMAC', icon: '📋' },
-  magicbricks: { label: 'MagicBricks', description: 'Real estate enquiries', auth: 'API Key or HMAC', icon: '🔑' },
-  housing: { label: 'Housing.com', description: 'Property leads', auth: 'API Key or HMAC', icon: '🏡' },
-  tradeindia: { label: 'TradeIndia', description: 'B2B buyer enquiries', auth: 'API Key or HMAC', icon: '🌐' },
+const endpointInfo: Record<string, { label: string; description: string; auth: string }> = {
+  whatsapp: { label: 'WhatsApp', description: 'Meta WhatsApp Cloud API messages', auth: 'HMAC Signature (x-hub-signature-256)' },
+  telegram: { label: 'Telegram', description: 'Bot API updates', auth: 'Bot Token' },
+  social: { label: 'Social Media', description: 'Facebook, Instagram, LinkedIn leads', auth: 'API Key (x-api-key)' },
+  voice: { label: 'Voice (Twilio)', description: 'Incoming call handling', auth: 'Twilio Signature' },
+  forms: { label: 'Forms', description: 'Custom form submissions', auth: 'API Key (x-api-key)' },
+  chatbot: { label: 'Chatbot', description: 'Chat widget messages', auth: 'API Key (x-api-key)' },
+  'mobile-app': { label: 'Mobile App', description: 'App event forwarding', auth: 'API Key (x-api-key)' },
+  payments: { label: 'Payments', description: 'Stripe payment events', auth: 'Stripe Signature' },
+  indiamart: { label: 'IndiaMART', description: 'B2B buyer enquiries', auth: 'API Key or HMAC' },
+  '99acres': { label: '99acres', description: 'Property enquiries', auth: 'API Key or HMAC' },
+  justdial: { label: 'JustDial', description: 'Business enquiries', auth: 'API Key or HMAC' },
+  magicbricks: { label: 'MagicBricks', description: 'Real estate enquiries', auth: 'API Key or HMAC' },
+  housing: { label: 'Housing.com', description: 'Property leads', auth: 'API Key or HMAC' },
+  tradeindia: { label: 'TradeIndia', description: 'B2B buyer enquiries', auth: 'API Key or HMAC' },
 };
 
 function isValidUrl(str: string): boolean {
@@ -229,7 +229,7 @@ export default function WebhookPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {webhooks.map((wh) => {
-          const info = endpointInfo[wh.type] || { label: wh.type, description: '', auth: 'Unknown', icon: '🔗' };
+          const info = endpointInfo[wh.type] || { label: wh.type, description: '', auth: 'Unknown' };
           const isActive = wh.status === 'configured' || wh.status === 'active';
           const hasRecentActivity = wh.lastReceived && new Date(wh.lastReceived).getTime() > Date.now() - 86400000;
 
@@ -237,7 +237,7 @@ export default function WebhookPage() {
             <div key={wh.type} className="rounded-lg bg-[var(--card)] border border-[var(--border)] p-5 shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)] transition-shadow">
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3">
-                  <span className="text-xl">{info.icon}</span>
+                  <Webhook size={18} className="text-[var(--muted-foreground)]" />
                   <div>
                     <h3 className="font-semibold text-sm text-[var(--foreground)]">{info.label}</h3>
                     <p className="text-xs text-[var(--muted-foreground)]">{info.description}</p>

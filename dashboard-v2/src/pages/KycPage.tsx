@@ -83,7 +83,7 @@ export default function KycPage() {
 
   return (
     <div className="space-y-4 animate-fade-in">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-[var(--foreground)]">KYC &amp; Documents</h1>
           <p className="text-sm text-[var(--muted-foreground)] mt-1">{docs.length} documents</p>

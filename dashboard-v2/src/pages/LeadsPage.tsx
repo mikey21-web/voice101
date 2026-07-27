@@ -34,6 +34,16 @@ const segmentStyles: Record<string, string> = {
   UNQUALIFIED: 'bg-gray-100 text-gray-400 dark:bg-gray-800',
 };
 
+// <option> elements ignore Tailwind classes in most browsers, so the open dropdown
+// needs actual inline colors per choice, matching the closed pill's statusStyles/segmentStyles above.
+const statusOptionColors: Record<string, string> = {
+  NEW: '#1d4ed8', CONTACTED: '#b45309', ENGAGED: '#4338ca', QUALIFYING: '#0e7490',
+  QUALIFIED: '#047857', CONVERTED: '#15803d', LOST: '#b91c1c', COLD: '#4b5563', SPAM: '#be123c',
+};
+const segmentOptionColors: Record<string, string> = {
+  HOT: '#b91c1c', WARM: '#b45309', COLD: '#4b5563', UNQUALIFIED: '#9ca3af',
+};
+
 const ALL_SOURCES = ['CAMPAIGN','QR_CODE','FORM','CHATBOT','MOBILE_APP','WHATSAPP','SOCIAL_MEDIA','PHONE_CALL','MANUAL','REFERRAL','INDIAMART','NINETY_NINE_ACRES','JUSTDIAL','MAGICBRICKS','HOUSING_COM','TRADEINDIA','TELEGRAM'];
 
 const SLA_DONE_STATUSES = new Set(['CONVERTED', 'LOST', 'SPAM']);
@@ -274,7 +284,7 @@ export default function LeadsPage() {
       className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium border-0 cursor-pointer ${statusStyles[lead.status] || ''}`}
     >
       {['NEW','CONTACTED','ENGAGED','QUALIFYING','QUALIFIED','CONVERTED','LOST','COLD','SPAM'].map(s => (
-        <option key={s} value={s}>{s}</option>
+        <option key={s} value={s} style={{ color: statusOptionColors[s], backgroundColor: '#fff' }}>{s}</option>
       ))}
     </select>
   );
@@ -287,7 +297,7 @@ export default function LeadsPage() {
       className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium border-0 cursor-pointer ${segmentStyles[lead.segment] || ''}`}
     >
       {['HOT','WARM','COLD','UNQUALIFIED'].map(s => (
-        <option key={s} value={s}>{s}</option>
+        <option key={s} value={s} style={{ color: segmentOptionColors[s], backgroundColor: '#fff' }}>{s}</option>
       ))}
     </select>
   );

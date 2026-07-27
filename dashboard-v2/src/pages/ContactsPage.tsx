@@ -184,7 +184,7 @@ export default function ContactsPage() {
           <p className="text-sm text-[var(--muted-foreground)]">
             Page {meta.page} of {meta.totalPages} ({meta.total} total)
           </p>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 flex-wrap">
             <button
               onClick={() => setPage(p => Math.max(1, p - 1))}
               disabled={page <= 1}
@@ -192,19 +192,29 @@ export default function ContactsPage() {
             >
               <ChevronLeft size={14} /> Prev
             </button>
-            {Array.from({ length: meta.totalPages }, (_, i) => i + 1).map(p => (
-              <button
-                key={p}
-                onClick={() => setPage(p)}
-                className={`h-8 w-8 rounded-lg text-sm font-medium transition-colors ${
-                  p === page
-                    ? 'bg-[var(--primary)] text-white'
-                    : 'border border-[var(--border)] text-[var(--foreground)] hover:bg-[var(--accent)]'
-                }`}
-              >
-                {p}
-              </button>
-            ))}
+            {(() => {
+              const total = meta.totalPages;
+              const maxVisible = 7;
+              if (total <= maxVisible) {
+                return Array.from({ length: total }, (_, i) => i + 1).map(p => (
+                  <button key={p} onClick={() => setPage(p)}
+                    className={`h-8 w-8 rounded-lg text-sm font-medium transition-colors ${p === page ? 'bg-[var(--primary)] text-white' : 'border border-[var(--border)] text-[var(--foreground)] hover:bg-[var(--accent)]'}`}
+                  >{p}</button>
+                ));
+              }
+              const pages: (number | 'ellipsis')[] = [];
+              const start = Math.max(1, page - 2);
+              const end = Math.min(total, page + 2);
+              if (start > 2) { pages.push(1, 'ellipsis'); } else if (start === 2) { pages.push(1); }
+              for (let i = start; i <= end; i++) pages.push(i);
+              if (end < total - 1) { pages.push('ellipsis', total); } else if (end === total - 1) { pages.push(total); }
+              return pages.map((p, idx) =>
+                p === 'ellipsis' ? <span key={`e-${idx}`} className="h-8 w-8 flex items-center justify-center text-xs text-[var(--muted-foreground)]">...</span>
+                : <button key={p} onClick={() => setPage(p)}
+                    className={`h-8 w-8 rounded-lg text-sm font-medium transition-colors ${p === page ? 'bg-[var(--primary)] text-white' : 'border border-[var(--border)] text-[var(--foreground)] hover:bg-[var(--accent)]'}`}
+                  >{p}</button>
+              );
+            })()}
             <button
               onClick={() => setPage(p => Math.min(meta.totalPages, p + 1))}
               disabled={page >= meta.totalPages}

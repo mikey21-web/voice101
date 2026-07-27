@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Mic, MicOff, Sparkles, Ear, EarOff } from 'lucide-react';
+import { Mic, MicOff, Sparkles, Ear, EarOff, Radio } from 'lucide-react';
 import { setPendingFilter } from '../lib/pendingSearch';
 import { apiUpload } from '../lib/api';
 import { useVoiceInput } from '../lib/useVoiceInput';
 import { PAGE_MAP, PAGE_ALIASES, fuzzyPageMatch, resolvePage, canonical } from '../lib/pageMap';
 import { speakStreamed, resetSpeech, queueSpeechSegment } from '../lib/streamingAudioPlayer';
 import { chatStream } from '../lib/streamingChat';
+import { useVoiceSession } from '../lib/voiceSession';
 
 // MediaRecorder only produces WebM/Opus (or MP4 on Safari), but the self-hosted
 // Moonshine transcriber decodes with libsndfile, which cannot read either
@@ -120,6 +121,12 @@ export default function VoiceCommandUI() {
   // transcript source when server transcription yields nothing.
   const shadowRef = useRef<any>(null);
   const shadowTextRef = useRef<string>('');
+
+  // Phase 3: continuous listening (always-on mic, live transcription, can be
+  // talked over mid-reply) — see lib/voiceSession.ts. Independent of the
+  // tap-to-talk / wake-word flow below; only one would realistically be
+  // active at a time, but nothing here prevents both existing side by side.
+  const voiceSession = useVoiceSession();
 
   const [wakeWordOn, setWakeWordOn] = useState(() => localStorage.getItem('mikeyWakeWordOn') === 'true');
   const wakeWord = useVoiceInput();
@@ -471,6 +478,53 @@ export default function VoiceCommandUI() {
 
   if (!supported) return null;
 
+  if (voiceSession.state !== 'idle') {
+    const stateLabel = {
+      listening: 'Listening... say something, or talk over Mikey anytime',
+      thinking: 'Thinking...',
+      speaking: 'Speaking... just start talking to interrupt',
+    }[voiceSession.state];
+    return (
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999] animate-fade-up flex flex-col items-center gap-2 max-w-lg w-full mx-4">
+        {(voiceSession.transcript || voiceSession.replyText) && (
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] px-5 py-4 shadow-2xl flex flex-col gap-2 w-full pointer-events-none">
+            {voiceSession.transcript && (
+              <div className="flex items-start gap-2">
+                <Mic size={14} className="text-[var(--primary)] mt-0.5 shrink-0" />
+                <p className="text-xs text-[var(--muted-foreground)]">{voiceSession.transcript}</p>
+              </div>
+            )}
+            {voiceSession.replyText && (
+              <div className="flex items-start gap-2">
+                <Sparkles size={16} className="text-[var(--primary)] mt-0.5 shrink-0" />
+                <p className="text-sm text-[var(--foreground)] leading-relaxed flex-1">{voiceSession.replyText}</p>
+              </div>
+            )}
+          </div>
+        )}
+        <div className="rounded-full border border-[var(--border)] bg-[var(--card)] px-5 py-2.5 shadow-2xl flex items-center gap-3">
+          <div className="flex items-end gap-0.5 h-5">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className={`w-1 rounded-full bg-[var(--primary)] ${voiceSession.state === 'thinking' ? 'animate-pulse' : ''}`} style={{ height: `${20 + Math.random() * 60}%` }} />
+            ))}
+          </div>
+          <span className="text-xs text-[var(--muted-foreground)] whitespace-nowrap">{stateLabel}</span>
+          <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+        </div>
+        {voiceSession.error && (
+          <p className="text-xs text-red-500">{voiceSession.error}</p>
+        )}
+        <button
+          onClick={voiceSession.stop}
+          className="flex items-center gap-2 rounded-full bg-[var(--primary)] text-white px-6 py-3 shadow-2xl active:scale-95 transition-transform"
+        >
+          <Radio size={18} />
+          <span className="text-sm font-medium">End conversation</span>
+        </button>
+      </div>
+    );
+  }
+
   if (result) {
     const lines = result.split('\n');
     const hasTranscript = lines.length > 1;
@@ -539,6 +593,13 @@ export default function VoiceCommandUI() {
         title={wakeWordOn ? '"Okay Mikey" listening is on — click to turn off' : 'Turn on hands-free "Okay Mikey" listening'}
       >
         {wakeWordOn ? <Ear size={15} /> : <EarOff size={15} />}
+      </button>
+      <button
+        onClick={voiceSession.start}
+        className="fixed bottom-20 right-32 z-[9999] w-9 h-9 rounded-full shadow-lg flex items-center justify-center border bg-[var(--card)] text-[var(--muted-foreground)] border-[var(--border)] hover:bg-[var(--accent)] transition-all duration-200 [body.overlay-open_&]:hidden"
+        title="Start a continuous conversation — always listening, talk over Mikey anytime"
+      >
+        <Radio size={15} />
       </button>
       <div className="fixed bottom-[5.5rem] right-6 z-[9999] text-[10px] text-[var(--muted-foreground)] opacity-50 text-right [body.overlay-open_&]:hidden">
         <kbd className="px-1 py-0.5 rounded bg-[var(--accent)] font-mono">Ctrl+H</kbd>

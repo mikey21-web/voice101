@@ -81,14 +81,14 @@ export default function ScoringPage() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-[var(--foreground)]">Scoring Rules</h1>
           <p className="text-sm text-[var(--muted-foreground)] mt-1">{rules.length} rules configured</p>
         </div>
         <button
           onClick={openCreate}
-          className="inline-flex items-center gap-2 h-9 px-4 rounded-lg bg-[var(--primary)] text-white text-sm font-medium hover:opacity-90 transition-opacity shadow-sm"
+          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 h-9 px-4 rounded-lg bg-[var(--primary)] text-white text-sm font-medium hover:opacity-90 transition-opacity shadow-sm"
         >
           <Plus size={16} /> Add Rule
         </button>

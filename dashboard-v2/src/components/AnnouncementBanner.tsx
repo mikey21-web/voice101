@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
+import { Wrench } from 'lucide-react';
 
 interface Announcement {
   id: string;
@@ -55,7 +56,7 @@ export function MaintenanceMode({ enabled, message = 'System maintenance in prog
   return createPortal(
     <div role="alertdialog" aria-modal="true" className="fixed inset-0 bg-yellow-100 dark:bg-yellow-950/40 flex items-center justify-center z-50">
       <div className="max-w-md text-center p-8">
-        <div className="text-4xl mb-4">🔧</div>
+        <Wrench size={32} className="mx-auto mb-4 text-[var(--muted-foreground)]" />
         <h2 className="text-xl font-bold mb-2">{message}</h2>
         <p className="text-sm text-[var(--muted-foreground)]">
           We're making the system better. We'll be back shortly.

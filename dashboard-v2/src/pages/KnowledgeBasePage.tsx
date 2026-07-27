@@ -27,7 +27,7 @@ export default function KnowledgeBasePage() {
 
   return (
     <div className="space-y-4 animate-fade-in">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <h1 className="text-2xl font-bold text-[var(--foreground)]">Knowledge Base</h1>
         <button onClick={() => { setEditing(null); setShowEditor(true); }} className="inline-flex items-center gap-2 rounded-lg bg-[var(--primary)] px-4 py-2 text-sm font-medium text-[var(--primary-foreground)] hover:bg-[var(--primary)]/90 transition-colors">
           <Plus size={16} /> New Article

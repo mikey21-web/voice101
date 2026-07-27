@@ -348,6 +348,45 @@ describe('CopilotService', () => {
       const result = await service.chatStream('user-1', 'SALES_AGENT', 'default-tenant', 'hi', undefined, () => { throw new Error('client gone'); });
       expect(result.reply).toBe('Hi there.');
     });
+
+    it('barge-in: persists whatever text had streamed in before the reply was aborted', async () => {
+      const abort = new AbortController();
+      // First read delivers a token like a real stream would; the second read is
+      // where a real aborted fetch's reader would reject — simulated the same way
+      // here, with the abort firing right before it, matching what actually
+      // happens when the frontend cancels mid-stream.
+      let reads = 0;
+      fetchMock.mockImplementationOnce(async () => {
+        return {
+          ok: true,
+          body: {
+            getReader: () => ({
+              read: async () => {
+                reads++;
+                if (reads === 1) {
+                  return { value: new TextEncoder().encode(sseFrame({ type: 'token', text: 'Let me check' })), done: false };
+                }
+                abort.abort();
+                throw new DOMException('aborted', 'AbortError');
+              },
+            }),
+          },
+        } as any;
+      });
+
+      const result = await service.chatStream('user-1', 'SALES_AGENT', 'default-tenant', 'how many hot leads', undefined, () => {}, abort.signal);
+      expect(result.reply).toBe('Let me check');
+      expect(result.actions).toEqual([]);
+    });
+
+    it('barge-in before any text streamed persists nothing rather than a fake reply', async () => {
+      const abort = new AbortController();
+      abort.abort();
+      fetchMock.mockRejectedValueOnce(new DOMException('aborted', 'AbortError'));
+
+      const result = await service.chatStream('user-1', 'SALES_AGENT', 'default-tenant', 'hi', undefined, () => {}, abort.signal);
+      expect(result.reply).toBe('');
+    });
   });
 
   describe('confirmAction ownership + lifecycle', () => {

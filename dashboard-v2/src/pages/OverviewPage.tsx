@@ -7,7 +7,7 @@ import {
   DollarSign, Clock, Phone, MessageSquare, Calendar,
   ChevronRight, Loader2, ArrowUpRight, ArrowDownRight,
   CheckSquare, UserCheck, Building2, MapPin, Bot,
-  Volume2, VolumeX, Home, ChevronLeft, Bed, Bath,
+  Volume2, VolumeX, ChevronLeft, Bed, Bath,
   Maximize2, Star,
 } from 'lucide-react';
 import { Skeleton } from '../components/ui/skeleton';
@@ -469,20 +469,18 @@ function HotLeadRatioCard({ hot, total }: { hot: number; total: number }) {
   );
 }
 
-function StatChip({ icon: Icon, label, value, color }: {
-  icon: any; label: string; value: string | number; color: 'emerald' | 'red' | 'amber' | 'blue';
+function StatChip({ icon: Icon, label, value, alert }: {
+  icon: any; label: string; value: string | number; alert?: boolean;
 }) {
-  const colors: Record<string, string> = {
-    emerald: 'bg-emerald-50 text-emerald-600',
-    red: 'bg-red-50 text-red-600',
-    amber: 'bg-amber-50 text-amber-600',
-    blue: 'bg-blue-50 text-blue-600',
-  };
   return (
-    <div className={`flex items-center gap-2 rounded-lg px-3 py-2 ${colors[color]}`}>
-      <Icon size={14} />
+    <div className={`flex items-center gap-2 rounded-lg border px-3 py-2 ${
+      alert
+        ? 'border-red-200 bg-red-50 text-red-700 dark:border-red-900/40 dark:bg-red-950/20 dark:text-red-400'
+        : 'border-[var(--border)] bg-[var(--card)] text-[var(--foreground)]'
+    }`}>
+      <Icon size={14} className={alert ? '' : 'text-[var(--muted-foreground)]'} />
       <span className="text-sm font-semibold">{value}</span>
-      <span className="text-xs opacity-80">{label}</span>
+      <span className="text-xs text-[var(--muted-foreground)]">{label}</span>
     </div>
   );
 }
@@ -960,7 +958,7 @@ export default function OverviewPage() {
           )}
         </div>
         <h1 className="text-2xl font-bold text-[var(--foreground)]">
-          {greeting()}, <span className="font-[family-name:var(--font-script)] text-3xl font-normal text-emerald-600">{firstName}</span>
+          {greeting()}, {firstName}
         </h1>
         <p className="text-sm text-[var(--muted-foreground)] mt-1">
           Here&rsquo;s your real estate overview for today
@@ -969,11 +967,11 @@ export default function OverviewPage() {
 
       {(s || error) && (
         <div className="flex flex-wrap gap-2">
-          {s && <StatChip icon={TrendingUp} label="yesterday" value={s.newLeadsYesterday} color="blue" />}
-          {s && <StatChip icon={Target} label="hot now" value={s.hotLeads} color="amber" />}
-          {s && <StatChip icon={Users} label="agents slow" value={s.slowAgents.length} color="red" />}
-          {rar && <StatChip icon={DollarSign} label="at risk" value={formatINR(rar.totalPaise)} color="red" />}
-          {pa && <StatChip icon={CheckSquare} label="pending approvals" value={pa.count} color="amber" />}
+          {s && <StatChip icon={TrendingUp} label="yesterday" value={s.newLeadsYesterday} />}
+          {s && <StatChip icon={Target} label="hot now" value={s.hotLeads} />}
+          {s && <StatChip icon={Users} label="agents slow" value={s.slowAgents.length} alert={s.slowAgents.length > 0} />}
+          {rar && <StatChip icon={DollarSign} label="at risk" value={formatINR(rar.totalPaise)} alert={rar.totalPaise > 0} />}
+          {pa && <StatChip icon={CheckSquare} label="pending approvals" value={pa.count} />}
         </div>
       )}
 
@@ -995,15 +993,8 @@ export default function OverviewPage() {
 
       {/* ── EstateRocket Sections ── */}
 
-      {/* Breadcrumb + pill group */}
-      <div className="flex items-center justify-between animate-fade-up">
-        <div className="flex items-center gap-2 text-xs text-[var(--muted-foreground)]">
-          <a href="#" className="hover:text-[var(--foreground)] transition-colors"><Home size={13} /></a>
-          <ChevronRight size={11} />
-          <span>Dashboard</span>
-          <ChevronRight size={11} />
-          <span className="text-[var(--foreground)] font-medium">Overview</span>
-        </div>
+      {/* Timeframe pill group */}
+      <div className="flex items-center justify-end animate-fade-up">
         <div className="flex items-center gap-1 p-0.5 rounded-lg bg-[var(--accent)]">
           {["7D", "1M", "3M", "1Y"].map(p => (
             <button key={p} className={`text-xs font-medium px-3 py-1.5 rounded-md transition-all duration-150 ${

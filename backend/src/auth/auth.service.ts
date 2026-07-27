@@ -111,7 +111,7 @@ export class AuthService {
     // If MFA is enabled, issue a short-lived challenge token instead
     if (user.mfaEnabled) {
       const mfaToken = this.mfa.generateMfaChallengeToken(user.id);
-      return { requireMfa: true, mfaToken, user: { id: user.id, email: user.email, role: user.role } };
+      return { requireMfa: true, mfaToken, user: { id: user.id, email: user.email, role: user.role, name: user.name } };
     }
 
     return this.generateTokens(user);
@@ -257,7 +257,7 @@ export class AuthService {
     return { message: 'Logged out successfully.' };
   }
 
-  private async generateTokens(user: { id: string; email: string; role: string; tenantId?: string }) {
+  private async generateTokens(user: { id: string; email: string; role: string; tenantId?: string; name?: string | null }) {
     const jti = crypto.randomUUID();
 
     const accessToken = this.jwtService.sign(
@@ -279,7 +279,7 @@ export class AuthService {
     return {
       accessToken,
       refreshToken: refreshTokenRaw,
-      user: { id: user.id, email: user.email, role: user.role },
+      user: { id: user.id, email: user.email, role: user.role, name: user.name },
     };
   }
 }

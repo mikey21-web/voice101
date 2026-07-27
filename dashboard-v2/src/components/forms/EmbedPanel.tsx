@@ -83,7 +83,7 @@ export default function EmbedPanel({ formId, formName }: Props) {
             </div>
             <div>
               <h4 className="text-sm font-semibold text-[var(--foreground)]">JavaScript Snippet</h4>
-              <p className="text-xs text-[var(--muted-foreground)]">Seamless inline embedding</p>
+              <p className="text-xs text-[var(--muted-foreground)]">Inline embed snippet</p>
             </div>
           </div>
           <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-200">
@@ -107,7 +107,7 @@ export default function EmbedPanel({ formId, formName }: Props) {
 
         <p className="text-xs text-[var(--muted-foreground)] mt-3 flex items-start gap-1.5">
           <span className="text-amber-500 mt-0.5 shrink-0">ⓘ</span>
-          The JavaScript embed injects the form seamlessly into your page. This feature is in preview.
+          Injects the form directly into your page. This feature is in preview.
         </p>
       </div>
 

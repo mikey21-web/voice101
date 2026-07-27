@@ -3,7 +3,7 @@ core_engine_version: "1.4.2"
 niche:
   key: realestate-acme
   industry: real_estate
-  display_name: "Acme Realty"
+  display_name: "Vezraa"
 branding:
   primary_color: "#0B5B7A"
   labels: { lead: "Buyer", leads: "Buyers", contact: "Contact", conversion: "Deal" }

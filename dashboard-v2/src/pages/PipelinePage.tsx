@@ -49,7 +49,7 @@ function DealCard({ deal, onOpen }: { deal: Deal; onOpen: (id: string) => void }
   const initials = deal.contact?.name?.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase() || "?";
 
   return (
-    <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-3.5 shadow-sm cursor-pointer hover:shadow-md hover:border-[var(--primary)]/30 transition-all" onClick={() => onOpen(deal.id)}>
+    <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-3 sm:p-3.5 shadow-sm cursor-pointer hover:shadow-md hover:border-[var(--primary)]/30 transition-all" onClick={() => onOpen(deal.id)}>
       <div className="flex items-start justify-between gap-2 mb-1">
         <span className="text-sm font-semibold text-[var(--foreground)] leading-tight line-clamp-2 min-w-0">{deal.contact?.name || "Unknown"}</span>
         <span className="shrink-0 text-[10px] text-[var(--muted-foreground)]">{daysInStage}d</span>
@@ -209,7 +209,7 @@ function DealDetailPanel({ leadId, onClose }: { leadId: string; onClose: () => v
 
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/30 p-4" onClick={onClose}>
-      <div className="w-full max-w-lg rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+      <div className="w-full max-w-lg rounded-t-xl sm:rounded-xl border border-[var(--border)] bg-[var(--card)] p-4 sm:p-5 max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-bold text-[var(--foreground)]">Deal Tasks</h2>
           <button onClick={onClose} className="text-[var(--muted-foreground)] hover:text-[var(--foreground)]"><X className="h-5 w-5" /></button>
@@ -340,9 +340,9 @@ export default function PipelinePage() {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 sm:mb-4 gap-2">
         <h1 className="text-xl font-bold text-[var(--foreground)]">Deal Pipeline</h1>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <a
             href="#/import?entity=lead"
             className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--accent)] transition-colors"
@@ -367,8 +367,8 @@ export default function PipelinePage() {
       </div>
 
       {/* Mobile */}
-      <div className="flex flex-col flex-1 md:hidden min-h-0">
-        <div className="flex gap-2 overflow-x-auto pb-2 shrink-0">
+      <div className="flex flex-col flex-1 md:hidden min-h-0 min-w-0">
+        <div className="flex gap-2 overflow-x-auto pb-2 shrink-0 -mx-1 px-1">
           {stageArray.map(stage => (
             <button key={stage.id} onClick={() => setSelectedStage(stage.status)}
               className={`flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${selectedStage === stage.status ? "bg-[var(--primary)] text-[var(--primary-foreground)]" : "border border-[var(--border)] text-[var(--foreground)] hover:bg-[var(--accent)]"}`}
@@ -379,7 +379,7 @@ export default function PipelinePage() {
             </button>
           ))}
         </div>
-        <div className="flex-1 overflow-y-auto space-y-2 pb-4">
+        <div className="flex-1 overflow-y-auto space-y-2 pb-4 min-w-0">
           {(selectedStage && data?.deals[selectedStage] || []).map(deal => (
             <DealCard key={deal.id} deal={deal} onOpen={setSelectedLeadId} />
           ))}
@@ -429,7 +429,7 @@ function ManageStagesPanel({ stages, onClose }: { stages: any[]; onClose: () => 
 
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/30 p-4" onClick={onClose}>
-      <div className="w-full max-w-lg rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+      <div className="w-full max-w-lg rounded-t-xl sm:rounded-xl border border-[var(--border)] bg-[var(--card)] p-4 sm:p-5 max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-bold text-[var(--foreground)]">Manage Stages</h2>
           <button onClick={onClose} className="text-[var(--muted-foreground)] hover:text-[var(--foreground)] text-lg leading-none">&times;</button>

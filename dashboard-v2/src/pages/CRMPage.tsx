@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../lib/api';
-import { Plus, Trash2, X, TestTube, Edit3 } from 'lucide-react';
+import { Plus, Trash2, X, TestTube, Edit3, Building2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Dialog } from '../components/ui/dialog';
 import { Input } from '../components/ui/input';
@@ -8,7 +8,6 @@ import { Select } from '../components/ui/select';
 import { Button } from '../components/ui/button';
 
 const crmTypes = ['HUBSPOT', 'SALESFORCE', 'ZOHO'];
-const crmIcons: Record<string, string> = { HUBSPOT: '🔵', SALESFORCE: '☁️', ZOHO: '🟢' };
 
 const systemFields = [
   { label: 'Name', value: 'contact.name' },
@@ -199,8 +198,8 @@ export default function CRMPage() {
               <div key={m.id} className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4 hover:shadow-lg transition-shadow">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-2">
-                    <div className="h-9 w-9 rounded-lg bg-[var(--muted)] flex items-center justify-center text-lg">
-                      {crmIcons[m.crmType] || '🏢'}
+                    <div className="h-9 w-9 rounded-lg bg-[var(--muted)] flex items-center justify-center">
+                      <Building2 size={16} className="text-[var(--muted-foreground)]" />
                     </div>
                     <div>
                       <div className="font-medium text-sm text-[var(--foreground)]">{m.name}</div>

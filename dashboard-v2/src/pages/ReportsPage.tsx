@@ -158,12 +158,12 @@ export default function ReportsPage() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-[var(--foreground)]">Report Builder</h1>
           <p className="text-sm text-[var(--muted-foreground)] mt-1">Build custom reports and save them for later</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button onClick={() => { setRefreshKey(k => k + 1); }} title="Refresh"
             className="inline-flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--card)] px-4 py-2 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--accent)] transition-colors">
             <RefreshCw size={16} className={loading ? "animate-spin" : ""} /> Refresh

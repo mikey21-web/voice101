@@ -65,28 +65,28 @@ export default function VoiceAgentPage() {
       {stats && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4 flex items-center gap-3">
-            <div className="h-9 w-9 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shrink-0"><PhoneCall size={16} className="text-blue-600 dark:text-blue-400" /></div>
+            <div className="h-9 w-9 rounded-lg bg-[var(--primary-light)] flex items-center justify-center shrink-0"><PhoneCall size={16} className="text-[var(--primary)]" /></div>
             <div>
               <div className="text-xl font-bold text-[var(--foreground)]">{stats.totalCalls}</div>
               <div className="text-[11px] text-[var(--muted-foreground)]">Total Calls</div>
             </div>
           </div>
           <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4 flex items-center gap-3">
-            <div className="h-9 w-9 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center shrink-0"><CheckCircle2 size={16} className="text-emerald-600 dark:text-emerald-400" /></div>
+            <div className="h-9 w-9 rounded-lg bg-[var(--primary-light)] flex items-center justify-center shrink-0"><CheckCircle2 size={16} className="text-[var(--primary)]" /></div>
             <div>
               <div className="text-xl font-bold text-[var(--foreground)]">{stats.answerRate}%</div>
               <div className="text-[11px] text-[var(--muted-foreground)]">Answer Rate</div>
             </div>
           </div>
           <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4 flex items-center gap-3">
-            <div className="h-9 w-9 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center shrink-0"><Timer size={16} className="text-purple-600 dark:text-purple-400" /></div>
+            <div className="h-9 w-9 rounded-lg bg-[var(--primary-light)] flex items-center justify-center shrink-0"><Timer size={16} className="text-[var(--primary)]" /></div>
             <div>
               <div className="text-xl font-bold text-[var(--foreground)]">{stats.avgDurationSeconds}s</div>
               <div className="text-[11px] text-[var(--muted-foreground)]">Avg Duration</div>
             </div>
           </div>
           <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4 flex items-center gap-3">
-            <div className="h-9 w-9 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center shrink-0"><Clock size={16} className="text-amber-600 dark:text-amber-400" /></div>
+            <div className="h-9 w-9 rounded-lg bg-[var(--primary-light)] flex items-center justify-center shrink-0"><Clock size={16} className="text-[var(--primary)]" /></div>
             <div>
               <div className="text-xl font-bold text-[var(--foreground)]">{stats.totalMinutesUsed}</div>
               <div className="text-[11px] text-[var(--muted-foreground)]">Total Minutes Used</div>

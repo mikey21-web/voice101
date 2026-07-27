@@ -173,7 +173,7 @@ export default function FieldEditor({
 
         {/* Collapsed conditional indicator */}
         {field.conditionalLogic?.enabled && (
-          <span className="text-[10px] text-[var(--muted-foreground)] hidden sm:inline">⚡ conditional</span>
+          <span className="text-[10px] text-[var(--muted-foreground)] hidden sm:inline">conditional</span>
         )}
 
         <div className="flex items-center gap-0.5 shrink-0">

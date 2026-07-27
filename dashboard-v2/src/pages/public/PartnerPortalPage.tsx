@@ -181,7 +181,7 @@ function LeadsTab({ leads, onRegistered }: { leads: any[]; onRegistered: () => v
     try {
       const result = await partnerApi("/leads", { method: "POST", body: JSON.stringify({ phone }) });
       if (result.status === "NEEDS_REVIEW") {
-        toast("This number needs review by the builder's team before it's confirmed.", { icon: "⏳" });
+        toast("This number needs review by the builder's team before it's confirmed.");
       } else if (result.status === "ALREADY_REGISTERED") {
         toast("You've already registered this number.");
       } else {

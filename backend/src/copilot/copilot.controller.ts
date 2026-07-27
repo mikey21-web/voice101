@@ -68,16 +68,24 @@ export class CopilotController {
     res.setHeader('Connection', 'keep-alive');
     res.flushHeaders();
 
+    // Barge-in support: if the frontend aborts its fetch (voiceSession.ts cancelling
+    // on interruption) or just closes the tab, this request's own `close` fires —
+    // forward that as an AbortSignal into the service call so it stops the upstream
+    // agent-service generation too, instead of only silently stopping the relay.
+    const abortController = new AbortController();
+    req.on('close', () => abortController.abort());
+
     try {
       const result = await this.service.chatStream(
         req.user.sub, req.user.role, req.user.tenantId || 'default-tenant', dto.message, dto.conversationId,
         (text) => { try { res.write(`data: ${JSON.stringify({ type: 'token', text })}\n\n`); } catch {} },
+        abortController.signal,
       );
-      res.write(`data: ${JSON.stringify({ type: 'done', ...result })}\n\n`);
+      try { res.write(`data: ${JSON.stringify({ type: 'done', ...result })}\n\n`); } catch {}
     } catch (err: any) {
-      res.write(`data: ${JSON.stringify({ type: 'error', message: err.message || 'Chat failed' })}\n\n`);
+      try { res.write(`data: ${JSON.stringify({ type: 'error', message: err.message || 'Chat failed' })}\n\n`); } catch {}
     } finally {
-      res.end();
+      try { res.end(); } catch {}
     }
   }
 
@@ -105,22 +113,26 @@ export class CopilotController {
   @Post('speak-stream')
   @Roles('OWNER', 'ADMIN', 'MANAGER', 'SALES_AGENT', 'SUPPORT_AGENT', 'VIEWER')
   @ApiOperation({ summary: 'Synthesize speech for a Mikey reply, streamed as it generates' })
-  async speakStream(@Body() dto: { text: string }, @Res() res: Response) {
+  async speakStream(@Body() dto: { text: string }, @Req() req, @Res() res: Response) {
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
     res.flushHeaders();
 
+    // Barge-in support — see chatStream()'s identical comment.
+    const abortController = new AbortController();
+    req.on('close', () => abortController.abort());
+
     let seq = 0;
     try {
       await this.service.speakStream(dto.text, (chunk) => {
-        res.write(`data: ${JSON.stringify({ seq: seq++, audioBase64: chunk.toString('base64'), final: false })}\n\n`);
-      });
-      res.write(`data: ${JSON.stringify({ seq: seq++, final: true })}\n\n`);
+        try { res.write(`data: ${JSON.stringify({ seq: seq++, audioBase64: chunk.toString('base64'), final: false })}\n\n`); } catch {}
+      }, abortController.signal);
+      try { res.write(`data: ${JSON.stringify({ seq: seq++, final: true })}\n\n`); } catch {}
     } catch (err: any) {
-      res.write(`data: ${JSON.stringify({ error: err.message || 'Speech synthesis failed' })}\n\n`);
+      try { res.write(`data: ${JSON.stringify({ error: err.message || 'Speech synthesis failed' })}\n\n`); } catch {}
     } finally {
-      res.end();
+      try { res.end(); } catch {}
     }
   }
 

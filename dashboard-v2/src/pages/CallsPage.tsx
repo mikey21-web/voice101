@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { api } from "../lib/api";
 import { useSocket } from "../hooks";
 import toast from "react-hot-toast";
-import { Phone, PhoneIncoming, PhoneOutgoing, PhoneMissed, Smartphone, Plus, Check, Download } from "lucide-react";
+import { Phone, PhoneIncoming, PhoneOutgoing, PhoneMissed, Smartphone, Plus, Check, Download, Pencil } from "lucide-react";
 import { toCsv, downloadCsv } from "../lib/csv";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/ui/table";
@@ -70,7 +70,7 @@ export default function CallsPage() {
 
   return (
     <div className="space-y-4 animate-fade-in">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <h1 className="text-2xl font-bold text-[var(--foreground)]">Calls</h1>
         <div className="flex items-center gap-2">
           <button
@@ -344,7 +344,7 @@ function NotesCell({ call, onUpdate }: { call: any; onUpdate: (id: string, notes
           className="text-xs text-[var(--muted-foreground)] hover:text-[var(--primary)] opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
           title="Edit note"
         >
-          ✏️
+          <Pencil size={12} />
         </button>
       </div>
     </TableCell>

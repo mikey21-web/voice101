@@ -220,12 +220,12 @@ export default function QuotationsPage() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-[var(--foreground)]">Quotations</h1>
           <p className="text-sm text-[var(--muted-foreground)] mt-1">Build client-ready quotes from sections and line items.</p>
         </div>
-        <button onClick={() => setShowCreate(true)} className="inline-flex items-center gap-2 h-9 px-4 rounded-lg bg-[var(--primary)] text-white text-sm font-medium hover:opacity-90">
+        <button onClick={() => setShowCreate(true)} className="w-full sm:w-auto inline-flex items-center justify-center gap-2 h-9 px-4 rounded-lg bg-[var(--primary)] text-white text-sm font-medium hover:opacity-90">
           <Plus size={16} /> New quotation
         </button>
       </div>

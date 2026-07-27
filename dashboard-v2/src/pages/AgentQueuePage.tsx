@@ -118,7 +118,7 @@ export default function AgentQueuePage() {
   return (
     <div className="flex flex-col min-h-[calc(100vh-4rem)] pb-20 animate-fade-in">
       <div className="sticky top-0 z-10 bg-[var(--background)] border-b border-[var(--border)] px-4 py-3">
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
           <h1 className="text-lg font-bold text-[var(--foreground)]">My Queue</h1>
           {status && (
             <span className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-medium ${

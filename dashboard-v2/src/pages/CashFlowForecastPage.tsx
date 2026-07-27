@@ -74,7 +74,7 @@ export default function CashFlowForecastPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div><h1 className="text-2xl font-bold">Cash Flow Forecasting</h1><p className="text-sm text-muted-foreground">Expected collections vs. payouts, by project and by month</p></div>
         <Button onClick={() => setShowCreate(!showCreate)} disabled={!projectId}><Plus className="mr-2 h-4 w-4" /> New Entry</Button>
       </div>

@@ -30,13 +30,20 @@ import { PERMISSION_MATRIX } from '../permissions/permissions.matrix';
 
 const HTTP_TIMEOUT_MS = parseInt(process.env.COPILOT_HTTP_TIMEOUT || '30000', 10);
 
-async function fetchWithTimeout(url: string, init: any = {}): Promise<Response> {
+// externalSignal lets a caller (barge-in cancelling a chat-stream/speak-stream
+// request mid-flight) abort the upstream call too, not just stop relaying to
+// a frontend that's no longer listening — otherwise DeepSeek/Cartesia keep
+// generating and getting billed for a reply nobody will hear.
+async function fetchWithTimeout(url: string, init: any = {}, externalSignal?: AbortSignal): Promise<Response> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), HTTP_TIMEOUT_MS);
+  const onExternalAbort = () => controller.abort();
+  externalSignal?.addEventListener('abort', onExternalAbort);
   try {
     return await fetch(url, { ...init, signal: controller.signal });
   } finally {
     clearTimeout(timeout);
+    externalSignal?.removeEventListener('abort', onExternalAbort);
   }
 }
 
@@ -294,7 +301,12 @@ export class CopilotService {
    * final persisted message and return shape are identical to chat() either way: onToken
    * failing partway through (e.g. the caller's HTTP response already closed) doesn't stop
    * accumulation or persistence — a client disconnecting mid-reply must not mean the
-   * conversation history silently loses that turn. */
+   * conversation history silently loses that turn.
+   *
+   * abortSignal is barge-in support (Phase 3): firing it cancels the upstream agent-service
+   * call too, not just relaying — otherwise DeepSeek keeps generating (and getting billed)
+   * a reply nobody will hear after the user talks over Mikey. Whatever text had already
+   * streamed in before the abort is still persisted, since that much genuinely was said. */
   async chatStream(
     userId: string,
     userRole: string,
@@ -302,11 +314,15 @@ export class CopilotService {
     message: string,
     conversationId: string | undefined,
     onToken: (text: string) => void,
+    abortSignal?: AbortSignal,
   ) {
     const { agentServiceUrl, agentInboundKey, conversation, requestBody } =
       await this.prepareChat(userId, tenantId, message, conversationId);
 
-    let pythonResult: { response?: string; actions?: any[] };
+    let finalResponse = '';
+    let finalActions: any[] = [];
+    let sawDone = false;
+
     try {
       const res = await fetchWithTimeout(`${agentServiceUrl}/agent/copilot/chat/stream`, {
         method: 'POST',
@@ -315,15 +331,12 @@ export class CopilotService {
           'x-agent-key': agentInboundKey,
         },
         body: JSON.stringify(requestBody),
-      });
+      }, abortSignal);
       if (!res.ok || !res.body) throw new Error(`HTTP ${res.status}`);
 
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let buffered = '';
-      let finalResponse = '';
-      let finalActions: any[] = [];
-      let sawDone = false;
 
       while (true) {
         const { value, done } = await reader.read();
@@ -337,9 +350,10 @@ export class CopilotService {
           let msg: any;
           try { msg = JSON.parse(line.slice(6)); } catch { continue; }
           if (msg.type === 'token' && msg.text) {
+            finalResponse += msg.text;
             try { onToken(msg.text); } catch {}
           } else if (msg.type === 'done') {
-            finalResponse = msg.response || '';
+            finalResponse = msg.response || finalResponse;
             finalActions = msg.actions || [];
             sawDone = true;
           } else if (msg.type === 'error') {
@@ -347,14 +361,17 @@ export class CopilotService {
           }
         }
       }
-      if (!sawDone) throw new Error('Stream ended without a completion frame');
-      pythonResult = { response: finalResponse, actions: finalActions };
+      if (!sawDone && !finalResponse) throw new Error('Stream ended without a completion frame');
     } catch (err: any) {
+      if (abortSignal?.aborted) {
+        if (!finalResponse.trim()) return { conversationId: conversation.id, reply: '', actions: [] };
+        return this.finalizeChat(conversation, tenantId, userId, { response: finalResponse, actions: [] }, undefined);
+      }
       this.logger.error('Python copilot stream call failed', err.message);
       return this.persistFallback(conversation);
     }
 
-    return this.finalizeChat(conversation, tenantId, userId, pythonResult, undefined);
+    return this.finalizeChat(conversation, tenantId, userId, { response: finalResponse, actions: finalActions }, undefined);
   }
 
   /** Checkpoint recovery: a step left 'in_progress' means runOutcome's in-memory
@@ -414,7 +431,7 @@ export class CopilotService {
    * the full clip finishes generating" tail latency for long replies. Raw PCM (not mp3)
    * because chunk boundaries from a websocket don't align to mp3 frame boundaries, but
    * do line up cleanly for the frontend's Web Audio buffer queue with no decode step. */
-  async speakStream(text: string, onChunk: (buf: Buffer) => void): Promise<void> {
+  async speakStream(text: string, onChunk: (buf: Buffer) => void, abortSignal?: AbortSignal): Promise<void> {
     const apiKey = this.config.get<string>('CARTESIA_API_KEY');
     if (!apiKey) throw new BadRequestException('CARTESIA_API_KEY not configured');
     const clean = (text || '').replace(/[#*`]/g, '').slice(0, 1000);
@@ -430,10 +447,17 @@ export class CopilotService {
         if (settled) return;
         settled = true;
         clearTimeout(timeout);
+        abortSignal?.removeEventListener('abort', onAbort);
         try { socket.close(); } catch {}
         if (err) reject(err); else resolve();
       };
       const timeout = setTimeout(() => finish(new Error('Cartesia stream timeout')), HTTP_TIMEOUT_MS);
+      // Barge-in: stop paying Cartesia for audio nobody will hear once the
+      // user starts talking over Mikey. Resolves (not rejects) — this is an
+      // intentional stop, not a failure.
+      const onAbort = () => finish();
+      abortSignal?.addEventListener('abort', onAbort);
+      if (abortSignal?.aborted) { finish(); return; }
 
       socket.on('open', () => {
         socket.send(JSON.stringify({
