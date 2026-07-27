@@ -105,6 +105,31 @@ services:
     ports:
       - "127.0.0.1:4010:4010"
 
+  agent-service:
+    build:
+      context: ./agent-service
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      BACKEND_API_URL: http://backend:3001
+      AGENT_SERVICE_JWT: ${AGENT_SERVICE_JWT:?AGENT_SERVICE_JWT must be set}
+      AGENT_INBOUND_KEY: ${AGENT_INBOUND_KEY:?AGENT_INBOUND_KEY must be set}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      AGENT_MODEL: ${AGENT_MODEL:-deepseek-v4-flash}
+      DEEPSEEK_BASE_URL: ${DEEPSEEK_BASE_URL:-https://api.deepseek.com/v1}
+      REDIS_URL: redis://redis:6379
+      PORT: 8000
+      NICHE_CONFIG_PATH: /app/niche.config.yaml
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}@postgres:5432/lead_automation
+    volumes:
+      - ${NICHE_CONFIG_FILE}:/app/niche.config.yaml:ro
+    depends_on:
+      backend:
+        condition: service_started
+      redis:
+        condition: service_healthy
+
 volumes:
   pgdata:
   redisdata:
