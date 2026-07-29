@@ -11,7 +11,7 @@ const UPSTREAM_BASE = 'https://hookbot.in/viewer/index.php';
 function rewriteBranding(html) {
   return html
     .split('NCD ZoneIQ').join('Vezraa Tour')
-    .split('presented by SPIM Innovations Pvt. Ltd.').join('presented by Vezraa');
+    .replace(/presented by SPIM Innovations(?: Pvt\. Ltd\.)?/g, 'presented by Vezraa');
 }
 
 function fetchUpstream(url) {

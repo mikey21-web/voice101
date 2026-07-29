@@ -3,6 +3,7 @@ import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
+import { Public } from '../auth/public.decorator';
 import { PublicProfileService } from './public-profile.service';
 import { UpdatePublicProfileDto } from './dto/public-profile.dto';
 
@@ -19,6 +20,7 @@ export class PublicProfileController {
   updateMine(@Body() d: UpdatePublicProfileDto) { return this.service.upsertMine(d); }
 
   // Public, unauthenticated microsite endpoint
+  @Public()
   @Get('org/:slug')
   getPublic(@Param('slug') slug: string) { return this.service.getPublicBySlug(slug); }
 }

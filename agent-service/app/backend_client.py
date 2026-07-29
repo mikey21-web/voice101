@@ -155,10 +155,30 @@ class BackendClient:
         return await self._retry_post("/conversations/messages", body)
 
     async def update_custom_fields(self, lead_id: str, fields: dict) -> dict:
-        r = await self._retry_get(f"/leads/{lead_id}")
-        current_meta = dict(r.get("metadata") or {})
-        current_meta.update(fields)
-        return await self._retry_patch(f"/leads/{lead_id}", {"metadata": current_meta})
+        """Extracted {key: value} pairs that match one of this tenant's LEAD custom-field
+        definitions (by key, e.g. "property_type", "budget_range") get written as real
+        custom_field_values rows — what the CRM's Custom Fields panel actually reads.
+        Anything left over still goes into lead.metadata so it isn't silently dropped."""
+        try:
+            defs_resp = await self._retry_get("/custom-fields/definitions?target=LEAD")
+            key_to_id = {d["key"]: d["id"] for d in defs_resp.get("data", [])}
+        except Exception:
+            key_to_id = {}
+
+        matched = {k: v for k, v in fields.items() if k in key_to_id}
+        unmatched = {k: v for k, v in fields.items() if k not in key_to_id}
+
+        if matched:
+            values = [{"definitionId": key_to_id[k], "value": v} for k, v in matched.items()]
+            await self._retry_post(f"/custom-fields/values/lead/{lead_id}", {"values": values})
+
+        if unmatched:
+            r = await self._retry_get(f"/leads/{lead_id}")
+            current_meta = dict(r.get("metadata") or {})
+            current_meta.update(unmatched)
+            await self._retry_patch(f"/leads/{lead_id}", {"metadata": current_meta})
+
+        return {"matchedFields": list(matched.keys()), "unmatchedFields": list(unmatched.keys())}
 
     async def update_score(self, lead_id: str) -> dict:
         return await self._retry_post(f"/leads/{lead_id}/score")
