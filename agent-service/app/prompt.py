@@ -119,12 +119,16 @@ def build_system_prompt(niche: dict, lead_context: dict) -> str:
             "IMPORTANT: Always call search_properties before suggesting listings. Never make up property details."
         )
 
-    media_collection_note = ""
     if has_properties:
-        media_collection_note = (
-            " If they're asking for photos/pictures of 2 or more properties/listings you already presented "
-            "(e.g. \"send me pictures of both\", \"pics of all of them\"), do NOT loop this per property — "
-            "call send_listing_collection instead, one bundled link beats a stream of separate files."
+        media_file_trigger = (
+            "Call this the moment the lead asks for a brochure, floor plan, or any visual/document that "
+            "is NOT a property photo — for property/listing photos, use send_property_photos (one property) "
+            "or send_listing_collection (2+ properties) instead, never this tool."
+        )
+    else:
+        media_file_trigger = (
+            "Call this the moment the lead asks for photos, pictures, brochure, floor plan, or any "
+            "visual/document, or once you've shown them something they're interested in. Search by name or area."
         )
 
     search_properties_tip = ""
@@ -240,7 +244,7 @@ Your job is simple: have a natural conversation, learn about them, and guide the
 - update_status: Call this to move them through the pipeline. Once you've collected two or more of the fields above, move them to "CONTACTED".
 - book_appointment: When they agree to book{', call check_availability first to verify the slot is free, then call book_appointment with the start_time' if has_booking else ''}. If they just want a general appointment (no date), call book_appointment without start_time.
 - send_options: Call this for ANY question with a small fixed set of answers, instead of typing the question and choices as plain text. The lead taps one and it comes back to you as a normal reply — just continue the conversation.
-- search_media_file: Call this the moment the lead asks for photos, pictures, brochure, floor plan, or any visual/document for ONE specific item, or once you've shown them one thing they're interested in. Search by the name or area.{media_collection_note}
+- search_media_file: {media_file_trigger}
 - send_media_file: Call this immediately after search_media_file finds a match, using the media_id it returns. Do not just describe the file or ask more questions first, actually send it. If no match is found, tell them you'll follow up with photos rather than going quiet on the request.
 {search_properties_tip}
 {shipment_tools}
