@@ -533,7 +533,7 @@ def build_tools(ctx: ToolContext) -> list:
         except BackendError as e:
             return _err(str(e))
 
-    return [
+    result = [
         send_message,
         extract_fields,
         update_score,
@@ -558,10 +558,18 @@ def build_tools(ctx: ToolContext) -> list:
         send_property_photos,
         send_unit_photos,
         send_area_collection,
-        search_media_file,
-        send_media_file,
         get_quote,
         create_shipment,
         update_shipment_status,
         create_event_draft,
     ]
+
+    if not (ctx.features and ctx.features.get("properties")):
+        # Property visuals are fully covered by send_property_photos / send_listing_link /
+        # send_listing_collection. Leaving the generic media-file tools in the list too gives
+        # the model a second, competing path for "send me pictures" that it keeps reaching for
+        # instead of the collection-link tool — dropping them outright for this niche removed
+        # the ambiguity that three rounds of prompt tweaks couldn't talk it out of.
+        result.extend([search_media_file, send_media_file])
+
+    return result
