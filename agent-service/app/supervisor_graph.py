@@ -16,7 +16,7 @@ from app.backend_client import BackendClient
 from app.memory_client import MemoryClient, MemoryEntry
 from app.lead_agent import build_lead_graph
 from app.operator_agent import build_operator_tools
-from app.tools import build_tools, ToolContext, _clean_text
+from app.tools import build_tools, ToolContext, _clean_text, HIGH_IMPACT_TOOLS
 from app.prompt_copilot import build_copilot_prompt
 from app.prompt_supervisor import build_supervisor_prompt
 from app.logging_config import utc_now_iso
@@ -24,6 +24,14 @@ from app.logging_config import utc_now_iso
 import structlog
 
 logger = structlog.get_logger()
+
+
+def merge_tools(primary: list, secondary: list) -> list:
+    """Combine two tool lists, keeping primary's version of any name both define
+    (e.g. lead_voice's own send_message/create_task/search_properties/search_units
+    over operator's differently-scoped tools of the same name)."""
+    seen = {t.name for t in primary}
+    return list(primary) + [t for t in secondary if t.name not in seen]
 
 
 def build_supervisor(
@@ -146,7 +154,7 @@ def build_supervisor(
 
     async def lead_voice_node(state: SharedMikeyState, config: RunnableConfig) -> dict:
         ctx = ToolContext(client=client, lead_id=state["lead_id"], tenant_id=tenant_id, channel=state.get("channel", "WHATSAPP"))
-        tools = build_tools(ctx)
+        tools = merge_tools(build_tools(ctx), build_operator_tools(client, tenant_id))
         sub_graph = build_lead_graph(tools=tools, settings=settings, client=client)
 
         sub_state: AgentState = {
@@ -183,7 +191,13 @@ def build_supervisor(
         }
 
     async def operator_voice_node(state: SharedMikeyState, config: RunnableConfig) -> dict:
-        operator_tools = build_operator_tools(client, tenant_id)
+        lead_ctx = ToolContext(
+            client=client,
+            lead_id=state.get("lead_id") or f"operator-{tenant_id}",
+            tenant_id=tenant_id,
+            channel=state.get("channel", "DASHBOARD"),
+        )
+        operator_tools = merge_tools(build_operator_tools(client, tenant_id), build_tools(lead_ctx))
         agent_tools_node = ToolNode(operator_tools)
         model_with_tools = model.bind_tools(operator_tools)
 
@@ -225,7 +239,10 @@ def build_supervisor(
         for m in state.get("messages", []):
             messages.append(m)
 
-        high_impact_tools = {"send_message", "create_campaign", "initiate_call", "send_email", "bulk_send_message", "define_outcome", "create_workflow", "publish_workflow"}
+        # operator's own send_message (proactively messaging a lead on staff's behalf)
+        # is also gated here — distinct from lead_voice's send_message (the live reply
+        # tool), which never collides into this set since HIGH_IMPACT_TOOLS excludes it.
+        high_impact_tools = HIGH_IMPACT_TOOLS | {"send_message"}
 
         actions_taken = state.get("actions_taken", [])
         steps = 0

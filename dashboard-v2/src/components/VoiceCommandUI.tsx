@@ -196,9 +196,15 @@ export default function VoiceCommandUI() {
     // whatever Mikey was already saying and starts a fresh generation; each segment
     // after that queues onto it rather than cutting the previous one off.
     if (localStorage.getItem('mikeyVoiceOn') !== 'false') resetSpeech();
+    // Live subtitles: each segment is shown the moment it's queued for speech,
+    // so the on-screen text tracks what Mikey is actually saying as she says it,
+    // rather than only appearing once the whole reply has finished generating.
+    let liveCaption = '';
     chatStream(text, undefined, {
       onSegment: (segment) => {
         if (localStorage.getItem('mikeyVoiceOn') !== 'false') queueSpeechSegment(segment);
+        liveCaption += (liveCaption ? ' ' : '') + segment;
+        setResult(`${transcriptLine}\n→ ${liveCaption}`);
       },
     }).then((res) => {
       const nav = (res.actions || []).find((a: any) => a.tool === 'navigate_ui' && a.status !== 'error');
@@ -580,14 +586,18 @@ export default function VoiceCommandUI() {
     <>
       <button
         onClick={startListening}
-        className="fixed bottom-20 right-6 z-[9999] w-12 h-12 rounded-full shadow-lg flex items-center justify-center bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] hover:bg-[var(--accent)] hover:scale-105 transition-all duration-200 [body.overlay-open_&]:hidden"
+        className="fixed bottom-24 sm:bottom-20 right-6 z-[9999] w-12 h-12 rounded-full shadow-lg flex items-center justify-center bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] hover:bg-[var(--accent)] hover:scale-105 transition-all duration-200 [body.overlay-open_&]:hidden"
         title="Activate Mikey Voice (Ctrl+H)"
       >
         <Mic size={18} />
       </button>
+      {/* Wake-word toggle and continuous-conversation buttons crowd the same corner
+          as Mikey's chat FAB on a phone-width screen with no room to spread out
+          horizontally the way they do on desktop — hide them below sm and let the
+          single mic button (which already reaches every voice feature) carry mobile. */}
       <button
         onClick={toggleWakeWord}
-        className={`fixed bottom-20 right-20 z-[9999] w-9 h-9 rounded-full shadow-lg flex items-center justify-center border transition-all duration-200 [body.overlay-open_&]:hidden ${
+        className={`hidden sm:flex fixed bottom-20 right-20 z-[9999] w-9 h-9 rounded-full shadow-lg items-center justify-center border transition-all duration-200 [body.overlay-open_&]:hidden ${
           wakeWordOn ? 'bg-[var(--primary)] text-white border-transparent' : 'bg-[var(--card)] text-[var(--muted-foreground)] border-[var(--border)] hover:bg-[var(--accent)]'
         }`}
         title={wakeWordOn ? '"Okay Mikey" listening is on — click to turn off' : 'Turn on hands-free "Okay Mikey" listening'}
@@ -596,12 +606,12 @@ export default function VoiceCommandUI() {
       </button>
       <button
         onClick={voiceSession.start}
-        className="fixed bottom-20 right-32 z-[9999] w-9 h-9 rounded-full shadow-lg flex items-center justify-center border bg-[var(--card)] text-[var(--muted-foreground)] border-[var(--border)] hover:bg-[var(--accent)] transition-all duration-200 [body.overlay-open_&]:hidden"
+        className="hidden sm:flex fixed bottom-20 right-32 z-[9999] w-9 h-9 rounded-full shadow-lg items-center justify-center border bg-[var(--card)] text-[var(--muted-foreground)] border-[var(--border)] hover:bg-[var(--accent)] transition-all duration-200 [body.overlay-open_&]:hidden"
         title="Start a continuous conversation — always listening, talk over Mikey anytime"
       >
         <Radio size={15} />
       </button>
-      <div className="fixed bottom-[5.5rem] right-6 z-[9999] text-[10px] text-[var(--muted-foreground)] opacity-50 text-right [body.overlay-open_&]:hidden">
+      <div className="hidden sm:block fixed bottom-[5.5rem] right-6 z-[9999] text-[10px] text-[var(--muted-foreground)] opacity-50 text-right [body.overlay-open_&]:hidden">
         <kbd className="px-1 py-0.5 rounded bg-[var(--accent)] font-mono">Ctrl+H</kbd>
       </div>
     </>

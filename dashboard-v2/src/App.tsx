@@ -132,6 +132,7 @@ const PageComponents: Record<string, React.LazyExoticComponent<React.ComponentTy
   OnboardingProgress: lazy(() => import("./pages/OnboardingProgressPage")),
   LaunchControl: lazy(() => import("./pages/LaunchControlPage")),
    AgentQueue: lazy(() => import("./pages/AgentQueuePage")),
+   Workflows: lazy(() => import("./pages/WorkflowsPage")),
    SmartLists: lazy(() => import("./components/SmartLists")),
    ManagerDashboard: lazy(() => import("./pages/ManagerDashboardPage")),
 };
@@ -170,6 +171,7 @@ function getPageKey(raw: string): string {
   if (path.startsWith("/voice-knowledge-base")) return "VoiceKnowledgeBase";
   if (path.startsWith("/voice-post-call-workflows")) return "VoicePostCallWorkflows";
   if (path.startsWith("/voice-agent")) return "VoiceAgent";
+  if (path.startsWith("/workflows")) return "Workflows";
   if (path.startsWith("/smart-lists")) return "SmartLists";
   const map: Record<string, string> = {
     "/": "Overview", "/builder-desk": "BuilderDesk", "/leads": "Leads", "/smart-lists": "SmartLists", "/pipeline": "Pipeline", "/contacts": "Contacts",

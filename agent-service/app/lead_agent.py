@@ -11,7 +11,7 @@ from langchain_core.messages import HumanMessage, SystemMessage, AIMessage, Tool
 from app.schemas import AgentState
 from app.config import Settings
 from app.backend_client import BackendClient
-from app.tools import build_tools, ToolContext
+from app.tools import build_tools, ToolContext, HIGH_IMPACT_TOOLS
 from app.prompt import build_system_prompt
 from app.niche_config import normalize_niche_config, load_niche_config_from_file
 from app.logging_config import utc_now_iso
@@ -25,9 +25,49 @@ def build_lead_graph(tools: list, settings: Settings, client: BackendClient):
     _tool_node = ToolNode(tools)
 
     async def _tools_node(state: AgentState, config) -> dict:
-        result = await _tool_node.ainvoke(state)
-        new_messages = result.get("messages", result) if isinstance(result, dict) else list(result)
-        return {"messages": state.get("messages", []) + list(new_messages)}
+        # Now that operator tools (campaigns, payments, bulk send, email) are merged
+        # into this graph's tool set too, a manipulated conversation can't walk one
+        # through unconfirmed: split those out and stub a pending-approval ToolMessage
+        # instead of letting ToolNode actually execute them, mirroring operator_voice_node.
+        messages = state.get("messages", [])
+        last = messages[-1] if messages else None
+        tool_calls = list(getattr(last, "tool_calls", None) or [])
+
+        def _name(tc):
+            return tc.get("name") if isinstance(tc, dict) else tc.name
+
+        def _id(tc):
+            return tc.get("id") if isinstance(tc, dict) else tc.id
+
+        high_impact_calls = [tc for tc in tool_calls if _name(tc) in HIGH_IMPACT_TOOLS]
+        normal_calls = [tc for tc in tool_calls if _name(tc) not in HIGH_IMPACT_TOOLS]
+
+        actions_taken = state.get("actions_taken", [])
+        new_messages: list = []
+
+        if high_impact_calls:
+            for tc in high_impact_calls:
+                tc_id = _id(tc)
+                new_messages.append(ToolMessage(
+                    content=f"pending confirmation: {_name(tc)} requires human approval",
+                    tool_call_id=tc_id,
+                ))
+                for a in actions_taken:
+                    if a.get("id") == tc_id:
+                        a["status"] = "pending_confirmation"
+
+        if normal_calls:
+            patched_last = last.copy(update={"tool_calls": normal_calls})
+            patched_state = {**state, "messages": messages[:-1] + [patched_last]}
+            result = await _tool_node.ainvoke(patched_state)
+            result_messages = result.get("messages", result) if isinstance(result, dict) else list(result)
+            new_messages.extend(result_messages)
+
+        return {
+            "messages": messages + new_messages,
+            "actions_taken": actions_taken,
+            "terminate": True if high_impact_calls else state.get("terminate", False),
+        }
 
     graph.add_node("load_context", _load_context)
     graph.add_node("agent", _agent_node)
@@ -91,11 +131,28 @@ async def _load_context(state: AgentState, config) -> AgentState:
         lc_messages.append(HumanMessage(content=pm["text"]) if pm["role"] == "user" else AIMessage(content=pm["text"]))
 
     incoming = state.get("incoming_text")
-    if incoming:
+
+    # webhooks.service.ts saves the inbound message to the DB before triggering this
+    # run, so it's already the last entry in prior_messages — appending it again as
+    # incoming would show the model the same line twice.
+    already_logged = bool(prior_messages) and incoming and prior_messages[-1]["role"] == "user" and prior_messages[-1]["text"] == incoming
+
+    # A lead with no conversation history yet is talking to Mikey for the first time —
+    # without this, the model just answers whatever they said (e.g. "hey") without ever
+    # naming itself or the business, which reads as a generic, uninformed reply.
+    if len(prior_messages) <= 1:
+        lc_messages.append(SystemMessage(content=(
+            f"This is {{lead}}'s very first message to you, ever — you have never spoken before. "
+            f"Before anything else, naturally work into your reply who you are (Mikey) and that you're "
+            f"with {nich.get('display_name', 'this business')}, then respond to what they actually said. "
+            f"Keep it in one warm, casual message, not a formal announcement."
+        ).replace("{lead}", lead.get("contact", {}).get("name", "they"))))
+
+    if incoming and not already_logged:
         lc_messages.append(HumanMessage(content=incoming))
-    elif state.get("trigger") == "lead_created":
+    elif not incoming and state.get("trigger") == "lead_created":
         lc_messages.append(HumanMessage(content="A new lead was created. Introduce yourself and start the conversation."))
-    else:
+    elif not prior_messages:
         lc_messages.append(HumanMessage(content="Check in with the lead."))
 
     state["lead_context"] = lead

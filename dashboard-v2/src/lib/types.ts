@@ -256,6 +256,20 @@ export interface WebhookEndpoint {
   lastReceived: string | null;
 }
 
+export interface WorkflowDefinition {
+  id: string;
+  name: string;
+  description?: string;
+  trigger?: any;
+  active: boolean;
+  version: number;
+  steps?: any[];
+  edges?: any[];
+  _count?: { steps: number };
+  createdAt: string;
+  updatedAt: string;
+}
+
 export type NavigationPage = 
   | 'Overview' | 'Leads' | 'Contacts' | 'Campaigns' | 'Forms' | 'QR Codes'
   | 'Messages' | 'Templates' | 'Media' | 'Scoring' | 'Routing'
