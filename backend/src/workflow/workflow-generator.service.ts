@@ -12,15 +12,15 @@ export class WorkflowGeneratorService {
     private config: ConfigService,
     private workflowService: WorkflowService,
   ) {
-    const apiKey = this.config.get<string>('DEEPSEEK_API_KEY');
-    const baseURL = this.config.get<string>('DEEPSEEK_BASE_URL') || 'https://api.deepseek.com/v1';
+    const apiKey = this.config.get<string>('OPENAI_API_KEY') || this.config.get<string>('DEEPSEEK_API_KEY');
+    const baseURL = this.config.get<string>('OPENAI_BASE_URL') || this.config.get<string>('DEEPSEEK_BASE_URL');
     if (apiKey) {
-      this.client = new OpenAI({ apiKey, baseURL, timeout: 30000, maxRetries: 1 });
+      this.client = new OpenAI({ apiKey, baseURL: baseURL || undefined, timeout: 30000, maxRetries: 1 });
     }
   }
 
   async generate(prompt: string, tenantId: string) {
-    if (!this.client) throw new Error('DeepSeek API key not configured');
+    if (!this.client) throw new Error('AI API key not configured');
 
     const systemPrompt = `You generate CRM workflow definitions in JSON. The user describes what they want in plain English. You output a JSON object with this exact structure:
 
@@ -61,7 +61,7 @@ For CONDITION, config: { "field": "lead.score", "operator": "greater_than", "val
 Return ONLY valid JSON, no explanation or markdown.`;
 
     const response = await this.client.chat.completions.create({
-      model: this.config.get<string>('AGENT_MODEL') || 'deepseek-chat',
+      model: this.config.get<string>('WORKFLOW_MODEL') || 'gpt-4o-mini',
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: prompt },
