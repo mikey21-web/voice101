@@ -42,6 +42,8 @@ export default function PropertiesPage() {
   const [pendingBrochure, setPendingBrochure] = useState<File | null>(null);
   const [uploadingMedia, setUploadingMedia] = useState(false);
   const [extracting, setExtracting] = useState(false);
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const imageInputRef = useRef<HTMLInputElement>(null);
   const brochureInputRef = useRef<HTMLInputElement>(null);
 
@@ -113,6 +115,24 @@ export default function PropertiesPage() {
       toast.success("Filled from description — review before saving");
     } catch { toast.error("AI extraction failed"); }
     finally { setExtracting(false); }
+  };
+
+  const toggleSelected = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const handleGetCollectionLink = async () => {
+    try {
+      const res = await api("/properties/collection-link", { method: "POST", body: JSON.stringify({ propertyIds: Array.from(selectedIds) }), headers: { "Content-Type": "application/json" } });
+      await navigator.clipboard.writeText(res.url);
+      toast.success(`Link copied — bundles ${selectedIds.size} properties`);
+      setSelectMode(false);
+      setSelectedIds(new Set());
+    } catch { toast.error("Failed to create collection link"); }
   };
 
   const handleSave = async () => {
@@ -249,10 +269,18 @@ export default function PropertiesPage() {
   const renderCard = (p: any) => (
     <div
       key={p.id}
-      onClick={() => { if (p.webverse) { window.open(p.webverse, "_blank"); } else { window.location.hash = `/properties/${p.id}`; } }}
-      className="rounded-xl border border-[var(--border)] bg-[var(--card)] overflow-hidden group cursor-pointer hover:border-[var(--primary)]/40 transition-colors"
+      onClick={() => {
+        if (selectMode) { if (!p.webverse) toggleSelected(p.id); return; }
+        if (p.webverse) { window.open(p.webverse, "_blank"); } else { window.location.hash = `/properties/${p.id}`; }
+      }}
+      className={`rounded-xl border bg-[var(--card)] overflow-hidden group cursor-pointer transition-colors ${selectMode && selectedIds.has(p.id) ? "border-[var(--primary)] ring-2 ring-[var(--primary)]/30" : "border-[var(--border)] hover:border-[var(--primary)]/40"}`}
     >
       <div className="relative h-44 bg-[var(--muted)]">
+        {selectMode && !p.webverse && (
+          <div className={`absolute top-3 left-3 h-6 w-6 rounded-md border-2 flex items-center justify-center z-10 ${selectedIds.has(p.id) ? "bg-[var(--primary)] border-[var(--primary)] text-white" : "bg-white/90 border-[var(--border)]"}`}>
+            {selectedIds.has(p.id) && "✓"}
+          </div>
+        )}
         {p.images?.[0] ? (
           <img src={resolveMediaUrl(p.images[0].url)} alt={p.title} className="h-full w-full object-cover" />
         ) : (
@@ -260,10 +288,10 @@ export default function PropertiesPage() {
             <ExternalLink className="h-10 w-10 text-[var(--muted-foreground-light)]" />
           </div>
         )}
-        <span className={`absolute top-3 left-3 inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${statusColors[p.status] || ""}`}>
+        <span className={`absolute top-3 ${selectMode ? "left-12" : "left-3"} inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${statusColors[p.status] || ""}`}>
           {p.status?.replace("_", " ")}
         </span>
-        {!p.webverse && (
+        {!selectMode && !p.webverse && (
         <button
           onClick={(e) => { e.stopPropagation(); toggleFeatured(p.id, p.featured); }}
           title={p.featured ? "Featured" : "Mark as featured"}
@@ -350,6 +378,19 @@ export default function PropertiesPage() {
           >
             Import
           </a>
+          {selectMode ? (
+            <>
+              <span className="text-sm text-[var(--muted-foreground)]">{selectedIds.size} selected</span>
+              <Button variant="outline" onClick={() => { setSelectMode(false); setSelectedIds(new Set()); }}>Cancel</Button>
+              <Button onClick={handleGetCollectionLink} disabled={selectedIds.size < 2 || selectedIds.size > 6}>
+                <ExternalLink className="h-4 w-4 mr-2" /> Get shareable link
+              </Button>
+            </>
+          ) : (
+            <Button variant="outline" onClick={() => setSelectMode(true)}>
+              Select properties
+            </Button>
+          )}
           <Button onClick={() => { resetForm(); setEditing(null); setShowForm(true); }}>
             <Plus className="h-4 w-4 mr-2" /> Add Property
           </Button>

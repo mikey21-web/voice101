@@ -337,7 +337,7 @@ def build_tools(ctx: ToolContext) -> list:
 
     @tool
     async def send_listing_collection(property_ids: list[str]):
-        """Send the lead one shareable link bundling 2-3 properties together (a "collection") when they're comparing several options rather than fixed on one. Use instead of calling send_listing_link repeatedly for each — one link, all the properties, easier for the lead to browse and forward. Sends at most 6 properties."""
+        """DEFAULT choice whenever you're sharing 2+ properties, including "send me their pictures/details" right after search_properties returned several matches. Sends ONE shareable link bundling up to 6 properties together — never call send_property_photos or send_listing_link in a loop for multiple properties, that spams raw images instead of one clean browsable page. Only skip this for a single property the lead has already narrowed down to (use send_listing_link then) or when they explicitly ask to just see photos in the chat."""
         if not (ctx.features and ctx.features.get("properties")):
             return _err("properties feature is not enabled for this niche")
         try:
@@ -365,7 +365,7 @@ def build_tools(ctx: ToolContext) -> list:
 
     @tool
     async def send_property_photos(property_ids: list[str]):
-        """Send photos of one or more properties to the lead over WhatsApp, each with a caption (title, price, location). Use after search_properties finds good matches and the lead seems interested. Sends at most 2 photos per property and 3 properties per call to avoid spamming."""
+        """Send raw photos of ONE property directly in chat, each with a caption. Use only when the lead is already fixed on a single specific property and wants a quick look, not as a way to share multiple matches — for 2+ properties always use send_listing_collection instead (one clean link beats a wall of raw images)."""
         if not (ctx.features and ctx.features.get("properties")):
             return _err("properties feature is not enabled for this niche")
         sent = 0
