@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import { Plus, Search, Edit2, Trash2, Building2, MapPin, BedDouble, Bath, Maximize, IndianRupee, ToggleLeft, ToggleRight, X, Image as ImageIcon, FileText, Upload, LayoutGrid, Layers, ExternalLink } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, Building2, MapPin, BedDouble, Bath, Maximize, IndianRupee, ToggleLeft, ToggleRight, X, Image as ImageIcon, FileText, Upload, LayoutGrid, Layers, ExternalLink, Sparkles } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
@@ -41,6 +41,7 @@ export default function PropertiesPage() {
   const [pendingImages, setPendingImages] = useState<File[]>([]);
   const [pendingBrochure, setPendingBrochure] = useState<File | null>(null);
   const [uploadingMedia, setUploadingMedia] = useState(false);
+  const [extracting, setExtracting] = useState(false);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const brochureInputRef = useRef<HTMLInputElement>(null);
 
@@ -89,6 +90,30 @@ export default function PropertiesPage() {
   }, [groupByArea, properties]);
 
   useEffect(() => { fetchProperties(); }, [fetchProperties]);
+
+  const handleExtract = async () => {
+    if (!form.description?.trim()) { toast.error("Paste a description first"); return; }
+    setExtracting(true);
+    try {
+      const draft = await api("/properties/extract", { method: "POST", body: JSON.stringify({ text: form.description }), headers: { "Content-Type": "application/json" } });
+      setForm((f: any) => ({
+        ...f,
+        title: draft.title || f.title,
+        description: draft.description || f.description,
+        propertyType: draft.propertyType || f.propertyType,
+        price: draft.price != null ? String(draft.price) : f.price,
+        bedrooms: draft.bedrooms != null ? String(draft.bedrooms) : f.bedrooms,
+        bathrooms: draft.bathrooms != null ? String(draft.bathrooms) : f.bathrooms,
+        areaSqft: draft.areaSqft != null ? String(draft.areaSqft) : f.areaSqft,
+        location: draft.location || f.location,
+        address: draft.address || f.address,
+        features: draft.features?.length ? draft.features.join(", ") : f.features,
+        amenities: draft.amenities?.length ? draft.amenities.join(", ") : f.amenities,
+      }));
+      toast.success("Filled from description — review before saving");
+    } catch { toast.error("AI extraction failed"); }
+    finally { setExtracting(false); }
+  };
 
   const handleSave = async () => {
     try {
@@ -455,8 +480,13 @@ export default function PropertiesPage() {
                 <Input value={form.reraId} onChange={e => setForm(f => ({ ...f, reraId: e.target.value }))} placeholder="PRM/KA/RERA/1251/446/AG/171104/001715" />
               </div>
               <div className="col-span-2">
-                <label className="text-sm font-medium block mb-1">Description</label>
-                <textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} className="w-full rounded-lg border border-[var(--border)] bg-[var(--card)] p-2 min-h-[80px] text-sm" placeholder="Property description..." />
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-sm font-medium">Description</label>
+                  <Button type="button" variant="outline" size="sm" onClick={handleExtract} disabled={extracting || !form.description?.trim()}>
+                    <Sparkles className="h-3.5 w-3.5 mr-1" /> {extracting ? "Filling..." : "AI Fill from description"}
+                  </Button>
+                </div>
+                <textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} className="w-full rounded-lg border border-[var(--border)] bg-[var(--card)] p-2 min-h-[80px] text-sm" placeholder="Paste a WhatsApp-style property description, then click AI Fill..." />
               </div>
 
               <div className="col-span-2 space-y-3 pt-2 border-t border-[var(--border)]">

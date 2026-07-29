@@ -10,7 +10,7 @@ function monthRange(year: number, month: number) {
 
 export default function CalendarPage() {
   const [cursor, setCursor] = useState(new Date());
-  const [items, setItems] = useState<{ events: any[]; tasks: any[] }>({ events: [], tasks: [] });
+  const [items, setItems] = useState<{ events: any[]; tasks: any[]; siteVisits: any[] }>({ events: [], tasks: [], siteVisits: [] });
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
 
   useEffect(() => {
@@ -22,6 +22,7 @@ export default function CalendarPage() {
     const map: Record<string, any[]> = {};
     for (const e of items.events) { const d = (e.date || '').slice(0, 10); (map[d] ||= []).push({ ...e, kind: 'event' }); }
     for (const t of items.tasks) { const d = (t.date || '').slice(0, 10); (map[d] ||= []).push({ ...t, kind: 'task' }); }
+    for (const v of items.siteVisits || []) { const d = (v.date || '').slice(0, 10); (map[d] ||= []).push({ ...v, kind: 'site_visit' }); }
     return map;
   }, [items]);
 
@@ -61,7 +62,7 @@ export default function CalendarPage() {
               className={`bg-[var(--card)] min-h-[80px] p-2 text-xs cursor-pointer ${selectedDay === key ? 'ring-2 ring-inset ring-[var(--primary)]' : ''}`}>
               {d && <div className="font-medium text-[var(--foreground)]">{d}</div>}
               {dayItems.slice(0, 3).map((it: any) => (
-                <div key={it.id} className={`mt-1 truncate rounded px-1 py-0.5 ${it.kind === 'event' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'}`}>
+                <div key={it.id} className={`mt-1 truncate rounded px-1 py-0.5 ${it.kind === 'event' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : it.kind === 'site_visit' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'}`}>
                   {it.title}
                 </div>
               ))}

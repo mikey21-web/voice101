@@ -16,7 +16,7 @@ from app.backend_client import BackendClient
 from app.memory_client import MemoryClient, MemoryEntry
 from app.lead_agent import build_lead_graph
 from app.operator_agent import build_operator_tools
-from app.tools import build_tools, ToolContext
+from app.tools import build_tools, ToolContext, _clean_text
 from app.prompt_copilot import build_copilot_prompt
 from app.prompt_supervisor import build_supervisor_prompt
 from app.logging_config import utc_now_iso
@@ -35,12 +35,15 @@ def build_supervisor(
 ):
     graph = StateGraph(SharedMikeyState)
 
+    # reasoning_effort is a DeepSeek-reasoner param; passing it to non-reasoning
+    # OpenAI models (gpt-4o-mini, gpt-4.1, etc.) gets rejected with a 400.
+    supports_reasoning_effort = settings.agent_model.startswith(("deepseek", "o1", "o3", "o4", "gpt-5"))
     model = ChatOpenAI(
         model=settings.agent_model,
         max_tokens=settings.agent_max_tokens,
         api_key=settings.deepseek_api_key,
         base_url=settings.deepseek_base_url,
-        model_kwargs={"reasoning_effort": settings.agent_reasoning_effort},
+        model_kwargs={"reasoning_effort": settings.agent_reasoning_effort} if supports_reasoning_effort else {},
     )
 
     async def load_context_node(state: SharedMikeyState, config: RunnableConfig) -> dict:
@@ -222,7 +225,7 @@ def build_supervisor(
         for m in state.get("messages", []):
             messages.append(m)
 
-        high_impact_tools = {"send_message", "create_campaign", "initiate_call", "send_email", "bulk_send_message", "define_outcome"}
+        high_impact_tools = {"send_message", "create_campaign", "initiate_call", "send_email", "bulk_send_message", "define_outcome", "create_workflow", "publish_workflow"}
 
         actions_taken = state.get("actions_taken", [])
         steps = 0
@@ -420,7 +423,7 @@ def build_supervisor(
                     try:
                         guard = await client.check_auto_send(tenant_id, state["lead_id"])
                         if guard.get("allowed", True):
-                            await client.send_message(state["lead_id"], state.get("channel", "WHATSAPP"), str(m.content), None)
+                            await client.send_message(state["lead_id"], state.get("channel", "WHATSAPP"), _clean_text(str(m.content)), None)
                             resolved.append({"tool": "send_message", "status": "auto"})
                         else:
                             logger.info("auto_send_blocked", reason=guard.get("reason", "guardrail"), lead_id=state["lead_id"])

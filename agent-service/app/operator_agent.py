@@ -378,6 +378,175 @@ def build_operator_tools(client: BackendClient, tenant_id: str) -> list:
         except Exception as e:
             return f"error: {e}"
 
+    VALID_ACTION_TYPES = [
+        "SEND_MESSAGE", "SEND_EMAIL", "SEND_WHATSAPP_TEMPLATE", "UPDATE_LEAD_STATUS",
+        "CREATE_TASK", "CREATE_TICKET", "UPDATE_RECORD", "CREATE_RECORD",
+        "HTTP_REQUEST", "DELAY", "CONDITION", "CODE", "WEBHOOK",
+    ]
+
+    VALID_TRIGGER_TYPES = ["DB_EVENT", "CRON", "SCHEDULED", "WEBHOOK", "MANUAL"]
+
+    VALID_DB_EVENTS = [
+        {"table": "lead", "event": "CREATED"},
+        {"table": "lead", "event": "UPDATED"},
+        {"table": "lead", "event": "STATUS_CHANGED"},
+        {"table": "conversation_message", "event": "CREATED"},
+        {"table": "task", "event": "CREATED"},
+        {"table": "task", "event": "UPDATED"},
+        {"table": "booking", "event": "CREATED"},
+        {"table": "ticket", "event": "CREATED"},
+    ]
+
+    @tool
+    async def create_workflow(
+        name: str,
+        trigger_type: str,
+        trigger_config: dict,
+        steps: list[dict],
+        edges: list[dict],
+        tags: list[str] | None = None,
+        auto_activate: bool = False,
+    ):
+        """Create an entire workflow from natural language description. Use when the user asks to automate something — e.g. 'send a welcome message when a new lead comes in', 'email me daily at 9am with new leads', 'create a task when a lead gets qualified'. Generates the workflow definition, version with steps+edges+triggers, and optionally activates it.
+
+        Args:
+            name: Human-readable workflow name (e.g. 'Welcome new leads', 'Daily lead digest')
+            trigger_type: One of DB_EVENT (runs on database changes), CRON (scheduled), SCHEDULED (relative timing), WEBHOOK (external call), MANUAL (run by hand)
+            trigger_config: Trigger configuration object:
+                - DB_EVENT: {"table": "lead", "event": "CREATED", "filters": {"status": "NEW"}}
+                - CRON: {"expression": "0 9 * * 1-5", "timezone": "Asia/Kolkata"}
+                - SCHEDULED: {"offsetMinutes": 30, "fromField": "lead.createdAt"}
+                - WEBHOOK: {}
+                - MANUAL: {}
+            steps: Array of step objects, each with:
+                - stepKey: Unique identifier (e.g. "step_1", "check_score")
+                - actionType: One of SEND_MESSAGE, SEND_EMAIL, UPDATE_LEAD_STATUS, CREATE_TASK, CREATE_TICKET, UPDATE_RECORD, CREATE_RECORD, HTTP_REQUEST, DELAY, CONDITION, CODE
+                - label: Human-readable label (e.g. "Send welcome message")
+                - config: Action-specific configuration object (see each action type's shape)
+            edges: Array of edge objects connecting steps, each with:
+                - sourceKey: Source step's stepKey
+                - targetKey: Target step's stepKey
+                - label: Optional edge label — "true"/"false" for CONDITION branches, "" (empty string) for unconditional
+            tags: Optional list of tags for categorization
+            auto_activate: If True, publishes the workflow immediately (default False)
+
+        Action config shapes:
+            SEND_MESSAGE: {"channel": "WHATSAPP", "body": "Hello {{lead.name}}!", "leadId": "FROM_CONTEXT"}
+            SEND_EMAIL: {"to": "user@example.com", "subject": "New lead!", "body": "{{lead.name}} just signed up"}
+            UPDATE_LEAD_STATUS: {"status": "QUALIFIED"}
+            CREATE_TASK: {"title": "Follow up with {{lead.name}}", "priority": "medium", "leadId": "FROM_CONTEXT"}
+            CREATE_RECORD: {"model": "Task", "data": {"title": "...", "leadId": "{{lead.id}}"}}
+            UPDATE_RECORD: {"model": "Lead", "id": "{{lead.id}}", "data": {"score": 100}}
+            HTTP_REQUEST: {"url": "https://api.example.com/webhook", "method": "POST", "headers": {}, "body": {}}
+            DELAY: {"durationSeconds": 3600}
+            CONDITION: {"expression": "lead.score > 50", "trueStep": "step_3", "falseStep": "step_4"}
+            CODE: {"code": "console.log(ctx); return {processed: true};", "language": "javascript"}
+            WEBHOOK: {"url": "https://...", "method": "POST"}
+        """
+        try:
+            if trigger_type not in VALID_TRIGGER_TYPES:
+                return f"error: invalid trigger_type '{trigger_type}'. Valid: {', '.join(VALID_TRIGGER_TYPES)}"
+
+            invalid_actions = [s["actionType"] for s in steps if s.get("actionType") not in VALID_ACTION_TYPES]
+            if invalid_actions:
+                return f"error: invalid action type(s): {', '.join(set(invalid_actions))}. Valid: {', '.join(VALID_ACTION_TYPES)}"
+
+            wf = await client.create_workflow(name, tenant_id, tags)
+            wf_id = wf.get("id", "")
+
+            triggers = [{"type": trigger_type, "config": trigger_config}]
+            version = await client.create_workflow_version(wf_id, steps, edges, triggers)
+
+            status = "draft"
+            if auto_activate:
+                await client.publish_workflow(wf_id)
+                status = "active"
+
+            return (
+                f"Workflow '{name}' created (id: {wf_id}) — {len(steps)} step(s), "
+                f"{len(edges)} edge(s), trigger: {trigger_type}. Status: {status}. "
+                f"Call validate_workflow(id='{wf_id}') to inspect, or publish_workflow(id='{wf_id}') to activate."
+            )
+        except Exception as e:
+            return f"error: {e}"
+
+    @tool
+    async def validate_workflow(workflow_id: str):
+        """Validate a workflow definition — checks that all edges reference valid steps, required fields are present, and the graph is connected. Use after creating or editing a workflow."""
+        try:
+            wf = await client.get_workflow(workflow_id)
+            version = (wf.get("versions") or [None])[0]
+            if not version:
+                return f"Workflow {workflow_id} has no version"
+            steps = version.get("steps", [])
+            edges = version.get("edges", [])
+            triggers = version.get("triggers", [])
+
+            issues = []
+            step_keys = {s["stepKey"] for s in steps}
+
+            if not steps:
+                issues.append("No steps defined")
+            if not edges:
+                issues.append("No edges defined — steps will not execute in sequence")
+            if not triggers:
+                issues.append("No triggers defined — workflow will never fire")
+
+            for e in edges:
+                if e["sourceKey"] not in step_keys:
+                    issues.append(f"Edge source '{e['sourceKey']}' not found in steps")
+                if e["targetKey"] not in step_keys:
+                    issues.append(f"Edge target '{e['targetKey']}' not found in steps")
+
+            condition_steps = [s for s in steps if s["actionType"] == "CONDITION"]
+            for s in condition_steps:
+                cfg = s.get("config", {})
+                if not cfg.get("expression"):
+                    issues.append(f"Step '{s['stepKey']}' (CONDITION) missing 'expression'")
+                true_edge = [e for e in edges if e["sourceKey"] == s["stepKey"] and e.get("label") == "true"]
+                false_edge = [e for e in edges if e["sourceKey"] == s["stepKey"] and e.get("label") == "false"]
+                if not true_edge:
+                    issues.append(f"CONDITION step '{s['stepKey']}' missing 'true' edge")
+                if not false_edge:
+                    issues.append(f"CONDITION step '{s['stepKey']}' missing 'false' edge")
+
+            if not issues:
+                return f"Workflow '{wf.get('name', '')}' is valid — {len(steps)} steps, {len(edges)} edges, {len(triggers)} trigger(s)"
+            return f"Workflow '{wf.get('name', '')}' has {len(issues)} issue(s):\n" + "\n".join(f"- {i}" for i in issues)
+        except Exception as e:
+            return f"error: {e}"
+
+    @tool
+    async def publish_workflow(workflow_id: str):
+        """Activate a workflow by publishing its latest draft version. Once published, the workflow starts responding to triggers. Use after creating or editing a workflow."""
+        try:
+            result = await client.publish_workflow(workflow_id)
+            wf = await client.get_workflow(workflow_id)
+            return f"Workflow '{wf.get('name', '')}' (id: {workflow_id}) is now ACTIVE"
+        except Exception as e:
+            return f"error: {e}"
+
+    @tool
+    async def list_workflows(status_filter: str | None = None):
+        """List all workflows and their status. Optional status_filter: 'active' or 'draft'."""
+        try:
+            wfs = await client.list_workflows()
+            if not wfs:
+                return "No workflows found"
+            lines = []
+            for w in wfs:
+                version = (w.get("versions") or [None])[0]
+                step_count = len(version.get("steps", [])) if version else 0
+                wf_status = "ACTIVE" if w.get("active") else "DRAFT"
+                if status_filter and status_filter.upper() != wf_status and status_filter.lower() != wf_status.lower():
+                    continue
+                lines.append(f"{wf_status} — {w['name']} ({w['id']}) — {step_count} step(s)")
+            if not lines:
+                return f"No workflows with status '{status_filter}'"
+            return "\n".join(lines)
+        except Exception as e:
+            return f"error: {e}"
+
     return [
         search_leads, search_contacts, get_lead_detail, update_lead_status,
         create_task, create_ticket, update_ticket, send_message, draft_message,
@@ -389,4 +558,5 @@ def build_operator_tools(client: BackendClient, tenant_id: str) -> list:
         allocate_lead_to_partner, search_channel_partners, get_partner_performance,
         assign_lead_to_agent, book_site_visit, update_booking,
         search_properties, search_units, get_lead_brief, get_team_command,
+        create_workflow, validate_workflow, publish_workflow, list_workflows,
     ]

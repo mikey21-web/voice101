@@ -48,6 +48,12 @@ export class PropertiesController {
     return this.service.getPublicCollectionLink(propertyIds || [], dashboardUrl);
   }
 
+  @Post('properties/extract')
+  @Roles('OWNER', 'ADMIN', 'MANAGER', 'SALES_AGENT')
+  extract(@Body('text') text: string) {
+    return this.service.extractFromText(text);
+  }
+
   @Post('properties')
   @Roles('OWNER', 'ADMIN', 'MANAGER')
   create(@Body() dto: CreatePropertyDto, @Req() req: any) {

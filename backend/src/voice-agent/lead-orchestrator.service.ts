@@ -16,6 +16,7 @@ interface ActionPlan {
   call?: { priority: number; lang: string };
   whatsapp?: { priority: number; text: string; templateId?: string };
   sms?: { priority: number; text: string };
+  telegram?: { priority: number; text: string };
   email?: { priority: number; subject: string; html: string };
   waitHours?: number;
 }
@@ -55,6 +56,7 @@ export class LeadOrchestratorService {
     if (plan.call) actions.push(() => this.executeCall(lead, plan.call!.lang, userId));
     if (plan.whatsapp) actions.push(() => this.executeWhatsApp(lead, plan.whatsapp!.text, userId, plan.whatsapp!.templateId));
     if (plan.sms) actions.push(() => this.executeSms(lead, plan.sms!.text, userId));
+    if (plan.telegram) actions.push(() => this.executeTelegram(lead, plan.telegram!.text, userId));
     if (plan.email) actions.push(() => this.executeEmail(lead, plan.email!.subject, plan.email!.html, userId));
 
     for (const action of actions) {
@@ -89,6 +91,14 @@ export class LeadOrchestratorService {
     // this into the WhatsApp-only "warm" branch).
     if (source === 'FORM' && phone) {
       return this.buildPlanFromActions(this.sourceDefaults('FORM'), lead, phone, whatsapp);
+    }
+
+    // A Telegram lead only ever gets created because of an inbound message, and
+    // webhooks.service.ts's dispatchInbound() already sends that message to the
+    // conversational AI agent for a live reply — issuing our own canned greeting
+    // here on top of it double-texts the lead on their very first message.
+    if (source === 'TELEGRAM') {
+      return null;
     }
 
     // Source defaults
@@ -138,6 +148,9 @@ export class LeadOrchestratorService {
       if (action.type === 'sms' && phone) {
         plan.sms = { priority: action.priority || 3, text: action.text || this.defaultSmsText(lead) };
       }
+      if (action.type === 'telegram' && (whatsapp || phone)) {
+        plan.telegram = { priority: action.priority || 1, text: action.text || this.defaultWhatsAppText(lead) };
+      }
       if (action.type === 'email' && lead.contact?.email) {
         plan.email = { priority: action.priority || 4, subject: action.subject || 'Thanks for your interest', html: action.html || this.defaultEmailHtml(lead) };
       }
@@ -164,6 +177,7 @@ export class LeadOrchestratorService {
       PHONE_CALL: [{ type: 'whatsapp', priority: 1, text: 'We missed your call. Let us know how we can help!' }],
       PORTAL: [{ type: 'call', priority: 1 }],
       CHATBOT: [{ type: 'call', priority: 1 }],
+      TELEGRAM: [{ type: 'telegram', priority: 1, text: 'Hi! Thanks for reaching out on Telegram. I\'m Mikey, your virtual assistant. How can I help you with properties today?' }],
     };
     return map[source] || [];
   }
@@ -216,6 +230,27 @@ export class LeadOrchestratorService {
       await this.conversations.create({ text, channel: 'SMS', direction: 'OUTBOUND', leadId: lead.id, contactId: lead.contactId }, userId);
     } catch (e: any) {
       if (e.name !== 'ForbiddenException') throw e;
+    }
+  }
+
+  private async executeTelegram(lead: any, text: string, userId: string): Promise<void> {
+    const to = lead.contact?.whatsapp || lead.contact?.phone;
+    if (!to) return;
+    const gate = await this.permissionGate.evaluate(lead.id, 'telegram_reply', 'TELEGRAM', { text });
+    if (gate.verdict === 'BLOCK') {
+      this.logger.warn(`Telegram blocked by gate for lead ${lead.id}: ${gate.reason}`);
+      return;
+    }
+    if (gate.verdict === 'REQUIRE_APPROVAL') {
+      await this.createApprovalRequest(lead.id, 'telegram', text, to);
+      return;
+    }
+    this.logger.log(`Auto-Telegram to lead ${lead.id}`);
+    try {
+      await this.conversations.create({ text, channel: 'TELEGRAM', direction: 'OUTBOUND', leadId: lead.id, contactId: lead.contactId }, userId);
+    } catch (e: any) {
+      if (e.name !== 'ForbiddenException') throw e;
+      this.logger.warn(`Telegram blocked by policy for lead ${lead.id}: ${e.message}`);
     }
   }
 

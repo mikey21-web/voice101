@@ -298,3 +298,20 @@ class BackendClient:
         params = [f"{k}={v}" for k, v in query.items() if v is not None]
         result = await self._retry_get(f"/units?{'&'.join(params)}")
         return result.get("data", []) if isinstance(result, dict) else result
+
+    async def create_workflow(self, name: str, tenant_id: str, tags: list[str] | None = None) -> dict:
+        return await self._retry_post("/workflows", {"name": name, "tags": tags or []})
+
+    async def get_workflow(self, workflow_id: str) -> dict:
+        return await self._retry_get(f"/workflows/{workflow_id}")
+
+    async def list_workflows(self) -> dict:
+        return await self._retry_get("/workflows")
+
+    async def create_workflow_version(self, workflow_id: str, steps: list[dict], edges: list[dict], triggers: list[dict] | None = None) -> dict:
+        return await self._retry_post(f"/workflows/{workflow_id}/versions", {
+            "steps": steps, "edges": edges, "triggers": triggers or [],
+        })
+
+    async def publish_workflow(self, workflow_id: str) -> dict:
+        return await self._retry_post(f"/workflows/{workflow_id}/publish")

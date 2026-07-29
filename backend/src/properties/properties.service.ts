@@ -1,7 +1,10 @@
 import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
-import { Prisma, PropertyStatus } from '@prisma/client';
+import { Prisma, PropertyStatus, PropertyType } from '@prisma/client';
 import { saveUploadedFile, deleteUploadedFile } from '../shared/file-storage.util';
+import OpenAI from 'openai';
+import { CreatePropertyDto } from './dto/create-property.dto';
 
 function slugify(title: string): string {
   const base = title.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60);
@@ -11,8 +14,15 @@ function slugify(title: string): string {
 @Injectable()
 export class PropertiesService {
   private readonly logger = new Logger(PropertiesService.name);
+  private aiClient: OpenAI | undefined;
 
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService, private config: ConfigService) {
+    const apiKey = this.config.get<string>('DEEPSEEK_API_KEY');
+    const baseURL = this.config.get<string>('DEEPSEEK_BASE_URL') || 'https://api.deepseek.com/v1';
+    if (apiKey) {
+      this.aiClient = new OpenAI({ apiKey, baseURL, timeout: 20000, maxRetries: 1 });
+    }
+  }
 
   async create(data: {
     tenantId: string;
@@ -236,7 +246,9 @@ export class PropertiesService {
     });
     if (!property || property.deletedAt) throw new NotFoundException('Listing not found');
     await this.prisma.property.update({ where: { id: property.id }, data: { viewCount: { increment: 1 } } });
-    return property;
+
+    const profile = await this.prisma.publicProfile.findUnique({ where: { tenantId: property.tenantId } });
+    return { ...property, whatsapp: profile?.whatsapp };
   }
 
   async getPublicLink(propertyId: string, dashboardUrl: string) {
@@ -279,5 +291,64 @@ export class PropertiesService {
     });
     // Preserve the order the slugs were requested in, not DB order.
     return slugs.map(s => properties.find(p => p.slug === s)).filter(Boolean);
+  }
+
+  // Paste a free-text (e.g. WhatsApp) property description, AI drafts the structured fields.
+  // Returns a draft only — the broker reviews/edits before POST /properties actually creates it.
+  async extractFromText(text: string): Promise<Partial<CreatePropertyDto>> {
+    if (!this.aiClient) return {};
+    const trimmed = (text || '').slice(0, 3000);
+    if (!trimmed.trim()) return {};
+
+    try {
+      const completion = await this.aiClient.chat.completions.create({
+        model: 'deepseek-chat',
+        messages: [
+          {
+            role: 'system',
+            content: `You are Mikey, extracting real estate listing details from a broker's free-text description (often pasted from WhatsApp). Respond with ONLY JSON matching this shape (omit fields you cannot determine):
+{
+  "title": "short listing title",
+  "description": "cleaned-up full description",
+  "propertyType": one of ${Object.values(PropertyType).join('|')},
+  "price": number (in the stated currency, no symbols/commas),
+  "currency": "INR" by default unless stated otherwise,
+  "bedrooms": number,
+  "bathrooms": number,
+  "areaSqft": number,
+  "location": "area/locality",
+  "address": "full address if given",
+  "features": ["short", "tags"],
+  "amenities": ["short", "tags"]
+}
+Return ONLY valid JSON, no prose.`,
+          },
+          { role: 'user', content: trimmed },
+        ],
+        response_format: { type: 'json_object' },
+        temperature: 0.1,
+      });
+
+      const parsed = JSON.parse(completion.choices[0].message.content || '{}');
+      const draft: Partial<CreatePropertyDto> = {};
+
+      if (typeof parsed.title === 'string') draft.title = parsed.title.slice(0, 200);
+      if (typeof parsed.description === 'string') draft.description = parsed.description.slice(0, 3000);
+      if (Object.values(PropertyType).includes(parsed.propertyType)) draft.propertyType = parsed.propertyType;
+      if (typeof parsed.price === 'number' && parsed.price > 0) draft.price = parsed.price;
+      if (typeof parsed.currency === 'string') draft.currency = parsed.currency.slice(0, 10);
+      if (typeof parsed.bedrooms === 'number' && parsed.bedrooms >= 0) draft.bedrooms = Math.round(parsed.bedrooms);
+      if (typeof parsed.bathrooms === 'number' && parsed.bathrooms >= 0) draft.bathrooms = Math.round(parsed.bathrooms);
+      if (typeof parsed.areaSqft === 'number' && parsed.areaSqft > 0) draft.areaSqft = parsed.areaSqft;
+      if (typeof parsed.location === 'string') draft.location = parsed.location.slice(0, 200);
+      if (typeof parsed.address === 'string') draft.address = parsed.address.slice(0, 300);
+      if (Array.isArray(parsed.features)) draft.features = parsed.features.filter((f: unknown) => typeof f === 'string').slice(0, 20);
+      if (Array.isArray(parsed.amenities)) draft.amenities = parsed.amenities.filter((a: unknown) => typeof a === 'string').slice(0, 20);
+
+      return draft;
+    } catch (e: any) {
+      this.logger.warn(`Property extraction failed: ${e.message}`);
+      return {};
+    }
   }
 }

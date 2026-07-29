@@ -9,6 +9,10 @@ const formatPrice = (p?: number) => {
   return `₹${p.toLocaleString()}`;
 };
 
+const waLink = (whatsapp?: string, title?: string) => whatsapp
+  ? `https://wa.me/${whatsapp.replace(/[^\d]/g, '')}?text=${encodeURIComponent(`Hi, I'm interested in ${title || 'this listing'}`)}`
+  : null;
+
 export default function PublicListingPage({ slug }: { slug: string }) {
   const [property, setProperty] = useState<any>(null);
   const [notFound, setNotFound] = useState(false);
@@ -56,6 +60,17 @@ export default function PublicListingPage({ slug }: { slug: string }) {
           {property.areaSqft && <span>{property.areaSqft} {property.areaUnit || 'sqft'}</span>}
         </div>
         <div className="mt-4 text-2xl font-semibold text-emerald-700">{formatPrice(property.price)}</div>
+
+        {waLink(property.whatsapp, property.title) && (
+          <a
+            href={waLink(property.whatsapp, property.title)!}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-emerald-600 px-4 py-2 text-white text-sm font-medium hover:bg-emerald-700 transition-colors"
+          >
+            Message on WhatsApp
+          </a>
+        )}
 
         {property.description && <p className="mt-6 text-gray-700 leading-relaxed whitespace-pre-line">{property.description}</p>}
 

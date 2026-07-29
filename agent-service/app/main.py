@@ -218,9 +218,14 @@ async def _build_copilot_run(body: dict):
 
 
 def _extract_response_and_actions(final_state: dict) -> tuple[str, list[dict]]:
+    # OpenAI models routinely return prose *and* a tool call (e.g. navigate_ui) in the
+    # same message, unlike DeepSeek which tends to separate them into different turns —
+    # requiring an absence of tool_calls here silently dropped that prose to "Done."
+    # Streamed turns also produce AIMessageChunk (type "AIMessageChunk"), not AIMessage
+    # (type "ai") — checking only "ai" silently dropped every streamed reply too.
     response_text = ""
     for m in reversed(final_state.get("messages", [])):
-        if hasattr(m, "type") and m.type == "ai" and m.content and not (hasattr(m, "tool_calls") and m.tool_calls):
+        if getattr(m, "type", None) in ("ai", "AIMessageChunk") and m.content:
             response_text = m.content
             break
 

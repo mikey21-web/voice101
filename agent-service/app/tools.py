@@ -29,7 +29,18 @@ def _clean_text(text: str) -> str:
     if not text:
         return text
     text = text.replace('—', ', ').replace('–', ', ')
+    text = _dedupe_repeated_text(text)
     return re.sub(r' {2,}', ' ', text)
+
+
+_REPEATED_WHOLE_MESSAGE = re.compile(r'\A\s*(.+?)\s*\n\s*\n\s*\1\s*\Z', re.DOTALL)
+
+
+def _dedupe_repeated_text(text: str) -> str:
+    """deepseek-v4-flash occasionally emits its entire reply twice in one completion,
+    separated by a blank line. Collapse that back down to a single copy."""
+    match = _REPEATED_WHOLE_MESSAGE.match(text)
+    return match.group(1) if match else text
 
 
 def build_tools(ctx: ToolContext) -> list:

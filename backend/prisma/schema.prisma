@@ -136,6 +136,7 @@ model Tenant {
   suppressionEntries           SuppressionEntry[]
   adSpendImports               AdSpendImport[]
   onboardingSteps              TenantOnboardingStep[]
+  workflowDefinitions          WorkflowDefinition[]
 
   @@index([slug])
   @@map("tenants")
@@ -3173,13 +3174,18 @@ model FailureRecord {
 
 model WorkflowInstance {
   id            String    @id @default(uuid())
-  workflowType  String
+  workflowId    String?   @map("workflow_id")
+  workflow      WorkflowDefinition? @relation(fields: [workflowId], references: [id], onDelete: SetNull)
+  versionId     String?   @map("version_id")
+  version       WorkflowVersion?    @relation(fields: [versionId], references: [id], onDelete: SetNull)
+  triggerId     String?   @map("trigger_id")
+  trigger       WorkflowTrigger?    @relation(fields: [triggerId], references: [id], onDelete: SetNull)
   status        String    @default("running")
   leadId        String?
   lead          Lead?     @relation(fields: [leadId], references: [id], onDelete: SetNull)
   contactId     String?
   campaignId    String?
-  currentStep   String?
+  currentStepKey String?
   context       Json      @default("{}")
   startedAt     DateTime  @default(now())
   completedAt   DateTime?
@@ -3188,7 +3194,8 @@ model WorkflowInstance {
 
   steps WorkflowStepRun[]
 
-  @@index([workflowType])
+  @@index([workflowId])
+  @@index([versionId])
   @@index([status])
   @@index([leadId])
   @@map("workflow_instances")
@@ -3198,6 +3205,8 @@ model WorkflowStepRun {
   id                 String           @id @default(uuid())
   workflowInstanceId String
   workflowInstance   WorkflowInstance @relation(fields: [workflowInstanceId], references: [id], onDelete: Cascade)
+  stepId             String?          @map("step_id")
+  step               WorkflowStep?    @relation(fields: [stepId], references: [id], onDelete: SetNull)
   stepKey            String
   status             String
   input              Json?
@@ -3210,6 +3219,143 @@ model WorkflowStepRun {
   @@index([stepKey])
   @@index([status])
   @@map("workflow_step_runs")
+}
+
+// === WORKFLOW ENGINE ===
+
+enum WorkflowTriggerType {
+  DB_EVENT
+  CRON
+  SCHEDULED
+  WEBHOOK
+  MANUAL
+
+  @@map("workflow_trigger_type")
+}
+
+enum WorkflowActionType {
+  SEND_MESSAGE
+  SEND_EMAIL
+  SEND_WHATSAPP_TEMPLATE
+  UPDATE_LEAD_STATUS
+  CREATE_TASK
+  CREATE_TICKET
+  UPDATE_RECORD
+  CREATE_RECORD
+  HTTP_REQUEST
+  DELAY
+  CONDITION
+  LOOP
+  CODE
+  AI_AGENT
+  WEBHOOK
+  CANCEL_WORKFLOW
+
+  @@map("workflow_action_type")
+}
+
+/// Blueprint for an automated workflow — the top-level entity users create and edit.
+model WorkflowDefinition {
+  id        String   @id @default(uuid())
+  tenantId  String   @map("tenant_id")
+  name      String
+  active    Boolean  @default(false)
+  tags      String[] @default([])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant   Tenant            @relation(fields: [tenantId], references: [id])
+  versions WorkflowVersion[]
+  instances WorkflowInstance[]
+
+  @@index([tenantId])
+  @@index([active])
+  @@map("workflow_definitions")
+}
+
+/// Immutable snapshot of a workflow at publish time — holds all steps and edges.
+/// The AI tool creates a new version atomically; edits create a new draft version.
+model WorkflowVersion {
+  id                 String   @id @default(uuid())
+  workflowId         String   @map("workflow_id")
+  workflow           WorkflowDefinition @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  version            Int      @default(1)
+  status             String   @default("draft") // draft | active | archived
+  config             Json     @default("{}")
+  createdAt          DateTime @default(now())
+  publishedAt        DateTime?
+
+  triggers  WorkflowTrigger[]
+  steps     WorkflowStep[]
+  edges     WorkflowEdge[]
+  instances WorkflowInstance[]
+
+  @@unique([workflowId, version])
+  @@index([workflowId])
+  @@map("workflow_versions")
+}
+
+/// What kicks off a workflow — linked to an immutable version so trigger changes
+/// only affect newly published versions.
+model WorkflowTrigger {
+  id        String             @id @default(uuid())
+  versionId String             @map("version_id")
+  version   WorkflowVersion    @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  type      WorkflowTriggerType
+  config    Json               @default("{}")
+  // DB_EVENT: { table: "lead", event: "CREATED|UPDATED|DELETED", filters: { status: "NEW" } }
+  // CRON: { expression: "0 9 * * 1", timezone: "Asia/Kolkata" }
+  // WEBHOOK: { path: "/workflow-hooks/my-hook", secret: "..." }
+  // SCHEDULED: { offsetMinutes: 30, fromField: "createdAt" }
+
+  instances WorkflowInstance[]
+
+  @@index([versionId])
+  @@map("workflow_triggers")
+}
+
+/// A single step/action inside a workflow version.
+model WorkflowStep {
+  id          String           @id @default(uuid())
+  versionId   String           @map("version_id")
+  version     WorkflowVersion  @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  stepKey     String           // Unique key within the workflow version, e.g. "step_1"
+  actionType  WorkflowActionType
+  label       String?          // Human-readable label, e.g. "Send welcome email"
+  config      Json             @default("{}")
+  // Action-specific config shapes:
+  // SEND_MESSAGE: { channel: "WHATSAPP", templateId?: string, body: string, leadId?: "FROM_CONTEXT" }
+  // SEND_EMAIL: { to: string, subject: string, body: string }
+  // UPDATE_LEAD_STATUS: { status: "QUALIFIED", field: "status" }
+  // HTTP_REQUEST: { url: string, method: "GET"|"POST"|"PATCH", headers: {}, body: {}, transform?: jsExpression }
+  // DELAY: { durationSeconds: 3600 }
+  // CONDITION: { expression: "lead.score > 50", trueStep: "step_3", falseStep: "step_4" }
+  // LOOP: { itemsExpression: "lead.tasks", maxIterations: 10 }
+  // AI_AGENT: { prompt: string, model: string, tools: string[] }
+  // CODE: { code: string, language: "javascript"|"python" }
+  // CREATE_RECORD: { model: "Task", data: { leadId: "{{lead.id}}", title: "..." } }
+  // UPDATE_RECORD: { model: "Lead", id: "{{lead.id}}", data: { score: 100 } }
+  displayOrder Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  stepRuns WorkflowStepRun[]
+
+  @@index([versionId])
+  @@map("workflow_steps")
+}
+
+/// Directed edge connecting two steps — enables branching (condition has two edges,
+/// loop has a back-edge to its start).
+model WorkflowEdge {
+  id        String        @id @default(uuid())
+  versionId String        @map("version_id")
+  version   WorkflowVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  sourceKey String        // Source stepKey
+  targetKey String        // Target stepKey
+  label     String?       // "true" | "false" | "" (for unconditional edges)
+
+  @@index([versionId])
+  @@map("workflow_edges")
 }
 
 // === MONITORING ===

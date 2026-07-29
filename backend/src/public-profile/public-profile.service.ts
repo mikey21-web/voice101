@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { PropertyStatus } from '@prisma/client';
 
 @Injectable()
 export class PublicProfileService {
@@ -33,6 +34,14 @@ export class PublicProfileService {
   async getPublicBySlug(slug: string) {
     const profile = await this.prisma.publicProfile.findUnique({ where: { slug } });
     if (!profile || !profile.published) throw new NotFoundException('Profile not found');
-    return profile;
+
+    // Broker mini-site: list every live property for this tenant alongside the profile.
+    const properties = await this.prisma.property.findMany({
+      where: { tenantId: profile.tenantId, status: PropertyStatus.AVAILABLE, deletedAt: null },
+      include: { images: { orderBy: { orderIndex: 'asc' }, take: 1 } },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return { ...profile, properties };
   }
 }

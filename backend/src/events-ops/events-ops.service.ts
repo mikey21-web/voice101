@@ -101,13 +101,24 @@ export class EventsOpsService {
   async getCalendar(from: string, to: string) {
     const fromDate = new Date(from);
     const toDate = new Date(to);
-    const [events, tasks] = await Promise.all([
+    const [events, tasks, siteVisits] = await Promise.all([
       this.prisma.event.findMany({ where: { eventDate: { gte: fromDate, lte: toDate } }, select: { id: true, title: true, eventDate: true, status: true } }),
       this.prisma.task.findMany({ where: { dueAt: { gte: fromDate, lte: toDate } }, select: { id: true, title: true, dueAt: true, status: true, priority: true } }),
+      this.prisma.siteVisit.findMany({
+        where: { startAt: { gte: fromDate, lte: toDate } },
+        select: { id: true, startAt: true, status: true, lead: { select: { contact: { select: { name: true } } } }, project: { select: { name: true } } },
+      }),
     ]);
     return {
       events: events.map((e) => ({ id: e.id, title: e.title, date: e.eventDate, kind: 'event', status: e.status })),
       tasks: tasks.map((t) => ({ id: t.id, title: t.title, date: t.dueAt, kind: 'task', status: t.status })),
+      siteVisits: siteVisits.map((v) => ({
+        id: v.id,
+        title: `Site visit: ${v.lead?.contact?.name || 'Lead'} @ ${v.project?.name || 'project'}`,
+        date: v.startAt,
+        kind: 'site_visit',
+        status: v.status,
+      })),
     };
   }
 }

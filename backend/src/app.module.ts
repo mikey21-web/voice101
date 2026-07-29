@@ -114,6 +114,7 @@ import { AdvancedMarketingModule } from './advanced-marketing/advanced-marketing
 import { OnboardingModule } from './onboarding/onboarding.module';
 import { LaunchControlModule } from './launch-control/launch-control.module';
 import { StateTaxModule } from './state-tax/state-tax.module';
+import { WorkflowModule } from './workflow/workflow.module';
 
 @Module({
   imports: [
@@ -238,6 +239,7 @@ import { StateTaxModule } from './state-tax/state-tax.module';
     ProjectsModule,
     PosthogModule,
     StateTaxModule,
+    WorkflowModule,
   ],
   controllers: [AICampaignsController],
   providers: [
