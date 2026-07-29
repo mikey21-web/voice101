@@ -2146,7 +2146,7 @@ const renderWebverseFilterOptions = () => {
         unitsEl.removeChild(unitsEl.firstChild);
     };
 
-    towerData?.orientations.map(each => {
+    towerData?.orientations?.map(each => {
         const orientationEl = document.createElement("li");
         orientationEl.classList.add("select-none", "text-sm", "cursor-pointer", "capitalize", "text-white", "px-3", "py-1", "rounded-full", "border", "border-2",  "bg-[rgba(255,255,255,0.1)]", "border-[rgba(255,255,255,0.2)]", "transition-colors", "duration-700", "ease-in-out", "delay-150");
         orientationEl.setAttribute("data-type", each);
@@ -2154,7 +2154,7 @@ const renderWebverseFilterOptions = () => {
         orientationsEl.appendChild(orientationEl);
     });
 
-    towerData?.floors.map(({ label, id }) => {
+    towerData?.floors?.map(({ label, id }) => {
         const floorEl = document.createElement("li");
         floorEl.classList.add("select-none", "cursor-pointer", "capitalize", "text-white", "border", "border-2", "bg-[rgba(255,255,255,0.1)]", "border-[rgba(255,255,255,0.2)]", "transition-colors", "duration-700", "ease-in-out", "delay-150", "p-1", "rounded-full", "text-sm", "h-10", "w-10", "flex", "flex-col", "justify-center", "items-center");
         floorEl.setAttribute("data-type", id);
@@ -2162,7 +2162,7 @@ const renderWebverseFilterOptions = () => {
         floorsEl.appendChild(floorEl);
     });
 
-    towerData?.types.map(each => {
+    towerData?.types?.map(each => {
         const typeEl = document.createElement("li");
         typeEl.classList.add("select-none", "cursor-pointer", "uppercase", "text-white", "border", "border-2", "bg-[rgba(255,255,255,0.1)]", "border-[rgba(255,255,255,0.2)]", "transition-colors", "duration-700", "ease-in-out", "delay-150", "px-3", "py-1", "rounded-full", "text-sm");
         typeEl.setAttribute("data-type", each);
@@ -2170,7 +2170,7 @@ const renderWebverseFilterOptions = () => {
         typesEl.appendChild(typeEl);
     });
 
-    towerData?.units.map(each => {
+    towerData?.units?.map(each => {
         const unitEl = document.createElement("li");
         unitEl.classList.add("select-none", "cursor-pointer", "text-white", "border", "border-2", "bg-[rgba(255,255,255,0.1)]", "border-[rgba(255,255,255,0.2)]", "transition-colors", "duration-700", "ease-in-out", "delay-150", "px-3", "py-1", "rounded-full", "flex", "flex-col", "justify-center", "items-center", "text-sm");
         unitEl.setAttribute("data-type", each);
@@ -2280,7 +2280,7 @@ const fetchLayoutSVGContent = async (url) => {
 
         webverseTowerLabel.textContent = `Block:${towerId.replace("Block_", "")}`;
 
-        unitsData = data?.flats.filter(each => each.towerId === towerId);
+        unitsData = data?.flats?.filter(each => each.towerId === towerId);
 
         window.history.replaceState({}, "", `${window.location.pathname}?blockId=${towerId}`);
 
@@ -2313,7 +2313,7 @@ const fetchLayoutSVGContent = async (url) => {
 
         // console.log("before", BLOCK_CURRENT_FRAME, BLOCK_DEGREE, BLOCK_DEGREE_INTERVALS);
 
-        towerData = data?.towers.find(each => each.towerId === towerId);
+        towerData = data?.towers?.find(each => each.towerId === towerId);
         // console.log("towerData:", towerData);
         // console.log("Raw degreeIntervals:", towerData?.degreeIntervals);
         // console.log("totalFrames:", towerData?.totalFrames);
@@ -2332,7 +2332,7 @@ const fetchLayoutSVGContent = async (url) => {
         BLOCK_CURRENT_FRAME = towerData?.currentFrame;
         BLOCK_DEGREE = 360 / towerData?.totalFrames;
 
-        BLOCK_DEGREE_INTERVALS = towerData.degreeIntervals.map(each => each * BLOCK_DEGREE);
+        BLOCK_DEGREE_INTERVALS = towerData?.degreeIntervals?.map(each => each * BLOCK_DEGREE);
 
         // console.log("AFTER VALUES:");
         // console.log("BLOCK_CURRENT_FRAME:", BLOCK_CURRENT_FRAME);
@@ -2727,6 +2727,7 @@ function setActiveTab(activeTab) {
 
 const tabsCondition = (tab) => {
     // console.log("2326:", tab.dataset.type);
+    if (!data) return; // data.json still loading - ignore clicks until it lands
     sectionHistory.push(tab.dataset.type);
     // console.log("Section History:", sectionHistory);
     switch (tab.dataset.type) {
@@ -5521,22 +5522,22 @@ window.addEventListener("load", async () => {
         LAYOUT_CURRENT_FRAME = data?.layout?.currentFrame;
         LAYOUT_TOTAL_FRAMES = data?.layout?.totalFrames;    
         LAYOUT_DEGREE = 360 / LAYOUT_TOTAL_FRAMES;
-        LAYOUT_DEGREE_INTERVALS = data?.layout?.degreeIntervals.map(each => each * LAYOUT_DEGREE);
+        LAYOUT_DEGREE_INTERVALS = data?.layout?.degreeIntervals?.map(each => each * LAYOUT_DEGREE);
 
         if (LAYOUT_CURRENT_FRAME && LAYOUT_TOTAL_FRAMES && LAYOUT_DEGREE && LAYOUT_DEGREE_INTERVALS && LAYOUT_DEGREE_INTERVALS.length > 0) {
             layoutControls.classList.remove("hidden");
             layoutControls.classList.remove("block");
         };
 
-        towerId = data?.towers[0].towerId;
-        unitPlanTowerNumberLabel.textContent = `${towerId.replace("_", " ")}`;
-        webverseTowerLabel.textContent = `Block:${towerId.replace("Block_", "")}`;
-        towerData= data?.towers.find(each => each.towerId === towerId);
-        unitsData = data?.flats.filter(each => each.towerId === towerId);
-        BLOCK_DEGREE_INTERVALS = towerData.degreeIntervals.map(each => each * BLOCK_DEGREE);
+        towerId = data?.towers?.[0]?.towerId;
+        unitPlanTowerNumberLabel.textContent = `${towerId?.replace("_", " ")}`;
+        webverseTowerLabel.textContent = `Block:${towerId?.replace("Block_", "")}`;
+        towerData= data?.towers?.find(each => each.towerId === towerId);
+        unitsData = data?.flats?.filter(each => each.towerId === towerId);
+        BLOCK_DEGREE_INTERVALS = towerData?.degreeIntervals?.map(each => each * BLOCK_DEGREE);
 
-        MAX_FLOORS = data?.floors.filter(each => each.towerId === towerId).length - 1;
-        totalFloorsCount.textContent = `${towerData?.floors.length}`;
+        MAX_FLOORS = data?.floors?.filter(each => each.towerId === towerId).length - 1;
+        totalFloorsCount.textContent = `${towerData?.floors?.length}`;
 
         renderFloorsOptions(towerData?.floors);
 
@@ -5544,11 +5545,11 @@ window.addEventListener("load", async () => {
         //     fetchBlockSVGContent(towerData?.flatWiseSvgs[BLOCK_CURRENT_FRAME * BLOCK_DEGREE]);
         // };
 
-        fetchLayoutSVGContent(data?.layout?.svgs[LAYOUT_CURRENT_FRAME * LAYOUT_DEGREE]);
+        fetchLayoutSVGContent(data?.layout?.svgs?.[LAYOUT_CURRENT_FRAME * LAYOUT_DEGREE]);
 
         updateGalleryImage();
 
-        data?.gallery.map((each, index) => {
+        data?.gallery?.map((each, index) => {
             const galleryItem = document.createElement("li");
             galleryItem.classList.add("group",  "select-none", 'border-box', 'aspect-16/9', 'rounded-md', 'cursor-pointer');
 
@@ -5730,9 +5731,9 @@ document.addEventListener('DOMContentLoaded', function() {
         canvas: true   
     };
 
-    const floorPlanWrapperInstance = panzoom(floorPlanWrapper, options);
-    const unitPlanImgInstance = panzoom(unitPlanImg, options);
-    const interiorImageInstance = panzoom(interiorImage, options);
+    const floorPlanWrapperInstance = Panzoom(floorPlanWrapper, options);
+    const unitPlanImgInstance = Panzoom(unitPlanImg, options);
+    const interiorImageInstance = Panzoom(interiorImage, options);
 
     floorPlanWrapper.addEventListener('wheel', floorPlanWrapperInstance.zoomWithWheel, { passive: false });
     unitPlanImg.addEventListener('wheel', unitPlanImgInstance.zoomWithWheel, { passive: false });

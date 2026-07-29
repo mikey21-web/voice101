@@ -12,14 +12,10 @@
     enumerable: descriptor.enumerable,
     get: descriptor.get,
     set: function (value) {
-      if (typeof value === 'string' && value.indexOf('hookbot.in/viewer/') !== -1) {
+      if (typeof value === 'string' && value.indexOf('hookbot.in/') !== -1) {
         try {
-          const parsed = new URL(value);
-          const code = parsed.searchParams.get('code');
-          const room = parsed.searchParams.get('room');
-          let proxied = '/tourproxy/viewer?code=' + encodeURIComponent(code || '');
-          if (room) proxied += '&room=' + encodeURIComponent(room);
-          value = proxied;
+          const parsed = new URL(value.trim());
+          value = '/tourproxy' + parsed.pathname + parsed.search;
         } catch (e) { /* malformed URL - fall through unchanged */ }
       }
       descriptor.set.call(this, value);
