@@ -14,6 +14,14 @@ class ToolContext:
     features: dict = None
 
 
+# Tools whose blast radius (money, mass messaging, external comms) is too high to
+# auto-execute from any voice — lead_voice and operator_voice both gate these behind
+# human approval instead of running them the moment the model calls them, so merging
+# operator's tool set into the lead-facing conversation can't be walked through by a
+# manipulated chat message into an unconfirmed campaign/payment/email/workflow action.
+HIGH_IMPACT_TOOLS = {"create_campaign", "initiate_call", "send_email", "bulk_send_message", "define_outcome", "create_workflow", "publish_workflow"}
+
+
 def _ok(msg: str) -> str:
     return f"ok: {msg}"
 
@@ -342,6 +350,20 @@ def build_tools(ctx: ToolContext) -> list:
             return _err(str(e))
 
     @tool
+    async def send_broker_profile():
+        """Send the lead the broker's own mini-site link — one evergreen page listing every live property plus a WhatsApp button, instead of a single property or hand-picked collection. Use when the lead wants to browse everything available rather than a specific match, or as an early "here's everything I have" message. Works the same over WhatsApp or Telegram."""
+        if not (ctx.features and ctx.features.get("properties")):
+            return _err("properties feature is not enabled for this niche")
+        try:
+            url = await ctx.client.get_broker_profile_link()
+            if not url:
+                return _err("broker profile has no shareable link yet — set a slug in Settings first")
+            await ctx.client.send_message(ctx.lead_id, ctx.channel, f"Here's everything I have available: {url}")
+            return _ok(f"sent broker profile link: {url}")
+        except BackendError as e:
+            return _err(str(e))
+
+    @tool
     async def send_property_photos(property_ids: list[str]):
         """Send photos of one or more properties to the lead over WhatsApp, each with a caption (title, price, location). Use after search_properties finds good matches and the lead seems interested. Sends at most 2 photos per property and 3 properties per call to avoid spamming."""
         if not (ctx.features and ctx.features.get("properties")):
@@ -532,6 +554,7 @@ def build_tools(ctx: ToolContext) -> list:
         search_units,
         send_listing_link,
         send_listing_collection,
+        send_broker_profile,
         send_property_photos,
         send_unit_photos,
         send_area_collection,

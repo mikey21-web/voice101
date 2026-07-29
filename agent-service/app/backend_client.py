@@ -308,6 +308,11 @@ class BackendClient:
         data = result.get('data', result)
         return data.get('url', '')
 
+    async def get_broker_profile_link(self) -> str:
+        result = await self._get("/public-profile/link")
+        data = result.get('data', result)
+        return data.get('url', '')
+
     async def get_property(self, property_id: str) -> dict:
         return await self._retry_get(f"/properties/{property_id}")
 

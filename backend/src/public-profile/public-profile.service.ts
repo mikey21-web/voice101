@@ -31,6 +31,14 @@ export class PublicProfileService {
     });
   }
 
+  // Authenticated: the broker's own shareable mini-site link, e.g. for Mikey to send to a lead.
+  async getMyLink(dashboardUrl: string) {
+    const tenantId = await this.currentTenantId();
+    const profile = await this.prisma.publicProfile.findUnique({ where: { tenantId } });
+    if (!profile?.slug) throw new NotFoundException('Public profile has no slug yet — set one in Settings first');
+    return { url: `${dashboardUrl.replace(/\/$/, '')}/#/org/${profile.slug}` };
+  }
+
   async getPublicBySlug(slug: string) {
     const profile = await this.prisma.publicProfile.findUnique({ where: { slug } });
     if (!profile || !profile.published) throw new NotFoundException('Profile not found');
