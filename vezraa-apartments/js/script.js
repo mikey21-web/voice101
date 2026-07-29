@@ -2209,13 +2209,13 @@ function reset() {
     selectedUnits.clear();
 };
 
-// applyFiltersBtn.addEventListener('click', () => {
-//     if (selectedFacings.size > 0 || selectedFloors.size > 0 || selectedTypes.size > 0 || selectedUnits.size > 0 )  {
-//         updateFilteredData(blockSVG);
-//     } else {
-//         resetSVGFill(blockSVG);
-//     };
-// });
+applyFiltersBtn.addEventListener('click', () => {
+    if (selectedFacings.size > 0 || selectedFloors.size > 0 || selectedUnits.size > 0 )  {
+        updateFilteredData(blockSVG);
+    } else {
+        resetSVGFill(blockSVG);
+    };
+});
 
 resetFiltersBtn.addEventListener('click', reset); // Reset Filters Event Listener
 
