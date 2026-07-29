@@ -1333,7 +1333,10 @@ const updateLayoutImage = () => {
         layoutSvg.style.opacity = "1";
     };
 
-    layoutImage.src = loadedImages[LAYOUT_CURRENT_FRAME - 1][timeOfDay].src;
+    const layoutFrame = loadedImages[LAYOUT_CURRENT_FRAME - 1];
+    if (!layoutFrame) return; // frame images still preloading - skip until ready
+
+    layoutImage.src = layoutFrame[timeOfDay].src;
 
 };
 
