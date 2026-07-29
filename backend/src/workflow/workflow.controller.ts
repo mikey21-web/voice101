@@ -1,16 +1,21 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards, Req, Logger } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { WorkflowService } from './workflow.service';
+import { WorkflowGeneratorService } from './workflow-generator.service';
 
 @ApiTags('Workflows')
 @Controller('workflows')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiBearerAuth()
 export class WorkflowController {
-  constructor(private service: WorkflowService) {}
+  private readonly logger = new Logger(WorkflowController.name);
+  constructor(
+    private service: WorkflowService,
+    private generator: WorkflowGeneratorService,
+  ) {}
 
   @Post()
   @Roles('OWNER', 'ADMIN', 'MANAGER')
@@ -59,6 +64,14 @@ export class WorkflowController {
   @ApiOperation({ summary: 'Publish the latest draft version (activates workflow)' })
   publish(@Param('id') id: string) {
     return this.service.publishVersion(id);
+  }
+
+  @Post('generate')
+  @Roles('OWNER', 'ADMIN', 'MANAGER')
+  @ApiOperation({ summary: 'Generate a workflow from a plain-English prompt using AI' })
+  async generate(@Body() dto: { prompt: string }, @Req() req) {
+    this.logger.log(`Generating workflow from prompt: ${dto.prompt?.slice(0, 80)}`);
+    return this.generator.generate(dto.prompt, req.user.tenantId);
   }
 
   @Get(':id/instances')

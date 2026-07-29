@@ -535,7 +535,7 @@ export default function VoiceCommandUI() {
     const lines = result.split('\n');
     const hasTranscript = lines.length > 1;
     return (
-      <div className="fixed bottom-28 left-1/2 -translate-x-1/2 z-[9999] max-w-lg w-full mx-4 animate-fade-up pointer-events-none">
+      <div className="fixed bottom-28 left-1/2 -translate-x-1/2 z-[9999] max-w-lg w-full mx-4 animate-fade-up pointer-events-none [body.mikey-panel-open_&]:hidden">
         <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] px-5 py-4 shadow-2xl flex flex-col gap-2">
           {hasTranscript && (
             <div className="flex items-start gap-2">
@@ -586,7 +586,7 @@ export default function VoiceCommandUI() {
     <>
       <button
         onClick={startListening}
-        className="fixed bottom-24 sm:bottom-20 right-6 z-[9999] w-12 h-12 rounded-full shadow-lg flex items-center justify-center bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] hover:bg-[var(--accent)] hover:scale-105 transition-all duration-200 [body.overlay-open_&]:hidden"
+        className="fixed bottom-24 sm:bottom-20 right-6 z-[9999] w-12 h-12 rounded-full shadow-lg flex items-center justify-center bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] hover:bg-[var(--accent)] hover:scale-105 transition-all duration-200 [body.overlay-open_&]:hidden [body.mikey-panel-open_&]:hidden"
         title="Activate Mikey Voice (Ctrl+H)"
       >
         <Mic size={18} />
@@ -597,7 +597,7 @@ export default function VoiceCommandUI() {
           single mic button (which already reaches every voice feature) carry mobile. */}
       <button
         onClick={toggleWakeWord}
-        className={`hidden sm:flex fixed bottom-20 right-20 z-[9999] w-9 h-9 rounded-full shadow-lg items-center justify-center border transition-all duration-200 [body.overlay-open_&]:hidden ${
+        className={`hidden sm:flex fixed bottom-20 right-20 z-[9999] w-9 h-9 rounded-full shadow-lg items-center justify-center border transition-all duration-200 [body.overlay-open_&]:hidden [body.mikey-panel-open_&]:hidden ${
           wakeWordOn ? 'bg-[var(--primary)] text-white border-transparent' : 'bg-[var(--card)] text-[var(--muted-foreground)] border-[var(--border)] hover:bg-[var(--accent)]'
         }`}
         title={wakeWordOn ? '"Okay Mikey" listening is on — click to turn off' : 'Turn on hands-free "Okay Mikey" listening'}
@@ -606,12 +606,12 @@ export default function VoiceCommandUI() {
       </button>
       <button
         onClick={voiceSession.start}
-        className="hidden sm:flex fixed bottom-20 right-32 z-[9999] w-9 h-9 rounded-full shadow-lg items-center justify-center border bg-[var(--card)] text-[var(--muted-foreground)] border-[var(--border)] hover:bg-[var(--accent)] transition-all duration-200 [body.overlay-open_&]:hidden"
+        className="hidden sm:flex fixed bottom-20 right-32 z-[9999] w-9 h-9 rounded-full shadow-lg items-center justify-center border bg-[var(--card)] text-[var(--muted-foreground)] border-[var(--border)] hover:bg-[var(--accent)] transition-all duration-200 [body.overlay-open_&]:hidden [body.mikey-panel-open_&]:hidden"
         title="Start a continuous conversation — always listening, talk over Mikey anytime"
       >
         <Radio size={15} />
       </button>
-      <div className="hidden sm:block fixed bottom-[5.5rem] right-6 z-[9999] text-[10px] text-[var(--muted-foreground)] opacity-50 text-right [body.overlay-open_&]:hidden">
+      <div className="hidden sm:block fixed bottom-[5.5rem] right-6 z-[9999] text-[10px] text-[var(--muted-foreground)] opacity-50 text-right [body.overlay-open_&]:hidden [body.mikey-panel-open_&]:hidden">
         <kbd className="px-1 py-0.5 rounded bg-[var(--accent)] font-mono">Ctrl+H</kbd>
       </div>
     </>

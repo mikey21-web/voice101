@@ -13,6 +13,7 @@ import { CreateRecordAction } from './actions/create-record.action';
 import { UpdateRecordAction } from './actions/update-record.action';
 import { CodeAction } from './actions/code.action';
 import { WorkflowActionFactory } from './actions/workflow-action.factory';
+import { WorkflowGeneratorService } from './workflow-generator.service';
 import { PrismaModule } from '../prisma/prisma.module';
 
 @Module({
@@ -33,6 +34,7 @@ import { PrismaModule } from '../prisma/prisma.module';
     CreateRecordAction,
     UpdateRecordAction,
     CodeAction,
+    WorkflowGeneratorService,
     WorkflowActionFactory,
   ],
   exports: [

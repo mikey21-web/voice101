@@ -20,7 +20,7 @@ import { MemoryService } from '../mikey/memory.service';
 import { ApprovalsService } from '../approvals/approvals.service';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { randomUUID } from 'crypto';
-import WebSocket from 'ws';
+import { WebSocket } from 'ws';
 
 const MAX_COPILOT_MESSAGES_PER_TENANT_PER_DAY = 500;
 // A step stuck 'in_progress' this long means the process died mid-runOutcome

@@ -356,6 +356,7 @@ export async function fetchPublicProfileBySlug(slug: string) { return api(`/publ
 export async function fetchPublicListingBySlug(slug: string) { return api(`/properties/public/${slug}`); }
 
 export async function fetchWorkflows() { return api('/workflows'); }
+export async function fetchWorkflowById(id: string) { return api(`/workflows/${id}`); }
 export async function createWorkflow(data: { name: string; description?: string }) { return api('/workflows', { method: 'POST', body: JSON.stringify(data) }); }
 export async function updateWorkflow(id: string, data: any) { return api(`/workflows/${id}`, { method: 'PATCH', body: JSON.stringify(data) }); }
 export async function deleteWorkflow(id: string) { return api(`/workflows/${id}`, { method: 'DELETE' }); }

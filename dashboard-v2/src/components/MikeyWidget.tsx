@@ -19,6 +19,14 @@ export default function MikeyWidget() {
   const [hasOpened, setHasOpened] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
+  // The voice command popup and this panel are two independent surfaces that can
+  // both show the same conversation at once — flag it on body so VoiceCommandUI
+  // can hide itself instead of stacking two overlapping chat UIs on screen.
+  useEffect(() => {
+    document.body.classList.toggle('mikey-panel-open', open);
+    return () => document.body.classList.remove('mikey-panel-open');
+  }, [open]);
+
   useEffect(() => {
     if (bottomRef.current) bottomRef.current.scrollIntoView({ behavior: "smooth" });
   }, [messages]);

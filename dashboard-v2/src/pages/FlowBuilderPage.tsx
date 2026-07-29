@@ -7,6 +7,7 @@ import '@xyflow/react/dist/style.css';
 import { Plus, Trash2, Save, MessageSquare, HelpCircle, Flag, Play, Pause, ArrowLeft, Bot, Workflow } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { fetchFlows, createFlow, updateFlow, deleteFlow, fetchBusinessSettings, updateBusinessSettings } from '../lib/data';
+import { fetchWorkflowById } from '../lib/data';
 
 let idCounter = 1;
 const nextId = () => `n${Date.now()}_${idCounter++}`;
@@ -180,6 +181,32 @@ export default function FlowBuilderPage() {
       const [f, settings] = await Promise.all([fetchFlows(), fetchBusinessSettings()]);
       setFlows(f || []);
       setAgentMode(settings?.agentMode === 'FLOW' ? 'FLOW' : 'AI');
+
+      const match = window.location.hash.match(/[?&]id=([^&]+)/);
+      if (match) {
+        const wfId = match[1];
+        try {
+          const wf = await fetchWorkflowById(wfId);
+          const v = wf.versions?.[0];
+          if (v) {
+            const nodes = (v.steps || []).map((s: any, i: number) => ({
+              id: s.stepKey,
+              type: s.actionType === 'CONDITION' ? 'question' : 'message',
+              position: { x: 250, y: 30 + i * 110 },
+              data: { text: s.label || s.actionType },
+            }));
+            if (!nodes.length) {
+              nodes.push({ id: 'start', type: 'start', position: { x: 250, y: 20 }, data: { text: '' } });
+            }
+            const edges = (v.edges || []).map((e: any) => ({
+              id: `${e.sourceKey}->${e.targetKey}`,
+              source: e.sourceKey,
+              target: e.targetKey,
+            }));
+            setEditing({ id: wfId, name: wf.name, nodes, edges, triggerKeywords: [] });
+          }
+        } catch {}
+      }
     } catch { /* keep empty state */ }
     setLoading(false);
   };
