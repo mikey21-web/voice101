@@ -91,9 +91,13 @@ export function useVoiceInput() {
             }
             return;
           }
-          log('Sending: ' + text);
-          updateState({ transcript: text });
-          return;
+          // No wake word in this utterance and no pending "okay mikey" from a prior
+          // one — this is background noise (or, without the caller pausing us while
+          // Mikey talks, Mikey's own voice bleeding back through the mic), not a
+          // command. Sending it here was the actual bug: "hands-free" mode was
+          // forwarding every single thing the mic ever heard, wake word or not.
+          log('Ignored (no wake word): ' + text);
+          continue;
         }
 
         wakeWordPending = false;

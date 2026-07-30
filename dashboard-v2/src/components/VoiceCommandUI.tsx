@@ -4,7 +4,7 @@ import { setPendingFilter } from '../lib/pendingSearch';
 import { apiUpload } from '../lib/api';
 import { useVoiceInput } from '../lib/useVoiceInput';
 import { PAGE_MAP, PAGE_ALIASES, fuzzyPageMatch, resolvePage, canonical } from '../lib/pageMap';
-import { speakStreamed, resetSpeech, queueSpeechSegment } from '../lib/streamingAudioPlayer';
+import { speakStreamed, resetSpeech, queueSpeechSegment, stopSpeaking } from '../lib/streamingAudioPlayer';
 import { chatStream } from '../lib/streamingChat';
 import { useVoiceSession } from '../lib/voiceSession';
 
@@ -121,6 +121,9 @@ export default function VoiceCommandUI() {
   // transcript source when server transcription yields nothing.
   const shadowRef = useRef<any>(null);
   const shadowTextRef = useRef<string>('');
+  // Lets a manual Stop actually cancel the in-flight chatStream() request, not just
+  // stop playing whatever's already been spoken — mirrors voiceSession.ts's chatAbort.
+  const chatAbortRef = useRef<AbortController | null>(null);
 
   // Phase 3: continuous listening (always-on mic, live transcription, can be
   // talked over mid-reply) — see lib/voiceSession.ts. Independent of the
@@ -200,13 +203,15 @@ export default function VoiceCommandUI() {
     // so the on-screen text tracks what Mikey is actually saying as she says it,
     // rather than only appearing once the whole reply has finished generating.
     let liveCaption = '';
+    const controller = new AbortController();
+    chatAbortRef.current = controller;
     chatStream(text, undefined, {
       onSegment: (segment) => {
         if (localStorage.getItem('mikeyVoiceOn') !== 'false') queueSpeechSegment(segment);
         liveCaption += (liveCaption ? ' ' : '') + segment;
         setResult(`${transcriptLine}\n→ ${liveCaption}`);
       },
-    }).then((res) => {
+    }, controller.signal).then((res) => {
       const nav = (res.actions || []).find((a: any) => a.tool === 'navigate_ui' && a.status !== 'error');
       if (nav) {
         const page = resolvePage(nav.args.page);
@@ -455,13 +460,17 @@ export default function VoiceCommandUI() {
 
   // Two independent always-listening mics (wake word + continuous conversation)
   // both reacting to the same utterance meant two separate replies got generated
-  // and spoken over each other. Pause wake word for the duration of a continuous
-  // session and resume it only once that session is fully idle again.
+  // and spoken over each other. Also pause wake word for the duration of any
+  // Mikey reply (mode === 'copilot', tap-to-talk/wake-word path) — the wake-word
+  // recognizer has no echo cancellation of its own, so left running while Mikey
+  // talks it can hear Mikey's own voice through the speakers and re-send it as a
+  // new "command", the actual cause of a self-triggering loop with no real input
+  // ever getting through. Resume only once fully idle again.
   useEffect(() => {
-    if (voiceSession.state !== 'idle') { wakeWord.stop(); return; }
+    if (voiceSession.state !== 'idle' || mode === 'copilot') { wakeWord.stop(); return; }
     if (wakeWordOn) wakeWord.start();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [voiceSession.state]);
+  }, [voiceSession.state, mode]);
 
   const stopListening = useCallback(() => {
     // Whisper path: leave listening/mode alone here — recorder.onstop owns
@@ -478,6 +487,19 @@ export default function VoiceCommandUI() {
     setMode('idle');
     if (wakeWordOn) wakeWord.start();
   }, [wakeWordOn, wakeWord]);
+
+  /** Cuts off Mikey mid-thought or mid-sentence: cancels the in-flight chatStream
+   * request (not just the audio already playing) and returns to idle. This is the
+   * tap-to-talk/wake-word equivalent of voiceSession.ts's interruptSpeech() — that
+   * one only covers the continuous Radio-button session, and this flow had no
+   * interrupt at all once a reply started generating. */
+  const stopMikey = useCallback(() => {
+    chatAbortRef.current?.abort();
+    stopSpeaking();
+    setResult(null);
+    setMode('idle');
+    setListening(false);
+  }, []);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -563,6 +585,40 @@ export default function VoiceCommandUI() {
     );
   }
 
+  // Covers both "still generating, nothing to show yet" (mode === 'copilot' with
+  // no result text) and "streaming the reply in" (result set) — a Stop control
+  // must be reachable for the entire time Mikey could be talking, not just once
+  // captions exist. Previously there was a real gap here: the moment listening
+  // flips to false but before the first streamed segment arrives, nothing
+  // rendered a stop control at all.
+  if (result && mode === 'copilot') {
+    const lines = result.split('\n');
+    const hasTranscript = lines.length > 1;
+    return (
+      <div className="fixed bottom-28 left-1/2 -translate-x-1/2 z-[9999] max-w-lg w-full mx-4 animate-fade-up flex flex-col items-center gap-2 [body.mikey-panel-open_&]:hidden">
+        <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] px-5 py-4 shadow-2xl flex flex-col gap-2 w-full pointer-events-none">
+          {hasTranscript && (
+            <div className="flex items-start gap-2">
+              <Mic size={14} className="text-[var(--primary)] mt-0.5 shrink-0" />
+              <p className="text-xs text-[var(--muted-foreground)]">{lines[0]}</p>
+            </div>
+          )}
+          <div className="flex items-start gap-2">
+            <Sparkles size={16} className="text-[var(--primary)] mt-0.5 shrink-0" />
+            <p className="text-sm text-[var(--foreground)] leading-relaxed flex-1">{hasTranscript ? lines.slice(1).join('\n') : result}</p>
+          </div>
+        </div>
+        <button
+          onClick={stopMikey}
+          className="flex items-center gap-2 rounded-full bg-[var(--card)] border border-[var(--border)] text-[var(--foreground)] px-5 py-2.5 shadow-2xl active:scale-95 transition-transform"
+        >
+          <MicOff size={16} />
+          <span className="text-sm font-medium">Stop</span>
+        </button>
+      </div>
+    );
+  }
+
   if (result) {
     const lines = result.split('\n');
     const hasTranscript = lines.length > 1;
@@ -584,7 +640,7 @@ export default function VoiceCommandUI() {
     );
   }
 
-  if (listening) {
+  if (listening || mode === 'copilot') {
     const thinking = mode === 'copilot';
     return (
       <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999] animate-fade-up flex flex-col items-center gap-2">
@@ -600,16 +656,15 @@ export default function VoiceCommandUI() {
           {!thinking && <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />}
         </div>
         {/* Big, thumb-friendly stop control. Auto-stop handles most cases, but
-            this is the obvious tap target on mobile where there's no Esc key. */}
-        {!thinking && (
-          <button
-            onClick={stopListening}
-            className="flex items-center gap-2 rounded-full bg-[var(--primary)] text-white px-6 py-3 shadow-2xl active:scale-95 transition-transform"
-          >
-            <MicOff size={18} />
-            <span className="text-sm font-medium">Tap to send</span>
-          </button>
-        )}
+            this is the obvious tap target on mobile where there's no Esc key —
+            and, while thinking, the only way to interrupt at all. */}
+        <button
+          onClick={thinking ? stopMikey : stopListening}
+          className="flex items-center gap-2 rounded-full bg-[var(--primary)] text-white px-6 py-3 shadow-2xl active:scale-95 transition-transform"
+        >
+          <MicOff size={18} />
+          <span className="text-sm font-medium">{thinking ? 'Stop' : 'Tap to send'}</span>
+        </button>
       </div>
     );
   }
