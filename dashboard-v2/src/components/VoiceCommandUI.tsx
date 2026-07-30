@@ -246,17 +246,22 @@ export default function VoiceCommandUI() {
 
     let finalText = '';
     let stopTimer: ReturnType<typeof setTimeout> | undefined;
-    const armAutoStop = () => {
+    const armAutoStop = (ms: number) => {
       if (stopTimer) clearTimeout(stopTimer);
-      stopTimer = setTimeout(() => { try { r.stop(); } catch {} }, 2500);
+      stopTimer = setTimeout(() => { try { r.stop(); } catch {} }, ms);
     };
 
-    r.onstart = () => { setListening(true); setMode('listening'); armAutoStop(); };
+    // The very first arm (onstart, before any speech exists) has to cover reaction
+    // time to the "Listening..." indicator plus the browser's own mic/recognition
+    // startup lag, not just silence — 2.5s there was cutting people off with zero
+    // captured text before they'd even finished their first sentence. Once a result
+    // has actually come back, tighten back to 2.5s of real silence to auto-send.
+    r.onstart = () => { setListening(true); setMode('listening'); armAutoStop(6000); };
     r.onresult = (e: any) => {
       for (let i = e.resultIndex; i < e.results.length; i++) {
         if (e.results[i].isFinal) finalText += e.results[i][0].transcript + ' ';
       }
-      armAutoStop();
+      armAutoStop(2500);
     };
     r.onerror = (e: any) => {
       // 'no-speech' (silence until timeout) and 'aborted' (stopped manually,
