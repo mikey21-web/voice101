@@ -188,9 +188,18 @@ export async function startVoiceSession(): Promise<void> {
   }
   micStream = stream;
 
-  socket = io(`${API_URL}/realtime`, {
+  // API_URL is sometimes a same-origin path prefix behind a reverse proxy (e.g. '/api'
+  // in production, routing to the backend), not an absolute origin. Socket.io's own
+  // transport path defaults to '/socket.io/' on the page's origin regardless of what
+  // pathname is baked into the connection URL, so a relative prefix like '/api' silently
+  // gets dropped from the handshake and the socket never reaches the backend at all.
+  // Route the transport through that same prefix explicitly, and keep the namespace
+  // (/realtime) separate from it.
+  const isRelativeApiUrl = API_URL.startsWith('/');
+  socket = io(isRelativeApiUrl ? '/realtime' : `${API_URL}/realtime`, {
     auth: { token },
     transports: ['websocket'],
+    path: isRelativeApiUrl ? `${API_URL}/socket.io/` : '/socket.io/',
   });
 
   socket.on('connect', () => socket?.emit('voice:start'));
