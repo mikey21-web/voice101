@@ -96,6 +96,7 @@ export class RealtimeGateway implements OnGatewayInit, OnGatewayConnection, OnGa
       const session = this.deepgram.connect(
         (text) => client.emit('voice:transcript', { text }),
         (err) => client.emit('voice:error', { message: err.message }),
+        (text) => client.emit('voice:interim', { text }),
       );
       this.voiceSessions.set(client.id, session);
       client.emit('voice:started', {});

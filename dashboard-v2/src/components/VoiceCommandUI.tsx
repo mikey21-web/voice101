@@ -502,8 +502,16 @@ export default function VoiceCommandUI() {
     }[voiceSession.state];
     return (
       <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999] animate-fade-up flex flex-col items-center gap-2 max-w-lg w-full mx-4">
-        {(voiceSession.transcript || voiceSession.replyText) && (
+        {(voiceSession.transcript || voiceSession.interimTranscript || voiceSession.replyText) && (
           <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] px-5 py-4 shadow-2xl flex flex-col gap-2 w-full pointer-events-none">
+            {/* Live, still-being-said preview — replaced by the finalized transcript
+                once Deepgram commits to it (see onTranscript clearing interim). */}
+            {!voiceSession.transcript && voiceSession.interimTranscript && (
+              <div className="flex items-start gap-2">
+                <Mic size={14} className="text-[var(--primary)] mt-0.5 shrink-0 animate-pulse" />
+                <p className="text-xs text-[var(--muted-foreground)] italic">{voiceSession.interimTranscript}</p>
+              </div>
+            )}
             {voiceSession.transcript && (
               <div className="flex items-start gap-2">
                 <Mic size={14} className="text-[var(--primary)] mt-0.5 shrink-0" />
@@ -530,13 +538,27 @@ export default function VoiceCommandUI() {
         {voiceSession.error && (
           <p className="text-xs text-red-500">{voiceSession.error}</p>
         )}
-        <button
-          onClick={voiceSession.stop}
-          className="flex items-center gap-2 rounded-full bg-[var(--primary)] text-white px-6 py-3 shadow-2xl active:scale-95 transition-transform"
-        >
-          <Radio size={18} />
-          <span className="text-sm font-medium">End conversation</span>
-        </button>
+        <div className="flex items-center gap-2">
+          {/* Guaranteed interrupt — doesn't depend on the mic picking up "stop" loud
+              enough to trip the automatic barge-in detector. Only meaningful while
+              Mikey is actually talking or working on a reply. */}
+          {(voiceSession.state === 'speaking' || voiceSession.state === 'thinking') && (
+            <button
+              onClick={voiceSession.interrupt}
+              className="flex items-center gap-2 rounded-full bg-[var(--card)] border border-[var(--border)] text-[var(--foreground)] px-5 py-3 shadow-2xl active:scale-95 transition-transform"
+            >
+              <MicOff size={18} />
+              <span className="text-sm font-medium">Stop</span>
+            </button>
+          )}
+          <button
+            onClick={voiceSession.stop}
+            className="flex items-center gap-2 rounded-full bg-[var(--primary)] text-white px-6 py-3 shadow-2xl active:scale-95 transition-transform"
+          >
+            <Radio size={18} />
+            <span className="text-sm font-medium">End conversation</span>
+          </button>
+        </div>
       </div>
     );
   }

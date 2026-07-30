@@ -14,6 +14,9 @@ export interface VoiceSessionListener {
   onStateChange?: (state: VoiceSessionState) => void;
   /** The user's own utterance, once Deepgram finalizes it. */
   onTranscript?: (text: string) => void;
+  /** Live, unstable preview of what the user is saying mid-utterance — may be
+   * revised/replaced by the next call, never a signal to act on. */
+  onInterimTranscript?: (text: string) => void;
   /** Mikey's reply, updated incrementally as it streams in. */
   onReplyText?: (fullText: string) => void;
   onError?: (message: string) => void;
@@ -85,6 +88,17 @@ export function rms(input: Float32Array): number {
   let sum = 0;
   for (let i = 0; i < input.length; i++) sum += input[i] * input[i];
   return Math.sqrt(sum / input.length);
+}
+
+/** Cuts off whatever Mikey is currently saying/thinking and returns to listening —
+ * the same effect the RMS-based auto barge-in has, but callable directly from a
+ * button so interrupting never depends on how loud/sustained your mic picked up
+ * "stop" (background noise, a soft voice, or an aggressive noise-suppression
+ * filter can all make automatic detection miss it). No-op outside an active
+ * session. */
+export function interruptSpeech(): void {
+  if (state === 'idle') return;
+  handleBargeIn();
 }
 
 function handleBargeIn() {
@@ -213,6 +227,9 @@ export async function startVoiceSession(): Promise<void> {
   socket.on('connect', () => socket?.emit('voice:start'));
   socket.on('voice:started', () => { startMicPipeline(); setState('listening'); });
   socket.on('voice:transcript', ({ text }: { text: string }) => { handleFinalTranscript(text); });
+  socket.on('voice:interim', ({ text }: { text: string }) => {
+    if (state === 'listening') for (const l of listeners) l.onInterimTranscript?.(text);
+  });
   socket.on('voice:error', ({ message }: { message: string }) => emitError(message));
   socket.on('connect_error', (err: Error) => emitError(`Couldn't connect: ${err.message}`));
   socket.on('disconnect', () => { if (state !== 'idle') stopVoiceSession(); });
@@ -244,6 +261,7 @@ export function getVoiceSessionState(): VoiceSessionState {
 export function useVoiceSession() {
   const [sessionState, setSessionState] = useState<VoiceSessionState>(getVoiceSessionState());
   const [transcript, setTranscript] = useState('');
+  const [interimTranscript, setInterimTranscript] = useState('');
   const [replyText, setReplyText] = useState('');
   const [error, setError] = useState<string | null>(null);
 
@@ -251,9 +269,10 @@ export function useVoiceSession() {
     return addVoiceSessionListener({
       onStateChange: (s) => {
         setSessionState(s);
-        if (s === 'listening') { setTranscript(''); setReplyText(''); }
+        if (s === 'listening') { setTranscript(''); setInterimTranscript(''); setReplyText(''); }
       },
-      onTranscript: setTranscript,
+      onTranscript: (t) => { setTranscript(t); setInterimTranscript(''); },
+      onInterimTranscript: setInterimTranscript,
       onReplyText: setReplyText,
       onError: setError,
     });
@@ -261,6 +280,7 @@ export function useVoiceSession() {
 
   const start = useCallback(() => { setError(null); startVoiceSession(); }, []);
   const stop = useCallback(() => stopVoiceSession(), []);
+  const interrupt = useCallback(() => interruptSpeech(), []);
 
-  return { state: sessionState, transcript, replyText, error, start, stop };
+  return { state: sessionState, transcript, interimTranscript, replyText, error, start, stop, interrupt };
 }

@@ -25,8 +25,11 @@ export class DeepgramService {
    * utterance — Deepgram's own guidance is to concatenate `is_final: true`
    * segments and only emit once `speech_final: true` arrives, rather than
    * acting on every interim/final fragment individually, since a long
-   * utterance can carry several is_final chunks before speech genuinely ends. */
-  connect(onTranscript: (text: string) => void, onError: (err: Error) => void): DeepgramSession {
+   * utterance can carry several is_final chunks before speech genuinely ends.
+   * onInterim fires on every result (including non-final, low-latency but
+   * unstable) purely for a live "you're saying..." caption — never used to
+   * trigger a reply, only onTranscript's speech_final does that. */
+  connect(onTranscript: (text: string) => void, onError: (err: Error) => void, onInterim?: (text: string) => void): DeepgramSession {
     const apiKey = this.config.get<string>('DEEPGRAM_API_KEY');
     if (!apiKey) throw new Error('DEEPGRAM_API_KEY not configured');
 
@@ -54,6 +57,10 @@ export class DeepgramService {
       if (msg.type !== 'Results') return;
       const alt = msg.channel?.alternatives?.[0];
       if (!alt) return;
+      if (alt.transcript) {
+        const preview = utteranceBuffer ? `${utteranceBuffer} ${alt.transcript}` : alt.transcript;
+        onInterim?.(preview.trim());
+      }
       if (msg.is_final && alt.transcript) {
         utteranceBuffer += (utteranceBuffer ? ' ' : '') + alt.transcript;
       }
