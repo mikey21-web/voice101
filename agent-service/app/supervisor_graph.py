@@ -10,7 +10,7 @@ from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage, ToolMessage, BaseMessage
 from langchain_core.runnables import RunnableConfig
 
-from app.config import Settings
+from app.config import Settings, resolve_llm_credentials
 from app.schemas import SharedMikeyState, AgentState
 from app.backend_client import BackendClient
 from app.memory_client import MemoryClient, MemoryEntry
@@ -43,14 +43,12 @@ def build_supervisor(
 ):
     graph = StateGraph(SharedMikeyState)
 
-    # reasoning_effort is a DeepSeek-reasoner param; passing it to non-reasoning
-    # OpenAI models (gpt-4o-mini, gpt-4.1, etc.) gets rejected with a 400.
-    supports_reasoning_effort = settings.agent_model.startswith(("deepseek", "o1", "o3", "o4", "gpt-5"))
+    api_key, base_url, model_name, supports_reasoning_effort = resolve_llm_credentials(settings)
     model = ChatOpenAI(
-        model=settings.agent_model,
+        model=model_name,
         max_tokens=settings.agent_max_tokens,
-        api_key=settings.deepseek_api_key,
-        base_url=settings.deepseek_base_url,
+        api_key=api_key,
+        base_url=base_url,
         model_kwargs={"reasoning_effort": settings.agent_reasoning_effort} if supports_reasoning_effort else {},
     )
 

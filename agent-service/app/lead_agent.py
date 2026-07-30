@@ -9,7 +9,7 @@ from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage, ToolMessage
 
 from app.schemas import AgentState
-from app.config import Settings
+from app.config import Settings, resolve_llm_credentials
 from app.backend_client import BackendClient
 from app.tools import build_tools, ToolContext, HIGH_IMPACT_TOOLS
 from app.prompt import build_system_prompt
@@ -174,16 +174,14 @@ async def _agent_node(state: AgentState, config) -> AgentState:
     settings: Settings = config["configurable"]["settings"]
     tools = config["configurable"]["tools"]
 
-    if not settings.deepseek_api_key:
-        raise RuntimeError("DEEPSEEK_API_KEY not configured")
-    # reasoning_effort is a DeepSeek-reasoner param; passing it to non-reasoning
-    # OpenAI models (gpt-4o-mini, gpt-4.1, etc.) gets rejected with a 400.
-    supports_reasoning_effort = settings.agent_model.startswith(("deepseek", "o1", "o3", "o4", "gpt-5"))
+    if not settings.deepseek_api_key and not settings.openai_api_key:
+        raise RuntimeError("Neither DEEPSEEK_API_KEY nor OPENAI_API_KEY configured")
+    api_key, base_url, model_name, supports_reasoning_effort = resolve_llm_credentials(settings)
     model = ChatOpenAI(
-        model=settings.agent_model,
+        model=model_name,
         max_tokens=settings.agent_max_tokens,
-        api_key=settings.deepseek_api_key,
-        base_url=settings.deepseek_base_url,
+        api_key=api_key,
+        base_url=base_url,
         model_kwargs={"reasoning_effort": settings.agent_reasoning_effort} if supports_reasoning_effort else {},
     ).bind_tools(tools)
 
