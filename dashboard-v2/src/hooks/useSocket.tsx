@@ -6,6 +6,7 @@ import {
   type ReactNode,
 } from 'react';
 import { io, Socket } from 'socket.io-client';
+import { resolveSocketConfig } from '../lib/voiceSession';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 const EVENT_BUFFER_MAX = 50;
@@ -76,9 +77,16 @@ export function SocketProvider({ children }: { children: ReactNode }) {
 
     if (!token) return;
 
-    const s = io(`${API_URL}/realtime`, {
+    // API_URL is sometimes a same-origin path prefix behind a reverse proxy (e.g.
+    // '/api' in production) rather than an absolute origin — see voiceSession.ts's
+    // resolveSocketConfig for why that breaks a plain io(`${API_URL}/realtime`) call
+    // (wrong namespace, and the transport falls through to the SPA's static file
+    // server instead of the backend). This hook had the identical bug.
+    const socketConfig = resolveSocketConfig(API_URL);
+    const s = io(socketConfig.url, {
       auth: { token },
       transports: ['websocket', 'polling'],
+      path: socketConfig.path,
       reconnection: true,
       reconnectionAttempts: Infinity,
       reconnectionDelay: 1000,
