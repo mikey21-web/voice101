@@ -453,6 +453,16 @@ export default function VoiceCommandUI() {
     handleTranscript(text);
   }, [wakeWord.transcript, handleTranscript, wakeWord]);
 
+  // Two independent always-listening mics (wake word + continuous conversation)
+  // both reacting to the same utterance meant two separate replies got generated
+  // and spoken over each other. Pause wake word for the duration of a continuous
+  // session and resume it only once that session is fully idle again.
+  useEffect(() => {
+    if (voiceSession.state !== 'idle') { wakeWord.stop(); return; }
+    if (wakeWordOn) wakeWord.start();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [voiceSession.state]);
+
   const stopListening = useCallback(() => {
     // Whisper path: leave listening/mode alone here — recorder.onstop owns
     // the transition once transcription finishes, so the "Thinking..." bar
@@ -605,7 +615,7 @@ export default function VoiceCommandUI() {
         {wakeWordOn ? <Ear size={15} /> : <EarOff size={15} />}
       </button>
       <button
-        onClick={voiceSession.start}
+        onClick={() => { wakeWord.stop(); voiceSession.start(); }}
         className="hidden sm:flex fixed bottom-20 right-32 z-[9999] w-9 h-9 rounded-full shadow-lg items-center justify-center border bg-[var(--card)] text-[var(--muted-foreground)] border-[var(--border)] hover:bg-[var(--accent)] transition-all duration-200 [body.overlay-open_&]:hidden [body.mikey-panel-open_&]:hidden"
         title="Start a continuous conversation — always listening, talk over Mikey anytime"
       >
