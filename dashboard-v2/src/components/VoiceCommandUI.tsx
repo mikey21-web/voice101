@@ -106,6 +106,13 @@ export default function VoiceCommandUI() {
   const [listening, setListening] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   const [mode, setMode] = useState<'idle' | 'listening' | 'copilot'>('idle');
+  // Guards startListening() against firing twice for one press — React's `listening`
+  // state hasn't re-rendered yet between two rapid keydown events (OS key-repeat on
+  // a held Ctrl+H, or a fast double-tap), so both would otherwise see the same stale
+  // `listening === false` and each spin up its own SpeechRecognition/MediaRecorder —
+  // two independent listeners hearing the same utterance, each replying and
+  // speaking on its own. A ref updates synchronously, closing that window.
+  const startingRef = useRef(false);
   const recognitionRef = useRef<any>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -234,7 +241,7 @@ export default function VoiceCommandUI() {
 
   const startBrowserRecognition = useCallback(() => {
     const Ctor = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!Ctor) { setResult('Voice input not supported in this browser'); return; }
+    if (!Ctor) { startingRef.current = false; setResult('Voice input not supported in this browser'); return; }
 
     const r = new Ctor();
     // continuous:true + a silence-based stop (below) instead of continuous:false,
@@ -256,7 +263,7 @@ export default function VoiceCommandUI() {
     // startup lag, not just silence — 2.5s there was cutting people off with zero
     // captured text before they'd even finished their first sentence. Once a result
     // has actually come back, tighten back to 2.5s of real silence to auto-send.
-    r.onstart = () => { setListening(true); setMode('listening'); armAutoStop(6000); };
+    r.onstart = () => { startingRef.current = false; setListening(true); setMode('listening'); armAutoStop(6000); };
     r.onresult = (e: any) => {
       for (let i = e.resultIndex; i < e.results.length; i++) {
         if (e.results[i].isFinal) finalText += e.results[i][0].transcript + ' ';
@@ -273,6 +280,7 @@ export default function VoiceCommandUI() {
     };
     r.onend = () => {
       if (stopTimer) clearTimeout(stopTimer);
+      recognitionRef.current = null;
       setListening(false);
       setMode('idle');
       const text = finalText.trim();
@@ -282,7 +290,7 @@ export default function VoiceCommandUI() {
     };
 
     recognitionRef.current = r;
-    try { r.start(); } catch { setResult('Failed to start microphone.'); }
+    try { r.start(); } catch { startingRef.current = false; recognitionRef.current = null; setResult('Failed to start microphone.'); }
   }, [handleTranscript, wakeWordOn, wakeWord]);
 
   // Press-to-talk + Whisper: a clean start/stop recording is transcribed
@@ -332,6 +340,7 @@ export default function VoiceCommandUI() {
         streamRef.current = null;
         try { shadowRef.current?.stop(); } catch {}
         shadowRef.current = null;
+        recorderRef.current = null;
         setMode('copilot');
 
         const blob = new Blob(chunksRef.current, { type: recorder.mimeType || 'audio/webm' });
@@ -369,6 +378,7 @@ export default function VoiceCommandUI() {
       recorderRef.current = recorder;
       recorder.start();
       startShadowRecognition();
+      startingRef.current = false;
       setListening(true);
       setMode('listening');
 
@@ -427,15 +437,18 @@ export default function VoiceCommandUI() {
         // AudioContext unavailable — the 15s cap + manual Tap to send still work.
       }
     } catch {
+      startingRef.current = false;
       setResult('Microphone permission denied.');
     }
   }, [handleTranscript]);
 
   const startListening = useCallback(() => {
+    if (startingRef.current || listening || recognitionRef.current || recorderRef.current) return;
+    startingRef.current = true;
     if (wakeWordOn) wakeWord.stop();
     if (whisperMode) startWhisperRecording();
     else startBrowserRecognition();
-  }, [whisperMode, startWhisperRecording, startBrowserRecognition, wakeWordOn, wakeWord]);
+  }, [listening, whisperMode, startWhisperRecording, startBrowserRecognition, wakeWordOn, wakeWord]);
 
   // "Okay Mikey" hands-free mode: runs a background SpeechRecognition
   // listener (useVoiceInput) that only reacts after hearing the wake phrase,
