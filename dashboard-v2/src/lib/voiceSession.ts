@@ -44,6 +44,21 @@ const BARGE_IN_GRACE_MS = 400;
 let consecutiveLoudFrames = 0;
 let speakingStartedAt = 0;
 
+/** API_URL is sometimes a same-origin path prefix behind a reverse proxy (e.g. '/api'
+ * in production, routing to the backend), not an absolute origin. Socket.io's own
+ * transport path defaults to '/socket.io/' on the page's origin regardless of what
+ * pathname is baked into the connection URL, so a relative prefix like '/api' silently
+ * gets dropped from the handshake and the socket never reaches the backend at all.
+ * Route the transport through that same prefix explicitly, and keep the namespace
+ * (/realtime) separate from it. */
+export function resolveSocketConfig(apiUrl: string): { url: string; path: string } {
+  const isRelative = apiUrl.startsWith('/');
+  return {
+    url: isRelative ? '/realtime' : `${apiUrl}/realtime`,
+    path: isRelative ? `${apiUrl}/socket.io/` : '/socket.io/',
+  };
+}
+
 function setState(next: VoiceSessionState) {
   state = next;
   for (const l of listeners) l.onStateChange?.(next);
@@ -188,18 +203,11 @@ export async function startVoiceSession(): Promise<void> {
   }
   micStream = stream;
 
-  // API_URL is sometimes a same-origin path prefix behind a reverse proxy (e.g. '/api'
-  // in production, routing to the backend), not an absolute origin. Socket.io's own
-  // transport path defaults to '/socket.io/' on the page's origin regardless of what
-  // pathname is baked into the connection URL, so a relative prefix like '/api' silently
-  // gets dropped from the handshake and the socket never reaches the backend at all.
-  // Route the transport through that same prefix explicitly, and keep the namespace
-  // (/realtime) separate from it.
-  const isRelativeApiUrl = API_URL.startsWith('/');
-  socket = io(isRelativeApiUrl ? '/realtime' : `${API_URL}/realtime`, {
+  const socketConfig = resolveSocketConfig(API_URL);
+  socket = io(socketConfig.url, {
     auth: { token },
     transports: ['websocket'],
-    path: isRelativeApiUrl ? `${API_URL}/socket.io/` : '/socket.io/',
+    path: socketConfig.path,
   });
 
   socket.on('connect', () => socket?.emit('voice:start'));

@@ -1,5 +1,18 @@
 import { describe, it, expect } from 'vitest';
-import { float32ToPCM16, rms } from './voiceSession';
+import { float32ToPCM16, rms, resolveSocketConfig } from './voiceSession';
+
+describe('resolveSocketConfig', () => {
+  it('routes through a relative API prefix (production, behind a reverse proxy)', () => {
+    expect(resolveSocketConfig('/api')).toEqual({ url: '/realtime', path: '/api/socket.io/' });
+  });
+
+  it('uses the default socket.io path for an absolute origin (local dev)', () => {
+    expect(resolveSocketConfig('http://localhost:3001')).toEqual({
+      url: 'http://localhost:3001/realtime',
+      path: '/socket.io/',
+    });
+  });
+});
 
 describe('float32ToPCM16', () => {
   it('encodes full-scale and mid-scale samples as little-endian PCM16', () => {
