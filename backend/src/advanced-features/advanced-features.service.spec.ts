@@ -4,12 +4,14 @@ import { AdvancedFeaturesService } from './advanced-features.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { ContactsService } from '../contacts/contacts.service';
+import { LeadsService } from '../leads/leads.service';
 
 describe('AdvancedFeaturesService — blocklist & SLA', () => {
   let service: AdvancedFeaturesService;
   let prisma: any;
   const auditLogs = { log: jest.fn().mockResolvedValue({}) };
   const contacts = { findOrCreate: jest.fn().mockResolvedValue({ id: 'contact-1' }) };
+  const leadsService = { create: jest.fn().mockResolvedValue({ id: 'lead-1' }) };
 
   const mockBlockEntry = { id: 'bl-1', type: 'email', value: 'spam@test.com', reason: 'Known spam' };
   const mockSlaRule = { id: 'sla-1', name: 'Urgent Response', condition: { status: 'NEW' }, responseTimeMinutes: 60, escalationAfterMinutes: 120, escalationUserId: 'user-1', active: true };
@@ -95,6 +97,7 @@ describe('AdvancedFeaturesService — blocklist & SLA', () => {
         { provide: PrismaService, useValue: prisma },
         { provide: AuditLogsService, useValue: auditLogs },
         { provide: ContactsService, useValue: contacts },
+        { provide: LeadsService, useValue: leadsService },
       ],
     }).compile();
     service = module.get<AdvancedFeaturesService>(AdvancedFeaturesService);
@@ -176,8 +179,12 @@ describe('AdvancedFeaturesService — blocklist & SLA', () => {
       ], 'lead');
 
       expect(contacts.findOrCreate).toHaveBeenCalledWith({ name: 'Ramesh Kumar', email: 'ramesh@test.com', phone: '+911234567890' });
-      expect(prisma.lead.create).toHaveBeenCalledWith({
-        data: { source: 'MANUAL', message: 'Interested in 3BHK', interest: null, budget: null, urgency: null, contactId: 'contact-1' },
+      // Lead creation is delegated to LeadsService (validation/scoring/events),
+      // not a raw prisma.lead.create — see leadsService.create call in
+      // advanced-features.service.ts's processImport().
+      expect(leadsService.create).toHaveBeenCalledWith({
+        source: 'MANUAL', message: 'Interested in 3BHK', interest: undefined, budget: undefined, urgency: undefined,
+        contactId: 'contact-1', metadata: { _bulkImport: true },
       });
       expect(result.processed).toBe(1);
       expect(result.failed).toBe(0);
@@ -190,8 +197,9 @@ describe('AdvancedFeaturesService — blocklist & SLA', () => {
       ], 'lead');
 
       expect(contacts.findOrCreate).not.toHaveBeenCalled();
-      expect(prisma.lead.create).toHaveBeenCalledWith({
-        data: { source: 'REFERRAL', message: null, interest: null, budget: null, urgency: null, contactId: 'existing-contact-id' },
+      expect(leadsService.create).toHaveBeenCalledWith({
+        source: 'REFERRAL', message: undefined, interest: undefined, budget: undefined, urgency: undefined,
+        contactId: 'existing-contact-id', metadata: { _bulkImport: true },
       });
       expect(result.processed).toBe(1);
     });

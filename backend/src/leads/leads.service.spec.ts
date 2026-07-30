@@ -9,6 +9,8 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { ContactsService } from '../contacts/contacts.service';
 import { MetricsService } from '../monitoring/metrics.service';
 import { RealtimeGateway } from '../realtime/realtime.gateway';
+import { LeadOrchestratorService } from '../voice-agent/lead-orchestrator.service';
+import { LeadContextService } from './lead-context.service';
 
 describe('LeadsService', () => {
   let service: LeadsService;
@@ -31,13 +33,21 @@ describe('LeadsService', () => {
   };
 
   beforeEach(async () => {
+    // findOne() queries via findFirst while other call sites use findUnique for the
+    // same row — sharing one jest.fn() keeps both in sync with whatever a test sets
+    // the lead's existence to (see the identical fix in campaigns.service.spec.ts).
+    const findLeadOne = jest.fn().mockResolvedValue(mockLead);
     prisma = {
       lead: {
         findMany: jest.fn().mockResolvedValue([mockLead]),
-        findUnique: jest.fn().mockResolvedValue(mockLead),
+        findUnique: findLeadOne,
+        findFirst: findLeadOne,
         create: jest.fn().mockResolvedValue(mockLead),
         update: jest.fn().mockImplementation(({ data }) => Promise.resolve({ ...mockLead, ...data })),
         count: jest.fn().mockResolvedValue(1),
+      },
+      contact: {
+        findUnique: jest.fn().mockResolvedValue({ tenantId: 'default-tenant' }),
       },
       scoringRule: {
         findMany: jest.fn().mockResolvedValue([]),
@@ -59,6 +69,8 @@ describe('LeadsService', () => {
         { provide: ContactsService, useValue: contacts },
         { provide: MetricsService, useValue: metrics },
         { provide: RealtimeGateway, useValue: { broadcastLeadUpdate: jest.fn(), sendToUser: jest.fn(), emitToTenant: jest.fn() } },
+        { provide: LeadOrchestratorService, useValue: { onLeadCreated: jest.fn().mockResolvedValue(undefined) } },
+        { provide: LeadContextService, useValue: { enrich: jest.fn().mockResolvedValue(undefined) } },
       ],
     }).compile();
 

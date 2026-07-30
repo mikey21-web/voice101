@@ -91,10 +91,17 @@ describe('CampaignsService', () => {
   };
 
   beforeEach(async () => {
+    // findOne() (used by completeCampaign/startCampaign/getTimeline) queries via
+    // findFirst, while a couple of call sites query the same row via findUnique —
+    // sharing one jest.fn() keeps both in sync with whatever a test sets the
+    // campaign's existence to, the same way a real Prisma client would return the
+    // same row (or none) from either query shape.
+    const findCampaignOne = jest.fn().mockResolvedValue(mockCampaign);
     prisma = {
       campaign: {
         findMany: jest.fn().mockResolvedValue([mockCampaign]),
-        findUnique: jest.fn().mockResolvedValue(mockCampaign),
+        findUnique: findCampaignOne,
+        findFirst: findCampaignOne,
         create: jest.fn().mockResolvedValue(mockCampaign),
         update: jest.fn().mockImplementation(({ data }) =>
           Promise.resolve({ ...mockCampaign, ...data }),

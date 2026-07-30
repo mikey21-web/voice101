@@ -2,6 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotificationsService } from './notifications.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { TwilioSmsAdapter } from '../shared/adapters/sms.adapter';
+import { WhatsAppCloudAdapter } from '../shared/adapters/messaging.adapter';
+import { NormalizationService } from '../shared/normalization.service';
 
 describe('NotificationsService', () => {
   let service: NotificationsService;
@@ -30,6 +32,8 @@ describe('NotificationsService', () => {
         NotificationsService,
         { provide: PrismaService, useValue: prisma },
         { provide: TwilioSmsAdapter, useValue: smsAdapter },
+        { provide: WhatsAppCloudAdapter, useValue: { sendMessage: jest.fn().mockResolvedValue({ success: true }) } },
+        { provide: NormalizationService, useValue: { normalizePhone: (p: string) => p } },
       ],
     }).compile();
 

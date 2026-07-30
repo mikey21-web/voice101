@@ -14,6 +14,9 @@ describe('PublicProfileService', () => {
         findUnique: jest.fn().mockResolvedValue(null),
         upsert: jest.fn().mockImplementation(({ create, update }) => Promise.resolve({ id: 'pp-1', ...create, ...update })),
       },
+      property: {
+        findMany: jest.fn().mockResolvedValue([]),
+      },
     };
 
     const module: TestingModule = await Test.createTestingModule({

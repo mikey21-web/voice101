@@ -44,6 +44,7 @@ describe('EventsOpsService', () => {
         create: jest.fn().mockImplementation(({ data }) => Promise.resolve({ id: 'exp-1', ...data })),
       },
       task: { findMany: jest.fn().mockResolvedValue([]) },
+      siteVisit: { findMany: jest.fn().mockResolvedValue([]) },
     };
 
     const module: TestingModule = await Test.createTestingModule({

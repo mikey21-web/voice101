@@ -9,6 +9,7 @@ import { WhatsAppCloudAdapter, TelegramBotAdapter } from '../shared/adapters/mes
 import { ConfigService } from '@nestjs/config';
 import { FailuresService } from '../failures/failures.service';
 import { EmailAdapter } from '../shared/adapters/email.adapter';
+import { NormalizationService } from '../shared/normalization.service';
 
 describe('ConversationsService', () => {
   let service: ConversationsService;
@@ -103,6 +104,7 @@ describe('ConversationsService', () => {
         { provide: ConfigService, useValue: configService },
         { provide: FailuresService, useValue: failuresService },
         { provide: EmailAdapter, useValue: emailAdapter },
+        { provide: NormalizationService, useValue: { normalizePhone: (p: string) => p } },
       ],
     }).compile();
 
@@ -410,8 +412,10 @@ describe('ConversationsService', () => {
     await service.create(data);
     await new Promise(process.nextTick);
 
+    // WhatsApp Cloud API's "to" field is digits-only (no leading +) — the service
+    // strips it after normalizePhone() puts the number in E.164 form.
     expect(whatsAppAdapter.sendMessage).toHaveBeenCalledWith(
-      '+1234567890',
+      '1234567890',
       'WhatsApp message',
       expect.objectContaining({
         phoneNumberId: 'whatsapp-phone-id',
@@ -526,7 +530,7 @@ describe('ConversationsService', () => {
     await service.create(data);
     await new Promise(process.nextTick);
 
-    expect(whatsAppAdapter.sendMessage).toHaveBeenCalledWith('+2222222222', 'WhatsApp msg', expect.any(Object));
+    expect(whatsAppAdapter.sendMessage).toHaveBeenCalledWith('2222222222', 'WhatsApp msg', expect.any(Object));
   });
 
   it('should not dispatch for non-standard channels like EMAIL', async () => {

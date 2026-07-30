@@ -8,6 +8,9 @@ import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { AgentClientService } from '../agent/agent-client.service';
 import { MetricsService } from '../monitoring/metrics.service';
 import { TimelineService } from '../timeline/timeline.service';
+import { OutboundWebhookDispatchService } from '../shared/outbound-webhook-dispatch.service';
+import { ConfigService } from '@nestjs/config';
+import { FlowRuntimeService } from '../flows/flow-runtime.service';
 
 describe('WebhooksService', () => {
   let service: WebhooksService;
@@ -28,6 +31,9 @@ describe('WebhooksService', () => {
       webhookEvent: {
         findUnique: jest.fn().mockResolvedValue(null),
         create: jest.fn().mockResolvedValue({}),
+      },
+      tenant: {
+        findUnique: jest.fn().mockResolvedValue({ settings: {} }),
       },
       lead: {
         findFirst: jest.fn().mockResolvedValue(null),
@@ -54,6 +60,9 @@ describe('WebhooksService', () => {
         { provide: AgentClientService, useValue: agentClient },
         { provide: MetricsService, useValue: metrics },
         { provide: TimelineService, useValue: timeline },
+        { provide: OutboundWebhookDispatchService, useValue: { send: jest.fn().mockResolvedValue(undefined), dispatch: jest.fn().mockResolvedValue([]) } },
+        { provide: ConfigService, useValue: { get: jest.fn() } },
+        { provide: FlowRuntimeService, useValue: { handleInbound: jest.fn().mockResolvedValue(undefined) } },
       ],
     }).compile();
 

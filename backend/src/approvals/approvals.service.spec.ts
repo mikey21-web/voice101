@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ApprovalsService } from './approvals.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
+import { EventsService } from '../events/events.service';
 import { ForbiddenException } from '@nestjs/common';
 
 describe('ApprovalsService', () => {
@@ -27,7 +28,7 @@ describe('ApprovalsService', () => {
       },
     };
     const module: TestingModule = await Test.createTestingModule({
-      providers: [ApprovalsService, { provide: PrismaService, useValue: prisma }, { provide: AuditLogsService, useValue: { log: jest.fn() } }],
+      providers: [ApprovalsService, { provide: PrismaService, useValue: prisma }, { provide: AuditLogsService, useValue: { log: jest.fn() } }, { provide: EventsService, useValue: { emit: jest.fn() } }],
     }).compile();
     service = module.get(ApprovalsService);
   });

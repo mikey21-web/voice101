@@ -52,6 +52,12 @@ async def test_extract_fields(tool_ctx):
         respx.patch("http://test:3001/leads/lead-1").mock(
             return_value=httpx.Response(200, json={"ok": True})
         )
+        # extract_fields re-scores the lead after saving (see the comment above that
+        # call in tools.py) — a real, deliberate follow-up request, not something
+        # this test can leave unmocked.
+        respx.post("http://test:3001/leads/lead-1/score").mock(
+            return_value=httpx.Response(200, json={"score": 42, "segment": "warm"})
+        )
         result = await ef.ainvoke({"fields": [{"key": "email", "value": "a@b.com"}]})
     assert result.startswith("ok:")
 

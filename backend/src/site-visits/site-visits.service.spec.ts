@@ -3,6 +3,7 @@ import { SiteVisitsService } from './site-visits.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { TimelineService } from '../timeline/timeline.service';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
+import { AutomationSchedulerService } from '../automation/automation-scheduler.service';
 import { ForbiddenException } from '@nestjs/common';
 
 describe('SiteVisitsService', () => {
@@ -49,6 +50,7 @@ describe('SiteVisitsService', () => {
         { provide: PrismaService, useValue: prisma },
         { provide: TimelineService, useValue: { add: jest.fn() } },
         { provide: AuditLogsService, useValue: { log: jest.fn() } },
+        { provide: AutomationSchedulerService, useValue: { schedule: jest.fn(), cancel: jest.fn() } },
       ],
     }).compile();
 
