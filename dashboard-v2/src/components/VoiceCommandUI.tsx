@@ -197,7 +197,12 @@ export default function VoiceCommandUI() {
       setPendingFilter(cmd.page, { filters: Object.keys(filters).length ? filters : undefined });
       window.location.hash = PAGE_MAP[cmd.page];
       const spoken = `Showing ${cmd.page}${cmd.filter ? ', ' + cmd.filter : ''}`;
-      setResult(`${transcriptLine}\n→ ${spoken}`);
+      // mikeyVoiceOn is one shared on/off switch across four surfaces (this
+      // component, MikeyWidget, CopilotPage, OverviewPage's briefing mute) — muting
+      // it anywhere silently kills voice everywhere else too, with nothing telling
+      // you why a command "worked" but said nothing. Surface it right here instead.
+      const mutedNote = localStorage.getItem('mikeyVoiceOn') === 'false' ? ' (voice is muted)' : '';
+      setResult(`${transcriptLine}\n→ ${spoken}${mutedNote}`);
       speakReply(spoken);
       // Wait for the audio to actually finish before dropping back to idle —
       // setting mode('idle') immediately here (the old behavior) meant the Stop
@@ -231,16 +236,17 @@ export default function VoiceCommandUI() {
         setResult(`${transcriptLine}\n→ ${liveCaption}`);
       },
     }, controller.signal).then((res) => {
+      const mutedNote = localStorage.getItem('mikeyVoiceOn') === 'false' ? ' (voice is muted)' : '';
       const nav = (res.actions || []).find((a: any) => a.tool === 'navigate_ui' && a.status !== 'error');
       if (nav) {
         const page = resolvePage(nav.args.page);
         setPendingFilter(page, { filters: nav.args.filters, highlightId: nav.args.highlightId, zoom: nav.args.zoom, summary: nav.args.summary });
         window.location.hash = PAGE_MAP[page] || '/' + page;
         const summary = nav.args.summary || `Navigated to ${page}`;
-        setResult(`${transcriptLine}\n→ ${summary}`);
+        setResult(`${transcriptLine}\n→ ${summary}${mutedNote}`);
       } else {
         const reply = res.reply || 'Done';
-        setResult(`${transcriptLine}\n→ ${reply}`);
+        setResult(`${transcriptLine}\n→ ${reply}${mutedNote}`);
       }
     }).catch(() => {
       setResult(`${transcriptLine}\n→ Couldn't reach Mikey just now. Check your connection and try again.`);
