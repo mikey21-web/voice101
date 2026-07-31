@@ -127,6 +127,13 @@ const PageComponents: Record<string, React.LazyExoticComponent<React.ComponentTy
   VoiceCallLogs: lazy(() => import("./pages/VoiceCallLogsPage")),
   VoiceKnowledgeBase: lazy(() => import("./pages/VoiceKnowledgeBasePage")),
   VoicePostCallWorkflows: lazy(() => import("./pages/VoicePostCallWorkflowsPage")),
+  VoiceDashboard: lazy(() => import("./pages/VoiceDashboardPage")),
+  VoiceInstantLeads: lazy(() => import("./pages/VoiceInstantLeadsPage")),
+  VoiceInboundCalls: lazy(() => import("./pages/VoiceInboundCallsPage")),
+  VoiceAllConversations: lazy(() => import("./pages/VoiceAllConversationsPage")),
+  VoiceLeadsResults: lazy(() => import("./pages/VoiceLeadsResultsPage")),
+  VoicePhoneNumbers: lazy(() => import("./pages/VoicePhoneNumbersPage")),
+  VoicePerformance: lazy(() => import("./pages/VoicePerformancePage")),
   AlliedInventory: lazy(() => import("./pages/AlliedInventoryPage")),
   SalesTargets: lazy(() => import("./pages/SalesTargetsPage")),
   DigitalSalesRoom: lazy(() => import("./pages/DigitalSalesRoomPage")),
@@ -172,6 +179,13 @@ function getPageKey(raw: string): string {
   if (path.startsWith("/voice-call-logs")) return "VoiceCallLogs";
   if (path.startsWith("/voice-knowledge-base")) return "VoiceKnowledgeBase";
   if (path.startsWith("/voice-post-call-workflows")) return "VoicePostCallWorkflows";
+  if (path.startsWith("/voice-dashboard")) return "VoiceDashboard";
+  if (path.startsWith("/voice-instant-leads")) return "VoiceInstantLeads";
+  if (path.startsWith("/voice-inbound-calls")) return "VoiceInboundCalls";
+  if (path.startsWith("/voice-all-conversations")) return "VoiceAllConversations";
+  if (path.startsWith("/voice-leads-results")) return "VoiceLeadsResults";
+  if (path.startsWith("/voice-phone-numbers")) return "VoicePhoneNumbers";
+  if (path.startsWith("/voice-performance")) return "VoicePerformance";
   if (/^\/voice-employees\/[^/]+$/.test(path)) return "VoiceEmployeeDetail";
   if (path.startsWith("/voice-employees")) return "VoiceEmployees";
   if (path.startsWith("/voice-agent")) return "VoiceAgent";
@@ -232,6 +246,13 @@ function getPageKey(raw: string): string {
     "/voice-call-logs": "VoiceCallLogs",
     "/voice-knowledge-base": "VoiceKnowledgeBase",
     "/voice-post-call-workflows": "VoicePostCallWorkflows",
+    "/voice-dashboard": "VoiceDashboard",
+    "/voice-instant-leads": "VoiceInstantLeads",
+    "/voice-inbound-calls": "VoiceInboundCalls",
+    "/voice-all-conversations": "VoiceAllConversations",
+    "/voice-leads-results": "VoiceLeadsResults",
+    "/voice-phone-numbers": "VoicePhoneNumbers",
+    "/voice-performance": "VoicePerformance",
     "/digital-sales-room": "DigitalSalesRoom",
     "/advanced-marketing": "AdvancedMarketing",
     "/onboarding-progress": "OnboardingProgress",

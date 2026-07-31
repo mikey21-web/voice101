@@ -15,13 +15,14 @@ export class VoiceCallService {
 
   constructor(private prisma: PrismaService, private dograh: DograhService) {}
 
-  async list(tenantId: string, filters: { employeeId?: string; campaignId?: string; disposition?: string; limit?: number } = {}) {
+  async list(tenantId: string, filters: { employeeId?: string; campaignId?: string; disposition?: string; direction?: string; limit?: number } = {}) {
     const calls = await this.prisma.voiceCall.findMany({
       where: {
         tenantId,
         employeeId: filters.employeeId,
         campaignId: filters.campaignId,
         disposition: filters.disposition,
+        direction: filters.direction,
       },
       orderBy: { createdAt: 'desc' },
       take: filters.limit ?? 50,

@@ -349,7 +349,7 @@ export interface VoiceEngineCall {
   summary: string | null; outcome: any; createdAt: string; employee?: { name: string };
   quality: { score: number; violations: any[]; agentTurns: number } | null;
 }
-export async function fetchVoiceEngineCalls(filters: { employeeId?: string; limit?: number } = {}) {
+export async function fetchVoiceEngineCalls(filters: { employeeId?: string; direction?: string; disposition?: string; limit?: number } = {}) {
   const q = new URLSearchParams(filters as any).toString();
   return api(`/voice-calls?${q}`) as Promise<VoiceEngineCall[]>;
 }
@@ -391,6 +391,12 @@ export interface VoiceEngineNumber { id: string; number: string; provider: strin
 export async function fetchVoiceEngineNumbers() { return api('/voice-numbers') as Promise<VoiceEngineNumber[]>; }
 export async function addVoiceEngineNumber(number: string, provider = 'twilio') {
   return api('/voice-numbers', { method: 'POST', body: JSON.stringify({ number, provider }) }) as Promise<VoiceEngineNumber>;
+}
+export async function setVoiceEngineNumberKyc(id: string, status: 'not_started' | 'pending' | 'verified') {
+  return api(`/voice-numbers/${id}/kyc`, { method: 'PATCH', body: JSON.stringify({ status }) }) as Promise<VoiceEngineNumber>;
+}
+export async function assignVoiceEngineNumber(id: string, employeeId: string) {
+  return api(`/voice-numbers/${id}/assign/${employeeId}`, { method: 'POST' });
 }
 
 export interface VoiceKbDocument { id: number; document_uuid: string; filename: string; processing_status: string; total_chunks: number; created_at: string; }

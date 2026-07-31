@@ -16,7 +16,9 @@ import { isFeatureEnabled, getLabel, getBusinessName, getNicheLogo, onConfigChan
 const featureMap: Record<string, string> = {
   "/": "overview", "/queue": "overview", "/builder-desk": "overview", "/leads": "leads", "/smart-lists": "leads", "/pipeline": "pipeline", "/contacts": "contacts",
   "/campaigns": "campaigns", "/forms": "forms", "/qr-codes": "qrCodes",
-  "/voice-agent": "voiceAgent", "/voice-employees": "voiceAgent", "/voice-agent-settings": "voiceAgent", "/voice-campaigns": "voiceAgent", "/voice-call-logs": "voiceAgent", "/voice-knowledge-base": "voiceAgent", "/voice-post-call-workflows": "voiceAgent", "/conversations": "messages", "/templates": "templates", "/media": "media",
+  "/voice-agent": "voiceAgent", "/voice-employees": "voiceAgent", "/voice-agent-settings": "voiceAgent", "/voice-campaigns": "voiceAgent", "/voice-call-logs": "voiceAgent", "/voice-knowledge-base": "voiceAgent", "/voice-post-call-workflows": "voiceAgent",
+  "/voice-dashboard": "voiceAgent", "/voice-instant-leads": "voiceAgent", "/voice-inbound-calls": "voiceAgent", "/voice-all-conversations": "voiceAgent", "/voice-leads-results": "voiceAgent", "/voice-phone-numbers": "voiceAgent", "/voice-performance": "voiceAgent",
+  "/conversations": "messages", "/templates": "templates", "/media": "media",
   "/scoring": "scoring", "/rules": "routing",
   "/ai-campaigns": "aiCampaigns", "/ai-agent": "aiAgent", "/copilot": "copilot",
   "/webhooks": "webhooks", "/sms": "sms", "/widget": "widget", "/calls": "calls", "/sync-logs": "syncLogs",
@@ -83,16 +85,34 @@ const rawNavGroups = [
   {
     label: "Outreach",
     items: [
-      { label: "Voice Agent", icon: Phone, path: "/voice-agent" },
-      { label: "AI Employees", icon: Users, path: "/voice-employees" },
-      { label: "Voice Campaigns", icon: Megaphone, path: "/voice-campaigns" },
-      { label: "Call Logs", icon: PhoneCall, path: "/voice-call-logs" },
-      { label: "Voice Knowledge Base", icon: BookOpen, path: "/voice-knowledge-base" },
-      { label: "Post-Call Workflows", icon: GitBranch, path: "/voice-post-call-workflows" },
-      { label: "Voice Agent Settings", icon: Settings, path: "/voice-agent-settings" },
       { label: "Message Log", icon: MessageSquare, path: "/conversations" },
       { label: "Templates", icon: FileText, path: "/templates" },
       { label: "Media", icon: Layers, path: "/media" },
+    ],
+  },
+  {
+    label: "AI Voice Agents",
+    items: [
+      { label: "Dashboard", icon: LayoutDashboard, path: "/voice-dashboard" },
+      { label: "My Employees", icon: Users, path: "/voice-employees" },
+    ],
+  },
+  {
+    label: "Voice · Calling",
+    items: [
+      { label: "Instant Leads", icon: Phone, path: "/voice-instant-leads" },
+      { label: "Bulk Campaigns", icon: Megaphone, path: "/voice-campaigns" },
+      { label: "Inbound Calls", icon: PhoneCall, path: "/voice-inbound-calls" },
+    ],
+  },
+  {
+    label: "Voice · Results & Setup",
+    items: [
+      { label: "Leads & Results", icon: BarChart3, path: "/voice-leads-results" },
+      { label: "All Conversations", icon: MessageSquare, path: "/voice-all-conversations" },
+      { label: "Train Employees", icon: BookOpen, path: "/voice-knowledge-base" },
+      { label: "Phone Numbers", icon: Settings, path: "/voice-phone-numbers" },
+      { label: "Performance", icon: Activity, path: "/voice-performance" },
     ],
   },
   {

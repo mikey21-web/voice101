@@ -14,8 +14,8 @@ export class VoiceCallController {
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('OWNER', 'ADMIN', 'MANAGER', 'SALES_AGENT')
-  list(@Req() req: any, @Query('employeeId') employeeId?: string, @Query('campaignId') campaignId?: string, @Query('disposition') disposition?: string, @Query('limit') limit?: string) {
-    return this.calls.list(req.user.tenantId, { employeeId, campaignId, disposition, limit: limit ? parseInt(limit, 10) : undefined });
+  list(@Req() req: any, @Query('employeeId') employeeId?: string, @Query('campaignId') campaignId?: string, @Query('disposition') disposition?: string, @Query('direction') direction?: string, @Query('limit') limit?: string) {
+    return this.calls.list(req.user.tenantId, { employeeId, campaignId, disposition, direction, limit: limit ? parseInt(limit, 10) : undefined });
   }
 
   @Get('live')
