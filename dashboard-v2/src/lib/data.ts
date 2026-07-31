@@ -334,6 +334,16 @@ export async function testCallVoiceEmployee(id: string, toNumber: string) {
   return api(`/voice-employees/${id}/test-call`, { method: 'POST', body: JSON.stringify({ toNumber }) }) as Promise<{ success: boolean; callSid?: string }>;
 }
 
+// "Tell us how the call should go" — one free-text description in, a full section-graph draft out.
+export interface GeneratedFlowDraft {
+  name: string; role: string; persona: string; greeting: string;
+  steps: Array<{ key: string; label: string; prompt: string; extract: Array<{ name: string; type: string; prompt: string }> }>;
+  outcomes: Array<{ key: string; label: string; condition: string; closingPrompt: string }>;
+}
+export async function generateVoiceEmployeeDraft(description: string, businessName?: string) {
+  return api('/voice-employees/generate-draft', { method: 'POST', body: JSON.stringify({ description, businessName }) }) as Promise<GeneratedFlowDraft>;
+}
+
 export interface VoiceEngineCall {
   id: string; employeeId: string; toNumber: string; durationS: number | null; disposition: string | null;
   summary: string | null; outcome: any; createdAt: string; employee?: { name: string };

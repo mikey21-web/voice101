@@ -3,6 +3,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { VoiceEmployeeService, EmployeeInput } from './voice-employee.service';
+import { CallFlowGeneratorService } from './call-flow-generator.service';
 
 /** Multi-employee CRUD — the core object model of the voice-agent engine. Route shape mirrors
  * Outpero's /employees surface (see REVERSE-ENGINEERED.md) so the frontend can be wired the
@@ -10,7 +11,15 @@ import { VoiceEmployeeService, EmployeeInput } from './voice-employee.service';
 @Controller('voice-employees')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class VoiceEmployeeController {
-  constructor(private service: VoiceEmployeeService) {}
+  constructor(private service: VoiceEmployeeService, private generator: CallFlowGeneratorService) {}
+
+  /** Mirrors Outpero's "Tell us how the call should go" hire step: one free-text description
+   * comes in, a full section-graph draft comes back for the user to review before create(). */
+  @Post('generate-draft')
+  @Roles('OWNER', 'ADMIN')
+  async generateDraft(@Body() body: { description: string; businessName?: string }) {
+    return this.generator.generate(body.description, body.businessName);
+  }
 
   @Get()
   @Roles('OWNER', 'ADMIN', 'MANAGER')
