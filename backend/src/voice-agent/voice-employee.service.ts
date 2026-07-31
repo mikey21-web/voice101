@@ -195,7 +195,11 @@ export class VoiceEmployeeService {
     const definition = this.dograh.compileEmployeeDefinition({
       employeeId: employee.id,
       composedPersona,
-      greeting: employee.welcomeMessage || `Hello, is this {{first_name}}?`,
+      // No {{first_name}} in the default — most calls (instant leads, test calls) have no name
+      // in initial_context, and an unresolved template var reads as broken/dead air to the
+      // caller ("Hello, is this ?"). Employees that always have a name (CSV campaigns, CRM
+      // leads) can opt into personalization by writing their own welcomeMessage.
+      greeting: employee.welcomeMessage || `Hi there! Thanks for picking up.`,
       sections: employee.sections.map((s) => ({
         sectionKey: s.sectionKey, label: s.label, prompt: s.prompt, enabled: s.enabled,
         order: s.order, nodeType: s.nodeType, edges: (s.edges as any) || [],
@@ -215,7 +219,10 @@ export class VoiceEmployeeService {
       await this.dograh.publishWorkflowDefinition(workflowId, `employee-${employee.id}`, definition);
     }
 
-    const nextRevision = employee.revision + (employee.hasUnpublishedChanges ? 1 : 0);
+    // Always bump the revision — publish is an explicit user action, and gating the bump on
+    // hasUnpublishedChanges collided with the last version's row when nothing had changed since
+    // (unique constraint on employee_id+revision).
+    const nextRevision = employee.revision + 1;
 
     const [updated] = await this.prisma.$transaction([
       this.prisma.voiceEmployee.update({
