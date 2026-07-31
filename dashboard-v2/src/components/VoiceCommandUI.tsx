@@ -4,7 +4,7 @@ import { setPendingFilter } from '../lib/pendingSearch';
 import { apiUpload } from '../lib/api';
 import { useVoiceInput } from '../lib/useVoiceInput';
 import { PAGE_MAP, PAGE_ALIASES, fuzzyPageMatch, resolvePage, canonical } from '../lib/pageMap';
-import { speakStreamed, resetSpeech, queueSpeechSegment, stopSpeaking } from '../lib/streamingAudioPlayer';
+import { speakStreamed, resetSpeech, queueSpeechSegment, stopSpeaking, waitUntilDoneSpeaking } from '../lib/streamingAudioPlayer';
 import { chatStream } from '../lib/streamingChat';
 import { useVoiceSession } from '../lib/voiceSession';
 
@@ -106,6 +106,11 @@ export default function VoiceCommandUI() {
   const [listening, setListening] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   const [mode, setMode] = useState<'idle' | 'listening' | 'copilot'>('idle');
+  // Live, still-being-said preview while the browser recognizer is listening —
+  // separate from `result` (the finished transcript/answer), which takes render
+  // priority in the JSX below and would otherwise hide the listening/waveform UI
+  // the instant this got set.
+  const [interimText, setInterimText] = useState('');
   // Guards startListening() against firing twice for one press — React's `listening`
   // state hasn't re-rendered yet between two rapid keydown events (OS key-repeat on
   // a held Ctrl+H, or a fast double-tap), so both would otherwise see the same stale
@@ -194,9 +199,16 @@ export default function VoiceCommandUI() {
       const spoken = `Showing ${cmd.page}${cmd.filter ? ', ' + cmd.filter : ''}`;
       setResult(`${transcriptLine}\n→ ${spoken}`);
       speakReply(spoken);
-      setMode('idle');
-      setListening(false);
-      if (wakeWordOn) wakeWord.start();
+      // Wait for the audio to actually finish before dropping back to idle —
+      // setting mode('idle') immediately here (the old behavior) meant the Stop
+      // button, which only shows while mode === 'copilot', never had a chance to
+      // render: speakReply()'s fetch+playback is async, so Mikey was still
+      // audibly talking well after the UI had already gone silent.
+      waitUntilDoneSpeaking().finally(() => {
+        setMode('idle');
+        setListening(false);
+        if (wakeWordOn) wakeWord.start();
+      });
       return;
     }
 
@@ -248,7 +260,12 @@ export default function VoiceCommandUI() {
     // which ended the whole recognition after the FIRST pause — cutting off any
     // command with a natural pause in the middle ("show me... hot leads").
     r.continuous = true;
-    r.interimResults = false;
+    // Was false, which meant zero feedback of what the mic was hearing until the
+    // whole recognition ended — you'd get either a final answer or "Didn't catch
+    // that" with nothing in between. Interim results give a live, still-being-said
+    // caption (see onresult below) the same way the continuous-session mode
+    // already has via Deepgram.
+    r.interimResults = true;
     r.lang = 'en-US';
 
     let finalText = '';
@@ -263,11 +280,14 @@ export default function VoiceCommandUI() {
     // startup lag, not just silence — 2.5s there was cutting people off with zero
     // captured text before they'd even finished their first sentence. Once a result
     // has actually come back, tighten back to 2.5s of real silence to auto-send.
-    r.onstart = () => { startingRef.current = false; setListening(true); setMode('listening'); armAutoStop(6000); };
+    r.onstart = () => { startingRef.current = false; setListening(true); setMode('listening'); setInterimText(''); armAutoStop(6000); };
     r.onresult = (e: any) => {
+      let interim = '';
       for (let i = e.resultIndex; i < e.results.length; i++) {
         if (e.results[i].isFinal) finalText += e.results[i][0].transcript + ' ';
+        else interim += e.results[i][0].transcript;
       }
+      setInterimText((finalText + interim).trim());
       armAutoStop(2500);
     };
     r.onerror = (e: any) => {
@@ -283,6 +303,7 @@ export default function VoiceCommandUI() {
       recognitionRef.current = null;
       setListening(false);
       setMode('idle');
+      setInterimText('');
       const text = finalText.trim();
       if (text) handleTranscript(text);
       else setResult("Didn't catch that — tap the mic and speak.");
@@ -661,7 +682,13 @@ export default function VoiceCommandUI() {
   if (listening || mode === 'copilot') {
     const thinking = mode === 'copilot';
     return (
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999] animate-fade-up flex flex-col items-center gap-2">
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999] animate-fade-up flex flex-col items-center gap-2 max-w-lg w-full mx-4">
+        {!thinking && interimText && (
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] px-5 py-3 shadow-2xl flex items-start gap-2 w-full pointer-events-none">
+            <Mic size={14} className="text-[var(--primary)] mt-0.5 shrink-0 animate-pulse" />
+            <p className="text-xs text-[var(--muted-foreground)] italic">{interimText}</p>
+          </div>
+        )}
         <div className="rounded-full border border-[var(--border)] bg-[var(--card)] px-5 py-2.5 shadow-2xl flex items-center gap-3 pointer-events-none">
           <div className="flex items-end gap-0.5 h-5">
             {Array.from({ length: 5 }).map((_, i) => (

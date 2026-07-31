@@ -163,3 +163,17 @@ export function speakStreamed(text: string): void {
 export function stopSpeaking(): void {
   resetSpeech();
 }
+
+/** Resolves once everything queued has actually finished playing (not just been
+ * fetched/scheduled) — queueSpeechSegment's own promise chain only tracks
+ * scheduling, since Web Audio's src.start() returns immediately while playback
+ * continues. Callers that need to know "is Mikey still audibly talking" (e.g. to
+ * keep an interrupt button visible for the real duration) should await this. */
+export async function waitUntilDoneSpeaking(): Promise<void> {
+  await segmentQueue;
+  const ctx = audioCtx;
+  if (!ctx) return;
+  while (ctx.currentTime < nextStartTime) {
+    await new Promise(r => setTimeout(r, 100));
+  }
+}
