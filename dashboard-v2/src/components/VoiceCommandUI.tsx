@@ -290,13 +290,22 @@ export default function VoiceCommandUI() {
       setInterimText((finalText + interim).trim());
       armAutoStop(2500);
     };
+    let lastErrorReason: string | null = null;
     r.onerror = (e: any) => {
+      // Always log the real reason — this was being silently thrown away for
+      // 'aborted'/'no-speech', which is why repeated "Didn't catch that" reports
+      // couldn't be diagnosed any further than "the mic didn't work." Chrome's
+      // SpeechRecognition is cloud-based (audio goes to Google's servers), so
+      // 'network' here specifically means that request never got a response —
+      // not a local mic problem at all, and no code-side timing fix can address it.
+      console.warn('[VoiceCommandUI] SpeechRecognition error:', e.error);
+      lastErrorReason = e.error;
       // 'no-speech' (silence until timeout) and 'aborted' (stopped manually,
       // or a fresh start cut off the previous session) are routine, not
       // failures — surfacing "Microphone error" for either was overwriting a
       // clean stop or empty attempt with a scary, wrong message every time.
       if (e.error === 'aborted' || e.error === 'no-speech') return;
-      setResult('Microphone error. Check permissions.');
+      setResult(`Microphone error: ${e.error}. Check permissions and network.`);
     };
     r.onend = () => {
       if (stopTimer) clearTimeout(stopTimer);
@@ -306,6 +315,13 @@ export default function VoiceCommandUI() {
       setInterimText('');
       const text = finalText.trim();
       if (text) handleTranscript(text);
+      // Distinguish "Chrome's own recognizer reported no-speech / network failure"
+      // from "recognition ran clean but produced literally nothing" — same visible
+      // failure, different root cause, and without this the message alone gives no
+      // way to tell "mic isn't picking anything up" apart from "reached Google's
+      // speech service and it timed out."
+      else if (lastErrorReason === 'network') setResult("Couldn't reach the speech recognition service — check your internet connection (this runs through Google's servers, not locally).");
+      else if (lastErrorReason === 'no-speech') setResult("No speech detected — check the correct microphone is selected/unmuted at the OS level, then try again.");
       else setResult("Didn't catch that — tap the mic and speak.");
       if (wakeWordOn) wakeWord.start();
     };
