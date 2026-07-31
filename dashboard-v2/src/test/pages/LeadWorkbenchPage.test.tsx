@@ -18,6 +18,7 @@ const mockNiche: NicheConfig = {
   booking_types: [],
   tone_examples: [],
   labels: { lead: 'Lead' },
+  compliance: [],
 };
 
 const mockLead = {
@@ -88,7 +89,7 @@ beforeEach(() => {
 function Wrapper({ children }: any) {
   return (
     <QueryClientProvider client={queryClient}>
-      <AppContext.Provider value={{ niche: mockNiche, setNiche: () => {} }}>
+      <AppContext.Provider value={{ niche: mockNiche, loading: false, isSuperAdmin: false, isClientUser: true }}>
         {children}
       </AppContext.Provider>
     </QueryClientProvider>

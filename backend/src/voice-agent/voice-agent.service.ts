@@ -2,6 +2,27 @@ import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { DograhService } from '../shared/dograh.service';
+import { composeGlobalPrompt } from './style-pack';
+import { lintTranscript } from './call-quality';
+import { CallFlowGeneratorService, GeneratedFlowDraft } from './call-flow-generator.service';
+
+/** Raw, uncomposed voice-agent config — the source of truth, stored per-tenant per-language in
+ * Tenant.settings.voiceAgentPersona. The compiled globalNode prompt Dograh actually runs is
+ * rebuilt from this on every save (see composeGlobalPrompt); it is never itself read back as
+ * state, which is what let old settings silently compound on repeated saves. */
+interface RawPersonaConfig {
+  persona: string;
+  stylePackEnabled: boolean;
+  aiAcknowledgementEnabled: boolean;
+  antiEarlyHangupEnabled: boolean;
+}
+
+const DEFAULT_RAW_CONFIG: RawPersonaConfig = {
+  persona: '',
+  stylePackEnabled: true,
+  aiAcknowledgementEnabled: true,
+  antiEarlyHangupEnabled: false,
+};
 
 @Injectable()
 export class VoiceAgentService {
@@ -11,6 +32,7 @@ export class VoiceAgentService {
     private config: ConfigService,
     private prisma: PrismaService,
     private dograh: DograhService,
+    private flowGenerator: CallFlowGeneratorService,
   ) {}
 
   async callLead(leadId: string, userId: string, language = 'te'): Promise<{ success: boolean; callSid?: string; message?: string }> {
@@ -40,16 +62,90 @@ export class VoiceAgentService {
   }
 
   async getCallHistory(tenantId: string, limit = 20) {
-    return this.prisma.callLog.findMany({ where: { tenantId }, orderBy: { createdAt: 'desc' }, take: limit, include: { lead: { include: { contact: { select: { name: true, phone: true } } } } } });
+    const calls = await this.prisma.callLog.findMany({ where: { tenantId }, orderBy: { createdAt: 'desc' }, take: limit, include: { lead: { include: { contact: { select: { name: true, phone: true } } } } } });
+    // Scored on read rather than stored on write: the linter is new and this way it can be
+    // improved and re-run against every past transcript at any time, with no migration and no
+    // backfill job needed. Revisit if call volume makes on-read scoring measurably slow.
+    return calls.map((call) => ({ ...call, quality: call.transcript ? lintTranscript(call.transcript) : null }));
   }
 
-  async getSettings(language = 'te') {
-    return this.dograh.getSettings(language);
+  /** Reads (and, on first run for a tenant/language, seeds) the raw persona config that is the
+   * source of truth — never parsed back out of the compiled prompt Dograh runs. */
+  private async getRawConfig(tenantId: string, language: string): Promise<RawPersonaConfig> {
+    const tenant = await this.prisma.tenant.findUnique({ where: { id: tenantId }, select: { settings: true } });
+    const stored = (tenant?.settings as any)?.voiceAgentPersona?.[language];
+    if (stored) return { ...DEFAULT_RAW_CONFIG, ...stored };
+
+    // First read after this refactor: seed from whatever is currently live so an existing
+    // configured persona isn't silently reset to blank. Old hangup-guard text that may have
+    // been string-appended onto the prompt by an earlier implementation is stripped, since
+    // that guard is now applied structurally via antiEarlyHangupEnabled instead.
+    //
+    // Stripped by PATTERN, not by an exact match against the current HANGUP_GUARD constant —
+    // confirmed against live production data that at least one earlier script
+    // (workflow-build/build-telugu.mjs) baked in a differently-worded variant of this same
+    // guard. An exact-string strip silently failed to remove it, which would have made the
+    // very first live-config save re-append the new guard on top of the old one: the exact
+    // compounding bug this refactor exists to fix. Match loosely on the recognizable core
+    // ("Do not end the call or mark the lead as not interested ... hung up.") plus any
+    // immediately-following sentence about hesitant callers, however it happens to be worded.
+    const HANGUP_GUARD_PATTERN = /\s*Do not end the call or mark the lead as not interested[\s\S]*?hung up\.(?:\s*A hesitant[\s\S]*?reason to give up on the call\.)?/;
+    const live = await this.dograh.getRawGlobalPrompt(language).catch(() => '');
+    const seeded: RawPersonaConfig = {
+      ...DEFAULT_RAW_CONFIG,
+      persona: live.replace(HANGUP_GUARD_PATTERN, '').trim(),
+      antiEarlyHangupEnabled: live.includes('Do not end the call'),
+    };
+    await this.saveRawConfig(tenantId, language, seeded);
+    return seeded;
   }
 
-  async updateSettings(language: string, changes: { greeting?: string; persona?: string; antiEarlyHangupEnabled?: boolean; checklistCopy?: string }) {
-    await this.dograh.updateSettings(language, changes);
-    return this.dograh.getSettings(language);
+  private async saveRawConfig(tenantId: string, language: string, config: RawPersonaConfig): Promise<void> {
+    const tenant = await this.prisma.tenant.findUnique({ where: { id: tenantId }, select: { settings: true } });
+    const settings = (tenant?.settings as any) || {};
+    settings.voiceAgentPersona = { ...(settings.voiceAgentPersona || {}), [language]: config };
+    await this.prisma.tenant.update({ where: { id: tenantId }, data: { settings } });
+  }
+
+  async getSettings(tenantId: string, language = 'te') {
+    const [raw, meta] = await Promise.all([
+      this.getRawConfig(tenantId, language),
+      this.dograh.getWorkflowMeta(language),
+    ]);
+    return {
+      greeting: meta.greeting,
+      persona: raw.persona,
+      voicemailDetectionEnabled: meta.voicemailDetectionEnabled,
+      antiEarlyHangupEnabled: raw.antiEarlyHangupEnabled,
+      stylePackEnabled: raw.stylePackEnabled,
+      aiAcknowledgementEnabled: raw.aiAcknowledgementEnabled,
+      checklistCopy: meta.checklistCopy,
+    };
+  }
+
+  async updateSettings(
+    tenantId: string,
+    language: string,
+    changes: { greeting?: string; persona?: string; antiEarlyHangupEnabled?: boolean; checklistCopy?: string; stylePackEnabled?: boolean; aiAcknowledgementEnabled?: boolean },
+  ) {
+    const current = await this.getRawConfig(tenantId, language);
+    const next: RawPersonaConfig = {
+      persona: changes.persona ?? current.persona,
+      stylePackEnabled: changes.stylePackEnabled ?? current.stylePackEnabled,
+      aiAcknowledgementEnabled: changes.aiAcknowledgementEnabled ?? current.aiAcknowledgementEnabled,
+      antiEarlyHangupEnabled: changes.antiEarlyHangupEnabled ?? current.antiEarlyHangupEnabled,
+    };
+    await this.saveRawConfig(tenantId, language, next);
+
+    // Every save is a clean rebuild from the raw config, never a mutation of the previous
+    // compiled text — this is what makes repeated saves idempotent.
+    const composed = composeGlobalPrompt(next);
+    const tasks: Promise<void>[] = [this.dograh.setGlobalPrompt(language, composed)];
+    if (changes.greeting !== undefined) tasks.push(this.dograh.updateGreeting(language, changes.greeting));
+    if (changes.checklistCopy !== undefined) tasks.push(this.dograh.updateChecklistCopy(language, changes.checklistCopy));
+    await Promise.all(tasks);
+
+    return this.getSettings(tenantId, language);
   }
 
   async toggleAmd(enabled: boolean) {
@@ -160,6 +256,7 @@ export class VoiceAgentService {
    */
   private normalizeRun(r: any) {
     const disposition = r.disposition || r.gathered_context?.mapped_call_disposition || 'unknown';
+    const transcript = r.transcript || r.call_transcript || r.gathered_context?.transcript || r.gathered_context?.call_transcript || null;
     return {
       id: r.id,
       workflowId: r.workflow_id,
@@ -175,8 +272,11 @@ export class VoiceAgentService {
       recordingUrl: r.recording_public_url || r.recording_url || null,
       transcriptUrl: r.transcript_public_url || r.transcript_url || null,
       summary: r.summary || r.call_summary || r.gathered_context?.summary || r.gathered_context?.call_summary || null,
-      transcript: r.transcript || r.call_transcript || r.gathered_context?.transcript || r.gathered_context?.call_transcript || null,
+      transcript,
       gatheredContext: r.gathered_context || {},
+      // Automated naturalness score (see call-quality.ts) — same instrument the style pack
+      // was tuned against, so a prompt regression shows up here on the very next call.
+      quality: transcript ? lintTranscript(transcript) : null,
     };
   }
 
@@ -247,5 +347,57 @@ export class VoiceAgentService {
   async deleteCustomField(language: string, fieldName: string) {
     await this.dograh.deleteCustomField(language, fieldName);
     return this.dograh.getCustomFields(language);
+  }
+
+  async listVoices(provider: string, language?: string) {
+    return this.dograh.listVoices(provider, language);
+  }
+
+  async getVoiceConfig() {
+    const cfg = await this.dograh.getModelConfiguration();
+    return {
+      provider: cfg?.tts?.provider ?? null,
+      voice: cfg?.tts?.voice ?? null,
+      speed: cfg?.tts?.speed ?? null,
+      language: cfg?.tts?.language ?? null,
+    };
+  }
+
+  async setVoice(provider: string, voiceId: string, speed?: number, language?: string) {
+    await this.dograh.setTtsVoice(provider, voiceId, speed, language);
+    return this.getVoiceConfig();
+  }
+
+  async getAmbientNoiseUploadUrl(language: string, filename: string, fileSize: number, mimeType?: string) {
+    return this.dograh.getAmbientNoiseUploadUrl(language, filename, fileSize, mimeType);
+  }
+
+  async getAmbientNoise(language: string) {
+    return this.dograh.getAmbientNoise(language);
+  }
+
+  async setAmbientNoise(language: string, changes: { enabled?: boolean; volume?: number; storageKey?: string }) {
+    await this.dograh.setAmbientNoise(language, changes);
+    return this.dograh.getAmbientNoise(language);
+  }
+
+  /** "Describe it, we build it" — pure draft generation, nothing touches the live call flow
+   * yet. The caller must review this (and, for non-English drafts, get native sign-off) before
+   * calling applyCallFlow. */
+  async generateCallFlow(description: string, businessName?: string): Promise<GeneratedFlowDraft> {
+    return this.flowGenerator.generate(description, businessName);
+  }
+
+  /** Replaces the live call-flow graph for a language with the (reviewed, possibly
+   * user-edited) draft. Persona goes through the same raw-config + style-pack composition path
+   * as the settings page, so it stays consistent with whatever style/hangup/AI-disclosure
+   * toggles are already set for this tenant rather than being a second, divergent copy. */
+  async applyCallFlow(tenantId: string, language: string, draft: GeneratedFlowDraft) {
+    const raw = await this.getRawConfig(tenantId, language);
+    const nextRaw: RawPersonaConfig = { ...raw, persona: draft.persona };
+    await this.saveRawConfig(tenantId, language, nextRaw);
+    const composed = composeGlobalPrompt(nextRaw);
+    await this.dograh.applyGeneratedFlow(language, composed, draft);
+    return this.getSettings(tenantId, language);
   }
 }

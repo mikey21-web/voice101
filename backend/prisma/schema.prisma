@@ -59,6 +59,11 @@ model Tenant {
   jarvisOutcomes                JarvisOutcome[]
   savedReports                 SavedReport[]
   callLogs                     CallLog[]
+  voiceEmployees                VoiceEmployee[]
+  voicePhoneNumbers             VoicePhoneNumber[]
+  voiceCalls                    VoiceCall[]
+  voiceLeads                    VoiceLead[]
+  voiceCampaigns                VoiceCampaign[]
   notifications                Notification[]
   adCampaigns                  AdCampaign[]
   events                       Event[]
@@ -5744,4 +5749,305 @@ model TenantOnboardingStep {
   @@unique([tenantId, stepKey])
   @@index([tenantId])
   @@map("tenant_onboarding_steps")
+}
+
+/// ===================== Voice Employee engine =====================
+/// An AI voice agent as a first-class, versioned object: identity, voice config,
+/// and a section graph (conditional LLM nodes) that compiles into a Dograh
+/// workflow at publish time. dograhWorkflowId is the execution backend this
+/// employee runs on — the graph/versioning/billing model lives here, in our
+/// own DB, so it survives regardless of which underlying engine executes calls.
+model VoiceEmployee {
+  id        String   @id @default(uuid())
+  tenantId  String   @map("tenant_id")
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+
+  name String
+  role String
+  mode String @default("instant") // instant | bulk | inbound
+  avatarUrl String? @map("avatar_url")
+
+  voiceProvider String  @map("voice_provider")
+  voiceId       String  @map("voice_id")
+  voiceName     String? @map("voice_name")
+  ttsSpeed      Float   @default(1) @map("tts_speed")
+  language      String  @default("te-IN")
+  extraLanguages Json   @default("[]") @map("extra_languages")
+  ambientSound   String? @map("ambient_sound")
+  ambientVolume  Float   @default(0) @map("ambient_volume")
+  maxCallDurationS Int   @default(600) @map("max_call_duration_s")
+
+  status String @default("inactive") // inactive | active | paused
+
+  welcomeMessage      String? @map("welcome_message") @db.Text
+  agentInformation     String? @map("agent_information") @db.Text
+  callEndRules         String? @map("call_end_rules") @db.Text
+  scriptAdherence      Int     @default(2) @map("script_adherence")
+  powerPrompting       Boolean @default(false) @map("power_prompting")
+  stylePackEnabled     Boolean @default(true) @map("style_pack_enabled")
+  aiAcknowledgementEnabled Boolean @default(true) @map("ai_acknowledgement_enabled")
+  recordingNotice      Boolean @default(false) @map("recording_notice")
+
+  numberId String? @map("number_id")
+  number   VoicePhoneNumber? @relation(fields: [numberId], references: [id])
+
+  dograhWorkflowId String? @map("dograh_workflow_id")
+  dograhWorkflowUuid String? @map("dograh_workflow_uuid")
+
+  revision              Int       @default(1)
+  isPublished           Boolean   @default(false) @map("is_published")
+  hasUnpublishedChanges Boolean   @default(false) @map("has_unpublished_changes")
+  publishedAt           DateTime? @map("published_at")
+
+  hiredUntil             DateTime? @map("hired_until")
+  hireSubscriptionStatus String?   @map("hire_subscription_status")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime? @map("deleted_at")
+
+  sections   VoiceEmployeeSection[]
+  variables  VoiceEmployeeVariable[]
+  actions    VoiceEmployeeAction[]
+  deliveries VoiceEmployeeDelivery[]
+  versions   VoiceEmployeeVersion[]
+  leads      VoiceLead[]
+  calls      VoiceCall[]
+  campaigns  VoiceCampaign[]
+
+  @@index([tenantId])
+  @@map("voice_employees")
+}
+
+/// One node in the call-flow graph: a goal-oriented prompt step with conditional
+/// edges to the next section. Compiled into the underlying engine's node graph
+/// (e.g. Dograh agentNode) at publish time — this table is the source of truth,
+/// the compiled form is a build artifact.
+model VoiceEmployeeSection {
+  id         String  @id @default(uuid())
+  employeeId String  @map("employee_id")
+  employee   VoiceEmployee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  sectionKey String  @map("section_key")
+  label      String
+  prompt     String  @db.Text
+  enabled    Boolean @default(true)
+  order      Int
+  nodeType   String  @default("llm") @map("node_type")
+  edges      Json    @default("[]") // [{ to_key, condition }]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([employeeId, sectionKey])
+  @@index([employeeId])
+  @@map("voice_employee_sections")
+}
+
+/// A value tracked across the call: either injected before dialling (source=pre,
+/// e.g. lead_name/phone) or extracted from what the caller says (source=capture,
+/// e.g. budget/intent). Drives both prompt templating ({{key}}) and post-call
+/// structured outcome data.
+model VoiceEmployeeVariable {
+  id         String @id @default(uuid())
+  employeeId String @map("employee_id")
+  employee   VoiceEmployee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  key         String
+  label       String
+  source      String  @default("capture") // pre | capture
+  required    Boolean @default(false)
+  extractHint String? @map("extract_hint")
+
+  createdAt DateTime @default(now())
+
+  @@unique([employeeId, key])
+  @@index([employeeId])
+  @@map("voice_employee_variables")
+}
+
+/// Mid-call tool the agent can invoke (transfer, book_appointment, send_whatsapp,
+/// custom_api). gated=true means it needs an integration connected before it can
+/// be enabled — mirrors the real-world dependency, not just a UI toggle.
+model VoiceEmployeeAction {
+  id         String @id @default(uuid())
+  employeeId String @map("employee_id")
+  employee   VoiceEmployee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  actionKey  String  @map("action_key")
+  label      String
+  enabled    Boolean @default(false)
+  gated      Boolean @default(false)
+  gateReason String? @map("gate_reason")
+  config     Json?
+
+  @@unique([employeeId, actionKey])
+  @@index([employeeId])
+  @@map("voice_employee_actions")
+}
+
+/// Where captured call outcomes get pushed after the call ends: WhatsApp, Google
+/// Sheets, a generic webhook. Separate from EmployeeAction (mid-call, live tools)
+/// — deliveries fire once, at call completion.
+model VoiceEmployeeDelivery {
+  id         String @id @default(uuid())
+  employeeId String @map("employee_id")
+  employee   VoiceEmployee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  type    String // whatsapp | sheets | webhook | email
+  config  Json
+  enabled Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([employeeId])
+  @@map("voice_employee_deliveries")
+}
+
+/// Full snapshot on every publish — enables restore-to-version without
+/// depending on the underlying engine's own version history (which may not
+/// exist, or may be provider-specific).
+model VoiceEmployeeVersion {
+  id         String @id @default(uuid())
+  employeeId String @map("employee_id")
+  employee   VoiceEmployee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  revision  Int
+  snapshot  Json // full employee + sections + variables at publish time
+  publishedById String? @map("published_by_id")
+
+  createdAt DateTime @default(now())
+
+  @@unique([employeeId, revision])
+  @@index([employeeId])
+  @@map("voice_employee_versions")
+}
+
+/// DLT-registered (or provider-issued) phone number an employee dials from /
+/// receives calls on. kycStatus tracks the real-world compliance step this
+/// requires in India — separate from whether the number is technically live.
+model VoicePhoneNumber {
+  id       String @id @default(uuid())
+  tenantId String @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  number       String  @unique
+  provider     String  @default("twilio")
+  dltRegistered Boolean @default(false) @map("dlt_registered")
+  kycStatus    String  @default("not_started") @map("kyc_status") // not_started | pending | verified
+  status       String  @default("active")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  employees VoiceEmployee[]
+
+  @@index([tenantId])
+  @@map("voice_phone_numbers")
+}
+
+/// A completed (or in-progress) call placed/received by a VoiceEmployee.
+/// Deliberately separate from the pre-existing CallLog model: CallLog is the
+/// general cross-channel call record used by the human-agent telephony path
+/// (TwilioVoiceAdapter); VoiceCall is specific to AI-employee-run calls and
+/// carries the richer outcome/quality data this engine produces.
+model VoiceCall {
+  id         String  @id @default(uuid())
+  tenantId   String  @map("tenant_id")
+  tenant     Tenant  @relation(fields: [tenantId], references: [id])
+  employeeId String  @map("employee_id")
+  employee   VoiceEmployee @relation(fields: [employeeId], references: [id])
+  campaignId String? @map("campaign_id")
+  campaign   VoiceCampaign? @relation(fields: [campaignId], references: [id])
+
+  direction String @default("outbound")
+  durationS Int?   @map("duration_s")
+  costInr   Float  @default(0) @map("cost_inr")
+  isWebCall Boolean @default(false) @map("is_web_call")
+
+  fromNumber String? @map("from_number")
+  toNumber   String  @map("to_number")
+
+  recordingUrl String? @map("recording_url") @db.Text
+  transcript   Json?
+  summary      String? @db.Text
+
+  disposition String? // qualified | no_answer | busy | failed | cancelled | blocked_dnc | voicemail
+  outcome     Json?   // structured captured variables
+
+  qualityScore Int? @map("quality_score") // from call-quality.ts linter, computed at read or backfilled here
+
+  dograhRunId String? @map("dograh_run_id")
+
+  createdAt DateTime @default(now())
+
+  @@index([tenantId])
+  @@index([employeeId])
+  @@index([campaignId])
+  @@map("voice_calls")
+}
+
+/// A lead surfaced through an instant-call webhook or a bulk campaign, with
+/// whatever the call captured. Separate from the CRM's own Lead model — this
+/// is the voice-engine's own record of "who did an employee call and what
+/// happened," which the CRM Lead can optionally be updated from.
+model VoiceLead {
+  id         String  @id @default(uuid())
+  tenantId   String  @map("tenant_id")
+  tenant     Tenant  @relation(fields: [tenantId], references: [id])
+  employeeId String  @map("employee_id")
+  employee   VoiceEmployee @relation(fields: [employeeId], references: [id])
+  callId     String? @map("call_id")
+
+  phone   String
+  contact String?
+  source  String  @default("manual") // manual | instant_webhook | bulk_campaign | test_call
+  outcome String?
+  captured Json   @default("{}")
+  summary  String? @db.Text
+
+  attempt      Int       @default(1)
+  callbackAt   DateTime? @map("callback_at")
+  timeToCallS  Int?      @map("time_to_call_s")
+
+  createdAt DateTime @default(now())
+  deletedAt DateTime? @map("deleted_at")
+
+  @@index([tenantId])
+  @@index([employeeId])
+  @@map("voice_leads")
+}
+
+/// A bulk-calling run against a list of contacts. Named VoiceCampaign (not
+/// Campaign) to avoid colliding with the existing generic marketing Campaign
+/// model, which this is not — it's calling-specific (retry/schedule/dialler
+/// config), one employee, backed by a Dograh campaign underneath.
+model VoiceCampaign {
+  id         String @id @default(uuid())
+  tenantId   String @map("tenant_id")
+  tenant     Tenant @relation(fields: [tenantId], references: [id])
+  employeeId String @map("employee_id")
+  employee   VoiceEmployee @relation(fields: [employeeId], references: [id])
+
+  name   String
+  status String @default("draft") // draft | running | paused | completed
+
+  totalContacts Int @default(0) @map("total_contacts")
+  dialed        Int @default(0)
+  reached       Int @default(0)
+
+  maxConcurrency Int?  @map("max_concurrency")
+  retryConfig    Json? @map("retry_config")
+  scheduleConfig Json? @map("schedule_config")
+
+  dograhCampaignId Int? @map("dograh_campaign_id")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  calls VoiceCall[]
+
+  @@index([tenantId])
+  @@map("voice_campaigns")
 }

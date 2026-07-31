@@ -50,15 +50,19 @@ export class VoiceAgentController {
   @Get('settings')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('OWNER', 'ADMIN')
-  async getSettings(@Query('lang') lang?: string) {
-    return this.service.getSettings(lang || 'te');
+  async getSettings(@Req() req: any, @Query('lang') lang?: string) {
+    return this.service.getSettings(req.user.tenantId, lang || 'te');
   }
 
   @Patch('settings')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('OWNER', 'ADMIN')
-  async updateSettings(@Body() body: { greeting?: string; persona?: string; antiEarlyHangupEnabled?: boolean; checklistCopy?: string }, @Query('lang') lang?: string) {
-    return this.service.updateSettings(lang || 'te', body);
+  async updateSettings(
+    @Req() req: any,
+    @Body() body: { greeting?: string; persona?: string; antiEarlyHangupEnabled?: boolean; checklistCopy?: string; stylePackEnabled?: boolean; aiAcknowledgementEnabled?: boolean },
+    @Query('lang') lang?: string,
+  ) {
+    return this.service.updateSettings(req.user.tenantId, lang || 'te', body);
   }
 
   @Patch('settings/amd')
@@ -66,6 +70,62 @@ export class VoiceAgentController {
   @Roles('OWNER', 'ADMIN')
   async toggleAmd(@Body() body: { enabled: boolean }) {
     return this.service.toggleAmd(body.enabled);
+  }
+
+  @Get('voices')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('OWNER', 'ADMIN')
+  async listVoices(@Query('provider') provider: string, @Query('lang') lang?: string) {
+    return this.service.listVoices(provider || 'sarvam', lang);
+  }
+
+  @Get('voice-config')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('OWNER', 'ADMIN')
+  async getVoiceConfig() {
+    return this.service.getVoiceConfig();
+  }
+
+  @Patch('voice-config')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('OWNER', 'ADMIN')
+  async setVoice(@Body() body: { provider: string; voiceId: string; speed?: number; language?: string }) {
+    return this.service.setVoice(body.provider, body.voiceId, body.speed, body.language);
+  }
+
+  @Post('ambient-noise/upload-url')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('OWNER', 'ADMIN')
+  async getAmbientNoiseUploadUrl(@Body() body: { filename: string; fileSize: number; mimeType?: string }, @Query('lang') lang?: string) {
+    return this.service.getAmbientNoiseUploadUrl(lang || 'te', body.filename, body.fileSize, body.mimeType);
+  }
+
+  @Get('ambient-noise')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('OWNER', 'ADMIN')
+  async getAmbientNoise(@Query('lang') lang?: string) {
+    return this.service.getAmbientNoise(lang || 'te');
+  }
+
+  @Patch('ambient-noise')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('OWNER', 'ADMIN')
+  async setAmbientNoise(@Body() body: { enabled?: boolean; volume?: number; storageKey?: string }, @Query('lang') lang?: string) {
+    return this.service.setAmbientNoise(lang || 'te', body);
+  }
+
+  @Post('flow/generate')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('OWNER', 'ADMIN')
+  async generateFlow(@Body() body: { description: string; businessName?: string }) {
+    return this.service.generateCallFlow(body.description, body.businessName);
+  }
+
+  @Post('flow/apply')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('OWNER', 'ADMIN')
+  async applyFlow(@Req() req: any, @Body() body: { draft: any }, @Query('lang') lang?: string) {
+    return this.service.applyCallFlow(req.user.tenantId, lang || 'te', body.draft);
   }
 
   @Post('campaigns')

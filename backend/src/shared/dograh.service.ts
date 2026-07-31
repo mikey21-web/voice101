@@ -104,54 +104,76 @@ export class DograhService {
     return Boolean(config?.credentials?.amd_enabled);
   }
 
-  async getSettings(language = 'te'): Promise<VoiceAgentSettings> {
+  /**
+   * One-time migration read: the raw, currently-live globalNode prompt, used ONLY to seed a
+   * tenant's stored rawPersona the first time getSettings runs after this refactor. Never used
+   * on the normal read/write path — see getWorkflowMeta / setGlobalPrompt.
+   */
+  async getRawGlobalPrompt(language = 'te'): Promise<string> {
     const workflowId = WORKFLOW_ID_BY_LANGUAGE[language] || WORKFLOW_ID_BY_LANGUAGE.te;
     const { definition } = await this.fetchWorkflowDefinition(workflowId);
     const globalNode = definition.nodes.find((n: any) => n.type === 'globalNode');
+    return globalNode?.data?.prompt || '';
+  }
+
+  /**
+   * Reads only what genuinely lives in Dograh's own workflow state: greeting text, whether AMD
+   * is on, and the end-call checklist copy (a fixed, non-compounding template — see
+   * updateChecklistCopy). The composed globalNode prompt (persona + safety + style layer) is NOT
+   * parsed back out here — that text is a build artifact, not a source of truth. The caller
+   * (VoiceAgentService) owns the raw persona and toggles and reconstructs the prompt from them.
+   * Parsing state back out of previously-generated text is exactly what caused settings to
+   * silently compound on every save; see setGlobalPrompt below.
+   */
+  async getWorkflowMeta(language = 'te'): Promise<{ greeting: string; voicemailDetectionEnabled: boolean; checklistCopy: string }> {
+    const workflowId = WORKFLOW_ID_BY_LANGUAGE[language] || WORKFLOW_ID_BY_LANGUAGE.te;
+    const { definition } = await this.fetchWorkflowDefinition(workflowId);
     const startNode = definition.nodes.find((n: any) => n.type === 'startCall');
     const endCallNodes = definition.nodes.filter((n: any) => n.type === 'endCall');
-    const voicemailDetectionEnabled = await this.getAmdEnabled();
-    const antiEarlyHangupEnabled = globalNode?.data?.prompt?.includes('Do not end the call') ?? false;
     const checklistCopy = endCallNodes.length > 0 && endCallNodes[0].data?.prompt?.includes('Before saying goodbye')
       ? endCallNodes[0].data.prompt
       : '';
     return {
       greeting: startNode?.data?.greeting || '',
-      persona: globalNode?.data?.prompt || '',
-      voicemailDetectionEnabled,
-      antiEarlyHangupEnabled,
+      voicemailDetectionEnabled: await this.getAmdEnabled(),
       checklistCopy,
     };
   }
 
-  async updateSettings(language: string, changes: { greeting?: string; persona?: string; antiEarlyHangupEnabled?: boolean; checklistCopy?: string }): Promise<void> {
+  async updateGreeting(language: string, greeting: string): Promise<void> {
+    const workflowId = WORKFLOW_ID_BY_LANGUAGE[language] || WORKFLOW_ID_BY_LANGUAGE.te;
+    const { name, definition } = await this.fetchWorkflowDefinition(workflowId);
+    const startNode = definition.nodes.find((n: any) => n.type === 'startCall');
+    if (startNode) startNode.data.greeting = greeting;
+    await this.saveAndPublishWorkflow(workflowId, name, definition);
+  }
+
+  /**
+   * Replaces the globalNode prompt outright with an already-composed string (built by
+   * composeGlobalPrompt in style-pack.ts). No parsing, no append, no substring matching —
+   * every publish is a clean overwrite from the caller's source of truth, so repeated saves
+   * can never compound duplicate guard text into the live prompt.
+   */
+  async setGlobalPrompt(language: string, composedPrompt: string): Promise<void> {
     const workflowId = WORKFLOW_ID_BY_LANGUAGE[language] || WORKFLOW_ID_BY_LANGUAGE.te;
     const { name, definition } = await this.fetchWorkflowDefinition(workflowId);
     const globalNode = definition.nodes.find((n: any) => n.type === 'globalNode');
-    const startNode = definition.nodes.find((n: any) => n.type === 'startCall');
+    if (globalNode) globalNode.data.prompt = composedPrompt;
+    await this.saveAndPublishWorkflow(workflowId, name, definition);
+  }
+
+  async updateChecklistCopy(language: string, checklistCopy: string): Promise<void> {
+    const workflowId = WORKFLOW_ID_BY_LANGUAGE[language] || WORKFLOW_ID_BY_LANGUAGE.te;
+    const { name, definition } = await this.fetchWorkflowDefinition(workflowId);
     const endCallNodes = definition.nodes.filter((n: any) => n.type === 'endCall');
-    if (changes.greeting !== undefined && startNode) startNode.data.greeting = changes.greeting;
-    if (changes.persona !== undefined && globalNode) globalNode.data.prompt = changes.persona;
-    if (changes.antiEarlyHangupEnabled !== undefined && globalNode) {
-      const guard = ' Do not end the call or mark the lead as not interested within the first 10 seconds of the conversation unless the caller is clearly hostile or has hung up - a hesitant "who is this?" or a slow start is not a reason to give up on the call.';
-      if (changes.antiEarlyHangupEnabled && !globalNode.data.prompt.includes('Do not end the call')) {
-        globalNode.data.prompt += guard;
-      } else if (!changes.antiEarlyHangupEnabled) {
-        globalNode.data.prompt = globalNode.data.prompt.replace(guard, '');
-      }
-    }
-    if (changes.checklistCopy !== undefined) {
-      for (const node of endCallNodes) {
-        const existing = node.data.prompt || '';
-        const checklist = ' Before saying goodbye: (1) confirm the caller has no more questions, (2) give them one clear summary line of what happens next, (3) then say goodbye.';
-        if (changes.checklistCopy) {
-          if (!existing.includes('Before saying goodbye')) {
-            node.data.prompt = existing + checklist;
-          }
-        } else {
-          node.data.prompt = existing.replace(checklist, '');
-        }
-      }
+    const marker = 'Before saying goodbye';
+    const defaultChecklist = ` ${marker}: (1) confirm the caller has no more questions, (2) give them one clear summary line of what happens next, (3) then say goodbye.`;
+    for (const node of endCallNodes) {
+      const existing: string = node.data.prompt || '';
+      const withoutChecklist = existing.includes(marker)
+        ? existing.replace(new RegExp(`\\s*${marker}[^]*$`), '')
+        : existing;
+      node.data.prompt = checklistCopy ? withoutChecklist + defaultChecklist : withoutChecklist;
     }
     await this.saveAndPublishWorkflow(workflowId, name, definition);
   }
@@ -199,9 +221,14 @@ export class DograhService {
       maxConcurrency?: number;
       retryConfig?: { enabled: boolean; maxRetries: number; retryDelaySeconds: number; retryOnBusy: boolean; retryOnNoAnswer: boolean; retryOnVoicemail: boolean };
       scheduleConfig?: { enabled: boolean; timezone: string; slots: Array<{ dayOfWeek: number; startTime: string; endTime: string }> };
+      /** Explicit Dograh workflow id — used by VoiceCampaignService for a specific
+       * VoiceEmployee's own compiled workflow, bypassing the language-keyed single-workflow
+       * lookup entirely (that lookup only ever made sense for the original one-employee-per-
+       * language system). */
+      workflowIdOverride?: string;
     },
   ): Promise<{ campaignId: number }> {
-    const workflowId = WORKFLOW_ID_BY_LANGUAGE[language] || WORKFLOW_ID_BY_LANGUAGE.te;
+    const workflowId = options?.workflowIdOverride || WORKFLOW_ID_BY_LANGUAGE[language] || WORKFLOW_ID_BY_LANGUAGE.te;
     const fileName = `campaign-${Date.now()}.csv`;
 
     const uploadUrlRes = await fetch(`${this.baseUrl}/api/v1/s3/presigned-upload-url`, {
@@ -371,5 +398,416 @@ export class DograhService {
         : current.filter((id) => id !== documentUuid);
     }
     await this.saveAndPublishWorkflow(workflowId, name, definition);
+  }
+
+  /**
+   * Real API keys used to talk to each TTS/STT/LLM provider on Dograh's behalf. Sourced from
+   * OUR OWN backend env, never from Dograh — Dograh's GET on model-configurations/v2 returns
+   * api_key masked (e.g. "********************************IRBy") for exactly the reason this
+   * matters: it must never be readable back over the API. Round-tripping that masked string
+   * into a later PUT would silently overwrite the real, working credential with asterisks and
+   * take down the live TTS pipeline. See setTtsVoice below.
+   */
+  private providerApiKey(provider: string): string {
+    const key = this.config.get<string>(`${provider.toUpperCase()}_API_KEY`, '');
+    if (!key) throw new Error(`${provider.toUpperCase()}_API_KEY is not configured on this server — add it before changing the ${provider} voice.`);
+    return key;
+  }
+
+  /** Voice catalogue for a provider (e.g. sarvam, cartesia, elevenlabs) — read-only, no credentials at risk. */
+  async listVoices(provider: string, language?: string): Promise<Array<{ voice_id: string; name: string; gender: string | null; accent: string | null }>> {
+    const q = language ? `?language=${encodeURIComponent(language)}` : '';
+    const res = await fetch(`${this.baseUrl}/api/v1/user/configurations/voices/${provider}${q}`, {
+      headers: { 'X-API-Key': this.apiKey },
+    });
+    if (!res.ok) throw new Error(`Dograh list voices failed: ${await res.text()}`);
+    const data = await res.json();
+    return data.voices || [];
+  }
+
+  /** The live LLM/TTS/STT configuration, with provider api_keys masked by Dograh itself. Display-only. */
+  async getModelConfiguration(): Promise<any> {
+    const res = await fetch(`${this.baseUrl}/api/v1/organizations/model-configurations/v2`, {
+      headers: { 'X-API-Key': this.apiKey },
+    });
+    if (!res.ok) throw new Error(`Dograh get model configuration failed: ${await res.text()}`);
+    return (await res.json()).effective_configuration;
+  }
+
+  /**
+   * Switches the TTS voice/speed, optionally the provider. Fetches the current full pipeline
+   * config first so llm/stt are carried over unchanged, replaces ONLY the tts block, and fills
+   * in the real api_key from our own env (never the masked value from the GET response) —
+   * this is the one write path in this file where getting that wrong breaks live calls, so it
+   * is deliberately its own method rather than a generic "patch config" helper.
+   */
+  async setTtsVoice(provider: string, voiceId: string, speed?: number, language?: string): Promise<void> {
+    const apiKey = this.providerApiKey(provider);
+    const res = await fetch(`${this.baseUrl}/api/v1/organizations/model-configurations/v2`, {
+      headers: { 'X-API-Key': this.apiKey },
+    });
+    if (!res.ok) throw new Error(`Dograh get model configuration failed: ${await res.text()}`);
+    const current = (await res.json()).configuration;
+    if (current?.mode !== 'byok' || !current.byok?.pipeline) {
+      throw new Error('Voice switching is only supported in BYOK pipeline mode; current org configuration is not in that mode.');
+    }
+
+    const previousTts = current.byok.pipeline.tts || {};
+    current.byok.pipeline.tts = {
+      provider,
+      api_key: apiKey,
+      model: previousTts.provider === provider ? previousTts.model : undefined,
+      voice: voiceId,
+      language: language ?? previousTts.language ?? 'te-IN',
+      speed: speed ?? previousTts.speed ?? 1,
+    };
+
+    const putRes = await fetch(`${this.baseUrl}/api/v1/organizations/model-configurations/v2`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'X-API-Key': this.apiKey },
+      body: JSON.stringify(current),
+    });
+    if (!putRes.ok) throw new Error(`Dograh set TTS voice failed: ${await putRes.text()}`);
+  }
+
+  /** Presigned URL for the owner to upload their own background-noise clip (max 10MB per Dograh's schema). No credentials involved — safe to call freely, unlike setTtsVoice. */
+  async getAmbientNoiseUploadUrl(language: string, filename: string, fileSize: number, mimeType = 'audio/wav'): Promise<{ uploadUrl: string; storageKey: string }> {
+    const workflowId = WORKFLOW_ID_BY_LANGUAGE[language] || WORKFLOW_ID_BY_LANGUAGE.te;
+    const res = await fetch(`${this.baseUrl}/api/v1/workflow/ambient-noise/upload-url`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-API-Key': this.apiKey },
+      body: JSON.stringify({ workflow_id: Number(workflowId), filename, file_size: fileSize, mime_type: mimeType }),
+    });
+    if (!res.ok) throw new Error(`Dograh ambient-noise upload URL failed: ${await res.text()}`);
+    const data = await res.json();
+    return { uploadUrl: data.upload_url, storageKey: data.storage_key };
+  }
+
+  /** Toggles ambient background noise and/or points it at a previously-uploaded clip. Passing
+   * storageKey undefined leaves whatever clip is already configured untouched. */
+  async setAmbientNoise(language: string, changes: { enabled?: boolean; volume?: number; storageKey?: string }): Promise<void> {
+    const workflowId = WORKFLOW_ID_BY_LANGUAGE[language] || WORKFLOW_ID_BY_LANGUAGE.te;
+    const { name, definition } = await this.fetchWorkflowDefinition(workflowId);
+    const res = await fetch(`${this.baseUrl}/api/v1/workflow/fetch/${workflowId}`, { headers: { 'X-API-Key': this.apiKey } });
+    if (!res.ok) throw new Error(`Dograh fetch workflow failed: ${await res.text()}`);
+    const wf = await res.json();
+    const current = wf.workflow_configurations || {};
+    const ambient = current.ambient_noise_configuration || { enabled: false, volume: 0.3 };
+
+    current.ambient_noise_configuration = {
+      ...ambient,
+      enabled: changes.enabled ?? ambient.enabled,
+      volume: changes.volume ?? ambient.volume,
+      ...(changes.storageKey ? { storage_key: changes.storageKey } : {}),
+    };
+
+    const putRes = await fetch(`${this.baseUrl}/api/v1/workflow/${workflowId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'X-API-Key': this.apiKey },
+      body: JSON.stringify({ name, workflow_definition: definition, workflow_configurations: current }),
+    });
+    if (!putRes.ok) throw new Error(`Dograh set ambient noise failed: ${await putRes.text()}`);
+    // Config-only change to a published workflow's siblings doesn't need a re-publish call in
+    // Dograh's model (workflow_configurations lives outside workflow_definition versioning),
+    // but publishing is cheap and guarantees the change is live rather than draft.
+    await fetch(`${this.baseUrl}/api/v1/workflow/${workflowId}/publish`, { method: 'POST', headers: { 'X-API-Key': this.apiKey } }).catch(() => {});
+  }
+
+  async getAmbientNoise(language: string): Promise<{ enabled: boolean; volume: number; storageKey: string | null }> {
+    const workflowId = WORKFLOW_ID_BY_LANGUAGE[language] || WORKFLOW_ID_BY_LANGUAGE.te;
+    const res = await fetch(`${this.baseUrl}/api/v1/workflow/fetch/${workflowId}`, { headers: { 'X-API-Key': this.apiKey } });
+    if (!res.ok) throw new Error(`Dograh fetch workflow failed: ${await res.text()}`);
+    const wf = await res.json();
+    const ambient = wf.workflow_configurations?.ambient_noise_configuration || {};
+    return { enabled: !!ambient.enabled, volume: ambient.volume ?? 0.3, storageKey: ambient.storage_key ?? null };
+  }
+
+  /**
+   * Deterministically builds a full call-flow node/edge graph from an AI-generated draft (see
+   * CallFlowGeneratorService) and publishes it, replacing the workflow's conversational nodes.
+   * The LLM only ever supplies plain text (persona/greeting/step prompts/outcome conditions) —
+   * this method owns every structural detail: node ids, edge wiring, and three boilerplate
+   * safety nodes that are never LLM-authored:
+   *   - wrong-number/busy routing off the greeting's call_status extraction
+   *   - voicemail routing off Twilio AMD's answered_by field
+   *   - a human-handoff endCall wired from EVERY conversational node, gated on a wants_human
+   *     extraction variable injected into every node regardless of what the draft specified
+   * This mirrors the exact pattern already proven in workflow-build/add-human-handoff.mjs and
+   * add-voicemail-node.mjs — same node shapes, same edge conventions, so a generated flow looks
+   * structurally identical to the hand-built one already live in production.
+   *
+   * The webhook node (post-call outcome delivery) is preserved byte-for-byte from whatever is
+   * currently live — its secret and endpoint are never touched — but its payload_template gets
+   * new `{{gathered_context.<var>}}` passthrough entries added for every variable this draft's
+   * steps extract, so nothing the new flow captures is silently dropped from the outbound
+   * webhook. Downstream consumers of that webhook (e.g. LeadOrchestratorService) still only
+   * understand the specific field names the real-estate flow uses today — teaching that service
+   * to interpret arbitrary generated fields is a separate piece of work, not done here.
+   *
+   * composedPersona must already be fully composed (safety rules + style pack etc. applied) by
+   * the caller — this method never mutates or re-derives it, same discipline as setGlobalPrompt.
+   */
+  async applyGeneratedFlow(
+    language: string,
+    composedPersona: string,
+    draft: {
+      greeting: string;
+      steps: Array<{ key: string; label: string; prompt: string; extract: Array<{ name: string; type: string; prompt: string }> }>;
+      outcomes: Array<{ key: string; label: string; condition: string; closingPrompt: string }>;
+    },
+  ): Promise<void> {
+    const workflowId = WORKFLOW_ID_BY_LANGUAGE[language] || WORKFLOW_ID_BY_LANGUAGE.te;
+    const res = await fetch(`${this.baseUrl}/api/v1/workflow/fetch/${workflowId}`, { headers: { 'X-API-Key': this.apiKey } });
+    if (!res.ok) throw new Error(`Dograh fetch workflow failed: ${await res.text()}`);
+    const wf = await res.json();
+    const oldDef = wf.workflow_definition;
+
+    const webhookNode = oldDef.nodes.find((n: any) => n.type === 'webhook');
+
+    let nextId = 1;
+    const id = () => String(nextId++);
+    const pos = { x: 0, y: 0 };
+    const WANTS_HUMAN_VAR = { name: 'wants_human', type: 'boolean', prompt: 'The caller explicitly asked to speak with a human agent or a real person instead of continuing with the AI.' };
+
+    const nodes: any[] = [];
+    const edges: any[] = [];
+
+    const globalNode = { id: id(), type: 'globalNode', position: pos, data: { name: 'persona', prompt: composedPersona } };
+    nodes.push(globalNode);
+
+    const greetingNode = {
+      id: id(), type: 'startCall', position: pos,
+      data: {
+        name: 'greeting', greeting_type: 'text', greeting: draft.greeting,
+        prompt: "Confirm they are the right person and have a couple of minutes. If wrong number, acknowledge and prepare to end the call politely. If busy, offer to call back later and prepare to end the call politely. If they confirm interest and have time, move on.",
+        allow_interrupt: false, add_global_prompt: true, delayed_start: false, delayed_start_duration: 2,
+        extraction_enabled: true,
+        extraction_variables: [{ name: 'call_status', type: 'string', prompt: "one of: 'interested', 'busy', 'wrong_number'" }, WANTS_HUMAN_VAR],
+        pre_call_fetch_enabled: false,
+      },
+    };
+    nodes.push(greetingNode);
+
+    const stepNodes = draft.steps.map((step) => {
+      const node = {
+        id: id(), type: 'agentNode', position: pos,
+        data: {
+          name: step.key, prompt: step.prompt, allow_interrupt: true, add_global_prompt: true,
+          extraction_enabled: true,
+          extraction_variables: [...step.extract.map((v) => ({ name: v.name, type: v.type, prompt: v.prompt })), WANTS_HUMAN_VAR],
+        },
+      };
+      nodes.push(node);
+      return node;
+    });
+
+    const outcomeNodes = draft.outcomes.map((o) => {
+      const node = {
+        id: id(), type: 'endCall', position: pos,
+        data: { name: o.key, prompt: `${o.closingPrompt} Before saying goodbye: (1) confirm the caller has no more questions, (2) give them one clear summary line of what happens next, (3) then say goodbye.`, add_global_prompt: true, extraction_enabled: false },
+      };
+      nodes.push(node);
+      return node;
+    });
+
+    const wrongNumberNode = { id: id(), type: 'endCall', position: pos, data: { name: 'wrong_number_or_busy', prompt: 'If wrong number, apologize briefly and end the call. If busy, confirm you will call back later and end the call politely.', add_global_prompt: true, extraction_enabled: false } };
+    nodes.push(wrongNumberNode);
+
+    const voicemailNode = { id: id(), type: 'endCall', position: pos, data: { name: 'voicemail', prompt: 'Leave a brief, friendly message mentioning why you called and that the team will try again later. Keep it under 10 seconds worth of speech.', add_global_prompt: false } };
+    nodes.push(voicemailNode);
+
+    const humanHandoffNode = { id: id(), type: 'endCall', position: pos, data: { name: 'human_handoff', prompt: "Acknowledge warmly and let them know a team member will call them back shortly. Don't argue or continue qualifying.", add_global_prompt: false } };
+    nodes.push(humanHandoffNode);
+
+    if (webhookNode) nodes.push(webhookNode);
+
+    // Wiring: greeting -> first step (on 'interested'); linear chain through steps; last step ->
+    // each outcome (LLM-authored condition); greeting -> wrong-number/voicemail off telephony
+    // signals; every conversational node -> human handoff, gated on the injected wants_human var.
+    edges.push({ id: `${greetingNode.id}-${stepNodes[0]?.id}`, source: greetingNode.id, target: stepNodes[0]?.id, data: { label: 'interested', condition: "call_status is 'interested'" } });
+    edges.push({ id: `${greetingNode.id}-${wrongNumberNode.id}`, source: greetingNode.id, target: wrongNumberNode.id, data: { label: 'busy_or_wrong_number', condition: "call_status is 'busy' or 'wrong_number'" } });
+    edges.push({ id: `${greetingNode.id}-${voicemailNode.id}`, source: greetingNode.id, target: voicemailNode.id, data: { label: 'voicemail', condition: "answered_by is 'machine_start', 'machine_end_beep', 'machine_end_silence', 'machine_end_other', or 'fax'" } });
+
+    for (let i = 0; i < stepNodes.length - 1; i++) {
+      edges.push({ id: `${stepNodes[i].id}-${stepNodes[i + 1].id}`, source: stepNodes[i].id, target: stepNodes[i + 1].id, data: { label: 'next', condition: `${draft.steps[i].label} captured.` } });
+    }
+    const lastStep = stepNodes[stepNodes.length - 1];
+    draft.outcomes.forEach((o, i) => {
+      edges.push({ id: `${lastStep.id}-${outcomeNodes[i].id}`, source: lastStep.id, target: outcomeNodes[i].id, data: { label: o.label, condition: o.condition } });
+    });
+
+    for (const node of [greetingNode, ...stepNodes]) {
+      edges.push({ id: `${node.id}-${humanHandoffNode.id}-human`, source: node.id, target: humanHandoffNode.id, data: { label: 'wants human', condition: 'wants_human is true' } });
+    }
+
+    if (webhookNode?.data?.payload_template?.outcome) {
+      for (const step of draft.steps) {
+        for (const v of step.extract) {
+          if (!(v.name in webhookNode.data.payload_template.outcome)) {
+            webhookNode.data.payload_template.outcome[v.name] = `{{gathered_context.${v.name}}}`;
+          }
+        }
+      }
+    }
+
+    const newDefinition = { nodes, edges, viewport: oldDef.viewport };
+    await this.saveAndPublishWorkflow(workflowId, wf.name, newDefinition);
+  }
+
+  /**
+   * Creates a brand-new Dograh workflow from a full definition — used the first time a
+   * VoiceEmployee is published. Subsequent publishes reuse the returned id and go through
+   * publishEmployeeWorkflow instead, so an employee always compiles to the same underlying
+   * workflow rather than accumulating orphaned ones.
+   */
+  async createWorkflow(name: string, definition: any): Promise<{ id: string; uuid: string }> {
+    const res = await fetch(`${this.baseUrl}/api/v1/workflow/create/definition`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-API-Key': this.apiKey },
+      body: JSON.stringify({ name, workflow_definition: definition }),
+    });
+    if (!res.ok) throw new Error(`Dograh create workflow failed: ${await res.text()}`);
+    const data = await res.json();
+    // create/definition alone doesn't leave a publishable draft — confirmed empirically,
+    // publish immediately after create fails with "No draft to publish". A PUT establishes
+    // the draft version (same PUT-then-publish sequence every other write path in this file
+    // already uses), so redo it here even though the content is identical to what create
+    // just wrote.
+    await this.saveAndPublishWorkflow(String(data.id), name, definition);
+    // workflow_uuid on the create/definition response is unset at that point (confirmed
+    // empirically — it's only assigned once the workflow is genuinely published, which just
+    // happened above) — re-fetch rather than trust the stale value from the create response.
+    const { uuid } = await this.getWorkflowUuid(String(data.id));
+    return { id: String(data.id), uuid };
+  }
+
+  private async getWorkflowUuid(workflowId: string): Promise<{ uuid: string }> {
+    const res = await fetch(`${this.baseUrl}/api/v1/workflow/fetch/${workflowId}`, { headers: { 'X-API-Key': this.apiKey } });
+    if (!res.ok) throw new Error(`Dograh fetch workflow (for uuid) failed: ${await res.text()}`);
+    const data = await res.json();
+    return { uuid: data.workflow_uuid };
+  }
+
+  /** Overwrites and republishes an already-created workflow — the update path for a
+   * VoiceEmployee that already has a dograhWorkflowId. */
+  async publishWorkflowDefinition(workflowId: string, name: string, definition: any): Promise<void> {
+    await this.saveAndPublishWorkflow(workflowId, name, definition);
+  }
+
+  /**
+   * Compiles a VoiceEmployee's section graph into a Dograh workflow_definition. Follows the
+   * exact node/edge conventions proven in applyGeneratedFlow above (id scheme, wrongNumber/
+   * voicemail telephony-signal branches off the greeting, a wants_human escalation edge on
+   * every conversational node) but is driven by the section graph's OWN edges — each section
+   * already carries {to_key, condition} pairs (see VoiceEmployeeSection), so branching is
+   * whatever the employee's own graph specifies rather than an auto-chained linear list.
+   */
+  compileEmployeeDefinition(employee: {
+    employeeId: string;
+    composedPersona: string;
+    greeting: string;
+    sections: Array<{ sectionKey: string; label: string; prompt: string; enabled: boolean; order: number; nodeType: string; edges: Array<{ to_key: string; condition: string }> }>;
+    variables: Array<{ key: string; label: string; source: string; required: boolean; extractHint: string | null }>;
+    outboundWebhookUrl?: string;
+    webhookSecretHeader?: string;
+  }): any {
+    let nextId = 1;
+    const id = () => String(nextId++);
+    const pos = { x: 0, y: 0 };
+    const WANTS_HUMAN_VAR = { name: 'wants_human', type: 'boolean', prompt: 'The caller explicitly asked to speak with a human agent or a real person instead of continuing with the AI.' };
+
+    const nodes: any[] = [];
+    const edges: any[] = [];
+
+    const globalNode = { id: id(), type: 'globalNode', position: pos, data: { name: 'persona', prompt: employee.composedPersona } };
+    nodes.push(globalNode);
+
+    const greetingNode = {
+      id: id(), type: 'startCall', position: pos,
+      data: {
+        name: 'greeting', greeting_type: 'text', greeting: employee.greeting,
+        prompt: 'Confirm they are the right person and have a couple of minutes. If wrong number, acknowledge and prepare to end the call politely. If busy, offer to call back later and prepare to end the call politely. If they confirm interest and have time, move on.',
+        allow_interrupt: false, add_global_prompt: true, delayed_start: false, delayed_start_duration: 2,
+        extraction_enabled: true,
+        extraction_variables: [{ name: 'call_status', type: 'string', prompt: "one of: 'interested', 'busy', 'wrong_number'" }, WANTS_HUMAN_VAR],
+        pre_call_fetch_enabled: false,
+      },
+    };
+    nodes.push(greetingNode);
+
+    const wrongNumberNode = { id: id(), type: 'endCall', position: pos, data: { name: 'wrong_number_or_busy', prompt: 'If wrong number, apologize briefly and end the call. If busy, confirm you will call back later and end the call politely.', add_global_prompt: true, extraction_enabled: false } };
+    nodes.push(wrongNumberNode);
+    const voicemailNode = { id: id(), type: 'endCall', position: pos, data: { name: 'voicemail', prompt: 'Leave a brief, friendly message mentioning why you called and that the team will try again later. Keep it under 10 seconds worth of speech.', add_global_prompt: false } };
+    nodes.push(voicemailNode);
+    const humanHandoffNode = { id: id(), type: 'endCall', position: pos, data: { name: 'human_handoff', prompt: "Acknowledge warmly and let them know a team member will call them back shortly. Don't argue or continue qualifying.", add_global_prompt: false } };
+    nodes.push(humanHandoffNode);
+
+    const captureVars = employee.variables.filter((v) => v.source === 'capture').map((v) => ({ name: v.key, type: 'string', prompt: v.extractHint || v.label }));
+
+    // Non-terminal sections (nodeType 'llm' with outgoing edges) become agentNodes; a section
+    // with no edges (Outpero's own convention for a closing step, e.g. "close"/"faqs") becomes
+    // an endCall so the call actually terminates instead of dead-ending mid-graph.
+    const enabledSections = employee.sections.filter((s) => s.enabled).sort((a, b) => a.order - b.order);
+    const sectionNodeByKey = new Map<string, any>();
+    for (const section of enabledSections) {
+      const isTerminal = !section.edges?.length;
+      const node = isTerminal
+        ? { id: id(), type: 'endCall', position: pos, data: { name: section.sectionKey, prompt: section.prompt, add_global_prompt: true, extraction_enabled: false } }
+        : {
+            id: id(), type: 'agentNode', position: pos,
+            data: {
+              name: section.sectionKey, prompt: section.prompt, allow_interrupt: true, add_global_prompt: true,
+              extraction_enabled: true,
+              // Every capture variable is offered at every non-terminal section — Dograh's
+              // extraction reads full conversation context, not just the current turn, so a
+              // variable mentioned two sections ago is still captured correctly here. Simpler
+              // and more robust than trying to guess which section "owns" which variable.
+              extraction_variables: [...captureVars, WANTS_HUMAN_VAR],
+            },
+          };
+      nodes.push(node);
+      sectionNodeByKey.set(section.sectionKey, node);
+    }
+
+    // First enabled section is the entry point from a confirmed-interested greeting.
+    const firstSection = enabledSections[0];
+    if (firstSection) {
+      edges.push({ id: `${greetingNode.id}-${sectionNodeByKey.get(firstSection.sectionKey).id}`, source: greetingNode.id, target: sectionNodeByKey.get(firstSection.sectionKey).id, data: { label: 'interested', condition: "call_status is 'interested'" } });
+    }
+    edges.push({ id: `${greetingNode.id}-${wrongNumberNode.id}`, source: greetingNode.id, target: wrongNumberNode.id, data: { label: 'busy_or_wrong_number', condition: "call_status is 'busy' or 'wrong_number'" } });
+    edges.push({ id: `${greetingNode.id}-${voicemailNode.id}`, source: greetingNode.id, target: voicemailNode.id, data: { label: 'voicemail', condition: "answered_by is 'machine_start', 'machine_end_beep', 'machine_end_silence', 'machine_end_other', or 'fax'" } });
+
+    // The section graph's own edges, exactly as authored — this is where real branching
+    // (not just a linear chain) comes from.
+    for (const section of enabledSections) {
+      const fromNode = sectionNodeByKey.get(section.sectionKey);
+      for (const e of section.edges || []) {
+        const toNode = sectionNodeByKey.get(e.to_key);
+        if (!toNode) continue; // dangling reference to a disabled/missing section — skip rather than crash the publish
+        edges.push({ id: `${fromNode.id}-${toNode.id}`, source: fromNode.id, target: toNode.id, data: { label: 'next', condition: e.condition } });
+      }
+    }
+
+    for (const node of [greetingNode, ...enabledSections.map((s) => sectionNodeByKey.get(s.sectionKey)).filter((n) => n.type === 'agentNode')]) {
+      edges.push({ id: `${node.id}-${humanHandoffNode.id}-human`, source: node.id, target: humanHandoffNode.id, data: { label: 'wants human', condition: 'wants_human is true' } });
+    }
+
+    if (employee.outboundWebhookUrl) {
+      const outcomeShape: Record<string, string> = { wants_human: '{{gathered_context.wants_human}}' };
+      for (const v of employee.variables) outcomeShape[v.key] = `{{gathered_context.${v.key}}}`;
+      nodes.push({
+        id: id(), type: 'webhook', position: pos,
+        data: {
+          name: 'post_call_outcome', http_method: 'POST', endpoint_url: employee.outboundWebhookUrl,
+          custom_headers: employee.webhookSecretHeader ? [{ key: 'X-Webhook-Secret', value: employee.webhookSecretHeader }] : [],
+          payload_template: {
+            employee_id: employee.employeeId, call_sid: '{{workflow_run_id}}', lead_id: '{{initial_context.lead_id}}', status: 'completed',
+            outcome: outcomeShape,
+          },
+        },
+      });
+    }
+
+    return { nodes, edges, viewport: { x: 0, y: 0, zoom: 1 } };
   }
 }

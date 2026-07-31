@@ -6,6 +6,7 @@ import { api } from '../../lib/api';
 vi.mock('../../lib/useAuth', () => ({
   useAuth: vi.fn().mockReturnValue({
     user: { id: 'u1', role: 'MANAGER', name: 'Manager', email: 'm@t.com', tenantId: 't1' },
+    login: vi.fn(), logout: vi.fn(), fetchProfile: vi.fn(), loading: false, isLoggedIn: true,
   }),
 }));
 
@@ -84,6 +85,7 @@ describe('ManagerDashboardPage', () => {
     vi.mocked(useAuth).mockReset();
     vi.mocked(useAuth).mockReturnValue({
       user: { id: 'u1', role: 'MANAGER', name: 'Manager', email: 'm@t.com', tenantId: 't1' },
+      login: vi.fn(), logout: vi.fn(), fetchProfile: vi.fn(), loading: false, isLoggedIn: true,
     });
   });
 
@@ -106,6 +108,7 @@ describe('ManagerDashboardPage', () => {
   it('shows permission error for non-OWNER/ADMIN/MANAGER roles', () => {
     vi.mocked(useAuth).mockReturnValue({
       user: { id: 'u2', role: 'SALES_AGENT', name: 'Agent', email: 'a@t.com', tenantId: 't1' },
+      login: vi.fn(), logout: vi.fn(), fetchProfile: vi.fn(), loading: false, isLoggedIn: true,
     });
     render(<ManagerDashboardPage />);
     expect(screen.getByText('You do not have permission to view this page.')).toBeInTheDocument();

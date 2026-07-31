@@ -119,6 +119,8 @@ const PageComponents: Record<string, React.LazyExoticComponent<React.ComponentTy
   DocumentSearch: lazy(() => import("./pages/DocumentSearchPage")),
   PhysicalDocuments: lazy(() => import("./pages/PhysicalDocumentsPage")),
   VoiceAgent: lazy(() => import("./pages/VoiceAgentPage")),
+  VoiceEmployees: lazy(() => import("./pages/VoiceEmployeesPage")),
+  VoiceEmployeeDetail: lazy(() => import("./pages/VoiceEmployeeDetailPage")),
   VoiceAgentSettings: lazy(() => import("./pages/VoiceAgentSettingsPage")),
   VoiceCampaigns: lazy(() => import("./pages/VoiceCampaignsPage")),
   VoiceCampaignDetail: lazy(() => import("./pages/VoiceCampaignDetailPage")),
@@ -170,6 +172,8 @@ function getPageKey(raw: string): string {
   if (path.startsWith("/voice-call-logs")) return "VoiceCallLogs";
   if (path.startsWith("/voice-knowledge-base")) return "VoiceKnowledgeBase";
   if (path.startsWith("/voice-post-call-workflows")) return "VoicePostCallWorkflows";
+  if (/^\/voice-employees\/[^/]+$/.test(path)) return "VoiceEmployeeDetail";
+  if (path.startsWith("/voice-employees")) return "VoiceEmployees";
   if (path.startsWith("/voice-agent")) return "VoiceAgent";
   if (path.startsWith("/workflows")) return "Workflows";
   if (path.startsWith("/smart-lists")) return "SmartLists";

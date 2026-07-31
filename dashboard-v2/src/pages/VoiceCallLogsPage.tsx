@@ -43,6 +43,7 @@ export default function VoiceCallLogsPage() {
                 <th className="p-3 font-medium">Phone</th>
                 <th className="p-3 font-medium">Outcome</th>
                 <th className="p-3 font-medium">Duration</th>
+                <th className="p-3 font-medium">Quality</th>
               </tr>
             </thead>
             <tbody>
@@ -59,6 +60,24 @@ export default function VoiceCallLogsPage() {
                     <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${r.answered ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'}`}>{r.disposition}</span>
                   </td>
                   <td className="p-3 text-[var(--muted-foreground)]">{r.durationSeconds}s</td>
+                  <td className="p-3">
+                    {r.quality ? (
+                      <span
+                        title={`${r.quality.violations.length} issue${r.quality.violations.length === 1 ? '' : 's'} across ${r.quality.agentTurns} turns`}
+                        className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
+                          r.quality.score >= 80
+                            ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
+                            : r.quality.score >= 50
+                            ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
+                            : 'bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400'
+                        }`}
+                      >
+                        {r.quality.score}/100
+                      </span>
+                    ) : (
+                      <span className="text-xs text-[var(--muted-foreground)]">—</span>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>

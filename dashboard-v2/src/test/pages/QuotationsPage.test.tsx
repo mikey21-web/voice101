@@ -49,7 +49,7 @@ const mockQuotations = [
 
 describe('QuotationsPage', () => {
   beforeEach(() => {
-    vi.mocked(fetchQuotations).mockResolvedValue({ data: mockQuotations });
+    vi.mocked(fetchQuotations).mockResolvedValue({ data: mockQuotations, meta: {} });
   });
 
   it('renders Quotations heading', async () => {
@@ -71,7 +71,7 @@ describe('QuotationsPage', () => {
   });
 
   it('shows empty state when no quotations exist', async () => {
-    vi.mocked(fetchQuotations).mockResolvedValue({ data: [] });
+    vi.mocked(fetchQuotations).mockResolvedValue({ data: [], meta: {} });
     render(<QuotationsPage />, { wrapper: Wrapper });
     expect(await screen.findByText('No quotations yet.')).toBeInTheDocument();
   });

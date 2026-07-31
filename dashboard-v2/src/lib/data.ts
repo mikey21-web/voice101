@@ -209,10 +209,38 @@ export async function fetchProfile() { return api('/auth/me') as Promise<any>; }
 export async function fetchBusinessSettings() { return api('/business-settings') as Promise<any>; }
 export async function updateBusinessSettings(data: any) { return api('/business-settings', { method: 'PATCH', body: JSON.stringify(data) }); }
 
-export interface VoiceAgentSettings { greeting: string; persona: string; voicemailDetectionEnabled: boolean; antiEarlyHangupEnabled: boolean; checklistCopy: string; }
+export interface VoiceAgentSettings { greeting: string; persona: string; voicemailDetectionEnabled: boolean; antiEarlyHangupEnabled: boolean; checklistCopy: string; stylePackEnabled: boolean; aiAcknowledgementEnabled: boolean; }
 export async function fetchVoiceAgentSettings(lang = 'en') { return api(`/voice-agent/settings?lang=${lang}`) as Promise<VoiceAgentSettings>; }
-export async function updateVoiceAgentSettings(data: { greeting?: string; persona?: string; antiEarlyHangupEnabled?: boolean; checklistCopy?: string }, lang = 'en') { return api(`/voice-agent/settings?lang=${lang}`, { method: 'PATCH', body: JSON.stringify(data) }) as Promise<VoiceAgentSettings>; }
+export async function updateVoiceAgentSettings(data: { greeting?: string; persona?: string; antiEarlyHangupEnabled?: boolean; checklistCopy?: string; stylePackEnabled?: boolean; aiAcknowledgementEnabled?: boolean }, lang = 'en') { return api(`/voice-agent/settings?lang=${lang}`, { method: 'PATCH', body: JSON.stringify(data) }) as Promise<VoiceAgentSettings>; }
+
+export interface CallQualityReport { score: number; agentTurns: number; violationsPerTurn: number; violations: Array<{ rule: string; severity: 'high' | 'medium' | 'low'; turn: number; detail: string; excerpt?: string }>; }
 export async function toggleVoiceAgentAmd(enabled: boolean) { return api('/voice-agent/settings/amd', { method: 'PATCH', body: JSON.stringify({ enabled }) }) as Promise<{ voicemailDetectionEnabled: boolean }>; }
+
+export interface VoiceOption { voice_id: string; name: string; gender: string | null; accent: string | null; }
+export interface VoiceConfig { provider: string | null; voice: string | null; speed: number | null; language: string | null; }
+export const VOICE_PROVIDERS = ['sarvam', 'cartesia', 'smallest', 'elevenlabs'] as const;
+export async function fetchVoices(provider: string, lang?: string) { return api(`/voice-agent/voices?provider=${provider}${lang ? `&lang=${lang}` : ''}`) as Promise<VoiceOption[]>; }
+export async function fetchVoiceConfig() { return api('/voice-agent/voice-config') as Promise<VoiceConfig>; }
+export async function updateVoiceConfig(data: { provider: string; voiceId: string; speed?: number; language?: string }) { return api('/voice-agent/voice-config', { method: 'PATCH', body: JSON.stringify(data) }) as Promise<VoiceConfig>; }
+
+export interface AmbientNoiseConfig { enabled: boolean; volume: number; storageKey: string | null; }
+export async function fetchAmbientNoise(lang = 'en') { return api(`/voice-agent/ambient-noise?lang=${lang}`) as Promise<AmbientNoiseConfig>; }
+export async function updateAmbientNoise(data: { enabled?: boolean; volume?: number; storageKey?: string }, lang = 'en') { return api(`/voice-agent/ambient-noise?lang=${lang}`, { method: 'PATCH', body: JSON.stringify(data) }) as Promise<AmbientNoiseConfig>; }
+export async function getAmbientNoiseUploadUrl(filename: string, fileSize: number, mimeType: string, lang = 'en') {
+  return api(`/voice-agent/ambient-noise/upload-url?lang=${lang}`, { method: 'POST', body: JSON.stringify({ filename, fileSize, mimeType }) }) as Promise<{ uploadUrl: string; storageKey: string }>;
+}
+
+export interface GeneratedFlowDraft {
+  name: string; role: string; persona: string; greeting: string;
+  steps: Array<{ key: string; label: string; prompt: string; extract: Array<{ name: string; type: string; prompt: string }> }>;
+  outcomes: Array<{ key: string; label: string; condition: string; closingPrompt: string }>;
+}
+export async function generateCallFlow(description: string, businessName?: string) {
+  return api('/voice-agent/flow/generate', { method: 'POST', body: JSON.stringify({ description, businessName }) }) as Promise<GeneratedFlowDraft>;
+}
+export async function applyCallFlow(draft: GeneratedFlowDraft, lang = 'en') {
+  return api(`/voice-agent/flow/apply?lang=${lang}`, { method: 'POST', body: JSON.stringify({ draft }) }) as Promise<VoiceAgentSettings>;
+}
 
 export interface VoiceCampaign { id: number; name: string; state: string; total_rows: number; processed_rows: number; failed_rows: number; created_at: string; }
 export interface VoiceRetryConfig { enabled: boolean; maxRetries: number; retryDelaySeconds: number; retryOnBusy: boolean; retryOnNoAnswer: boolean; retryOnVoicemail: boolean; }
@@ -232,6 +260,7 @@ export interface VoiceCallRun {
   recordingUrl: string | null; transcriptUrl: string | null;
   summary: string | null; transcript: string | null;
   gatheredContext: Record<string, any>;
+  quality: CallQualityReport | null;
 }
 export async function fetchVoiceCampaignRuns(id: number, page = 1, limit = 50) {
   return api(`/voice-agent/campaigns/${id}/runs?page=${page}&limit=${limit}`) as Promise<{ runs: VoiceCallRun[]; totalCount: number; page: number; limit: number; totalPages: number }>;
@@ -253,6 +282,106 @@ export async function fetchVoiceCallLogs(page = 1, limit = 50) {
 }
 export interface VoiceDashboardStats { totalCalls: number; answerRate: number; avgDurationSeconds: number; totalMinutesUsed: number; dispositionCounts: Record<string, number>; }
 export async function fetchVoiceDashboardStats() { return api('/voice-agent/dashboard-stats') as Promise<VoiceDashboardStats>; }
+
+// ===== Multi-employee voice engine (VoiceEmployee, VoiceCall, VoiceLead, VoiceCampaign) =====
+
+export interface VoiceEmployeeSection {
+  id?: string; sectionKey: string; label: string; prompt: string; enabled?: boolean;
+  order: number; nodeType?: string; edges: Array<{ to_key: string; condition: string }>;
+}
+export interface VoiceEmployeeVariable {
+  id?: string; key: string; label: string; source?: 'pre' | 'capture'; required?: boolean; extractHint?: string | null;
+}
+export interface VoiceEmployeeAction { id: string; actionKey: string; label: string; enabled: boolean; gated: boolean; gateReason: string | null; }
+export interface VoiceEmployee {
+  id: string; name: string; role: string; mode: string; status: string;
+  voiceProvider: string; voiceId: string; voiceName?: string | null; ttsSpeed: number;
+  language: string; ambientSound?: string | null; ambientVolume: number;
+  welcomeMessage?: string | null; agentInformation?: string | null; callEndRules?: string | null;
+  scriptAdherence: number; stylePackEnabled: boolean; aiAcknowledgementEnabled: boolean;
+  dograhWorkflowId?: string | null; dograhWorkflowUuid?: string | null;
+  revision: number; isPublished: boolean; hasUnpublishedChanges: boolean; publishedAt?: string | null;
+  sections: VoiceEmployeeSection[]; variables: VoiceEmployeeVariable[]; actions?: VoiceEmployeeAction[];
+  createdAt: string;
+}
+export interface VoiceEmployeeInput {
+  name: string; role: string; mode?: string; voiceProvider: string; voiceId: string; voiceName?: string;
+  language?: string; welcomeMessage?: string; agentInformation?: string; callEndRules?: string;
+  stylePackEnabled?: boolean; aiAcknowledgementEnabled?: boolean;
+  sections?: VoiceEmployeeSection[]; variables?: VoiceEmployeeVariable[];
+}
+
+export async function fetchVoiceEmployees(includeArchived = false) {
+  return api(`/voice-employees?include_archived=${includeArchived}`) as Promise<VoiceEmployee[]>;
+}
+export async function fetchVoiceEmployee(id: string) { return api(`/voice-employees/${id}`) as Promise<VoiceEmployee>; }
+export async function createVoiceEmployee(data: VoiceEmployeeInput) {
+  return api('/voice-employees', { method: 'POST', body: JSON.stringify(data) }) as Promise<VoiceEmployee>;
+}
+export async function updateVoiceEmployee(id: string, data: Partial<VoiceEmployeeInput>) {
+  return api(`/voice-employees/${id}`, { method: 'PATCH', body: JSON.stringify(data) }) as Promise<VoiceEmployee>;
+}
+export async function deleteVoiceEmployee(id: string) { return api(`/voice-employees/${id}`, { method: 'DELETE' }); }
+export async function publishVoiceEmployee(id: string) { return api(`/voice-employees/${id}/publish`, { method: 'POST' }) as Promise<VoiceEmployee>; }
+export async function activateVoiceEmployee(id: string) { return api(`/voice-employees/${id}/activate`, { method: 'POST' }) as Promise<VoiceEmployee>; }
+export async function deactivateVoiceEmployee(id: string) { return api(`/voice-employees/${id}/deactivate`, { method: 'POST' }) as Promise<VoiceEmployee>; }
+export interface VoiceEmployeeVersion { id: string; revision: number; snapshot: any; createdAt: string; }
+export async function fetchVoiceEmployeeVersions(id: string) { return api(`/voice-employees/${id}/versions`) as Promise<VoiceEmployeeVersion[]>; }
+export async function restoreVoiceEmployeeVersion(id: string, revision: number) {
+  return api(`/voice-employees/${id}/versions/${revision}/restore`, { method: 'POST' }) as Promise<VoiceEmployee>;
+}
+export async function testCallVoiceEmployee(id: string, toNumber: string) {
+  return api(`/voice-employees/${id}/test-call`, { method: 'POST', body: JSON.stringify({ toNumber }) }) as Promise<{ success: boolean; callSid?: string }>;
+}
+
+export interface VoiceEngineCall {
+  id: string; employeeId: string; toNumber: string; durationS: number | null; disposition: string | null;
+  summary: string | null; outcome: any; createdAt: string; employee?: { name: string };
+  quality: { score: number; violations: any[]; agentTurns: number } | null;
+}
+export async function fetchVoiceEngineCalls(filters: { employeeId?: string; limit?: number } = {}) {
+  const q = new URLSearchParams(filters as any).toString();
+  return api(`/voice-calls?${q}`) as Promise<VoiceEngineCall[]>;
+}
+export async function fetchVoiceEngineCall(id: string) { return api(`/voice-calls/${id}`) as Promise<VoiceEngineCall>; }
+export async function redialVoiceEngineCall(id: string) { return api(`/voice-calls/${id}/redial`, { method: 'POST' }); }
+
+export interface VoiceEngineLead {
+  id: string; employeeId: string; phone: string; outcome: string | null; captured: any; summary: string | null; createdAt: string;
+}
+export async function fetchVoiceEngineLeads(filters: { employeeId?: string; limit?: number } = {}) {
+  const q = new URLSearchParams(filters as any).toString();
+  return api(`/voice-leads?${q}`) as Promise<VoiceEngineLead[]>;
+}
+
+export interface VoiceEngineCampaign {
+  id: string; employeeId: string; name: string; status: string; totalContacts: number; dialed: number; reached: number; createdAt: string;
+  employee?: { name: string };
+}
+export async function fetchVoiceEngineCampaigns(employeeId?: string) {
+  return api(`/voice-campaigns${employeeId ? `?employeeId=${employeeId}` : ''}`) as Promise<VoiceEngineCampaign[]>;
+}
+export async function createVoiceEngineCampaign(data: { employeeId: string; name: string; contacts: Array<{ phone: string; name?: string }> }) {
+  return api('/voice-campaigns', { method: 'POST', body: JSON.stringify(data) }) as Promise<VoiceEngineCampaign>;
+}
+export async function pauseVoiceEngineCampaign(id: string) { return api(`/voice-campaigns/${id}/pause`, { method: 'POST' }); }
+export async function resumeVoiceEngineCampaign(id: string) { return api(`/voice-campaigns/${id}/resume`, { method: 'POST' }); }
+export async function fetchVoiceEngineCampaignProgress(id: string) { return api(`/voice-campaigns/${id}/progress`); }
+
+export interface VoiceEngineBilling {
+  credits: number;
+  employees: Array<{ id: string; name: string; role: string; status: string; voiceProvider: string; minutesUsed: number; costInr: number }>;
+  rates: { sarvamPerMin: number; cartesiaPerMin: number; openaiRealtimePerMin: number; hireFee: number; hireIncludedCredits: number; hireActiveDays: number; gstRatePct: number };
+  lifetime: { spentInr: number; minutesUsedTotal: number };
+}
+export async function fetchVoiceEngineBilling() { return api('/voice-billing') as Promise<VoiceEngineBilling>; }
+export async function fetchVoiceEngineWallet() { return api('/voice-wallet') as Promise<{ balanceInr: number }>; }
+
+export interface VoiceEngineNumber { id: string; number: string; provider: string; dltRegistered: boolean; kycStatus: string; status: string; }
+export async function fetchVoiceEngineNumbers() { return api('/voice-numbers') as Promise<VoiceEngineNumber[]>; }
+export async function addVoiceEngineNumber(number: string, provider = 'twilio') {
+  return api('/voice-numbers', { method: 'POST', body: JSON.stringify({ number, provider }) }) as Promise<VoiceEngineNumber>;
+}
 
 export interface VoiceKbDocument { id: number; document_uuid: string; filename: string; processing_status: string; total_chunks: number; created_at: string; }
 export async function fetchVoiceKbDocuments() { return api('/voice-agent/knowledge-base/documents') as Promise<{ documents: VoiceKbDocument[] }>; }
