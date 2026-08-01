@@ -11,14 +11,10 @@ export default function VoiceLeadsResultsPage() {
   }, []);
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center gap-1.5 mb-0.5">
-        <Database size={13} className="text-[var(--primary)]" />
-        <span className="text-[11px] font-medium text-[var(--primary)] uppercase tracking-wider">Outreach · Results</span>
-      </div>
+    <div className="space-y-8 animate-fade-in">
       <div>
-        <h1 className="text-xl font-bold text-[var(--foreground)]">Leads & Results</h1>
-        <p className="text-sm text-[var(--muted-foreground)] mt-0.5">Every lead captured by a call, with what the employee found out</p>
+        <h1 className="text-3xl font-bold text-[var(--foreground)]">Leads & Results</h1>
+        <p className="text-sm text-[var(--muted-foreground)] mt-2">Every lead captured by a call, with outcomes and data</p>
       </div>
 
       <div className="rounded-lg border border-[var(--border)] bg-[var(--card)] overflow-x-auto">

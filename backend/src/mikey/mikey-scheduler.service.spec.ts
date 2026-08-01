@@ -95,6 +95,43 @@ describe('MikeySchedulerService reliability', () => {
     expect(memory.reflectOnOutcome).toHaveBeenCalledWith('t1', 'booking_outcome', 'b1');
     expect(memory.reflectOnOutcome).toHaveBeenCalledWith('t1', 'booking_outcome', 'b2');
   });
+
+  describe('30 second first-contact SLA (section 5)', () => {
+    // Pin the clock so these do not pass or fail depending on what time the
+    // suite happens to run.
+    afterEach(() => jest.useRealTimers());
+
+    it('raises a finding for a lead captured with no call attempted', async () => {
+      jest.useFakeTimers().setSystemTime(new Date('2026-08-01T11:00:00'));
+      prisma.lead.findMany.mockResolvedValue([
+        { id: 'l1', tenantId: 't1', contact: { name: 'Ravi' } },
+      ]);
+
+      const findings = await (scheduler as any).checkFirstContactSlaBreaches();
+
+      expect(findings).toHaveLength(1);
+      expect(findings[0].type).toBe('first_contact_sla_breach');
+      expect(prisma.lead.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ firstContactAttemptedAt: null }),
+        }),
+      );
+    });
+
+    it('stays quiet when every lead was called in time', async () => {
+      jest.useFakeTimers().setSystemTime(new Date('2026-08-01T11:00:00'));
+      prisma.lead.findMany.mockResolvedValue([]);
+      expect(await (scheduler as any).checkFirstContactSlaBreaches()).toEqual([]);
+    });
+
+    it('does not alert outside business hours', async () => {
+      jest.useFakeTimers().setSystemTime(new Date('2026-08-01T23:30:00'));
+      prisma.lead.findMany.mockResolvedValue([
+        { id: 'l1', tenantId: 't1', contact: { name: 'Ravi' } },
+      ]);
+      expect(await (scheduler as any).checkFirstContactSlaBreaches()).toEqual([]);
+    });
+  });
 });
 
 

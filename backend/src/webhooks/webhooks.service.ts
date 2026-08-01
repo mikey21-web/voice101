@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { PrismaService } from '../prisma/prisma.service';
 import { ContactsService } from '../contacts/contacts.service';
 import { LeadsService } from '../leads/leads.service';
+import { ResolveLeadService } from '../leads/resolve-lead.service';
 import { ConversationsService } from '../conversations/conversations.service';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { AgentClientService } from '../agent/agent-client.service';
@@ -11,6 +12,7 @@ import { envelopeDecrypt } from '../shared/crypto.util';
 import { OutboundWebhookDispatchService } from '../shared/outbound-webhook-dispatch.service';
 import { ConfigService } from '@nestjs/config';
 import { FlowRuntimeService } from '../flows/flow-runtime.service';
+import { getTenantId } from '../shared/tenant-helper';
 import * as crypto from 'crypto';
 
 @Injectable()
@@ -27,6 +29,7 @@ export class WebhooksService {
     private outboundDispatch: OutboundWebhookDispatchService,
     private config: ConfigService,
     private flowRuntime: FlowRuntimeService,
+    private resolveLead: ResolveLeadService,
   ) {}
 
   // The "off switch" for the freeform AI agent — when a business has flipped to
@@ -64,15 +67,33 @@ export class WebhooksService {
     const existing = await this.prisma.webhookEvent.findUnique({ where: { idempotencyKey: key } });
     if (existing) return { status: 'duplicate', result: existing.processedResult };
 
-    const contact = await this.contactsService.findOrCreate({ name: payload.name, email: payload.email, phone: payload.phone, whatsapp: payload.whatsapp, company: payload.company }, req);
+    // Phase 4: one resolve path. This used to dedupe the contact and then always
+    // create a lead, so the same buyer arriving from four portals became four
+    // leads and four salespeople rang one person.
+    const resolved = await this.resolveLead.resolveLead({
+      tenantId: getTenantId(req),
+      name: payload.name,
+      email: payload.email,
+      phone: payload.phone,
+      whatsapp: payload.whatsapp,
+      company: payload.company,
+      source: 'FORM',
+      message: payload.message,
+      interest: payload.interest,
+      budget: payload.budget,
+      metadata: payload,
+      req,
+    });
     if (payload.language) {
+      const contactRow = await this.prisma.contact.findUnique({ where: { id: resolved.contactId } });
       await this.prisma.contact.update({
-        where: { id: contact.id },
-        data: { metadata: { ...(contact.metadata as object || {}), language: payload.language } },
+        where: { id: resolved.contactId },
+        data: { metadata: { ...(contactRow?.metadata as object || {}), language: payload.language } },
       }).catch(() => {});
     }
-    const lead = await this.leadsService.create({ contactId: contact.id, source: 'FORM', message: payload.message, interest: payload.interest, budget: payload.budget, metadata: payload });
-    const result = { contact, lead };
+    const contact = await this.prisma.contact.findUnique({ where: { id: resolved.contactId } });
+    const lead = await this.prisma.lead.findUnique({ where: { id: resolved.leadId } });
+    const result = { contact, lead, resolution: { isReturning: resolved.isReturning, reusedExistingLead: resolved.reusedExistingLead } };
     await this.prisma.webhookEvent.create({ data: { provider, eventType: 'form_submit', idempotencyKey: key, rawPayload: payload, processedResult: result } });
     await this.auditLogs.log('webhook_processed', 'WebhookEvent', key, undefined, { provider, eventType: 'form_submit' });
     this.metrics.incrementCounter('webhooks_processed_total', { provider, status: 'success' });

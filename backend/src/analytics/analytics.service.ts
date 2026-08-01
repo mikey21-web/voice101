@@ -6,15 +6,19 @@ export class AnalyticsService {
   constructor(private prisma: PrismaService) {}
 
   async overview() {
-    const [total, hot, warm, cold, converted, lost] = await Promise.all([
+    const [total, hot, warm, cold, converted, lost, contacted] = await Promise.all([
       this.prisma.lead.count(),
       this.prisma.lead.count({ where: { segment: 'HOT' } }),
       this.prisma.lead.count({ where: { segment: 'WARM' } }),
       this.prisma.lead.count({ where: { segment: 'COLD' } }),
       this.prisma.lead.count({ where: { status: 'CONVERTED' } }),
       this.prisma.lead.count({ where: { status: 'LOST' } }),
+      this.prisma.lead.findMany({ where: { firstContactAttemptedAt: { not: null } }, select: { createdAt: true, firstContactAttemptedAt: true } }),
     ]);
-    return { total, hot, warm, cold, converted, lost, conversionRate: total ? ((converted / total) * 100).toFixed(1) : 0 };
+    const captureToCallSeconds = contacted.length > 0
+      ? +(contacted.reduce((sum, l) => sum + Math.max(0, (l.firstContactAttemptedAt!.getTime() - l.createdAt.getTime()) / 1000), 0) / contacted.length).toFixed(1)
+      : 0;
+    return { total, hot, warm, cold, converted, lost, conversionRate: total ? ((converted / total) * 100).toFixed(1) : 0, captureToCallSeconds };
   }
 
   async forecast() {

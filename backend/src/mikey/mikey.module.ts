@@ -1,5 +1,6 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { BookingsModule } from '../bookings/bookings.module';
+import { LeadsModule } from '../leads/leads.module';
 import { AnalyticsModule } from '../analytics/analytics.module';
 import { ApprovalsModule } from '../approvals/approvals.module';
 import { ConversationsModule } from '../conversations/conversations.module';
@@ -22,6 +23,7 @@ import { MorningDigestService } from './morning-digest.service';
 import { DailyBriefService } from './daily-brief.service';
 import { SalienceEngineService } from './salience-engine.service';
 import { AutonomyGuardrailsService } from './autonomy-guardrails.service';
+import { EscalationService } from './escalation.service';
 import { AutonomousActionService } from './autonomous-action.service';
 import { AutonomousActionController } from './autonomous-action.controller';
 import { OutcomeEngineService } from './outcome-engine.service';
@@ -38,6 +40,7 @@ import { GuardrailsController } from './guardrails.controller';
 
 @Module({
   imports: [
+    forwardRef(() => LeadsModule),
     BookingsModule, AnalyticsModule, ConversationsModule, SiteVisitsModule, UnitHoldsModule, SlaModule,
     CostSheetsModule, OffersModule, DocumentsModule, ChannelPartnerClaimsModule, TicketsModule, ApprovalsModule,
     PropertiesModule, ProjectsModule, ChannelPartnersModule, CampaignsModule,
@@ -58,6 +61,7 @@ import { GuardrailsController } from './guardrails.controller';
     SalienceEngineService,
     AutonomyGuardrailsService,
     AutonomousActionService,
+    EscalationService,
     PermissionGateService,
   ],
   exports: [
@@ -67,6 +71,7 @@ import { GuardrailsController } from './guardrails.controller';
     StaffAwarenessService,
     MemoryService,
     AutonomousActionService,
+    EscalationService,
     AutonomyGuardrailsService,
     PermissionGateService,
   ],

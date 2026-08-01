@@ -6,6 +6,7 @@ import { Public } from '../auth/public.decorator';
 import { WebhookSecurityService } from '../shared/webhook-security.service';
 import { VoiceCallService } from './voice-call.service';
 import { VoiceLeadService } from './voice-lead.service';
+import { lintTranscript } from './call-quality';
 
 @Controller('voice-calls')
 export class VoiceCallController {
@@ -39,13 +40,36 @@ export class VoiceCallController {
     return this.calls.redial(req.user.tenantId, id);
   }
 
+  @Get(':id/struggles')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('OWNER', 'ADMIN', 'MANAGER')
+  async getStruggles(@Req() req: any, @Param('id') id: string) {
+    const call = await this.calls.get(req.user.tenantId, id);
+    if (!call.transcript) return { struggles: [], teachable: [] };
+
+    const report = lintTranscript(call.transcript);
+    const teachable = report.violations
+      .filter((v) => v.severity === 'high')
+      .map((v) => ({
+        issue: v.rule,
+        detail: v.detail,
+        turn: v.turn,
+        excerpt: v.excerpt,
+      }));
+
+    return { struggles: report.violations, score: report.score, teachable };
+  }
+
   /** Dograh's post_call_outcome webhook, one per employee's compiled workflow (see
-   * DograhService.compileEmployeeDefinition). Same secret-header verification pattern as the
-   * existing single-workflow webhook/call-completed endpoint. */
+   * DograhService.compileEmployeeDefinition). Accepts the secret via query param — confirmed
+   * empirically that Dograh's webhook node does not actually send configured custom_headers at
+   * runtime (the definition stores them, but the real outbound request omits them), so the
+   * header-only check silently 401'd every real call while working fine via manual curl. The
+   * query param is embedded directly in endpoint_url, which Dograh always sends verbatim. */
   @Public()
   @Post('webhook/employee-call-completed')
-  async webhook(@Body() body: any, @Headers('x-webhook-secret') secret?: string) {
-    if (!this.security.verifyWebhookApiKey(secret || '', 'dograh')) {
+  async webhook(@Body() body: any, @Query('secret') querySecret?: string, @Headers('x-webhook-secret') headerSecret?: string) {
+    if (!this.security.verifyWebhookApiKey(querySecret || headerSecret || '', 'dograh')) {
       throw new UnauthorizedException('Invalid webhook secret');
     }
     return this.calls.handleWebhook(body);

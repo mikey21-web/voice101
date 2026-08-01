@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import OpenAI from 'openai';
+import { SectionInput } from './voice-employee.service';
 
 /** One qualifying question the agent asks mid-call, with what it should capture while asking it. */
 export interface GeneratedStep {
@@ -65,6 +66,50 @@ Rules:
 - Do not include any safety/compliance/escalation logic — that is added automatically.
 - Keep every "prompt" field to plain instructions for the AGENT, not example dialogue.`;
 
+/** The section shape editFlow reads and writes: an already-hired employee's LIVE call script
+ * (VoiceEmployeeSection, same as SectionInput) — not the pre-creation draft from generate().
+ * Editing an existing agent's script is what actually happens on the "Call script" tab. */
+export interface SectionsEditResult {
+  sections: SectionInput[];
+}
+
+const EDIT_SYSTEM_PROMPT = `You edit an EXISTING AI voice agent's call script — a sequence of
+named sections, each with instructions for what to do and rules for where the call goes next.
+You are given the current sections as JSON and one plain-English instruction describing a single
+change the business owner wants made. Output ONLY a JSON object of this exact shape, no markdown,
+no explanation:
+
+{
+  "sections": [
+    {
+      "sectionKey": "snake_case_key",
+      "label": "Short human-readable label",
+      "prompt": "One instruction: what this section should ask or do. Never ask two things in one section.",
+      "enabled": true,
+      "order": 1,
+      "nodeType": "agentNode",
+      "edges": [ { "to_key": "snake_case_key_of_next_section", "condition": "plain-English condition for taking this edge" } ]
+    }
+  ]
+}
+
+Rules:
+- Apply ONLY the requested change. Copy every other section through UNCHANGED — same prompt text,
+  same edges, same order — unless the instruction requires touching it (e.g. inserting a new
+  section requires re-pointing the edge that used to skip over where it now sits).
+- order is 1-indexed and must have no gaps or duplicates across the returned array.
+- sectionKey values must be unique. When adding a section, invent a new key that doesn't collide.
+- A section can have MULTIPLE edges (branches) — e.g. one condition routing to a follow-up section
+  and another routing to closing if the caller isn't interested. Every to_key must be a sectionKey
+  that exists somewhere in the returned sections array (no dangling edges).
+- The LAST section in call order should have an empty edges array (nothing routes onward from it).
+- If the instruction references a fact, price, or promise the script can't already verify, phrase
+  the section as asking/offering it, not asserting it as already true.
+- nodeType is "agentNode" for a normal conversational section. Preserve whatever nodeType an
+  existing section already has when you copy it through.
+- Do not add language-specific style rules, safety/compliance/escalation logic, or persona/greeting
+  text — those live outside sections and are not yours to touch.`;
+
 @Injectable()
 export class CallFlowGeneratorService {
   private readonly logger = new Logger(CallFlowGeneratorService.name);
@@ -110,6 +155,74 @@ export class CallFlowGeneratorService {
     return this.validate(parsed);
   }
 
+  /** Conversational script editor ("Swara"-style): takes an already-hired employee's CURRENT
+   * live sections plus one plain-English instruction ("add urgency before closing", "handle a
+   * price objection") and returns the whole section list again with only that change applied.
+   * Whole-list in/out (not a diff) so the model sees full context — existing section keys and
+   * edges — and doesn't duplicate a section or point an edge at a key that doesn't exist.
+   * Pure generation like generate(): nothing is saved until the caller reviews the result and
+   * calls VoiceEmployeeService.update() themselves (same draft-vs-published flow as everywhere
+   * else in this module — publish() is what actually reaches live calls). */
+  async editFlow(currentSections: SectionInput[], instruction: string): Promise<SectionsEditResult> {
+    if (!this.client) throw new Error('AI API key not configured (OPENAI_API_KEY or DEEPSEEK_API_KEY)');
+    if (!instruction?.trim()) throw new Error('Instruction is required');
+    if (!currentSections?.length) throw new Error('There are no sections to edit yet');
+
+    const response = await this.client.chat.completions.create({
+      model: this.config.get<string>('WORKFLOW_MODEL') || 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: EDIT_SYSTEM_PROMPT },
+        { role: 'user', content: `Current sections:\n${JSON.stringify({ sections: currentSections }, null, 2)}\n\nRequested change:\n${instruction.trim()}` },
+      ],
+      temperature: 0.3,
+      response_format: { type: 'json_object' },
+    });
+
+    const text = response.choices[0]?.message?.content;
+    if (!text) throw new Error('AI returned an empty response');
+
+    let parsed: any;
+    try {
+      parsed = JSON.parse(text);
+    } catch {
+      throw new Error('AI returned malformed JSON');
+    }
+
+    return this.validateSections(parsed);
+  }
+
+  /** Same fail-loudly principle as validate() below, but for the sections shape: a dangling edge
+   * or duplicate key here would either crash the Dograh compile step or silently produce a call
+   * flow with a section the caller can never reach. */
+  private validateSections(result: any): SectionsEditResult {
+    const errors: string[] = [];
+    const sections = result?.sections;
+    if (!Array.isArray(sections) || sections.length === 0) {
+      throw new Error('AI-edited flow is invalid: sections must be a non-empty array');
+    }
+
+    const keys = new Set<string>();
+    for (const s of sections) {
+      if (!s.sectionKey || !s.prompt) errors.push(`section missing sectionKey/prompt: ${JSON.stringify(s).slice(0, 80)}`);
+      if (s.sectionKey && keys.has(s.sectionKey)) errors.push(`duplicate sectionKey: ${s.sectionKey}`);
+      if (s.sectionKey) keys.add(s.sectionKey);
+      if (typeof s.order !== 'number') errors.push(`section "${s.sectionKey}" missing numeric order`);
+    }
+    for (const s of sections) {
+      for (const e of s.edges || []) {
+        if (!e.to_key || !keys.has(e.to_key)) errors.push(`section "${s.sectionKey}" has an edge to unknown section "${e.to_key}"`);
+        if (!e.condition) errors.push(`section "${s.sectionKey}" has an edge with no condition`);
+      }
+    }
+
+    if (errors.length) {
+      this.logger.warn(`AI-edited flow failed validation: ${errors.join('; ')}`);
+      throw new Error(`AI-edited flow is invalid: ${errors.join('; ')}`);
+    }
+
+    return result as SectionsEditResult;
+  }
+
   /** Fails loudly on a structurally broken draft rather than passing it through to the graph
    * builder, where a missing field would either crash mid-write or silently produce a call flow
    * with a dangling edge. */
@@ -139,5 +252,52 @@ export class CallFlowGeneratorService {
     }
 
     return draft as GeneratedFlowDraft;
+  }
+
+  checkReadiness(sections: SectionInput[]): { score: number; canPublish: boolean; feedback: string[] } {
+    const feedback: string[] = [];
+    let totalScore = 0;
+
+    for (const section of sections) {
+      const promptLength = section.prompt?.length || 0;
+      const hasEdges = (section.edges || []).length > 0;
+      const isTerminal = !hasEdges;
+
+      // Prompt richness (0-25)
+      if (promptLength < 30) feedback.push(`[${section.sectionKey}] Prompt too short — expand to at least 30 chars`);
+      if (promptLength < 50) totalScore += 10;
+      else if (promptLength < 100) totalScore += 15;
+      else if (promptLength < 200) totalScore += 20;
+      else totalScore += 25;
+
+      // Edges quality (0-25)
+      if (!isTerminal) {
+        const hasWeakEdges = (section.edges || []).some((e) => !e.condition || e.condition.length < 10);
+        if (hasWeakEdges) feedback.push(`[${section.sectionKey}] Edge conditions too vague — be specific when this branch should trigger`);
+        totalScore += (section.edges || []).length * 8;
+      } else {
+        totalScore += 15;
+      }
+
+      // Variables captured (0-25)
+      const captureVars = (section.edges || [])
+        .flatMap((e) => e.condition.match(/\w+/g) || [])
+        .filter((v) => !['is', 'and', 'or', 'true', 'false'].includes(v));
+      if (captureVars.length === 0 && !isTerminal) feedback.push(`[${section.sectionKey}] No extraction variables — what should the LLM capture here?`);
+      totalScore += Math.min(captureVars.length * 5, 25);
+
+      // Label/section quality (0-25)
+      if (section.label?.length >= 5) totalScore += 15;
+      if (section.sectionKey?.length >= 3 && !section.sectionKey.match(/[A-Z]|[0-9]{2}/)) totalScore += 10;
+    }
+
+    const score = Math.min(100, Math.round(totalScore / Math.max(1, sections.length)));
+    const canPublish = score >= 40;
+
+    if (score < 40) feedback.push(`Overall readiness: ${score}/100. Prompts are too thin to publish reliably.`);
+    else if (score < 70) feedback.push(`Overall readiness: ${score}/100. Could be richer — consider adding more context/instructions.`);
+    else feedback.push(`Overall readiness: ${score}/100. Ready to publish.`);
+
+    return { score, canPublish, feedback };
   }
 }

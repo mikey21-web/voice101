@@ -11,10 +11,12 @@ import { MetricsService } from '../monitoring/metrics.service';
 import { RealtimeGateway } from '../realtime/realtime.gateway';
 import { LeadOrchestratorService } from '../voice-agent/lead-orchestrator.service';
 import { LeadContextService } from './lead-context.service';
+import { AdvanceStageService } from './advance-stage.service';
 
 describe('LeadsService', () => {
   let service: LeadsService;
   let prisma: any;
+  const advanceStage = { advanceStage: jest.fn().mockResolvedValue({ from: 'NEW', to: 'SPAM', stage: 'CLOSED_LOST' }) };
   const auditLogs = { log: jest.fn().mockResolvedValue({}) };
   const advanced = { checkBlocklist: jest.fn().mockResolvedValue(false) };
   const events = { emit: jest.fn().mockResolvedValue({}) };
@@ -71,6 +73,7 @@ describe('LeadsService', () => {
         { provide: RealtimeGateway, useValue: { broadcastLeadUpdate: jest.fn(), sendToUser: jest.fn(), emitToTenant: jest.fn() } },
         { provide: LeadOrchestratorService, useValue: { onLeadCreated: jest.fn().mockResolvedValue(undefined) } },
         { provide: LeadContextService, useValue: { enrich: jest.fn().mockResolvedValue(undefined) } },
+        { provide: AdvanceStageService, useValue: advanceStage },
       ],
     }).compile();
 
@@ -105,9 +108,9 @@ describe('LeadsService', () => {
     expect(scored.segment).toBe('UNQUALIFIED');
   });
 
-  it('should mark lead as spam', async () => {
+  it('should mark lead as spam through advanceStage', async () => {
     const spam = await service.markSpam('lead-1');
-    expect(spam.status).toBe('SPAM');
+    expect(advanceStage.advanceStage).toHaveBeenCalledWith(expect.objectContaining({ to: 'SPAM', reason: 'marked as spam' }));
     expect(spam.segment).toBe('UNQUALIFIED');
     expect(spam.score).toBe(-100);
   });

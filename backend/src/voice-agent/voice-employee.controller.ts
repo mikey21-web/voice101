@@ -21,6 +21,27 @@ export class VoiceEmployeeController {
     return this.generator.generate(body.description, body.businessName);
   }
 
+  /** "Swara"-style conversational script editor: one plain-English instruction patches the
+   * employee's CURRENT sections. Returns the proposed sections for review only — nothing is
+   * saved here. The frontend shows them as a draft (same "these edits aren't on live calls yet"
+   * banner as any other unsaved change) and calls PATCH :id itself once the owner accepts. */
+  @Post(':id/edit-flow')
+  @Roles('OWNER', 'ADMIN')
+  async editFlow(@Req() req: any, @Param('id') id: string, @Body() body: { instruction: string }) {
+    const employee = await this.service.get(req.user.tenantId, id);
+    const sections = employee.sections.map((s) => ({
+      sectionKey: s.sectionKey, label: s.label, prompt: s.prompt, enabled: s.enabled,
+      order: s.order, nodeType: s.nodeType, edges: s.edges as any,
+    }));
+    return this.generator.editFlow(sections, body.instruction);
+  }
+
+  @Get(':id/readiness')
+  @Roles('OWNER', 'ADMIN', 'MANAGER')
+  checkReadiness(@Req() req: any, @Param('id') id: string) {
+    return this.service.checkReadiness(req.user.tenantId, id);
+  }
+
   @Get()
   @Roles('OWNER', 'ADMIN', 'MANAGER')
   list(@Req() req: any, @Query('include_archived') includeArchived?: string) {

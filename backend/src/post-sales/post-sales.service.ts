@@ -135,7 +135,7 @@ export class PostSalesService {
     });
     await this.auditLogs.log('ADVANCE_STAGE', 'Booking', bookingId, actorId, { fromStage, toStage, reason });
 
-    return updated;
+    return { ...updated, bookingAmountPaise: (updated as any).bookingAmountPaise?.toString() };
   }
 
   private async checkPrecondition(tenantId: string, bookingId: string, leadId: string, toStage: PostSalesStage): Promise<{ passed: boolean; reason?: string; checkedAt: string }> {

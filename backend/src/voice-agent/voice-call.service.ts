@@ -1,6 +1,7 @@
 import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { DograhService } from '../shared/dograh.service';
+import { CallerMemoryService } from './caller-memory.service';
 import { lintTranscript } from './call-quality';
 
 /**
@@ -13,7 +14,7 @@ import { lintTranscript } from './call-quality';
 export class VoiceCallService {
   private readonly logger = new Logger(VoiceCallService.name);
 
-  constructor(private prisma: PrismaService, private dograh: DograhService) {}
+  constructor(private prisma: PrismaService, private dograh: DograhService, private memory: CallerMemoryService) {}
 
   async list(tenantId: string, filters: { employeeId?: string; campaignId?: string; disposition?: string; direction?: string; limit?: number } = {}) {
     const calls = await this.prisma.voiceCall.findMany({
@@ -97,6 +98,15 @@ export class VoiceCallService {
         summary: call.summary,
       },
     });
+
+    // Merge extracted variables into caller memory for future calls from this number
+    if (call.toNumber && outcome && Object.keys(outcome).length > 0) {
+      try {
+        await this.memory.mergeFacts(employee.tenantId, call.toNumber, outcome);
+      } catch (err) {
+        this.logger.warn(`Failed to merge caller facts: ${err.message}`);
+      }
+    }
 
     this.logger.log(`Ingested call ${call.id} for employee ${employee.id} (${employee.name})`);
     return { received: true, callId: call.id };

@@ -82,6 +82,17 @@ export class AutonomousActionService {
           data: { priority: undoData.previousPriority ?? 'medium' },
         });
         break;
+      // advanceStage is strict-forward, so a reversal cannot go back through it.
+      // This is the explicit backward path spine-stage.ts points at.
+      case 'advance_stage':
+        if (!undoData.previousStatus) {
+          throw new BadRequestException('No previous status recorded for this transition');
+        }
+        await this.prisma.lead.update({
+          where: { id: action.leadId! },
+          data: { status: undoData.previousStatus },
+        });
+        break;
       default:
         throw new BadRequestException(`No undo handler for tool "${action.tool}"`);
     }

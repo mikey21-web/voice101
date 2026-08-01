@@ -9,7 +9,7 @@ import { ChannelPartnerClaimsService } from '../channel-partner-claims/channel-p
 import { TicketsService } from '../tickets/tickets.service';
 import { ApprovalsService } from '../approvals/approvals.service';
 import { AutonomousActionService } from './autonomous-action.service';
-import { AutonomyGuardrailsService } from './autonomy-guardrails.service';
+import { AutonomyGuardrailsService, AutonomyCategory } from './autonomy-guardrails.service';
 import { PropertiesService } from '../properties/properties.service';
 import { ProjectsService } from '../projects/projects.service';
 import { ChannelPartnersService } from '../channel-partners/channel-partners.service';
@@ -20,6 +20,47 @@ export type JarvisToolResult =
   | { status: 'BLOCKED_BY_POLICY'; reason: string }
   | { status: 'FAILED_RETRYABLE'; error: string }
   | { status: 'FAILED_FINAL'; error: string };
+
+/**
+ * Every tool maps to exactly one autonomy dial. Anything that moves money or
+ * commits a price is `money` and stays observe-first; scheduling a site visit
+ * must never share a switch with issuing a demand letter.
+ */
+export const TOOL_CATEGORY: Record<string, AutonomyCategory> = {
+  // money: payments, prices, discounts, anything a buyer could hold us to
+  generateCostSheet: 'money',
+  requestDiscountApproval: 'money',
+  createDemandLetter: 'money',
+  sendPaymentReminder: 'money',
+  // inventory: units and listings
+  holdUnit: 'inventory',
+  releaseHold: 'inventory',
+  searchProperties: 'inventory',
+  createProperty: 'inventory',
+  updateProperty: 'inventory',
+  searchProjects: 'inventory',
+  createProject: 'inventory',
+  updateProject: 'inventory',
+  // scheduling: the diary
+  createSiteVisit: 'scheduling',
+  confirmSiteVisit: 'scheduling',
+  // documents: paperwork, tickets, partner records, campaigns
+  createCustomerTicket: 'documents',
+  updateTicket: 'documents',
+  createPartnerLeadRegistration: 'documents',
+  searchChannelPartners: 'documents',
+  createChannelPartner: 'documents',
+  updateChannelPartner: 'documents',
+  searchCampaigns: 'documents',
+  createCampaign: 'documents',
+  updateCampaign: 'documents',
+};
+
+/** Unmapped tools fall back to `money`, the strictest dial: a new tool is
+ * gated until someone deliberately classifies it. */
+export function categoryOfTool(tool: string): AutonomyCategory {
+  return TOOL_CATEGORY[tool] ?? 'money';
+}
 
 /**
  * Narrowly-scoped, typed tools Jarvis/Mikey may call on its own (spec 56.6) —
@@ -229,7 +270,7 @@ export class JarvisToolsService {
     leadId: string | undefined,
     execute: () => Promise<Record<string, unknown>>,
   ): Promise<JarvisToolResult> {
-    const gate = await this.guardrails.canActInternally(tenantId, 'jarvis_tools');
+    const gate = await this.guardrails.canActInternally(tenantId, categoryOfTool(tool));
     if (!gate.allowed) {
       await this.autonomousActions.record({ tenantId, findingType: tool, tool, leadId, result: `BLOCKED_BY_POLICY: ${gate.reason}` });
       return { status: 'BLOCKED_BY_POLICY', reason: gate.reason! };

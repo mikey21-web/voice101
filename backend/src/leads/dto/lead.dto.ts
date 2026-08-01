@@ -17,6 +17,7 @@ export class CreateLeadDto {
 export class UpdateLeadDto {
   @ApiPropertyOptional() @IsOptional() @IsString() status?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() segment?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() whatsapp?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() interest?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() budget?: string;
   @ApiPropertyOptional() @IsOptional() @IsNumber() dealValue?: number | null;

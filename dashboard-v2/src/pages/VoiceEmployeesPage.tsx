@@ -62,121 +62,123 @@ export default function VoiceEmployeesPage() {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex items-start justify-between">
+    <div className="space-y-8 animate-fade-in">
+      <div className="flex items-end justify-between">
         <div>
-          <div className="flex items-center gap-1.5 mb-0.5">
-            <Users size={13} className="text-[var(--primary)]" />
-            <span className="text-[11px] font-medium text-[var(--primary)] uppercase tracking-wider">Outreach</span>
-          </div>
-          <h1 className="text-xl font-bold text-[var(--foreground)]">My Employees</h1>
-          <p className="text-sm text-[var(--muted-foreground)] mt-0.5">Voice agents you've hired — each with its own script, voice and phone number</p>
+          <h1 className="text-3xl font-bold text-[var(--foreground)]">My Employees</h1>
+          <p className="text-sm text-[var(--muted-foreground)] mt-2">Voice agents you've hired. Each runs with its own script and phone number.</p>
         </div>
         <button
           onClick={() => setModalOpen(true)}
-          className="h-9 px-4 rounded-lg bg-[var(--primary)] text-white text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2"
+          className="h-10 px-4 rounded-lg bg-[var(--primary)] text-white text-sm font-bold hover:opacity-90 transition-opacity flex items-center gap-2"
         >
-          <Plus size={14} /> Hire an employee
+          <Plus size={16} /> Hire
         </button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatCard label="Total employees" value={employees.length} hint={`${filtered.length} shown`} />
-        <StatCard label="Active" value={activeCount} hint={`${employees.length - activeCount} paused/draft`} dotColor="bg-emerald-500" />
-        <StatCard label="Unpublished drafts" value={draftCount} hint="not yet live on calls" dotColor="bg-amber-500" />
+      <div className="grid grid-cols-3 gap-6">
+        <StatCard label="Total" value={employees.length} hint={`${filtered.length} shown`} />
+        <StatCard label="Active" value={activeCount} hint={`${employees.length - activeCount} paused`} />
+        <StatCard label="Drafts" value={draftCount} hint="unpublished" />
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-col sm:flex-row gap-3">
         <input
-          value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search name or role..."
-          className="flex-1 min-w-[200px] h-9 rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20"
+          value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search employees..."
+          className="flex-1 h-10 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)]"
         />
-        {(['all', 'active', 'draft'] as StatusFilter[]).map((f) => (
-          <button
-            key={f}
-            onClick={() => setStatusFilter(f)}
-            className={`h-9 px-3 rounded-lg text-xs font-medium border transition-colors ${
-              statusFilter === f ? 'bg-[var(--primary)] text-white border-[var(--primary)]' : 'border-[var(--border)] text-[var(--foreground)] hover:bg-[var(--accent)]'
-            }`}
-          >
-            {f === 'all' ? 'All statuses' : f === 'active' ? 'Active' : 'Draft'}
-          </button>
-        ))}
+        <div className="flex gap-2">
+          {(['all', 'active', 'draft'] as StatusFilter[]).map((f) => (
+            <button
+              key={f}
+              onClick={() => setStatusFilter(f)}
+              className={`h-10 px-3 rounded-lg text-sm font-medium transition-colors ${
+                statusFilter === f ? 'bg-[var(--primary)] text-white' : 'bg-[var(--accent)] text-[var(--foreground)] hover:opacity-75'
+              }`}
+            >
+              {f === 'all' ? 'All' : f === 'active' ? 'Active' : 'Draft'}
+            </button>
+          ))}
+        </div>
       </div>
 
       {loading ? (
-        <div className="p-10 text-center text-[var(--muted-foreground)]"><Loader2 size={20} className="animate-spin inline mr-2" />Loading...</div>
+        <div className="py-12 text-center text-[var(--muted-foreground)]"><Loader2 size={20} className="animate-spin inline mr-2" />Loading...</div>
+      ) : filtered.length === 0 ? (
+        <div className="py-12 text-center">
+          <p className="text-sm text-[var(--muted-foreground)] mb-4">{employees.length === 0 ? 'No employees yet.' : 'No employees match this filter.'}</p>
+          {employees.length === 0 && (
+            <button onClick={() => setModalOpen(true)} className="inline-flex h-10 px-4 rounded-lg bg-[var(--primary)] text-white text-sm font-medium hover:opacity-90">
+              <Plus size={16} className="mr-2" /> Hire your first employee
+            </button>
+          )}
+        </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map((emp) => (
-            <div key={emp.id} className="rounded-lg border border-[var(--border)] bg-[var(--card)] p-4 shadow-[var(--shadow-sm)] flex flex-col gap-3">
-              <div className="flex items-start justify-between">
-                <div className="flex items-start gap-3 min-w-0 cursor-pointer" onClick={() => { window.location.hash = `/voice-employees/${emp.id}`; }}>
-                  <div className="shrink-0 h-9 w-9 rounded-full bg-[var(--primary)] text-white flex items-center justify-center font-semibold text-sm">
-                    {emp.name.charAt(0).toUpperCase()}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="font-semibold text-sm text-[var(--foreground)] truncate">{emp.name}</p>
-                    <p className="text-xs text-[var(--muted-foreground)] truncate">{emp.role}</p>
-                  </div>
+            <div
+              key={emp.id}
+              onClick={() => { window.location.hash = `/voice-employees/${emp.id}`; }}
+              className="rounded-lg border border-[var(--border)] p-4 hover:bg-[var(--accent)]/50 cursor-pointer transition-colors space-y-4"
+            >
+              <div className="flex items-start gap-3">
+                <div className="h-10 w-10 rounded-full bg-[var(--primary)] text-white flex items-center justify-center font-semibold flex-shrink-0">
+                  {emp.name.charAt(0).toUpperCase()}
                 </div>
-                <span className={`shrink-0 inline-flex px-2 py-0.5 rounded-full text-[10px] font-medium ${
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold text-[var(--foreground)] truncate">{emp.name}</p>
+                  <p className="text-sm text-[var(--muted-foreground)] truncate">{emp.role}</p>
+                </div>
+                <span className={`text-xs font-medium px-2 py-1 rounded-full shrink-0 ${
                   emp.status === 'active' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' : 'bg-gray-100 dark:bg-gray-800 text-[var(--muted-foreground)]'
                 }`}>
-                  {emp.status}
+                  {emp.status === 'active' ? 'Active' : 'Paused'}
                 </span>
               </div>
 
-              <div className="grid grid-cols-3 gap-2 text-center border-t border-b border-[var(--border)] py-2">
+              <div className="grid grid-cols-3 gap-3 text-center py-2 border-y border-[var(--border)]">
                 <div>
-                  <p className="text-sm font-bold text-[var(--foreground)]">{emp.sections?.length || 0}</p>
-                  <p className="text-[10px] text-[var(--muted-foreground)] uppercase tracking-wide">Sections</p>
+                  <p className="text-lg font-bold text-[var(--foreground)]">{emp.sections?.length || 0}</p>
+                  <p className="text-xs text-[var(--muted-foreground)]">Steps</p>
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-[var(--foreground)]">{emp.variables?.length || 0}</p>
-                  <p className="text-[10px] text-[var(--muted-foreground)] uppercase tracking-wide">Variables</p>
+                  <p className="text-lg font-bold text-[var(--foreground)]">{emp.variables?.length || 0}</p>
+                  <p className="text-xs text-[var(--muted-foreground)]">Variables</p>
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-[var(--foreground)]">{emp.isPublished ? `v${emp.revision}` : '—'}</p>
-                  <p className="text-[10px] text-[var(--muted-foreground)] uppercase tracking-wide">{emp.isPublished ? 'Published' : 'Draft'}</p>
+                  <p className="text-lg font-bold text-[var(--foreground)]">{emp.isPublished ? `v${emp.revision}` : '—'}</p>
+                  <p className="text-xs text-[var(--muted-foreground)]">{emp.isPublished ? 'Live' : 'Draft'}</p>
                 </div>
               </div>
 
               {emp.hasUnpublishedChanges && (
-                <p className="text-[11px] text-amber-600 dark:text-amber-400">Unpublished changes</p>
+                <p className="text-xs text-amber-600 dark:text-amber-400 font-medium">Unsaved changes</p>
               )}
 
-              <div className="flex items-center gap-1.5 mt-1">
+              <div className="flex gap-1.5 pt-2" onClick={(e) => e.stopPropagation()}>
                 <button
                   onClick={() => handlePublish(emp.id)}
                   disabled={busyId === emp.id}
-                  className="flex-1 h-8 rounded-lg border border-[var(--border)] text-xs font-medium text-[var(--foreground)] hover:bg-[var(--accent)] transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50"
+                  className="flex-1 h-9 rounded-lg bg-[var(--primary)] text-white text-xs font-medium hover:opacity-90 disabled:opacity-50 transition-opacity flex items-center justify-center gap-1"
                 >
-                  {busyId === emp.id ? <Loader2 size={12} className="animate-spin" /> : <Rocket size={12} />}
-                  Publish
+                  {busyId === emp.id ? <Loader2 size={14} className="animate-spin" /> : <Rocket size={14} />}
                 </button>
                 <button
                   onClick={() => handleToggleActive(emp)}
                   disabled={busyId === emp.id || !emp.isPublished}
                   title={!emp.isPublished ? 'Publish first' : undefined}
-                  className={`h-8 w-8 rounded-lg border border-[var(--border)] flex items-center justify-center transition-colors disabled:opacity-40 ${
-                    emp.status === 'active' ? 'text-emerald-600' : 'text-[var(--muted-foreground)] hover:bg-[var(--accent)]'
-                  }`}
+                  className={`h-9 w-9 rounded-lg flex items-center justify-center transition-colors ${
+                    emp.status === 'active' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600' : 'hover:bg-[var(--accent)] text-[var(--muted-foreground)]'
+                  } disabled:opacity-40`}
                 >
-                  <Power size={12} />
-                </button>
-                <button
-                  onClick={() => { window.location.hash = `/voice-employees/${emp.id}`; }}
-                  className="h-8 w-8 rounded-lg border border-[var(--border)] text-[var(--muted-foreground)] hover:bg-[var(--accent)] transition-colors flex items-center justify-center"
-                >
-                  <ChevronRight size={12} />
+                  <Power size={14} />
                 </button>
                 <button
                   onClick={() => handleDelete(emp.id, emp.name)}
                   disabled={busyId === emp.id}
-                  className="h-8 w-8 rounded-lg border border-[var(--border)] text-[var(--muted-foreground)] hover:text-rose-600 hover:border-rose-300 transition-colors flex items-center justify-center disabled:opacity-50"
+                  className="h-9 w-9 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/20 text-[var(--muted-foreground)] hover:text-rose-600 transition-colors flex items-center justify-center disabled:opacity-50"
                 >
-                  <Trash2 size={12} />
+                  <Trash2 size={14} />
                 </button>
               </div>
             </div>
@@ -184,19 +186,13 @@ export default function VoiceEmployeesPage() {
 
           <button
             onClick={() => setModalOpen(true)}
-            className="rounded-lg border border-dashed border-[var(--border)] bg-[var(--accent)]/30 p-4 flex flex-col items-center justify-center gap-2 min-h-[180px] hover:bg-[var(--accent)]/50 transition-colors"
+            className="rounded-lg border-2 border-dashed border-[var(--border)] p-4 flex flex-col items-center justify-center gap-2 min-h-[200px] hover:border-[var(--primary)] hover:bg-[var(--primary)]/5 transition-colors"
           >
-            <div className="h-10 w-10 rounded-full bg-[var(--primary)] text-white flex items-center justify-center">
+            <div className="h-10 w-10 rounded-lg bg-[var(--primary)]/10 text-[var(--primary)] flex items-center justify-center">
               <Plus size={18} />
             </div>
-            <p className="text-sm font-semibold text-[var(--foreground)]">Hire another employee</p>
+            <p className="text-sm font-medium text-[var(--foreground)]">Hire another</p>
           </button>
-
-          {!loading && filtered.length === 0 && employees.length > 0 && (
-            <div className="col-span-full rounded-lg border border-[var(--border)] bg-[var(--card)] p-10 text-center text-sm text-[var(--muted-foreground)]">
-              No employees match this filter.
-            </div>
-          )}
         </div>
       )}
 
@@ -205,15 +201,12 @@ export default function VoiceEmployeesPage() {
   );
 }
 
-function StatCard({ label, value, hint, dotColor }: { label: string; value: number; hint: string; dotColor?: string }) {
+function StatCard({ label, value, hint }: { label: string; value: number; hint: string }) {
   return (
-    <div className="rounded-lg border border-[var(--border)] bg-[var(--card)] p-4">
-      <div className="flex items-center gap-1.5 mb-1">
-        <span className={`h-1.5 w-1.5 rounded-full ${dotColor || 'bg-[var(--primary)]'}`} />
-        <span className="text-[11px] font-medium text-[var(--muted-foreground)] uppercase tracking-wider">{label}</span>
-      </div>
-      <p className="text-2xl font-bold text-[var(--foreground)]">{value}</p>
-      <p className="text-xs text-[var(--muted-foreground)] mt-0.5">{hint}</p>
+    <div className="rounded-lg border border-[var(--border)] p-4">
+      <p className="text-sm font-medium text-[var(--muted-foreground)] mb-2">{label}</p>
+      <p className="text-3xl font-bold text-[var(--foreground)]">{value}</p>
+      <p className="text-xs text-[var(--muted-foreground)] mt-1">{hint}</p>
     </div>
   );
 }

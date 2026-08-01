@@ -42,14 +42,10 @@ export default function VoiceInstantLeadsPage() {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center gap-1.5 mb-0.5">
-        <Zap size={13} className="text-[var(--primary)]" />
-        <span className="text-[11px] font-medium text-[var(--primary)] uppercase tracking-wider">Outreach · Calling</span>
-      </div>
+    <div className="space-y-8 animate-fade-in">
       <div>
-        <h1 className="text-xl font-bold text-[var(--foreground)]">Instant Leads</h1>
-        <p className="text-sm text-[var(--muted-foreground)] mt-0.5">Call one number right now with a published employee</p>
+        <h1 className="text-3xl font-bold text-[var(--foreground)]">Instant Leads</h1>
+        <p className="text-sm text-[var(--muted-foreground)] mt-2">Call one number right now using any published employee</p>
       </div>
 
       <form onSubmit={handleCall} className="rounded-lg border border-[var(--border)] bg-[var(--card)] p-4 space-y-3 max-w-md">

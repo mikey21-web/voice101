@@ -152,27 +152,23 @@ export default function VoiceCampaignsPage() {
   );
 
   return (
-    <div className="space-y-6 animate-fade-in max-w-3xl">
-      <div className="flex items-start justify-between">
+    <div className="space-y-8 animate-fade-in">
+      <div className="flex items-end justify-between">
         <div>
-          <div className="flex items-center gap-1.5 mb-0.5">
-            <Megaphone size={13} className="text-[var(--primary)]" />
-            <span className="text-[11px] font-medium text-[var(--primary)] uppercase tracking-wider">Outreach</span>
-          </div>
-          <h1 className="text-xl font-bold text-[var(--foreground)]">Voice Campaigns</h1>
-          <p className="text-sm text-[var(--muted-foreground)] mt-0.5">Call many leads at once with the AI voice agent</p>
+          <h1 className="text-3xl font-bold text-[var(--foreground)]">Campaigns</h1>
+          <p className="text-sm text-[var(--muted-foreground)] mt-2">Call lists of leads using the AI voice agent</p>
         </div>
         <button
           onClick={openModal}
-          className="h-9 px-4 rounded-lg bg-[var(--primary)] text-white text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2 shrink-0"
+          className="h-10 px-4 rounded-lg bg-[var(--primary)] text-white text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2 shrink-0"
         >
-          <Plus size={14} />
-          New Campaign
+          <Plus size={16} />
+          New
         </button>
       </div>
 
-      <div className="rounded-lg bg-[var(--card)] border border-[var(--border)] p-5 shadow-[var(--shadow-sm)]">
-        <h3 className="font-semibold text-sm text-[var(--foreground)] mb-4">Campaigns</h3>
+      <section>
+        <h2 className="text-lg font-bold text-[var(--foreground)] mb-4">Active Campaigns</h2>
         {campaigns.length === 0 ? (
           <div className="py-10 text-center">
             <Megaphone size={28} className="mx-auto mb-3 text-[var(--muted-foreground)]" />

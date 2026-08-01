@@ -69,14 +69,10 @@ export default function VoicePostCallWorkflowsPage() {
   );
 
   return (
-    <div className="space-y-6 animate-fade-in max-w-2xl">
+    <div className="space-y-8 animate-fade-in">
       <div>
-        <div className="flex items-center gap-1.5 mb-0.5">
-          <Workflow size={13} className="text-[var(--primary)]" />
-          <span className="text-[11px] font-medium text-[var(--primary)] uppercase tracking-wider">Outreach</span>
-        </div>
-        <h1 className="text-xl font-bold text-[var(--foreground)]">Post-Call Workflows</h1>
-        <p className="text-sm text-[var(--muted-foreground)] mt-0.5">Automatically send call data (outcome, transcript, summary) somewhere after every call</p>
+        <h1 className="text-3xl font-bold text-[var(--foreground)]">Post-Call Workflows</h1>
+        <p className="text-sm text-[var(--muted-foreground)] mt-2">Automatically send call data (outcome, transcript, summary) to Google Sheets, webhooks, or other APIs</p>
       </div>
 
       {!showForm && (
@@ -101,7 +97,7 @@ export default function VoicePostCallWorkflowsPage() {
       )}
 
       {showForm && (
-        <form onSubmit={handleCreate} className="rounded-lg bg-[var(--card)] border border-[var(--border)] p-5 shadow-[var(--shadow-sm)] space-y-3">
+        <form onSubmit={handleCreate} className="rounded-lg border border-[var(--border)] p-6 space-y-4">
           <h3 className="font-semibold text-sm text-[var(--foreground)] flex items-center gap-2">
             {showForm === 'sheets' ? <Sheet size={15} className="text-emerald-600" /> : <WebhookIcon size={15} className="text-[var(--primary)]" />}
             {showForm === 'sheets' ? 'Save to Google Sheets' : 'Custom Webhook'}

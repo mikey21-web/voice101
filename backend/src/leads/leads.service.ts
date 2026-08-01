@@ -10,6 +10,7 @@ import { MetricsService } from '../monitoring/metrics.service';
 import { RealtimeGateway } from '../realtime/realtime.gateway';
 import { LeadOrchestratorService } from '../voice-agent/lead-orchestrator.service';
 import { LeadContextService } from './lead-context.service';
+import { AdvanceStageService } from './advance-stage.service';
 import { getNested, evaluateCondition } from '../shared/scoring.util';
 
 @Injectable()
@@ -27,6 +28,7 @@ export class LeadsService {
     private realtimeGateway: RealtimeGateway,
     private callOrchestrator: LeadOrchestratorService,
     private leadContext: LeadContextService,
+    private advanceStage: AdvanceStageService,
   ) {}
 
   async findAll(query: any = {}, tenantId?: string) {
@@ -343,10 +345,30 @@ export class LeadsService {
 
   async update(id: string, data: any, userId?: string) {
     const existing = await this.findOne(id);
+    // Status is the spine. It never moves through a generic update — route it
+    // through advanceStage so every transition is validated, audited and emitted.
+    const { status, whatsapp, ...rest } = data || {};
+    if (status) {
+      await this.advanceStage.advanceStage({
+        tenantId: existing.tenantId,
+        leadId: id,
+        to: status,
+        actor: userId ? 'human' : 'system',
+        reason: 'lead update',
+        actorUserId: userId,
+      });
+    }
+    if (whatsapp) {
+      // WhatsApp is a Contact column, not a Lead column — route it to the contact.
+      try {
+        await this.prisma.contact.update({ where: { id: existing.contactId }, data: { whatsapp } });
+      } catch { /* ignore contact update errors */ }
+    }
+    if (Object.keys(rest).length === 0) return existing;
     return this.prisma.$transaction(async (tx) => {
       const lead = await tx.lead.update({
         where: { id, version: existing.version },
-        data: { ...data, version: { increment: 1 } },
+        data: { ...rest, version: { increment: 1 } },
       }).catch((err) => {
         if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {
           throw new ConflictException('Lead was modified by another request. Please refresh and retry.');
@@ -368,7 +390,6 @@ export class LeadsService {
       }
 
       await this.auditLogs.log('lead_updated', 'Lead', id, userId, data);
-      if (data.status) await this.events.emit({ type: 'lead.status_changed', leadId: id, entityType: 'lead', entityId: id, payload: { from: null, to: data.status }, createdById: userId });
       if (data.segment) await this.events.emit({ type: 'lead.segment_changed', leadId: id, entityType: 'lead', entityId: id, payload: { to: data.segment }, createdById: userId });
       return lead;
     });
@@ -443,8 +464,16 @@ export class LeadsService {
   }
 
   async markSpam(id: string, userId?: string) {
-    await this.findOne(id);
-    const lead = await this.prisma.lead.update({ where: { id }, data: { status: 'SPAM', segment: 'UNQUALIFIED', score: -100 } });
+    const existing = await this.findOne(id);
+    await this.advanceStage.advanceStage({
+      tenantId: existing.tenantId,
+      leadId: id,
+      to: 'SPAM',
+      actor: userId ? 'human' : 'system',
+      reason: 'marked as spam',
+      actorUserId: userId,
+    });
+    const lead = await this.prisma.lead.update({ where: { id }, data: { segment: 'UNQUALIFIED', score: -100 } });
     await this.auditLogs.log('lead_marked_spam', 'Lead', id, userId);
     return lead;
   }

@@ -144,6 +144,8 @@ model Tenant {
   workflowDefinitions          WorkflowDefinition[]
   voiceCallers                 VoiceCaller[]
   voiceTrainingExamples        VoiceTrainingExample[]
+  leadEscalations              LeadEscalation[]
+  callCoachings                CallCoaching[]
 
   @@index([slug])
   @@map("tenants")
@@ -265,6 +267,7 @@ model CallLog {
   transcript      String?       @db.Text
   summary         String?
   summaryStatus   String        @default("PENDING")
+  coaching        CallCoaching?
   disposition     String? // connected_qualified | connected_follow_up | wrong_number | no_answer | busy | switched_off | not_interested | site_visit_scheduled | lost (spec 64.1)
   nextActionAt    DateTime?
   outcome         Json? // structured data extracted by the voice agent (e.g. Dograh call outcomes: property_type, area, bhk, budget, timeline, needs_loan, wants_site_visit)
@@ -652,6 +655,7 @@ model User {
   skills                          String[]                    @default([])
   annualLeaveQuota                Int?
   teamStatus                      String?
+  callCoachings                   CallCoaching[]
 
   @@index([email])
   @@index([role])
@@ -811,7 +815,7 @@ model Lead {
   campaignId  String?
   qualifiedAt DateTime?
   convertedAt DateTime?
-  firstContactAttemptedAt DateTime?
+  firstContactAttemptedAt DateTime? @map("first_contact_attempted_at")
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
@@ -862,6 +866,7 @@ model Lead {
   nriProfile                  NriBuyerProfile?
   physicalDocumentCustodies   PhysicalDocumentCustody[]    @relation("PhysicalDocumentLead")
   buyerSessions               BuyerSession[]
+  escalations                 LeadEscalation[]
 
   channelPartnerId String?
   channelPartner   ChannelPartner? @relation(fields: [channelPartnerId], references: [id])
@@ -6101,4 +6106,72 @@ model VoiceCampaign {
 
   @@index([tenantId])
   @@map("voice_campaigns")
+}
+
+enum EscalationTrigger {
+  LEAD_REQUESTED_HUMAN
+  DEAL_VALUE_OVER_THRESHOLD
+  NEGATIVE_SENTIMENT
+  LOW_MODEL_CONFIDENCE
+  PRICE_NEGOTIATION
+  LEGAL_OR_COMMITMENT
+
+  @@map("escalation_trigger")
+}
+
+/// Phase 5: Mikey hands a lead to a human and stops acting on it. An unresolved
+/// row is the per-lead pause — every autonomous path checks for one before
+/// acting. The trigger log is also the training data Phase 7's coach learns
+/// from, so rows are kept after resolution rather than deleted.
+model LeadEscalation {
+  id         String            @id @default(uuid())
+  tenantId   String            @map("tenant_id")
+  tenant     Tenant            @relation(fields: [tenantId], references: [id])
+  leadId     String
+  lead       Lead              @relation(fields: [leadId], references: [id])
+  trigger    EscalationTrigger
+  detail     String
+  resolvedAt DateTime?
+  resolvedById String?
+  createdAt  DateTime          @default(now())
+
+  @@index([tenantId, leadId, resolvedAt])
+  @@index([leadId])
+  @@map("lead_escalations")
+}
+
+
+/// Phase 7 (Rail D). One coaching record per call, for every call at every
+/// stage — not just the negotiation call. The rep sees their own row; only an
+/// admin sees them side by side. There is deliberately no public leaderboard:
+/// a sales team quietly kills a tool that grades them in front of each other.
+model CallCoaching {
+  id            String   @id @default(uuid())
+  tenantId      String   @map("tenant_id")
+  tenant        Tenant   @relation(fields: [tenantId], references: [id])
+  callLogId     String   @unique
+  callLog       CallLog  @relation(fields: [callLogId], references: [id], onDelete: Cascade)
+  /// The rep being coached. Null for a call Mikey handled on its own.
+  userId        String?
+  user          User?    @relation(fields: [userId], references: [id])
+  leadId        String?
+
+  /// 0-100. Null when the model could not score the call rather than 0, so a
+  /// failed analysis never looks like a terrible call.
+  score         Int?
+  missedQuestions   String[] @default([])
+  objections        String[] @default([])
+  buyingSignals     String[] @default([])
+  recommendedAction String?
+  whatToSend        String?
+  /// 0-1 chance this deal closes, as read from this call alone.
+  dealProbability   Float?
+  /// Set when the call is good enough to show a new rep as an example.
+  isExemplar    Boolean  @default(false)
+  analysisStatus String  @default("PENDING")
+  createdAt     DateTime @default(now())
+
+  @@index([tenantId, userId, createdAt])
+  @@index([tenantId, isExemplar])
+  @@map("call_coachings")
 }

@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { KhojClientService } from '../khoj-client/khoj-client.service';
 import { OutcomeEngineService } from './outcome-engine.service';
 import { EventsService } from '../events/events.service';
+import { AdvanceStageService } from '../leads/advance-stage.service';
 
 export type RiskLevel = 'low' | 'medium' | 'high';
 
@@ -50,6 +51,7 @@ export class MikeyService {
     private khoj: KhojClientService,
     private outcomeEngine: OutcomeEngineService,
     private events: EventsService,
+    private advanceStage: AdvanceStageService,
   ) {}
 
   getActionRisk(tool: string): { rule: ActionRule; risk: RiskLevel } {
@@ -141,13 +143,19 @@ export class MikeyService {
           result = await this.prisma.ticket.create({ data: { ...params.args, leadId: params.leadId } });
           actionDescription = `Created ticket: ${params.args.title || ''}`;
           break;
-        case 'update_lead_status':
-          result = await this.prisma.lead.update({
-            where: { id: params.leadId },
-            data: { status: params.args.status },
+        case 'update_lead_status': {
+          const lead = await this.prisma.lead.findUnique({ where: { id: params.leadId }, select: { tenantId: true } });
+          if (!lead) throw new Error('Lead not found');
+          result = await this.advanceStage.advanceStage({
+            tenantId: lead.tenantId,
+            leadId: params.leadId!,
+            to: params.args.status,
+            actor: 'mikey',
+            reason: 'autonomous update_lead_status',
           });
           actionDescription = `Updated lead ${params.leadId} status to ${params.args.status}`;
           break;
+        }
         case 'set_segment':
           result = await this.prisma.lead.update({
             where: { id: params.leadId },

@@ -12,9 +12,10 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { ContactsModule } from '../contacts/contacts.module';
 import { LeadsModule } from '../leads/leads.module';
 import { RealtimeModule } from '../realtime/realtime.module';
+import { CoachModule } from '../coach/coach.module';
 
 @Module({
-  imports: [ScheduleModule.forRoot(), PrismaModule, ContactsModule, LeadsModule, RealtimeModule, HttpModule],
+  imports: [ScheduleModule.forRoot(), PrismaModule, ContactsModule, LeadsModule, RealtimeModule, HttpModule, CoachModule],
   controllers: [CallTrackingController, WorkforceController],
   providers: [CallTrackingService, CallSummaryService, RecordingCleanupService, WorkforceService, DeviceAuthGuard],
   exports: [CallTrackingService, CallSummaryService, WorkforceService],

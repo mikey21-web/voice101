@@ -6,6 +6,7 @@ import { MoonshineService } from '../shared/moonshine.service';
 import OpenAI from 'openai';
 import * as fs from 'fs';
 import * as path from 'path';
+import { CoachService } from '../coach/coach.service';
 
 @Injectable()
 export class CallSummaryService {
@@ -18,6 +19,7 @@ export class CallSummaryService {
     private prisma: PrismaService,
     private realtime: RealtimeGateway,
     private moonshine: MoonshineService,
+    private coach: CoachService,
   ) {
     const openaiApiKey = this.config.get<string>('OPENAI_API_KEY');
     if (openaiApiKey) {
@@ -147,6 +149,13 @@ export class CallSummaryService {
           transcript,
         });
       }
+
+      // Rail D fires on every call, not only the ones that summarised cleanly:
+      // a call with no transcript still tells the rep their recording failed.
+      // Never let coaching failure lose the transcript we just saved.
+      await this.coach.coachCall(callLogId).catch((err: any) =>
+        this.logger.error(`Coaching failed for call ${callLogId}: ${err.message}`),
+      );
     } catch (err: any) {
       this.logger.error(`Summarization failed for call ${callLogId}: ${err.message}`);
       await this.prisma.callLog.update({

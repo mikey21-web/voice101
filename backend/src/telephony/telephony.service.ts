@@ -46,6 +46,15 @@ export class TelephonyService {
         },
       });
 
+      // First outbound contact clock (form-submit -> call-placed). Set once, so a
+      // follow-up call doesn't overwrite the original capture-to-call measurement.
+      if (!lead.firstContactAttemptedAt) {
+        await this.prisma.lead.update({
+          where: { id: lead.id },
+          data: { firstContactAttemptedAt: new Date() },
+        });
+      }
+
       await this.prisma.conversationMessage.create({
         data: {
           text: `Outbound call to ${lead.contact.phone} (SID: ${result.callSid})`,

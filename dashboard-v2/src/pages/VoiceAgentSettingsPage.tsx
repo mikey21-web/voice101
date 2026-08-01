@@ -210,19 +210,13 @@ export default function VoiceAgentSettingsPage() {
   );
 
   return (
-    <div className="space-y-6 animate-fade-in max-w-2xl">
-      <div className="flex items-start justify-between">
-        <div>
-          <div className="flex items-center gap-1.5 mb-0.5">
-            <Phone size={13} className="text-[var(--primary)]" />
-            <span className="text-[11px] font-medium text-[var(--primary)] uppercase tracking-wider">Outreach</span>
-          </div>
-          <h1 className="text-xl font-bold text-[var(--foreground)]">Voice Agent Settings</h1>
-          <p className="text-sm text-[var(--muted-foreground)] mt-0.5">Tune the greeting, persona, and conversation safeguards for the AI voice agent (Telugu)</p>
-        </div>
+    <div className="space-y-8 animate-fade-in max-w-4xl">
+      <div>
+        <h1 className="text-3xl font-bold text-[var(--foreground)]">Voice Agent Settings</h1>
+        <p className="text-sm text-[var(--muted-foreground)] mt-2">Greeting, persona, voice, voicemail detection, and conversation safeguards (Telugu)</p>
       </div>
 
-      <div className="rounded-lg bg-[var(--card)] border border-[var(--border)] p-5 shadow-[var(--shadow-sm)] space-y-4">
+      <section className="space-y-4 border-t border-[var(--border)] pt-6">
         <h3 className="font-semibold text-sm text-[var(--foreground)] flex items-center gap-2">
           <Sparkles size={15} className="text-[var(--primary)]" />
           Build a call flow from a description
@@ -307,7 +301,7 @@ export default function VoiceAgentSettingsPage() {
         )}
       </div>
 
-      <div className="rounded-lg bg-[var(--card)] border border-[var(--border)] p-5 shadow-[var(--shadow-sm)] flex items-center justify-between">
+      <div className="rounded-lg border border-[var(--border)] p-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           {settings?.voicemailDetectionEnabled ? (
             <ShieldCheck size={16} className="text-emerald-600 dark:text-emerald-400" />
@@ -329,7 +323,7 @@ export default function VoiceAgentSettingsPage() {
         </button>
       </div>
 
-      <div className="rounded-lg bg-[var(--card)] border border-[var(--border)] p-5 shadow-[var(--shadow-sm)] space-y-4">
+      <section className="space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="font-semibold text-sm text-[var(--foreground)] flex items-center gap-2">
             <Mic size={15} className="text-[var(--primary)]" />
@@ -400,7 +394,7 @@ export default function VoiceAgentSettingsPage() {
         </div>
       </div>
 
-      <div className="rounded-lg bg-[var(--card)] border border-[var(--border)] p-5 shadow-[var(--shadow-sm)] space-y-4">
+      <section className="space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Volume2 size={15} className="text-[var(--primary)]" />
@@ -449,7 +443,7 @@ export default function VoiceAgentSettingsPage() {
         </div>
       </div>
 
-      <form onSubmit={handleSave} className="rounded-lg bg-[var(--card)] border border-[var(--border)] p-5 shadow-[var(--shadow-sm)] space-y-4">
+      <form onSubmit={handleSave} className="space-y-6 border-t border-[var(--border)] pt-6">
         <div>
           <label className="block text-xs font-medium text-[var(--muted-foreground)] mb-1">Greeting</label>
           <textarea
@@ -549,7 +543,7 @@ export default function VoiceAgentSettingsPage() {
         </button>
       </form>
 
-      <div className="rounded-lg bg-[var(--card)] border border-[var(--border)] p-5 shadow-[var(--shadow-sm)] space-y-4">
+      <section className="space-y-4">
         <h3 className="font-semibold text-sm text-[var(--foreground)] flex items-center gap-2">
           <Database size={15} className="text-[var(--primary)]" />
           Data Collection

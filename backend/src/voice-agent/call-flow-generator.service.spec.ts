@@ -84,3 +84,58 @@ describe('CallFlowGeneratorService', () => {
     await expect(svc.generate('qualify leads')).rejects.toThrow('AI returned an empty response');
   });
 });
+
+const validSections = [
+  { sectionKey: 'greeting', label: 'Greeting', prompt: 'Say hi and confirm they have a minute.', enabled: true, order: 1, nodeType: 'agentNode', edges: [{ to_key: 'qualify', condition: 'once they confirm' }] },
+  { sectionKey: 'qualify', label: 'Qualify', prompt: 'Ask their budget.', enabled: true, order: 2, nodeType: 'agentNode', edges: [] },
+];
+
+describe('CallFlowGeneratorService.editFlow', () => {
+  it('throws when no API key is configured', async () => {
+    const svc = new CallFlowGeneratorService({ get: () => undefined } as any);
+    await expect(svc.editFlow(validSections, 'add urgency')).rejects.toThrow('AI API key not configured');
+  });
+
+  it('throws on an empty instruction', async () => {
+    const svc = makeService(JSON.stringify({ sections: validSections }));
+    await expect(svc.editFlow(validSections, '')).rejects.toThrow('Instruction is required');
+  });
+
+  it('throws when there are no existing sections to edit', async () => {
+    const svc = makeService(JSON.stringify({ sections: validSections }));
+    await expect(svc.editFlow([], 'add urgency')).rejects.toThrow('no sections to edit');
+  });
+
+  it('accepts a well-formed edited section list', async () => {
+    const edited = [
+      ...validSections.map((s) => (s.sectionKey === 'qualify' ? { ...s, edges: [{ to_key: 'urgency', condition: 'once budget given' }] } : s)),
+      { sectionKey: 'urgency', label: 'Urgency', prompt: 'Mention limited slots.', enabled: true, order: 3, nodeType: 'agentNode', edges: [] },
+    ];
+    const svc = makeService(JSON.stringify({ sections: edited }));
+    const result = await svc.editFlow(validSections, 'add urgency before closing');
+    expect(result.sections).toHaveLength(3);
+    expect(result.sections.map((s) => s.sectionKey)).toContain('urgency');
+  });
+
+  it('rejects malformed JSON from the model', async () => {
+    const svc = makeService('not json {');
+    await expect(svc.editFlow(validSections, 'add urgency')).rejects.toThrow('malformed JSON');
+  });
+
+  it('rejects an edit with a dangling edge to a nonexistent section', async () => {
+    const bad = [{ ...validSections[0], edges: [{ to_key: 'ghost_section', condition: 'x' }] }, validSections[1]];
+    const svc = makeService(JSON.stringify({ sections: bad }));
+    await expect(svc.editFlow(validSections, 'add urgency')).rejects.toThrow(/unknown section/);
+  });
+
+  it('rejects an edit with duplicate section keys', async () => {
+    const bad = [validSections[0], { ...validSections[0], order: 2 }];
+    const svc = makeService(JSON.stringify({ sections: bad }));
+    await expect(svc.editFlow(validSections, 'add urgency')).rejects.toThrow(/duplicate sectionKey/);
+  });
+
+  it('rejects an empty sections array', async () => {
+    const svc = makeService(JSON.stringify({ sections: [] }));
+    await expect(svc.editFlow(validSections, 'add urgency')).rejects.toThrow(/non-empty array/);
+  });
+});

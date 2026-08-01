@@ -19,7 +19,9 @@ class ToolContext:
 # human approval instead of running them the moment the model calls them, so merging
 # operator's tool set into the lead-facing conversation can't be walked through by a
 # manipulated chat message into an unconfirmed campaign/payment/email/workflow action.
-HIGH_IMPACT_TOOLS = {"create_campaign", "initiate_call", "send_email", "bulk_send_message", "define_outcome", "create_workflow", "publish_workflow"}
+HIGH_IMPACT_TOOLS = {"create_campaign", "initiate_call", "send_email", "bulk_send_message", "define_outcome", "create_workflow", "publish_workflow",
+                     # Phase 3: anything that commits a price or blocks stock.
+                     "generate_cost_sheet", "hold_unit"}
 
 
 def _ok(msg: str) -> str:
@@ -119,6 +121,18 @@ def build_tools(ctx: ToolContext) -> list:
         try:
             await ctx.client.set_segment(ctx.lead_id, segment)
             return _ok(f"segment \u2192 {segment}")
+        except BackendError as e:
+            return _err(str(e))
+
+    @tool
+    async def set_whatsapp_number(number: str):
+        """Save the lead's WhatsApp number. IMPORTANT: only call AFTER reading the
+        number back digit by digit and getting an explicit yes — never write a number
+        you have not confirmed out loud. This must never be sent to a number other
+        than the one the lead confirms."""
+        try:
+            await ctx.client.set_whatsapp_number(ctx.lead_id, number)
+            return _ok(f"whatsapp number set: {number}")
         except BackendError as e:
             return _err(str(e))
 
@@ -533,12 +547,76 @@ def build_tools(ctx: ToolContext) -> list:
         except BackendError as e:
             return _err(str(e))
 
+    # --- Phase 3: finish the sale in the conversation, not in a dashboard ---
+
+    @tool
+    async def generate_cost_sheet(unit_id: str, project_id: str):
+        """Produce the full priced breakdown for one unit (base price, charges, taxes, total) so the lead can see what it actually costs. Use once they have narrowed to a specific unit and ask "what's the final price" or "send me the cost". This is a PRICE COMMITMENT, so it is raised for owner approval rather than sent straight to the lead — tell them the detailed costing is on its way, do not read out numbers you have not been given."""
+        if not (ctx.features and ctx.features.get("projects")):
+            return _err("project/unit inventory is not enabled for this niche")
+        try:
+            res = await ctx.client.generate_cost_sheet(ctx.lead_id, unit_id, project_id)
+            return _ok(f"cost sheet raised for approval (id {res.get('id', '?')})")
+        except BackendError as e:
+            return _err(str(e))
+
+    @tool
+    async def hold_unit(unit_id: str, hold_hours: int = 24):
+        """Block one unit for this lead so nobody else is sold it while they decide. Use when they say they want a specific unit or are coming for a site visit to confirm it. Tell them how long it is held for. Do not hold more than one unit for the same lead."""
+        if not (ctx.features and ctx.features.get("projects")):
+            return _err("project/unit inventory is not enabled for this niche")
+        try:
+            res = await ctx.client.hold_unit(ctx.lead_id, unit_id, hold_hours)
+            return _ok(f"unit {unit_id} held for {hold_hours}h (hold {res.get('id', '?')})")
+        except BackendError as e:
+            return _err(str(e))
+
+    @tool
+    async def loan_status(booking_id: str):
+        """Check where this buyer's home loan has actually got to (file submitted, bank sanctioned, disbursed). Use when they ask about their loan or when chasing a stalled file after booking. Report only what comes back — never guess at a bank's timeline."""
+        try:
+            res = await ctx.client.get_loan_status(booking_id)
+            status = res.get("status") or res.get("loanStatus") or "unknown"
+            return _ok(f"loan status: {status}")
+        except BackendError as e:
+            return _err(str(e))
+
+    @tool
+    async def payment_status():
+        """List this buyer's payment schedule and what is still outstanding. Use before chasing a payment so you name the right amount and due date, and when they ask what they owe."""
+        try:
+            res = await ctx.client.list_payment_schedules(ctx.lead_id)
+            items = res if isinstance(res, list) else (res.get("data") or [])
+            if not items:
+                return _ok("no payment schedule on file for this buyer")
+            summary = "; ".join(
+                f"{i.get('label', 'payment')}: {i.get('status', '?')}" for i in items[:6]
+            )
+            return _ok(f"{len(items)} scheduled payment(s): {summary}")
+        except BackendError as e:
+            return _err(str(e))
+
+    @tool
+    async def ask_for_referral(name: str, phone: str):
+        """Record someone this buyer has referred to us. Only call this after they have actually named a person and given a number — never invent a referral, and never ask for one before they have taken possession."""
+        try:
+            await ctx.client.create_referral(ctx.lead_id, name, phone)
+            return _ok(f"referral recorded: {name}")
+        except BackendError as e:
+            return _err(str(e))
+
     result = [
         send_message,
+        generate_cost_sheet,
+        hold_unit,
+        loan_status,
+        payment_status,
+        ask_for_referral,
         extract_fields,
         update_score,
         update_status,
         set_segment,
+        set_whatsapp_number,
         assign_agent,
         create_task,
         book_appointment,

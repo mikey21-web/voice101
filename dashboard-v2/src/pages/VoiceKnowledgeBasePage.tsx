@@ -59,17 +59,13 @@ export default function VoiceKnowledgeBasePage() {
   );
 
   return (
-    <div className="space-y-6 animate-fade-in max-w-2xl">
+    <div className="space-y-8 animate-fade-in">
       <div>
-        <div className="flex items-center gap-1.5 mb-0.5">
-          <BookOpen size={13} className="text-[var(--primary)]" />
-          <span className="text-[11px] font-medium text-[var(--primary)] uppercase tracking-wider">Outreach</span>
-        </div>
-        <h1 className="text-xl font-bold text-[var(--foreground)]">Voice Agent Knowledge Base</h1>
-        <p className="text-sm text-[var(--muted-foreground)] mt-0.5">Upload price sheets, brochures, or FAQs — the AI agent can answer questions from these documents during calls</p>
+        <h1 className="text-3xl font-bold text-[var(--foreground)]">Knowledge Base</h1>
+        <p className="text-sm text-[var(--muted-foreground)] mt-2">Upload documents — price sheets, brochures, FAQs. The agent can reference these during calls.</p>
       </div>
 
-      <div className="rounded-lg bg-[var(--card)] border border-[var(--border)] p-5 shadow-[var(--shadow-sm)]">
+      <div className="rounded-lg border border-[var(--border)] p-6">
         <input ref={fileInputRef} type="file" onChange={handleFileChange} className="hidden" accept=".pdf,.txt,.docx,.doc,.md,.csv" />
         <button
           onClick={() => fileInputRef.current?.click()}
@@ -81,8 +77,8 @@ export default function VoiceKnowledgeBasePage() {
         </button>
       </div>
 
-      <div className="rounded-lg bg-[var(--card)] border border-[var(--border)] p-5 shadow-[var(--shadow-sm)]">
-        <h3 className="font-semibold text-sm text-[var(--foreground)] mb-4">Documents</h3>
+      <section className="border-t border-[var(--border)] pt-6">
+        <h2 className="text-lg font-bold text-[var(--foreground)] mb-4">Documents</h2>
         {docs.length === 0 ? (
           <p className="text-xs text-[var(--muted-foreground)]">No documents uploaded yet</p>
         ) : (

@@ -9,8 +9,11 @@ import { AutonomousActionService } from '../mikey/autonomous-action.service';
 import { PermissionGateService } from '../mikey/permission-gate.service';
 import { ApprovalsService } from '../approvals/approvals.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { PostCallDispatchService } from './post-call-dispatch.service';
 import { LeadsService } from '../leads/leads.service';
+import { AdvanceStageService } from '../leads/advance-stage.service';
 import { AgentClientService } from '../agent/agent-client.service';
+import { WhatsAppCloudAdapter } from '../shared/adapters/messaging.adapter';
 
 interface ActionPlan {
   call?: { priority: number; lang: string };
@@ -37,7 +40,10 @@ export class LeadOrchestratorService {
     private approvals: ApprovalsService,
     private notifications: NotificationsService,
     @Inject(forwardRef(() => LeadsService)) private leadsService: LeadsService,
+    private advanceStage: AdvanceStageService,
     private agentClient: AgentClientService,
+    private whatsAppAdapter: WhatsAppCloudAdapter,
+    private postCallDispatch: PostCallDispatchService,
   ) {}
 
   async onLeadCreated(leadId: string): Promise<void> {
@@ -292,6 +298,11 @@ export class LeadOrchestratorService {
 
     const callStatus = this.mapCallStatus(status || 'COMPLETED', ended_reason);
 
+    const existingCall = await this.prisma.callLog.findFirst({
+      where: { leadId: lead_id, providerSid: call_sid },
+      select: { id: true },
+    });
+
     await this.prisma.callLog.updateMany({
       where: { leadId: lead_id, providerSid: call_sid },
       data: {
@@ -332,6 +343,16 @@ export class LeadOrchestratorService {
     this.onLeadCreated(lead_id).catch((e: any) =>
       this.logger.warn(`Re-trigger orchestrator for lead ${lead_id} after call: ${e.message}`)
     );
+
+    // Section 5 post-call send: WhatsApp the discussed details within 60s and
+    // notify the assigned rep. Only on completed calls with a transcript/summary.
+    if (callStatus === 'COMPLETED' && existingCall) {
+      this.postCallDispatch.dispatchAfterCall({
+        tenantId: lead.tenantId,
+        leadId: lead_id,
+        callLogId: existingCall.id,
+      }).catch((e) => this.logger.warn(`Post-call dispatch failed for lead ${lead_id}: ${e.message}`));
+    }
 
     this.logger.log(`Call webhook processed for lead ${lead_id}`);
   }
@@ -380,7 +401,16 @@ export class LeadOrchestratorService {
       ? this.mapStructuredOutcome(payload.outcome)
       : this.parseCallOutcome(payload.summary || '', payload.transcript || '');
     if (outcome.status) {
-      await this.prisma.lead.update({ where: { id: leadId }, data: { status: outcome.status as any } }).catch(() => {});
+      const lead = await this.prisma.lead.findUnique({ where: { id: leadId }, select: { tenantId: true } });
+      if (lead) {
+        await this.advanceStage.advanceStage({
+          tenantId: lead.tenantId,
+          leadId,
+          to: outcome.status as any,
+          actor: 'system',
+          reason: 'voice call outcome',
+        }).catch(() => {});
+      }
     }
     if (outcome.followUpDays) {
       const dueAt = new Date();
@@ -416,21 +446,53 @@ export class LeadOrchestratorService {
     );
 
     // A call that qualifies the lead or books a visit is exactly the moment to get the
-    // matching brochure/photos into their hands — hand it to the same conversational
-    // agent loop used for chat replies so it picks the send_property_photos /
-    // send_media_file tool itself, rather than duplicating its matching logic here.
+    // matching brochure/photos into their hands.
     if (outcome.status === 'QUALIFIED' || outcome.status === 'APPOINTMENT_BOOKED') {
-      const lead = await this.prisma.lead.findUnique({ where: { id: leadId }, select: { tenantId: true, contact: { select: { whatsapp: true, phone: true } } } });
-      if (lead?.contact?.whatsapp || lead?.contact?.phone) {
-        this.agentClient.trigger(
-          leadId,
-          `call-qualified-${Date.now()}`,
-          'WHATSAPP',
-          'The voice call with this lead just finished and they are qualified/interested. Send them the matching property photos and brochure now over WhatsApp.',
-          lead!.tenantId,
-          'call_qualified',
-        ).catch(() => {});
-      }
+      this.sendPropertyMedia(leadId).catch((e: any) =>
+        this.logger.warn(`Property media send failed for lead ${leadId}: ${e.message}`)
+      );
+    }
+  }
+
+  private async sendPropertyMedia(leadId: string): Promise<void> {
+    const lead = await this.prisma.lead.findUnique({
+      where: { id: leadId },
+      select: { tenantId: true, interest: true, contact: { select: { whatsapp: true, phone: true } } },
+    });
+    const to = lead?.contact?.whatsapp || lead?.contact?.phone;
+    if (!to || !lead?.interest) return;
+
+    const PROPERTY_TYPES = ['APARTMENT', 'VILLA', 'PLOT', 'COMMERCIAL', 'PENTHOUSE', 'DUPLEX', 'STUDIO'];
+    const normalizedType = lead.interest.replace(/\s+/g, '').toUpperCase();
+    const matchedType = PROPERTY_TYPES.includes(normalizedType) ? normalizedType : undefined;
+
+    const property = await this.prisma.property.findFirst({
+      where: {
+        tenantId: lead.tenantId,
+        OR: [
+          { title: { contains: lead.interest, mode: 'insensitive' } },
+          ...(matchedType ? [{ propertyType: matchedType as any }] : []),
+        ],
+      },
+      include: { images: { orderBy: { orderIndex: 'asc' } } },
+    });
+    if (!property) return;
+
+    const waConfig = {
+      phoneNumberId: this.config.get<string>('WHATSAPP_PHONE_NUMBER_ID') || '',
+      accessToken: this.config.get<string>('WHATSAPP_ACCESS_TOKEN') || '',
+    };
+
+    const photo = property.images.find((i) => i.isPrimary) || property.images[0];
+    if (photo) {
+      await this.whatsAppAdapter.sendMessage(to, property.title, {
+        ...waConfig, mediaUrl: photo.url, mediaType: 'image', caption: property.title,
+      });
+    }
+    if (property.brochureUrl) {
+      await this.whatsAppAdapter.sendMessage(to, `${property.title} brochure`, {
+        ...waConfig, mediaUrl: property.brochureUrl, mediaType: 'document', fileName: `${property.title}.pdf`,
+      });
     }
   }
 

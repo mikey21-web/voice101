@@ -22,17 +22,19 @@ import { DeepgramService } from './deepgram.service';
 import { DograhService } from './dograh.service';
 import { PiperTtsService } from './piper-tts.service';
 import { OutboundWebhookDispatchService } from './outbound-webhook-dispatch.service';
+import { LLMHealthService } from './llm-health.service';
+import { LLMHealthController } from './llm-health.controller';
 
 @Global()
 @Module({
-  controllers: [HealthController],
+  controllers: [HealthController, LLMHealthController],
   providers: [
     SignedUrlService, WebhookSecurityService, HealthService, PackApplierService,
     FeatureFlagsService, AlertingService, NormalizationService, GracefulDegradationService,
     HubspotAdapter, SalesforceAdapter, ZohoAdapter,
     CalendlyAdapter, GoogleCalendarAdapter,
     WhatsAppCloudAdapter, TelegramBotAdapter, TwilioSmsAdapter, TwilioVoiceAdapter, TwiMLGenerator,
-    EmailAdapter, OutboxService, SentryService, MoonshineService, DeepgramService, DograhService, PiperTtsService, OutboundWebhookDispatchService,
+    EmailAdapter, OutboxService, SentryService, MoonshineService, DeepgramService, DograhService, PiperTtsService, OutboundWebhookDispatchService, LLMHealthService,
   ],
   exports: [
     SignedUrlService, WebhookSecurityService, HealthService, PackApplierService,
@@ -40,7 +42,7 @@ import { OutboundWebhookDispatchService } from './outbound-webhook-dispatch.serv
     HubspotAdapter, SalesforceAdapter, ZohoAdapter,
     CalendlyAdapter, GoogleCalendarAdapter,
     WhatsAppCloudAdapter, TelegramBotAdapter, TwilioSmsAdapter, TwilioVoiceAdapter, TwiMLGenerator,
-    EmailAdapter, OutboxService, SentryService, MoonshineService, DeepgramService, DograhService, PiperTtsService, OutboundWebhookDispatchService,
+    EmailAdapter, OutboxService, SentryService, MoonshineService, DeepgramService, DograhService, PiperTtsService, OutboundWebhookDispatchService, LLMHealthService,
   ],
 })
 export class SharedModule {}

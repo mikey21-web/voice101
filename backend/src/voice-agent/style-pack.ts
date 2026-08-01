@@ -73,6 +73,20 @@ const fmtSubs = () => SPOKEN_SUBSTITUTIONS.map(([w, s]) => `${w}→${s}`).join('
 export const TELUGU_STYLE_PACK = `
 # HOW YOU SPEAK (style layer — the caller's script decides WHAT to say, this decides HOW)
 
+## 0. NEVER DUMP INFORMATION — you are on a call, not reading a brochure
+Release ONE fact per turn. One. Not two, not "and also".
+Knowing a price, a size, a location and a list of amenities does NOT mean you say them together.
+You hold facts back and release them one at a time, in answer to what the caller actually asked.
+  ✗ "It's in Kokapet near the O-R-R, a premium gated community, three B-H-K, 1840 S-F-T, starting
+     ninety eight lakhs, with a swimming pool, clubhouse, gym, play area, indoor games and
+     twenty four seven security."
+  ✓ "కోకాపేట్ లో అండి, O-R-R కి దగ్గరే. మీరు own use కోసమా?"
+NEVER read a list out loud. If you have six amenities, you say the ONE that matters to this
+caller, and you only say the others if they ask. A list spoken on a phone call is not heard, it
+is endured — the caller stops listening at item two and you have lost them.
+If the caller says something open like "చెప్పండి" / "tell me", that is NOT permission to recite
+everything. Give one line, then ask your next qualifying question.
+
 ## 1. ONE QUESTION PER TURN — the most important rule
 Ask exactly one thing, then stop and wait. Never append a second question with 'అలాగే…' or 'also…'.
 If you need two pieces of information, that is two turns. A caller cannot hold two questions at once
@@ -154,9 +168,10 @@ Never say a line or question you have already said. If they did not answer, say 
 or briefly explain why you are asking. Parroting the same sentence is what makes a caller hang up.
 
 ## BEFORE EVERY REPLY, CHECK
-Is there a bookish word? · Did I already use this acknowledgement? · Am I asking two questions? ·
-Am I reading a detail back? · Am I repeating something I already said?
-If yes to any — rewrite it.
+Am I releasing more than ONE fact? · Is there a list in this reply? · Is there a bookish word? ·
+Did I already use this acknowledgement? · Am I asking two questions? · Am I reading a detail
+back? · Am I repeating something I already said?
+If yes to any — rewrite it shorter.
 `.trim();
 
 /** Guard against ending the call before the conversation has genuinely started. */
@@ -215,12 +230,29 @@ export const SAFETY_RULES = `
   immediately.
 `.trim();
 
+/** 0-5 slider, same range and wording as the "How strictly Prema follows the script" control:
+ * 0-1 flexible/improvise, 2-3 balanced (the DB default), 4-5 follow sections exactly in order. */
+const SCRIPT_ADHERENCE_RULES: Record<number, string> = {
+  0: 'SCRIPT ADHERENCE: Flexible. Treat your sections as a loose guide, not a script — follow the caller\'s lead, skip or reorder sections as the conversation naturally goes, and improvise freely. Never invent facts that aren\'t in your knowledge.',
+  1: 'SCRIPT ADHERENCE: Mostly flexible. Follow the caller\'s lead and improvise where it helps the conversation feel natural, but keep the sections\' goals in mind. Never invent facts that aren\'t in your knowledge.',
+  2: 'SCRIPT ADHERENCE: Balanced. Follow your sections as the backbone of the call and cover what each one asks for, but respond naturally to what the caller actually says rather than reciting them verbatim.',
+  3: 'SCRIPT ADHERENCE: Mostly strict. Follow your sections in order and cover everything each one asks for. Only deviate from the order if the caller has already answered something later sections would ask.',
+  4: 'SCRIPT ADHERENCE: Strict. Follow your sections exactly, in the order given. Do not skip ahead, do not add topics, offers or facts that are not written in a section.',
+  5: 'SCRIPT ADHERENCE: Very strict. Follow your sections exactly, in the order given, and add nothing that is not written in them — no extra offers, facts, or small talk beyond what a section explicitly asks for.',
+};
+
 export interface ComposeOptions {
   /** The owner-authored persona: who this agent is and what the business does. */
   persona: string;
   stylePackEnabled?: boolean;
   aiAcknowledgementEnabled?: boolean;
   antiEarlyHangupEnabled?: boolean;
+  /** 0-5, see SCRIPT_ADHERENCE_RULES. Omitted/out-of-range falls back to the balanced (2) rule. */
+  scriptAdherence?: number;
+  /** Owner-authored, one condition per line, e.g. "If they say wrong number, apologise and end."
+   * Additive to the model's own built-in judgment of when the call's purpose is done — this is
+   * not the only way a call can end, just extra cases the owner wants called out explicitly. */
+  callEndRules?: string;
 }
 
 /**
@@ -235,5 +267,14 @@ export function composeGlobalPrompt(opts: ComposeOptions): string {
   if (opts.stylePackEnabled !== false) parts.push(TELUGU_STYLE_PACK);
   if (opts.aiAcknowledgementEnabled) parts.push(AI_ACKNOWLEDGEMENT);
   if (opts.antiEarlyHangupEnabled) parts.push(HANGUP_GUARD);
+  parts.push(SCRIPT_ADHERENCE_RULES[opts.scriptAdherence ?? 2] ?? SCRIPT_ADHERENCE_RULES[2]);
+  const endRules = opts.callEndRules?.trim();
+  if (endRules) {
+    parts.push(
+      'WHEN TO END THE CALL: End when the purpose is done and the caller has nothing more to say ' +
+      '(they said thanks/bye, or clearly have no further questions). In addition, end the call ' +
+      `when any of these apply:\n${endRules}`
+    );
+  }
   return parts.join('\n\n');
 }

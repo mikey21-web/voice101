@@ -13,6 +13,7 @@ describe('AutonomyGuardrailsService', () => {
         update: jest.fn().mockResolvedValue({}),
       },
       mikeyAutonomousAction: { count: jest.fn().mockResolvedValue(0), findFirst: jest.fn().mockResolvedValue(null) },
+      leadEscalation: { findFirst: jest.fn().mockResolvedValue(null) },
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -25,9 +26,45 @@ describe('AutonomyGuardrailsService', () => {
   it('defaults every category to observe when nothing is configured', async () => {
     const levels = await service.getAllCategoryLevels('t1');
     expect(levels).toEqual({
-      lead_assignment: 'observe', lead_messaging: 'observe',
-      task_escalation: 'observe', jarvis_tools: 'observe',
+      lead_assignment: 'observe', lead_messaging: 'observe', task_escalation: 'observe',
+      money: 'observe', inventory: 'observe', scheduling: 'observe', documents: 'observe',
     });
+  });
+
+  it('seeds the split categories from a tenant\'s old jarvis_tools dial', async () => {
+    prisma.tenant.findUnique.mockResolvedValue({ settings: { mikeyAutonomyCategories: { jarvis_tools: 'autonomous' } } });
+    const levels = await service.getAllCategoryLevels('t1');
+
+    expect(levels.inventory).toBe('autonomous');
+    expect(levels.scheduling).toBe('autonomous');
+    expect(levels.documents).toBe('autonomous');
+    // Their old dial meant site visits and unit holds, never demand letters.
+    expect(levels.money).toBe('observe');
+  });
+
+  it('an escalated lead is left alone even when the dial says autonomous', async () => {
+    prisma.tenant.findUnique.mockResolvedValue({
+      settings: { mikeyAutonomyCategories: { lead_messaging: 'autonomous' }, leadAutoSendMode: 'enabled' },
+    });
+    prisma.leadEscalation.findFirst.mockResolvedValue({ id: 'esc-1' });
+
+    const gate = await service.canMessageLeadAutonomously('t1', 'lead_messaging', 'lead-1');
+    expect(gate.allowed).toBe(false);
+    expect(gate.reason).toContain('escalated');
+
+    // auto-send mode 'enabled' skips quiet hours and caps, but not this.
+    const send = await service.canAutoSend('t1', 'lead-1');
+    expect(send.allowed).toBe(false);
+    expect(send.reason).toContain('escalated');
+  });
+
+  it('turning off money leaves scheduling free to act', async () => {
+    prisma.tenant.findUnique.mockResolvedValue({
+      settings: { mikeyAutonomyCategories: { money: 'off', scheduling: 'autonomous' } },
+    });
+
+    expect((await service.canActInternally('t1', 'money')).allowed).toBe(false);
+    expect((await service.canActInternally('t1', 'scheduling')).allowed).toBe(true);
   });
 
   it('blocks an internal action once its category is turned off', async () => {

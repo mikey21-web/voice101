@@ -39,38 +39,53 @@ export class VoiceBillingService {
   /** Matches Outpero's /billing shape: credits, per-employee usage, rate card, lifetime
    * totals, runway. Rate card is the one real thing here — it should reflect your actual
    * vendor costs (Sarvam/Cartesia/OpenAI/Gemini) plus margin, not Outpero's own numbers. */
+  private readonly RATE_CARD = {
+    sarvamPerMin: 0.50,        // ₹30/hour STT
+    cartesiaPerMin: 2.50,      // $0.03/min ~₹2.50
+    openaiPerMin: 0.15,        // gpt-4o-mini avg ₹0.15/min (input+output tokens)
+    groqPerMin: 0,             // free tier
+    vobizPerMin: 0.60,         // SIP trunk outbound, ballpark
+  };
+
   async getBilling(tenantId: string) {
     const [employees, calls] = await Promise.all([
       this.prisma.voiceEmployee.findMany({ where: { tenantId, deletedAt: null }, select: { id: true, name: true, role: true, status: true, voiceProvider: true } }),
-      this.prisma.voiceCall.findMany({ where: { tenantId }, select: { employeeId: true, costInr: true, durationS: true } }),
+      this.prisma.voiceCall.findMany({ where: { tenantId }, select: { employeeId: true, durationS: true } }),
     ]);
 
     const byEmployee = new Map<string, { costInr: number; minutes: number }>();
     for (const c of calls) {
+      const minutes = (c.durationS || 0) / 60;
+      const costInr = this.computeCallCost(minutes);
       const cur = byEmployee.get(c.employeeId) || { costInr: 0, minutes: 0 };
-      cur.costInr += c.costInr;
-      cur.minutes += (c.durationS || 0) / 60;
+      cur.costInr += costInr;
+      cur.minutes += minutes;
       byEmployee.set(c.employeeId, cur);
     }
 
-    const totalSpent = calls.reduce((s, c) => s + c.costInr, 0);
-    const totalMinutes = calls.reduce((s, c) => s + (c.durationS || 0) / 60, 0);
+    const totalSpent = Array.from(byEmployee.values()).reduce((s, e) => s + e.costInr, 0);
+    const totalMinutes = Array.from(byEmployee.values()).reduce((s, e) => s + e.minutes, 0);
 
     return {
-      credits: 0, // no payment processor wired in — see class doc
+      credits: 0,
       employees: employees.map((e) => ({
         id: e.id, name: e.name, role: e.role, status: e.status,
         voiceProvider: e.voiceProvider,
         minutesUsed: Math.round((byEmployee.get(e.id)?.minutes || 0) * 10) / 10,
         costInr: Math.round((byEmployee.get(e.id)?.costInr || 0) * 100) / 100,
       })),
-      rates: {
-        sarvamPerMin: 3, cartesiaPerMin: 7, openaiRealtimePerMin: 6,
-        hireFee: 1899, hireIncludedCredits: 500, hireActiveDays: 30, gstRatePct: 18,
-      },
+      rates: this.RATE_CARD,
       lifetime: { spentInr: Math.round(totalSpent * 100) / 100, minutesUsedTotal: Math.round(totalMinutes * 10) / 10 },
       minutesUsedTotal: Math.round(totalMinutes * 10) / 10,
     };
+  }
+
+  private computeCallCost(minutes: number): number {
+    const stt = minutes * this.RATE_CARD.sarvamPerMin;
+    const tts = minutes * this.RATE_CARD.cartesiaPerMin;
+    const llm = minutes * this.RATE_CARD.openaiPerMin;
+    const telephony = minutes * this.RATE_CARD.vobizPerMin;
+    return stt + tts + llm + telephony;
   }
 
   async getWallet(_tenantId: string) {

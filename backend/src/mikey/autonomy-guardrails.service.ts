@@ -7,9 +7,26 @@ const DEFAULT_DAILY_CAP = 50;
 const DEFAULT_LEAD_COOLDOWN_HOURS = 24;
 const DEFAULT_AUTO_SEND_MODE = 'enabled';
 
-/** Every autonomous action belongs to exactly one category so an owner can dial autonomy per category instead of one global on/off switch. */
-export type AutonomyCategory = 'lead_assignment' | 'lead_messaging' | 'task_escalation' | 'jarvis_tools';
-export const AUTONOMY_CATEGORIES: AutonomyCategory[] = ['lead_assignment', 'lead_messaging', 'task_escalation', 'jarvis_tools'];
+/**
+ * Every autonomous action belongs to exactly one category so an owner can dial
+ * autonomy per category instead of one global on/off switch.
+ *
+ * `jarvis_tools` used to be a single dial covering everything from "book a site
+ * visit" to "issue a demand letter". It is split into money/inventory/
+ * scheduling/documents so money never shares a switch with scheduling. The old
+ * value is still read from stored settings for back-compat (see LEGACY_TOOL_CATEGORY).
+ */
+export type AutonomyCategory =
+  | 'lead_assignment' | 'lead_messaging' | 'task_escalation'
+  | 'money' | 'inventory' | 'scheduling' | 'documents';
+export const AUTONOMY_CATEGORIES: AutonomyCategory[] = [
+  'lead_assignment', 'lead_messaging', 'task_escalation',
+  'money', 'inventory', 'scheduling', 'documents',
+];
+
+/** The pre-split dial. Existing tenants have this stored; it seeds the four new ones. */
+const LEGACY_TOOL_CATEGORY = 'jarvis_tools';
+const SPLIT_FROM_LEGACY: AutonomyCategory[] = ['inventory', 'scheduling', 'documents'];
 
 /** off: never acts, only reports. shadow: runs the same decision as autonomous but only logs what it would have done — no write, no approval-queue entry, so an owner can validate a category before trusting it live. observe: drafts every action to the approval queue for one-tap approve/reject. autonomous: acts on its own, subject to the other guardrails below. */
 export type AutonomyLevel = 'off' | 'shadow' | 'observe' | 'autonomous';
@@ -32,10 +49,22 @@ export class AutonomyGuardrailsService {
     return (tenant?.settings as Record<string, any>) || {};
   }
 
-  /** New tenants default to 'observe' for every category so Mikey is observe-first by default. */
+  /**
+   * New tenants default to 'observe' for every category so Mikey is
+   * observe-first by default.
+   *
+   * `money` never inherits the old jarvis_tools dial. A tenant who once set
+   * that to autonomous did so for site visits and unit holds, not for demand
+   * letters and token requests, so money stays observe until set explicitly.
+   */
   async getCategoryLevel(tenantId: string, category: AutonomyCategory): Promise<AutonomyLevel> {
     const settings = await this.getTenantSettings(tenantId);
-    return settings.mikeyAutonomyCategories?.[category] ?? 'observe';
+    const stored = settings.mikeyAutonomyCategories || {};
+    if (stored[category]) return stored[category];
+    if (SPLIT_FROM_LEGACY.includes(category) && stored[LEGACY_TOOL_CATEGORY]) {
+      return stored[LEGACY_TOOL_CATEGORY];
+    }
+    return 'observe';
   }
 
   async setCategoryLevel(tenantId: string, category: AutonomyCategory, level: AutonomyLevel): Promise<void> {
@@ -46,9 +75,10 @@ export class AutonomyGuardrailsService {
   }
 
   async getAllCategoryLevels(tenantId: string): Promise<Record<AutonomyCategory, AutonomyLevel>> {
-    const settings = await this.getTenantSettings(tenantId);
-    const stored = settings.mikeyAutonomyCategories || {};
-    return Object.fromEntries(AUTONOMY_CATEGORIES.map((c) => [c, stored[c] ?? 'observe'])) as Record<AutonomyCategory, AutonomyLevel>;
+    const levels = await Promise.all(
+      AUTONOMY_CATEGORIES.map(async (c) => [c, await this.getCategoryLevel(tenantId, c)] as const),
+    );
+    return Object.fromEntries(levels) as Record<AutonomyCategory, AutonomyLevel>;
   }
 
   async isQuietHours(tenantId: string): Promise<boolean> {
@@ -101,6 +131,11 @@ export class AutonomyGuardrailsService {
   async canAutoSend(tenantId: string, leadId: string): Promise<{ allowed: boolean; reason?: string }> {
     const mode = await this.getAutoSendMode(tenantId);
     if (mode === 'disabled') return { allowed: false, reason: 'auto-send is disabled for this tenant' };
+    // Escalation beats auto-send mode. 'enabled' skips quiet hours and caps for
+    // 24/7 answering, but it must not talk over the human who took this lead.
+    if (await this.isEscalated(tenantId, leadId)) {
+      return { allowed: false, reason: 'lead is escalated to a human' };
+    }
     if (mode === 'enabled') return { allowed: true };
     if (await this.isQuietHours(tenantId)) return { allowed: false, reason: 'quiet hours' };
     if (!(await this.isUnderDailyCap(tenantId))) return { allowed: false, reason: 'daily auto-send cap reached' };
@@ -108,10 +143,24 @@ export class AutonomyGuardrailsService {
     return { allowed: true };
   }
 
+  /** An open escalation is a per-lead pause: a human is on this one, Mikey is not. */
+  private async isEscalated(tenantId: string, leadId: string): Promise<boolean> {
+    const open = await this.prisma.leadEscalation.findFirst({
+      where: { tenantId, leadId, resolvedAt: null },
+      select: { id: true },
+    });
+    return !!open;
+  }
+
   /** Full check for any autonomous action that messages a specific lead. */
   async canMessageLeadAutonomously(tenantId: string, category: AutonomyCategory, leadId: string): Promise<{ allowed: boolean; reason?: string; mode?: AutonomyLevel }> {
     const level = await this.getCategoryLevel(tenantId, category);
     if (level === 'off') return { allowed: false, reason: `${category} autonomy is turned off` };
+    // Checked before shadow mode too: once a human takes over, even a "what
+    // would I have done" log entry is noise on a lead Mikey should leave alone.
+    if (await this.isEscalated(tenantId, leadId)) {
+      return { allowed: false, reason: 'lead is escalated to a human' };
+    }
     if (level === 'observe') return { allowed: false, mode: 'observe', reason: `${category} is in observe-only mode — drafting for approval` };
     if (level === 'shadow') return { allowed: true, mode: 'shadow', reason: `${category} is in shadow mode — logging what would happen, not acting` };
     if (await this.isQuietHours(tenantId)) return { allowed: false, reason: 'quiet hours' };

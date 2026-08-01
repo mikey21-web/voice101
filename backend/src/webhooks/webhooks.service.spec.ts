@@ -3,6 +3,7 @@ import { WebhooksService } from './webhooks.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { ContactsService } from '../contacts/contacts.service';
 import { LeadsService } from '../leads/leads.service';
+import { ResolveLeadService } from '../leads/resolve-lead.service';
 import { ConversationsService } from '../conversations/conversations.service';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { AgentClientService } from '../agent/agent-client.service';
@@ -18,6 +19,7 @@ describe('WebhooksService', () => {
   let contacts: any;
   let leads: any;
   let conversations: any;
+  let resolveLead: any;
   const auditLogs = { log: jest.fn().mockResolvedValue({}) };
   const agentClient = { trigger: jest.fn().mockResolvedValue(undefined) };
   const metrics = { incrementCounter: jest.fn() };
@@ -37,7 +39,20 @@ describe('WebhooksService', () => {
       },
       lead: {
         findFirst: jest.fn().mockResolvedValue(null),
+        findUnique: jest.fn().mockResolvedValue(mockLead),
       },
+      contact: {
+        findUnique: jest.fn().mockResolvedValue(mockContact),
+        update: jest.fn().mockResolvedValue(mockContact),
+      },
+    };
+    resolveLead = {
+      resolveLead: jest.fn().mockResolvedValue({
+        leadId: mockLead.id, contactId: mockContact.id,
+        isReturning: false, reusedExistingLead: false,
+        segment: 'WARM', assignedRepId: null,
+        history: { previousLeads: 0, conversations: 0, callsAnswered: 0, callsMissed: 0, campaigns: [] },
+      }),
     };
     contacts = {
       findOrCreate: jest.fn().mockResolvedValue(mockContact),
@@ -63,6 +78,7 @@ describe('WebhooksService', () => {
         { provide: OutboundWebhookDispatchService, useValue: { send: jest.fn().mockResolvedValue(undefined), dispatch: jest.fn().mockResolvedValue([]) } },
         { provide: ConfigService, useValue: { get: jest.fn() } },
         { provide: FlowRuntimeService, useValue: { handleInbound: jest.fn().mockResolvedValue(undefined) } },
+        { provide: ResolveLeadService, useValue: resolveLead },
       ],
     }).compile();
 

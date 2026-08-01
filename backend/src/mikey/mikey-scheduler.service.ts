@@ -19,6 +19,11 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { MetricsService } from '../monitoring/metrics.service';
 import type { SchedulerFinding } from './mikey-scheduler.types';
 
+/** Section 5: a captured lead gets a call attempt inside this many seconds. */
+const FIRST_CONTACT_SLA_SECONDS = 30;
+const BUSINESS_HOURS_START = 9;
+const BUSINESS_HOURS_END = 21;
+
 @Injectable()
 export class MikeySchedulerService {
   private readonly logger = new Logger(MikeySchedulerService.name);
@@ -162,6 +167,7 @@ export class MikeySchedulerService {
       const [staleHot, staleNew, overdue, unassigned, missedCalls, portalFails, weakSales, sourceDrops, executedTasks] = await Promise.all([
         this.runCheck('checkStaleHotLeads', () => this.checkStaleHotLeads()),
         this.runCheck('checkStaleNewLeads', () => this.checkStaleNewLeads()),
+        this.runCheck('checkFirstContactSlaBreaches', () => this.checkFirstContactSlaBreaches()),
         this.runCheck('checkOverdueTasks', () => this.checkOverdueTasks()),
         this.runCheck('checkUnassignedHotLeads', () => this.checkUnassignedHotLeads()),
         this.runCheck('scanMissedCalls', () => this.scanMissedCalls()),
@@ -373,6 +379,39 @@ export class MikeySchedulerService {
       description: `${stale.length} hot lead(s) haven't been contacted in over 2 hours. ${stale.slice(0, 3).map(l => l.contact?.name || 'Unknown').join(', ')}${stale.length > 3 ? ` and ${stale.length - 3} more` : ''}`,
       count: stale.length,
       metadata: { leadIds: stale.map(l => l.id) },
+    }];
+  }
+
+  /**
+   * Section 5's 30 second SLA. A lead captured during business hours must have
+   * an outbound call attempted within FIRST_CONTACT_SLA_SECONDS. Anything past
+   * that is speed-to-lead we have already paid for and not used.
+   */
+  private async checkFirstContactSlaBreaches(): Promise<SchedulerFinding[]> {
+    const hour = new Date().getHours();
+    if (hour < BUSINESS_HOURS_START || hour >= BUSINESS_HOURS_END) return [];
+
+    const cutoff = new Date(Date.now() - FIRST_CONTACT_SLA_SECONDS * 1000);
+    // Only look back an hour: older misses are history, not something a rep can
+    // still rescue, and they would re-fire this alert every 5 minutes forever.
+    const since = new Date(Date.now() - 60 * 60 * 1000);
+    const breached = await this.prisma.lead.findMany({
+      where: {
+        firstContactAttemptedAt: null,
+        createdAt: { lt: cutoff, gte: since },
+        status: { notIn: ['SPAM', 'LOST'] },
+      },
+      include: { contact: true },
+      take: 10,
+    });
+    if (breached.length === 0) return [];
+    return [{
+      type: 'first_contact_sla_breach',
+      severity: breached.length > 3 ? 'critical' : 'warning',
+      title: `Leads not called within ${FIRST_CONTACT_SLA_SECONDS}s`,
+      description: `${breached.length} lead(s) captured in business hours with no call attempted. ${breached.slice(0, 3).map(l => l.contact?.name || 'Unknown').join(', ')}${breached.length > 3 ? ` and ${breached.length - 3} more` : ''}`,
+      count: breached.length,
+      metadata: { leadIds: breached.map(l => l.id) },
     }];
   }
 

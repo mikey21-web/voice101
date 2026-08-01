@@ -12,6 +12,25 @@ const WORKFLOW_ID_BY_LANGUAGE: Record<string, string> = {
 };
 const DEFAULT_TELEPHONY_CONFIG_ID = process.env.DOGRAH_TELEPHONY_CONFIG_ID || '1';
 
+/**
+ * Turn-taking settings sent with every workflow publish. These decide when the agent believes
+ * you have stopped speaking, which matters far more to whether a call feels human than the voice
+ * or the prompt does. We previously shipped Dograh's stock defaults, which are tuned for English
+ * on a clean line — on an 8kHz Indian phone line with Telugu fillers ('అ..', 'మ్మ్') the 2s stop
+ * window reads as the agent being slow to respond.
+ *
+ * ponytail: these are a starting point, not a truth. Calibrate against real call recordings —
+ * raise smart_turn_stop_secs if the agent starts talking over people, lower it if it feels slow.
+ */
+const TURN_TAKING = {
+  smart_turn_stop_secs: 0.8,
+  max_user_idle_timeout: 8,
+  turn_start_strategy: 'default',
+  turn_stop_strategy: 'transcription',
+  context_compaction_enabled: true,
+  max_call_duration: 600,
+};
+
 export interface VoiceAgentSettings {
   greeting: string;
   persona: string;
@@ -84,7 +103,7 @@ export class DograhService {
     const putRes = await fetch(`${this.baseUrl}/api/v1/workflow/${workflowId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', 'X-API-Key': this.apiKey },
-      body: JSON.stringify({ name, workflow_definition: definition }),
+      body: JSON.stringify({ name, workflow_definition: definition, workflow_configurations: TURN_TAKING }),
     });
     if (!putRes.ok) throw new Error(`Dograh update workflow failed: ${await putRes.text()}`);
 
@@ -744,27 +763,32 @@ export class DograhService {
 
     const captureVars = employee.variables.filter((v) => v.source === 'capture').map((v) => ({ name: v.key, type: 'string', prompt: v.extractHint || v.label }));
 
-    // Non-terminal sections (nodeType 'llm' with outgoing edges) become agentNodes; a section
-    // with no edges (Outpero's own convention for a closing step, e.g. "close"/"faqs") becomes
-    // an endCall so the call actually terminates instead of dead-ending mid-graph.
+    // Every section is a conversational agentNode. Sections used to be compiled to endCall when
+    // they had no outgoing edges, which meant a single-section employee (what the hire wizard
+    // produces, and the common case) went greeting -> endCall: the agent spoke one line and hung
+    // up. An endCall node in Dograh delivers its prompt and terminates, so it can never hold a
+    // conversation. Sections with nowhere to go now route to a shared goodbye node instead
+    // (wired up below), so the call ends only once the section's own conversation is finished.
     const enabledSections = employee.sections.filter((s) => s.enabled).sort((a, b) => a.order - b.order);
+    const goodbyeNode = { id: id(), type: 'endCall', position: pos, data: { name: 'goodbye', prompt: 'Confirm the caller has no more questions, give one clear line on what happens next, then say goodbye and end the call.', add_global_prompt: true, extraction_enabled: false } };
+    nodes.push(goodbyeNode);
+
     const sectionNodeByKey = new Map<string, any>();
     for (const section of enabledSections) {
-      const isTerminal = !section.edges?.length;
-      const node = isTerminal
-        ? { id: id(), type: 'endCall', position: pos, data: { name: section.sectionKey, prompt: section.prompt, add_global_prompt: true, extraction_enabled: false } }
-        : {
-            id: id(), type: 'agentNode', position: pos,
-            data: {
-              name: section.sectionKey, prompt: section.prompt, allow_interrupt: true, add_global_prompt: true,
-              extraction_enabled: true,
-              // Every capture variable is offered at every non-terminal section — Dograh's
-              // extraction reads full conversation context, not just the current turn, so a
-              // variable mentioned two sections ago is still captured correctly here. Simpler
-              // and more robust than trying to guess which section "owns" which variable.
-              extraction_variables: [...captureVars, WANTS_HUMAN_VAR],
-            },
-          };
+      const nodeType = section.nodeType || 'agentNode';
+      const isFaq = nodeType === 'faq';
+      const node = {
+        id: id(), type: isFaq ? 'agentNode' : nodeType, position: pos,
+        data: {
+          name: section.sectionKey,
+          prompt: section.prompt,
+          allow_interrupt: !isFaq,
+          add_global_prompt: true,
+          extraction_enabled: !isFaq,
+          ...(isFaq && { faq_mode: true, source_type: 'knowledge_base' }),
+          extraction_variables: !isFaq ? [...captureVars, WANTS_HUMAN_VAR] : [],
+        },
+      };
       nodes.push(node);
       sectionNodeByKey.set(section.sectionKey, node);
     }
@@ -788,18 +812,35 @@ export class DograhService {
       }
     }
 
-    for (const node of [greetingNode, ...enabledSections.map((s) => sectionNodeByKey.get(s.sectionKey)).filter((n) => n.type === 'agentNode')]) {
+    // A section with no authored outgoing edge is where the script runs out. It still needs a way
+    // out of the graph, or the call dead-ends; route it to the shared goodbye node so the agent
+    // finishes the conversation first and only then closes.
+    for (const section of enabledSections) {
+      if (section.edges?.some((e) => sectionNodeByKey.has(e.to_key))) continue;
+      const fromNode = sectionNodeByKey.get(section.sectionKey);
+      edges.push({ id: `${fromNode.id}-${goodbyeNode.id}-done`, source: fromNode.id, target: goodbyeNode.id, data: { label: 'done', condition: 'the caller has no further questions and this part of the conversation is complete' } });
+    }
+
+    for (const node of [greetingNode, ...enabledSections.map((s) => sectionNodeByKey.get(s.sectionKey))]) {
       edges.push({ id: `${node.id}-${humanHandoffNode.id}-human`, source: node.id, target: humanHandoffNode.id, data: { label: 'wants human', condition: 'wants_human is true' } });
     }
 
     if (employee.outboundWebhookUrl) {
       const outcomeShape: Record<string, string> = { wants_human: '{{gathered_context.wants_human}}' };
       for (const v of employee.variables) outcomeShape[v.key] = `{{gathered_context.${v.key}}}`;
+      // Secret goes on the URL as a query param, not a custom header — confirmed empirically that
+      // Dograh's webhook node stores configured custom_headers on the definition but does not
+      // actually send them on the real outbound request, so every real call 401'd against our
+      // header-only check even though the header was correctly configured. The endpoint_url itself
+      // is always sent verbatim, so a query param survives where a header silently didn't.
+      const webhookUrl = employee.webhookSecretHeader
+        ? `${employee.outboundWebhookUrl}?secret=${encodeURIComponent(employee.webhookSecretHeader)}`
+        : employee.outboundWebhookUrl;
       nodes.push({
         id: id(), type: 'webhook', position: pos,
         data: {
-          name: 'post_call_outcome', http_method: 'POST', endpoint_url: employee.outboundWebhookUrl,
-          custom_headers: employee.webhookSecretHeader ? [{ key: 'X-Webhook-Secret', value: employee.webhookSecretHeader }] : [],
+          name: 'post_call_outcome', http_method: 'POST', endpoint_url: webhookUrl,
+          custom_headers: [],
           payload_template: {
             employee_id: employee.employeeId, call_sid: '{{workflow_run_id}}', lead_id: '{{initial_context.lead_id}}', status: 'completed',
             outcome: outcomeShape,

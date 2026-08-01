@@ -56,10 +56,10 @@ export default function VoiceAgentPage() {
   if (loading) return <div className="p-6 text-center text-[var(--muted-foreground)]"><Loader2 size={20} className="animate-spin inline mr-2" />Loading...</div>;
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-8 animate-fade-in">
       <div>
-        <h1 className="text-xl font-bold text-[var(--foreground)]">Voice Agent</h1>
-        <p className="text-sm text-[var(--muted-foreground)] mt-0.5">Call leads with Mikey's AI voice — he talks, listens, and qualifies.</p>
+        <h1 className="text-3xl font-bold text-[var(--foreground)]">Voice Agent</h1>
+        <p className="text-sm text-[var(--muted-foreground)] mt-2">Call leads with Mikey's AI voice — he talks, listens, and qualifies</p>
       </div>
 
       {stats && (

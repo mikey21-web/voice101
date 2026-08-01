@@ -189,6 +189,34 @@ class BackendClient:
     async def set_segment(self, lead_id: str, segment: str) -> dict:
         return await self._retry_patch(f"/leads/{lead_id}", {"segment": segment})
 
+    async def set_whatsapp_number(self, lead_id: str, number: str) -> dict:
+        return await self._retry_patch(f"/leads/{lead_id}", {"whatsapp": number})
+
+    # --- Phase 3: money-trail + inventory actions the buyer conversation needs ---
+    # Each one wraps a NestJS service that already exists. No business logic here.
+
+    async def generate_cost_sheet(self, lead_id: str, unit_id: str, project_id: str) -> dict:
+        return await self._retry_post("/cost-sheets", {
+            "leadId": lead_id, "unitId": unit_id, "projectId": project_id,
+        })
+
+    async def hold_unit(self, lead_id: str, unit_id: str, hold_hours: int | None = None) -> dict:
+        body: dict = {"leadId": lead_id, "unitId": unit_id}
+        if hold_hours:
+            body["holdHours"] = hold_hours
+        return await self._retry_post("/unit-holds", body)
+
+    async def get_loan_status(self, booking_id: str) -> dict:
+        return await self._retry_get(f"/bookings/{booking_id}/loan-registration")
+
+    async def list_payment_schedules(self, lead_id: str) -> dict:
+        return await self._retry_get(f"/payment-schedules?leadId={lead_id}")
+
+    async def create_referral(self, lead_id: str, name: str, phone: str) -> dict:
+        return await self._retry_post("/referrals", {
+            "referrerLeadId": lead_id, "refereeName": name, "refereePhone": phone,
+        })
+
     async def assign_agent(self, lead_id: str, agent_id: str | None = None) -> dict:
         body = {"agentId": agent_id} if agent_id else {}
         return await self._retry_post(f"/leads/{lead_id}/assign", body)

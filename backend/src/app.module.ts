@@ -115,6 +115,7 @@ import { OnboardingModule } from './onboarding/onboarding.module';
 import { LaunchControlModule } from './launch-control/launch-control.module';
 import { StateTaxModule } from './state-tax/state-tax.module';
 import { WorkflowModule } from './workflow/workflow.module';
+import { CoachModule } from './coach/coach.module';
 
 @Module({
   imports: [
@@ -141,6 +142,7 @@ import { WorkflowModule } from './workflow/workflow.module';
     UsersModule,
     ContactsModule,
     LeadsModule,
+    CoachModule,
     CampaignsModule,
     FormsModule,
     QrCodesModule,

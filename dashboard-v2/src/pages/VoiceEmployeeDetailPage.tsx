@@ -186,252 +186,243 @@ export default function VoiceEmployeeDetailPage() {
   if (!employee) return <div className="p-10 text-center text-sm text-[var(--muted-foreground)]">Employee not found.</div>;
 
   return (
-    <div className="flex gap-6 animate-fade-in">
-    <div className="space-y-6 flex-1">
-      <div className="flex items-start justify-between">
-        <div className="flex items-start gap-3">
-          <button onClick={() => { window.location.hash = '/voice-employees'; }} className="h-9 w-9 rounded-lg border border-[var(--border)] flex items-center justify-center text-[var(--muted-foreground)] hover:bg-[var(--accent)] transition-colors shrink-0 mt-0.5">
-            <ArrowLeft size={14} />
+    <div className="animate-fade-in max-w-4xl mx-auto">
+      <div className="flex items-start justify-between mb-8">
+        <div className="flex items-start gap-4">
+          <button onClick={() => { window.location.hash = '/voice-employees'; }} className="h-10 w-10 rounded-lg flex items-center justify-center text-[var(--muted-foreground)] hover:bg-[var(--accent)] transition-colors shrink-0 -ml-2">
+            <ArrowLeft size={16} />
           </button>
           <div>
-            <h1 className="text-xl font-bold text-[var(--foreground)]">{employee.name}</h1>
-            <p className="text-sm text-[var(--muted-foreground)] mt-0.5">
-              {employee.status} · {employee.isPublished ? `published rev ${employee.revision}` : 'never published'}
-              {employee.hasUnpublishedChanges && <span className="text-amber-600 dark:text-amber-400"> · unpublished changes</span>}
+            <h1 className="text-3xl font-bold text-[var(--foreground)]">{employee.name}</h1>
+            <p className="text-sm text-[var(--muted-foreground)] mt-2">
+              {employee.status} {employee.isPublished && `· rev ${employee.revision}`}
+              {employee.hasUnpublishedChanges && <span className="text-amber-600 dark:text-amber-400"> · unsaved</span>}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={handleShowVersions} className="h-9 px-3 rounded-lg border border-[var(--border)] text-sm text-[var(--foreground)] hover:bg-[var(--accent)] transition-colors flex items-center gap-1.5">
-            <History size={14} /> Versions
+          <button onClick={handleShowVersions} className="h-10 px-4 rounded-lg text-sm text-[var(--foreground)] hover:bg-[var(--accent)] transition-colors flex items-center gap-2">
+            <History size={16} /> Versions
           </button>
-          <button onClick={handleSave} disabled={saving} className="h-9 px-3 rounded-lg border border-[var(--border)] text-sm text-[var(--foreground)] hover:bg-[var(--accent)] transition-colors flex items-center gap-1.5 disabled:opacity-50">
-            {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />} Save draft
+          <button onClick={handleSave} disabled={saving} className="h-10 px-4 rounded-lg border border-[var(--border)] text-sm text-[var(--foreground)] hover:bg-[var(--accent)] transition-colors flex items-center gap-2 disabled:opacity-50">
+            {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />} Save
           </button>
-          <button onClick={handlePublish} disabled={publishing} className="h-9 px-4 rounded-lg bg-[var(--primary)] text-white text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-opacity flex items-center gap-1.5">
-            {publishing ? <Loader2 size={14} className="animate-spin" /> : <Rocket size={14} />} Publish
+          <button onClick={handlePublish} disabled={publishing} className="h-10 px-4 rounded-lg bg-[var(--primary)] text-white text-sm font-bold hover:opacity-90 disabled:opacity-50 transition-opacity flex items-center gap-2">
+            {publishing ? <Loader2 size={16} className="animate-spin" /> : <Rocket size={16} />} Publish
           </button>
         </div>
       </div>
 
+      <div className="space-y-8">
+
       {showVersions && (
-        <div className="rounded-lg border border-[var(--border)] bg-[var(--card)] p-4 space-y-2">
-          <h3 className="text-sm font-semibold text-[var(--foreground)]">Publish history</h3>
+        <div className="border-t border-[var(--border)] pt-6">
+          <h3 className="text-sm font-semibold text-[var(--foreground)] mb-4">Publish history</h3>
           {versions.length === 0 ? (
-            <p className="text-xs text-[var(--muted-foreground)]">No published versions yet.</p>
-          ) : versions.map((v) => (
-            <div key={v.id} className="flex items-center justify-between rounded-lg border border-[var(--border)] px-3 py-2">
-              <span className="text-sm text-[var(--foreground)]">Revision {v.revision}</span>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-[var(--muted-foreground)]">{new Date(v.createdAt).toLocaleString()}</span>
-                <button onClick={() => handleRestore(v.revision)} className="h-7 px-2.5 rounded-md border border-[var(--border)] text-xs text-[var(--foreground)] hover:bg-[var(--accent)] transition-colors">Restore</button>
-              </div>
+            <p className="text-sm text-[var(--muted-foreground)]">No published versions yet.</p>
+          ) : (
+            <div className="space-y-2">
+              {versions.map((v) => (
+                <div key={v.id} className="flex items-center justify-between py-2 border-b border-[var(--border)] last:border-0">
+                  <div>
+                    <span className="text-sm font-medium text-[var(--foreground)]">Revision {v.revision}</span>
+                    <p className="text-xs text-[var(--muted-foreground)]">{new Date(v.createdAt).toLocaleString()}</p>
+                  </div>
+                  <button onClick={() => handleRestore(v.revision)} className="px-3 py-1.5 rounded-lg text-xs text-[var(--foreground)] hover:bg-[var(--accent)] transition-colors">Restore</button>
+                </div>
+              ))}
             </div>
-          ))}
+          )}
         </div>
       )}
 
-      <div className="rounded-lg bg-[var(--card)] border border-[var(--border)] p-5 shadow-[var(--shadow-sm)] space-y-4">
-        <h3 className="font-semibold text-sm text-[var(--foreground)]">Identity</h3>
-        <div className="grid grid-cols-2 gap-3">
+      <section className="space-y-4">
+        <h2 className="text-lg font-bold text-[var(--foreground)]">Identity</h2>
+        <div className="grid grid-cols-2 gap-6">
           <div>
-            <label className="block text-xs font-medium text-[var(--muted-foreground)] mb-1">Name</label>
-            <input value={name} onChange={(e) => setName(e.target.value)} className="w-full h-9 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)]" />
+            <label className="block text-sm font-medium text-[var(--foreground)] mb-1.5">Name</label>
+            <input value={name} onChange={(e) => setName(e.target.value)} className="w-full h-10 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)]" />
           </div>
           <div>
-            <label className="block text-xs font-medium text-[var(--muted-foreground)] mb-1">Role</label>
-            <input value={role} onChange={(e) => setRole(e.target.value)} className="w-full h-9 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)]" />
+            <label className="block text-sm font-medium text-[var(--foreground)] mb-1.5">Role</label>
+            <input value={role} onChange={(e) => setRole(e.target.value)} className="w-full h-10 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)]" />
           </div>
         </div>
         <div>
-          <label className="block text-xs font-medium text-[var(--muted-foreground)] mb-1">Greeting</label>
+          <label className="block text-sm font-medium text-[var(--foreground)] mb-1.5">Greeting</label>
           <textarea value={welcomeMessage} onChange={(e) => setWelcomeMessage(e.target.value)} rows={2}
             className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--foreground)] resize-none" placeholder="Hi {{first_name}}, this is..." />
         </div>
         <div>
-          <label className="block text-xs font-medium text-[var(--muted-foreground)] mb-1">Persona &amp; instructions</label>
+          <label className="block text-sm font-medium text-[var(--foreground)] mb-1.5">Persona &amp; instructions</label>
           <textarea value={agentInformation} onChange={(e) => setAgentInformation(e.target.value)} rows={3}
             className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--foreground)]" />
         </div>
         <div>
-          <label className="block text-xs font-medium text-[var(--muted-foreground)] mb-1">Call-end rules</label>
+          <label className="block text-sm font-medium text-[var(--foreground)] mb-1.5">Call-end rules</label>
           <textarea value={callEndRules} onChange={(e) => setCallEndRules(e.target.value)} rows={2}
             className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--foreground)] resize-none" />
         </div>
-        <div className="flex items-center justify-between rounded-lg border border-[var(--border)] px-3 py-2">
+        <div className="flex items-center justify-between pt-2">
           <span className="text-sm font-medium text-[var(--foreground)]">Natural spoken-Telugu style</span>
-          <button type="button" onClick={() => setStylePackEnabled((v) => !v)} className={`inline-flex items-center gap-1.5 h-7 px-2.5 rounded-lg text-xs font-medium ${stylePackEnabled ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' : 'bg-gray-100 dark:bg-gray-800 text-[var(--muted-foreground)]'}`}>
-            {stylePackEnabled ? <ToggleRight size={13} /> : <ToggleLeft size={13} />} {stylePackEnabled ? 'On' : 'Off'}
+          <button type="button" onClick={() => setStylePackEnabled((v) => !v)} className={`inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-medium ${stylePackEnabled ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' : 'bg-gray-100 dark:bg-gray-800 text-[var(--muted-foreground)]'}`}>
+            {stylePackEnabled ? <ToggleRight size={14} /> : <ToggleLeft size={14} />} {stylePackEnabled ? 'On' : 'Off'}
           </button>
         </div>
-      </div>
+      </section>
 
-      <div className="rounded-lg bg-[var(--card)] border border-[var(--border)] p-5 shadow-[var(--shadow-sm)] space-y-3">
+      <section className="space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-sm text-[var(--foreground)]">Call flow — sections</h3>
-          <button onClick={addSection} className="h-8 px-3 rounded-lg border border-[var(--border)] text-xs font-medium text-[var(--foreground)] hover:bg-[var(--accent)] transition-colors flex items-center gap-1.5">
-            <Plus size={12} /> Add step
+          <h2 className="text-lg font-bold text-[var(--foreground)]">Call flow</h2>
+          <button onClick={addSection} className="h-10 px-3 rounded-lg text-[var(--primary)] text-sm font-medium hover:bg-[var(--primary)]/10 transition-colors flex items-center gap-1.5">
+            <Plus size={16} /> Add step
           </button>
         </div>
-        <p className="text-[11px] text-[var(--muted-foreground)] -mt-1">A step with no "next" is a closing step. Steps run in order unless you set a condition.</p>
-        {sections.map((section, idx) => (
-          <div key={section.sectionKey} className="rounded-lg border border-[var(--border)] p-3 space-y-2">
-            <div className="flex items-center gap-2">
-              <GripVertical size={14} className="text-[var(--muted-foreground)] shrink-0" />
-              <input value={section.label} onChange={(e) => updateSection(idx, { label: e.target.value })}
-                className="flex-1 h-8 rounded-md border border-[var(--border)] bg-[var(--background)] px-2 text-sm font-medium text-[var(--foreground)]" placeholder="Step label" />
-              <button onClick={() => moveSection(idx, -1)} disabled={idx === 0} className="h-8 w-8 rounded-md border border-[var(--border)] text-xs text-[var(--muted-foreground)] disabled:opacity-30 hover:bg-[var(--accent)]">↑</button>
-              <button onClick={() => moveSection(idx, 1)} disabled={idx === sections.length - 1} className="h-8 w-8 rounded-md border border-[var(--border)] text-xs text-[var(--muted-foreground)] disabled:opacity-30 hover:bg-[var(--accent)]">↓</button>
-              <button onClick={() => removeSection(idx)} className="h-8 w-8 rounded-md border border-[var(--border)] text-[var(--muted-foreground)] hover:text-rose-600 hover:border-rose-300"><Trash2 size={12} /></button>
+        <p className="text-sm text-[var(--muted-foreground)]">Steps run in order. A step with no "next" closes the call. Set conditions to branch.</p>
+        {sections.length === 0 ? (
+          <div className="py-12 text-center">
+            <p className="text-sm text-[var(--muted-foreground)]">No steps yet. Add one to build your call flow.</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {sections.map((section, idx) => (
+              <div key={section.sectionKey} className="border border-[var(--border)] rounded-lg p-4 space-y-3">
+                <div className="flex items-center gap-2">
+                  <GripVertical size={16} className="text-[var(--muted-foreground)] shrink-0" />
+                  <input value={section.label} onChange={(e) => updateSection(idx, { label: e.target.value })}
+                    className="flex-1 text-sm font-medium bg-transparent border-0 p-0 text-[var(--foreground)] placeholder-[var(--muted-foreground)]" placeholder="Step label" />
+                  <div className="flex items-center gap-1">
+                    <button onClick={() => moveSection(idx, -1)} disabled={idx === 0} className="h-8 w-8 rounded text-xs text-[var(--muted-foreground)] disabled:opacity-20 hover:bg-[var(--accent)]">↑</button>
+                    <button onClick={() => moveSection(idx, 1)} disabled={idx === sections.length - 1} className="h-8 w-8 rounded text-xs text-[var(--muted-foreground)] disabled:opacity-20 hover:bg-[var(--accent)]">↓</button>
+                    <button onClick={() => removeSection(idx)} className="h-8 w-8 rounded text-[var(--muted-foreground)] hover:text-rose-600"><Trash2 size={14} /></button>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-[var(--muted-foreground)] mb-1">Prompt</label>
+                  <textarea value={section.prompt} onChange={(e) => updateSection(idx, { prompt: e.target.value })} rows={2}
+                    className="w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--foreground)] resize-none" placeholder="What should the agent do in this step?" />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-[var(--muted-foreground)] mb-1">Next step key</label>
+                    <input
+                      value={section.edges[0]?.to_key || ''}
+                      onChange={(e) => updateSection(idx, { edges: e.target.value ? [{ to_key: e.target.value, condition: section.edges[0]?.condition || 'once done' }] : [] })}
+                      placeholder="blank = closes call"
+                      className="w-full h-9 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 text-xs text-[var(--foreground)]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-[var(--muted-foreground)] mb-1">Condition</label>
+                    <input
+                      value={section.edges[0]?.condition || ''}
+                      onChange={(e) => updateSection(idx, { edges: [{ to_key: section.edges[0]?.to_key || '', condition: e.target.value }] })}
+                      placeholder="e.g. 'after they answer'"
+                      className="w-full h-9 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 text-xs text-[var(--foreground)]"
+                    />
+                  </div>
+                </div>
+                <p className="text-xs text-[var(--muted-foreground)]">Key: <code className="bg-[var(--accent)] px-2 py-1 rounded">{section.sectionKey}</code></p>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="text-lg font-bold text-[var(--foreground)]">Data &amp; Knowledge</h2>
+        <div className="space-y-6">
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <label className="text-sm font-medium text-[var(--foreground)]">Variables to capture</label>
+              <button onClick={addVariable} className="text-[var(--primary)] text-sm font-medium hover:opacity-75 flex items-center gap-1">
+                <Plus size={14} /> Add
+              </button>
             </div>
-            <textarea value={section.prompt} onChange={(e) => updateSection(idx, { prompt: e.target.value })} rows={2}
-              className="w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-2 py-1.5 text-xs text-[var(--foreground)] resize-none" placeholder="What should the agent do in this step?" />
-            <div className="flex items-center gap-2">
-              <input
-                value={section.edges[0]?.to_key || ''}
-                onChange={(e) => updateSection(idx, { edges: e.target.value ? [{ to_key: e.target.value, condition: section.edges[0]?.condition || 'once done' }] : [] })}
-                placeholder="next step key (blank = closing step)"
-                className="flex-1 h-7 rounded-md border border-[var(--border)] bg-[var(--background)] px-2 text-[11px] text-[var(--foreground)]"
-              />
-              <input
-                value={section.edges[0]?.condition || ''}
-                onChange={(e) => updateSection(idx, { edges: [{ to_key: section.edges[0]?.to_key || '', condition: e.target.value }] })}
-                placeholder="condition, e.g. 'after they answer'"
-                className="flex-1 h-7 rounded-md border border-[var(--border)] bg-[var(--background)] px-2 text-[11px] text-[var(--foreground)]"
-              />
+            {variables.length === 0 ? (
+              <p className="text-sm text-[var(--muted-foreground)]">No structured data to capture. Agent will converse naturally.</p>
+            ) : (
+              <div className="space-y-2">
+                {variables.map((v, idx) => (
+                  <div key={idx} className="flex gap-2 items-center">
+                    <input value={v.key} onChange={(e) => updateVariable(idx, { key: e.target.value.replace(/\s+/g, '_').toLowerCase() })} placeholder="key"
+                      className="w-24 h-9 rounded-lg border border-[var(--border)] bg-[var(--background)] px-2 text-xs text-[var(--foreground)]" />
+                    <input value={v.label} onChange={(e) => updateVariable(idx, { label: e.target.value })} placeholder="What to capture"
+                      className="flex-1 h-9 rounded-lg border border-[var(--border)] bg-[var(--background)] px-2 text-xs text-[var(--foreground)]" />
+                    <select value={v.source} onChange={(e) => updateVariable(idx, { source: e.target.value as 'pre' | 'capture' })}
+                      className="h-9 rounded-lg border border-[var(--border)] bg-[var(--background)] px-2 text-xs text-[var(--foreground)]">
+                      <option value="capture">During</option>
+                      <option value="pre">Before</option>
+                    </select>
+                    <button onClick={() => removeVariable(idx)} className="h-9 w-9 rounded-lg text-[var(--muted-foreground)] hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20"><Trash2 size={14} /></button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="border-t border-[var(--border)] pt-6">
+            <label className="block text-sm font-medium text-[var(--foreground)] mb-3">Knowledge base (Q &amp; A)</label>
+            <textarea value={knowledgeBase} onChange={(e) => setKnowledgeBase(e.target.value)} rows={4}
+              className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--foreground)] resize-none font-mono"
+              placeholder='Q: What are your hours?&#10;A: 9am-6pm, Monday to Saturday&#10;&#10;Q: Do you offer delivery?&#10;A: Yes, free within the city' />
+            <p className="text-xs text-[var(--muted-foreground)] mt-2">Format: Q: ... / A: ... (alternate lines)</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="space-y-4 border-t border-[var(--border)] pt-6">
+        <h2 className="text-lg font-bold text-[var(--foreground)]">Configuration</h2>
+        <div className="grid grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-medium text-[var(--foreground)] mb-3">Script adherence</label>
+            <div className="space-y-3">
+              <input type="range" min="1" max="5" value={scriptStrictness} onChange={(e) => setScriptStrictness(Number(e.target.value))}
+                className="w-full h-2 bg-[var(--border)] rounded-lg appearance-none cursor-pointer" />
+              <div className="flex justify-between text-xs">
+                <span className="text-[var(--muted-foreground)]">Natural</span>
+                <span className="font-medium text-[var(--foreground)]">{['Conversational', 'Natural', 'Balanced', 'Structured', 'Strict'][scriptStrictness - 1]}</span>
+                <span className="text-[var(--muted-foreground)]">Strict</span>
+              </div>
             </div>
-            <p className="text-[10px] text-[var(--muted-foreground)]">Step key: <code>{section.sectionKey}</code></p>
+            <p className="text-xs text-[var(--muted-foreground)] mt-3">How closely the agent follows your script sections.</p>
           </div>
-        ))}
-        {sections.length === 0 && <p className="text-xs text-[var(--muted-foreground)] text-center py-4">No steps yet — add one to build the call flow.</p>}
-      </div>
-
-      <div className="rounded-lg bg-[var(--card)] border border-[var(--border)] p-5 shadow-[var(--shadow-sm)] space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-sm text-[var(--foreground)]">Data to capture</h3>
-          <button onClick={addVariable} className="h-8 px-3 rounded-lg border border-[var(--border)] text-xs font-medium text-[var(--foreground)] hover:bg-[var(--accent)] transition-colors flex items-center gap-1.5">
-            <Plus size={12} /> Add variable
-          </button>
-        </div>
-        {variables.map((v, idx) => (
-          <div key={idx} className="flex gap-2 items-center">
-            <input value={v.key} onChange={(e) => updateVariable(idx, { key: e.target.value.replace(/\s+/g, '_').toLowerCase() })} placeholder="key"
-              className="w-1/4 h-8 rounded-md border border-[var(--border)] bg-[var(--background)] px-2 text-xs text-[var(--foreground)]" />
-            <input value={v.label} onChange={(e) => updateVariable(idx, { label: e.target.value })} placeholder="What this captures"
-              className="flex-1 h-8 rounded-md border border-[var(--border)] bg-[var(--background)] px-2 text-xs text-[var(--foreground)]" />
-            <select value={v.source} onChange={(e) => updateVariable(idx, { source: e.target.value as 'pre' | 'capture' })}
-              className="h-8 rounded-md border border-[var(--border)] bg-[var(--background)] px-1.5 text-xs text-[var(--foreground)]">
-              <option value="capture">During call</option>
-              <option value="pre">Before call</option>
-            </select>
-            <button onClick={() => removeVariable(idx)} className="h-8 w-8 rounded-md border border-[var(--border)] text-[var(--muted-foreground)] hover:text-rose-600 hover:border-rose-300 shrink-0"><Trash2 size={12} /></button>
-          </div>
-        ))}
-        {variables.length === 0 && <p className="text-xs text-[var(--muted-foreground)] text-center py-2">No variables — the agent won't capture structured data from calls.</p>}
-      </div>
-
-      <div className="rounded-lg bg-[var(--card)] border border-[var(--border)] p-5 shadow-[var(--shadow-sm)] space-y-3">
-        <h3 className="font-semibold text-sm text-[var(--foreground)] flex items-center gap-2"><BookOpen size={14} className="text-[var(--primary)]" /> Knowledge base</h3>
-        <textarea value={knowledgeBase} onChange={(e) => setKnowledgeBase(e.target.value)} rows={3}
-          className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-xs text-[var(--foreground)] resize-none font-mono"
-          placeholder='Q: What are your hours? A: 9am-6pm, Mon-Sat&#10;Q: Do you offer delivery? A: Yes, free within the city' />
-        <p className="text-[10px] text-[var(--muted-foreground)]">Format: Q: ... / A: ... (one per line pair)</p>
-      </div>
-
-      <div className="rounded-lg bg-[var(--card)] border border-[var(--border)] p-5 shadow-[var(--shadow-sm)] space-y-4">
-        <div className="space-y-2">
-          <h3 className="font-semibold text-sm text-[var(--foreground)]">How strictly does the agent follow the script?</h3>
-          <p className="text-[10px] text-[var(--muted-foreground)]">Left = more natural & improvises freely. Right = sticks to sections exactly, in order, adds nothing that isn't written.</p>
-        </div>
-        <div className="space-y-2">
-          <input type="range" min="1" max="5" value={scriptStrictness} onChange={(e) => setScriptStrictness(Number(e.target.value))}
-            className="w-full h-2 bg-[var(--border)] rounded-lg appearance-none cursor-pointer" />
-          <div className="flex justify-between text-xs text-[var(--muted-foreground)]">
-            <span>Flexible</span>
-            <span className="font-medium">{['Conversational', 'Natural', 'Balanced', 'Structured', 'Strict'][scriptStrictness - 1]}</span>
-            <span>Strict</span>
+          <div>
+            <label className="block text-sm font-medium text-[var(--foreground)] mb-3">Max concurrent calls</label>
+            <input type="number" min="1" max="100" value={maxConcurrentCalls} onChange={(e) => setMaxConcurrentCalls(Number(e.target.value))}
+              className="w-full h-10 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)] text-center" />
+            <p className="text-xs text-[var(--muted-foreground)] mt-3">Higher = faster but more expensive.</p>
           </div>
         </div>
-      </div>
-
-      <div className="rounded-lg bg-[var(--card)] border border-[var(--border)] p-5 shadow-[var(--shadow-sm)] space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-sm text-[var(--foreground)] flex items-center gap-2"><Users size={14} /> Max concurrent calls</h3>
-          <input type="number" min="1" max="100" value={maxConcurrentCalls} onChange={(e) => setMaxConcurrentCalls(Number(e.target.value))}
-            className="w-20 h-8 rounded-lg border border-[var(--border)] bg-[var(--background)] px-2 text-sm text-[var(--foreground)] text-center" />
-        </div>
-        <p className="text-[10px] text-[var(--muted-foreground)]">How many calls at the same time during campaigns. Higher = faster but more expensive.</p>
-      </div>
+      </section>
 
       {trainingExamples.length > 0 && (
-        <div className="rounded-lg bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-900/40 p-5 space-y-3">
-          <h3 className="font-semibold text-sm text-emerald-900 dark:text-emerald-300">Training examples applied ({trainingExamples.length})</h3>
+        <section className="border-t border-[var(--border)] pt-6">
+          <h3 className="text-sm font-semibold text-[var(--foreground)] mb-3">Training applied ({trainingExamples.length})</h3>
           <div className="space-y-2">
             {trainingExamples.slice(0, 3).map((ex, i) => (
-              <div key={i} className="rounded-lg bg-white dark:bg-emerald-900/20 p-2 border border-emerald-200 dark:border-emerald-900/40">
-                <p className="text-[10px] font-medium text-emerald-700 dark:text-emerald-400 uppercase">Issue: {ex.issue}</p>
+              <div key={i} className="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-900/10">
+                <p className="text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase">Issue: {ex.issue}</p>
                 <p className="text-xs text-[var(--foreground)] mt-1">Fix: {ex.correction}</p>
               </div>
             ))}
-            {trainingExamples.length > 3 && <p className="text-[10px] text-emerald-700 dark:text-emerald-400">+ {trainingExamples.length - 3} more</p>}
+            {trainingExamples.length > 3 && <p className="text-xs text-emerald-700 dark:text-emerald-400">+ {trainingExamples.length - 3} more</p>}
           </div>
-        </div>
+        </section>
       )}
 
-      <div className="rounded-lg bg-[var(--card)] border border-[var(--border)] p-5 shadow-[var(--shadow-sm)] space-y-3">
-        <h3 className="font-semibold text-sm text-[var(--foreground)] flex items-center gap-2"><PhoneCall size={14} className="text-[var(--primary)]" /> Test call</h3>
-        {!employee.isPublished && <p className="text-xs text-amber-600 dark:text-amber-400">Publish this employee before test-calling it.</p>}
+      <section className="border-t border-[var(--border)] pt-6">
+        <h2 className="text-lg font-bold text-[var(--foreground)] mb-4">Test call</h2>
+        {!employee.isPublished && <p className="text-sm text-amber-600 dark:text-amber-400 mb-4">Publish first to test.</p>}
         <div className="flex gap-2">
           <input value={testNumber} onChange={(e) => setTestNumber(e.target.value)} placeholder="+91XXXXXXXXXX"
-            className="flex-1 h-9 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)]" />
+            className="flex-1 h-10 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)]" />
           <button onClick={handleTestCall} disabled={testingCall || !employee.isPublished}
-            className="h-9 px-4 rounded-lg bg-[var(--primary)] text-white text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-opacity flex items-center gap-2">
-            {testingCall ? <Loader2 size={14} className="animate-spin" /> : <PhoneCall size={14} />} Call
+            className="h-10 px-4 rounded-lg bg-[var(--primary)] text-white text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-opacity flex items-center gap-2">
+            {testingCall ? <Loader2 size={16} className="animate-spin" /> : <PhoneCall size={16} />} Call
           </button>
         </div>
-      </div>
-    </div>
-
-    <div className="sticky top-6 h-fit w-80 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 text-white p-5 shadow-lg space-y-4">
-      <div className="flex items-center gap-2">
-        <Mic size={16} className="animate-pulse" />
-        <h3 className="font-bold text-sm">Swara</h3>
-      </div>
-      <p className="text-xs opacity-90">Just tell me what you want — speak or type, and I'll update the whole flow.</p>
-
-      <div className="rounded-lg bg-white/10 p-3 space-y-2">
-        <textarea
-          value={swaraInput}
-          onChange={(e) => setSwaraInput(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && e.ctrlKey && handleSwaraUpdate()}
-          placeholder="e.g. 'make the call friendlier' or 'add urgency before closing'"
-          className="w-full h-20 rounded-lg bg-white/20 text-white text-xs placeholder-white/60 p-2 resize-none focus:bg-white/30 transition-colors"
-        />
-        <button
-          onClick={handleSwaraUpdate}
-          disabled={swaraLoading || !swaraInput.trim()}
-          className="w-full h-8 rounded-lg bg-white text-purple-600 font-medium text-xs hover:bg-opacity-90 disabled:opacity-40 transition-all flex items-center justify-center gap-2"
-        >
-          {swaraLoading ? <Loader2 size={12} className="animate-spin" /> : <Mic size={12} />}
-          Update script
-        </button>
-      </div>
-
-      <div className="space-y-2 pt-2 border-t border-white/20">
-        <button onClick={() => setSwaraInput('add urgency before closing')} className="w-full text-left px-2 py-1.5 text-xs hover:bg-white/10 rounded transition-colors">
-          Add urgency before closing
-        </button>
-        <button onClick={() => setSwaraInput('make the whole call friendlier')} className="w-full text-left px-2 py-1.5 text-xs hover:bg-white/10 rounded transition-colors">
-          Make the whole call friendlier
-        </button>
-        <button onClick={() => setSwaraInput('add a product to pitch')} className="w-full text-left px-2 py-1.5 text-xs hover:bg-white/10 rounded transition-colors">
-          Add a product to pitch
-        </button>
-        <button onClick={() => setSwaraInput('handle a price objection')} className="w-full text-left px-2 py-1.5 text-xs hover:bg-white/10 rounded transition-colors">
-          Handle a price objection
-        </button>
-      </div>
-    </div>
+      </section>
     </div>
   );
 }

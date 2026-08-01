@@ -9,11 +9,11 @@ export class LoanRegistrationService {
   async getOrCreate(tenantId: string, bookingId: string) {
     const booking = await this.prisma.booking.findFirst({ where: { id: bookingId, tenantId } });
     if (!booking) throw new NotFoundException('Booking not found');
-    return this.prisma.loanRegistrationCase.upsert({
+    return this.ser(await this.prisma.loanRegistrationCase.upsert({
       where: { bookingId },
       create: { tenantId, bookingId },
       update: {},
-    });
+    }));
   }
 
   async update(tenantId: string, bookingId: string, data: Partial<{
@@ -24,7 +24,7 @@ export class LoanRegistrationService {
   }>) {
     await this.getOrCreate(tenantId, bookingId);
     const { loanAmountPaise, disbursedAmountPaise, registrationChargesPaise, sanctionDate, registrationAppointmentAt, registeredAt, ...rest } = data;
-    return this.prisma.loanRegistrationCase.update({
+    return this.ser(await this.prisma.loanRegistrationCase.update({
       where: { bookingId },
       data: {
         ...rest,
@@ -35,7 +35,13 @@ export class LoanRegistrationService {
         registrationAppointmentAt: registrationAppointmentAt ? new Date(registrationAppointmentAt) : undefined,
         registeredAt: registeredAt ? new Date(registeredAt) : undefined,
       } as any,
-    });
+    }));
+  }
+
+  /** Prisma returns paise columns as BigInt, which breaks JSON.stringify. Serialize to string everywhere. */
+  private ser(c: any) {
+    if (!c) return c;
+    return { ...c, loanAmountPaise: c.loanAmountPaise?.toString(), disbursedAmountPaise: c.disbursedAmountPaise?.toString(), registrationChargesPaise: c.registrationChargesPaise?.toString() };
   }
 
   /** One combined read: loan/registration status + KYC checklist + generated documents + e-sign state, so staff don't tab-hop across four screens for one buyer. */
@@ -49,10 +55,8 @@ export class LoanRegistrationService {
       this.prisma.generatedDocument.findMany({ where: { tenantId, bookingId }, include: { esignRequests: true } }),
     ]);
 
-    const ser = (c: any) => ({ ...c, loanAmountPaise: c.loanAmountPaise?.toString(), disbursedAmountPaise: c.disbursedAmountPaise?.toString(), registrationChargesPaise: c.registrationChargesPaise?.toString() });
-
     return {
-      loanRegistration: ser(loanCase),
+      loanRegistration: loanCase,
       kycChecklist: kycDocs.map(d => ({ id: d.id, type: d.type, status: d.status })),
       documents: generatedDocs.map(d => ({ id: d.id, documentType: (d.snapshot as any)?.documentType, esignStatus: d.esignRequests[0]?.status || null })),
       missingBeforeRegistration: kycDocs.filter(d => !['VERIFIED', 'WAIVED'].includes(d.status)).map(d => d.type),
