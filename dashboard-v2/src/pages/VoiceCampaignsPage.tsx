@@ -216,7 +216,7 @@ export default function VoiceCampaignsPage() {
             ))}
           </div>
         )}
-      </div>
+      </section>
 
       {modalOpen && createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setModalOpen(false)}>

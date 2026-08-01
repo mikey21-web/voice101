@@ -423,6 +423,7 @@ export default function VoiceEmployeeDetailPage() {
           </button>
         </div>
       </section>
+      </div>
     </div>
   );
 }

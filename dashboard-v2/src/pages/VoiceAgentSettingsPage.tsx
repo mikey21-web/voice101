@@ -299,7 +299,7 @@ export default function VoiceAgentSettingsPage() {
             </button>
           </div>
         )}
-      </div>
+      </section>
 
       <div className="rounded-lg border border-[var(--border)] p-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -392,7 +392,7 @@ export default function VoiceAgentSettingsPage() {
             className="w-full"
           />
         </div>
-      </div>
+      </section>
 
       <section className="space-y-4">
         <div className="flex items-center justify-between">
@@ -441,7 +441,7 @@ export default function VoiceAgentSettingsPage() {
             className="w-full"
           />
         </div>
-      </div>
+      </section>
 
       <form onSubmit={handleSave} className="space-y-6 border-t border-[var(--border)] pt-6">
         <div>
@@ -603,7 +603,7 @@ export default function VoiceAgentSettingsPage() {
             Add Field
           </button>
         </form>
-      </div>
+      </section>
     </div>
   );
 }

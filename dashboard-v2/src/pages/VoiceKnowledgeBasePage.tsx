@@ -106,7 +106,7 @@ export default function VoiceKnowledgeBasePage() {
             ))}
           </div>
         )}
-      </div>
+      </section>
     </div>
   );
 }
