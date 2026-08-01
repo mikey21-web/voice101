@@ -51,6 +51,17 @@ export class EscalationService {
       data: { tenantId, leadId, trigger, detail },
     });
 
+    // A human is taking this lead. Automated nudges arriving on top of that
+    // read as the company not talking to itself, so stop the clock too — the
+    // autonomy gate alone would not stop work already queued.
+    const cancelled = await this.prisma.scheduledAction.updateMany({
+      where: { leadId, status: 'pending' },
+      data: { status: 'cancelled' },
+    });
+    if (cancelled.count > 0) {
+      this.logger.log(`Escalation on ${leadId} cancelled ${cancelled.count} queued follow-up(s)`);
+    }
+
     const lead = await this.prisma.lead.findUnique({
       where: { id: leadId },
       include: { contact: true, assignedAgent: true },

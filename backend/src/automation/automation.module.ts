@@ -6,6 +6,7 @@ import { DataPruningService } from './data-pruning.service';
 import { DataPruningProcessor } from './data-pruning.processor';
 import { FollowupProcessorService } from './followup-processor.service';
 import { ConversationsModule } from '../conversations/conversations.module';
+import { FollowUpSchedulerService } from './follow-up-scheduler.service';
 
 @Module({
   imports: [
@@ -22,10 +23,12 @@ import { ConversationsModule } from '../conversations/conversations.module';
     DataPruningService,
     DataPruningProcessor,
     FollowupProcessorService,
+    FollowUpSchedulerService,
   ],
   exports: [
     AutomationSchedulerService,
     DataPruningService,
+    FollowUpSchedulerService,
   ],
 })
 export class AutomationModule {}

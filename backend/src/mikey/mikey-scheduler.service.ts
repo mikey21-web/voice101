@@ -23,6 +23,10 @@ import type { SchedulerFinding } from './mikey-scheduler.types';
 const FIRST_CONTACT_SLA_SECONDS = 30;
 const BUSINESS_HOURS_START = 9;
 const BUSINESS_HOURS_END = 21;
+/** Top 3 things costing money today. An owner reads three alerts, not seventeen. */
+const MAX_ALERTS_PER_PUSH = 3;
+/** A loan or agreement with no movement for this long is stuck, not slow. */
+const MONEY_TRAIL_STALL_DAYS = 7;
 
 @Injectable()
 export class MikeySchedulerService {
@@ -122,8 +126,38 @@ export class MikeySchedulerService {
   private lastPushAt = 0;
 
   /** Push critical findings to the dashboard in real time — no waiting for the morning digest. */
+  /**
+   * Phase 9: rank by what the finding is costing and push only the top few.
+   * An owner who gets seventeen alerts reads none of them, so a stalled
+   * booking outranks a stale lead and both outrank a source-mix wobble.
+   */
+  private rankByImpact(findings: SchedulerFinding[]): SchedulerFinding[] {
+    const weight: Partial<Record<SchedulerFinding['type'], number>> = {
+      stalled_money_trail: 100,   // a signed buyer stuck is the most expensive thing here
+      pending_possession: 90,
+      first_contact_sla_breach: 80,
+      unassigned_hot_leads: 70,
+      stale_hot_leads: 60,
+      open_complaints: 55,
+      missed_call: 50,
+      portal_lead_failure: 45,
+      conversion_anomaly: 40,
+      stale_new_leads: 30,
+      overdue_tasks: 25,
+      weak_salesperson: 20,
+      source_drop: 15,
+      lead_source_shift: 10,
+    };
+    return [...findings].sort((a, b) => {
+      const byWeight = (weight[b.type] ?? 0) - (weight[a.type] ?? 0);
+      // Same kind of problem: the one hitting more leads costs more.
+      return byWeight !== 0 ? byWeight : (b.count ?? 0) - (a.count ?? 0);
+    });
+  }
+
   private async pushCriticalFindings(findings: SchedulerFinding[]): Promise<void> {
-    const critical = findings.filter(f => f.severity === 'critical');
+    const critical = this.rankByImpact(findings.filter(f => f.severity === 'critical'))
+      .slice(0, MAX_ALERTS_PER_PUSH);
     if (critical.length === 0) return;
     // Don't spam — at most once per 30 minutes
     if (Date.now() - this.lastPushAt < 30 * 60 * 1000) return;
@@ -164,10 +198,19 @@ export class MikeySchedulerService {
     const startedAt = Date.now();
     try {
       const findings: SchedulerFinding[] = [];
-      const [staleHot, staleNew, overdue, unassigned, missedCalls, portalFails, weakSales, sourceDrops, executedTasks] = await Promise.all([
+      // Order here must match the destructuring above it exactly. Inserting a
+      // check without adding its name silently shifts every result after it
+      // into the wrong variable.
+      const [
+        staleHot, staleNew, slaBreaches, stalledMoney, pendingPossession, complaints,
+        overdue, unassigned, missedCalls, portalFails, weakSales, sourceDrops, executedTasks,
+      ] = await Promise.all([
         this.runCheck('checkStaleHotLeads', () => this.checkStaleHotLeads()),
         this.runCheck('checkStaleNewLeads', () => this.checkStaleNewLeads()),
         this.runCheck('checkFirstContactSlaBreaches', () => this.checkFirstContactSlaBreaches()),
+        this.runCheck('checkStalledMoneyTrail', () => this.checkStalledMoneyTrail()),
+        this.runCheck('checkPendingPossession', () => this.checkPendingPossession()),
+        this.runCheck('checkOpenComplaints', () => this.checkOpenComplaints()),
         this.runCheck('checkOverdueTasks', () => this.checkOverdueTasks()),
         this.runCheck('checkUnassignedHotLeads', () => this.checkUnassignedHotLeads()),
         this.runCheck('scanMissedCalls', () => this.scanMissedCalls()),
@@ -176,7 +219,11 @@ export class MikeySchedulerService {
         this.runCheck('scanSourceDrops', () => this.scanSourceDrops()),
         this.runCheck('executeFollowUpTasks', () => this.executeFollowUpTasks()),
       ]);
-      findings.push(...staleHot, ...staleNew, ...overdue, ...unassigned, ...missedCalls, ...portalFails, ...weakSales, ...sourceDrops);
+      findings.push(
+        ...staleHot, ...staleNew, ...slaBreaches, ...stalledMoney, ...pendingPossession,
+        ...complaints, ...overdue, ...unassigned, ...missedCalls, ...portalFails,
+        ...weakSales, ...sourceDrops,
+      );
       if (executedTasks.length > 0) findings.push(...executedTasks);
 
       // Triage core: hand findings with an unambiguous, safe remedy straight
@@ -412,6 +459,69 @@ export class MikeySchedulerService {
       description: `${breached.length} lead(s) captured in business hours with no call attempted. ${breached.slice(0, 3).map(l => l.contact?.name || 'Unknown').join(', ')}${breached.length > 3 ? ` and ${breached.length - 3} more` : ''}`,
       count: breached.length,
       metadata: { leadIds: breached.map(l => l.id) },
+    }];
+  }
+
+  /**
+   * Phase 9, spine stage 9. A buyer who has paid a token and then sits in
+   * AGREEMENT or LOAN_PROCESSING for a week is the most expensive stall in the
+   * business: the deal is won and the money is not in.
+   */
+  private async checkStalledMoneyTrail(): Promise<SchedulerFinding[]> {
+    const cutoff = new Date(Date.now() - MONEY_TRAIL_STALL_DAYS * 24 * 60 * 60 * 1000);
+    const stalled = await this.prisma.lead.findMany({
+      where: {
+        status: { in: ['BOOKED', 'AGREEMENT', 'LOAN_PROCESSING'] },
+        updatedAt: { lt: cutoff },
+      },
+      include: { contact: true },
+      take: 10,
+    });
+    if (stalled.length === 0) return [];
+    return [{
+      type: 'stalled_money_trail',
+      severity: 'critical',
+      title: 'Signed buyers stuck before registration',
+      description: `${stalled.length} booked buyer(s) have not moved in ${MONEY_TRAIL_STALL_DAYS} days. ${stalled.slice(0, 3).map(l => l.contact?.name || 'Unknown').join(', ')}${stalled.length > 3 ? ` and ${stalled.length - 3} more` : ''}`,
+      count: stalled.length,
+      metadata: { leadIds: stalled.map(l => l.id) },
+    }];
+  }
+
+  /** Phase 9, spine stage 10. Registered buyers still waiting on hand-over. */
+  private async checkPendingPossession(): Promise<SchedulerFinding[]> {
+    const cutoff = new Date(Date.now() - MONEY_TRAIL_STALL_DAYS * 24 * 60 * 60 * 1000);
+    const pending = await this.prisma.lead.findMany({
+      where: { status: 'REGISTERED', updatedAt: { lt: cutoff } },
+      include: { contact: true },
+      take: 10,
+    });
+    if (pending.length === 0) return [];
+    return [{
+      type: 'pending_possession',
+      severity: pending.length > 3 ? 'critical' : 'warning',
+      title: 'Registered buyers awaiting possession',
+      description: `${pending.length} buyer(s) registered but not handed over. ${pending.slice(0, 3).map(l => l.contact?.name || 'Unknown').join(', ')}`,
+      count: pending.length,
+      metadata: { leadIds: pending.map(l => l.id) },
+    }];
+  }
+
+  /** Phase 9. An unanswered complaint is a refund or a bad review in waiting. */
+  private async checkOpenComplaints(): Promise<SchedulerFinding[]> {
+    const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
+    const open = await this.prisma.ticket.findMany({
+      where: { status: 'OPEN', createdAt: { lt: twoDaysAgo } },
+      take: 10,
+    });
+    if (open.length === 0) return [];
+    return [{
+      type: 'open_complaints',
+      severity: open.length > 5 ? 'critical' : 'warning',
+      title: 'Customer complaints going unanswered',
+      description: `${open.length} ticket(s) open for more than 2 days.`,
+      count: open.length,
+      metadata: { ticketIds: open.map(t => t.id) },
     }];
   }
 

@@ -28,7 +28,7 @@ conn.on('ready', async () => {
 
   const cmds = [
     'echo "📦 Pulling single-tenant-arch branch..."',
-    'cd /opt/lead-automation-demo && git fetch origin single-tenant-arch && git checkout single-tenant-arch && git pull origin single-tenant-arch',
+    'cd /opt/lead-automation-demo && git stash && git clean -fd && git fetch origin single-tenant-arch && git checkout single-tenant-arch && git pull origin single-tenant-arch',
     'echo "🛑 Stopping old containers..."',
     'docker compose -p virtual-assistant down --remove-orphans 2>/dev/null; docker stop $(docker ps -aq --filter name=lead-automation) 2>/dev/null; docker rm -f $(docker ps -aq --filter name=lead-automation) 2>/dev/null; docker rm -f $(docker ps -aq --filter name=virtual-assistant) 2>/dev/null; echo "✓ Cleaned up"',
     'echo "🔨 Building and starting services..."',

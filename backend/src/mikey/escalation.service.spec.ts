@@ -18,6 +18,7 @@ describe('EscalationService (Phase 5)', () => {
         updateMany: jest.fn().mockResolvedValue({ count: 1 }),
         findMany: jest.fn().mockResolvedValue([]),
       },
+      scheduledAction: { updateMany: jest.fn().mockResolvedValue({ count: 3 }) },
       lead: {
         findUnique: jest.fn().mockResolvedValue({
           id: 'lead-1',
@@ -78,6 +79,14 @@ describe('EscalationService (Phase 5)', () => {
 
       expect(prisma.leadEscalation.create).toHaveBeenCalled();
       expect(notifications.create).not.toHaveBeenCalled();
+    });
+
+    it('stops queued follow-ups so Mikey does not nudge over the human', async () => {
+      await service.raise({ tenantId: 't1', leadId: 'lead-1', trigger: 'NEGATIVE_SENTIMENT', detail: 'angry' });
+
+      const call = prisma.scheduledAction.updateMany.mock.calls[0][0];
+      expect(call.where).toEqual({ leadId: 'lead-1', status: 'pending' });
+      expect(call.data.status).toBe('cancelled');
     });
 
     it('a failing notification does not lose the escalation', async () => {

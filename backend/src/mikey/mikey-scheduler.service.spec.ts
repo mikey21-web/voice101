@@ -96,6 +96,57 @@ describe('MikeySchedulerService reliability', () => {
     expect(memory.reflectOnOutcome).toHaveBeenCalledWith('t1', 'booking_outcome', 'b2');
   });
 
+  describe('Business Brain coverage (Phase 9)', () => {
+    it('flags booked buyers stuck before registration', async () => {
+      prisma.lead.findMany.mockResolvedValue([
+        { id: 'l1', tenantId: 't1', contact: { name: 'Ravi' } },
+      ]);
+
+      const findings = await (scheduler as any).checkStalledMoneyTrail();
+
+      expect(findings[0].type).toBe('stalled_money_trail');
+      expect(findings[0].severity).toBe('critical');
+      const where = prisma.lead.findMany.mock.calls[0][0].where;
+      expect(where.status.in).toEqual(['BOOKED', 'AGREEMENT', 'LOAN_PROCESSING']);
+    });
+
+    it('flags registered buyers still waiting on hand-over', async () => {
+      prisma.lead.findMany.mockResolvedValue([{ id: 'l1', tenantId: 't1', contact: { name: 'Asha' } }]);
+      const findings = await (scheduler as any).checkPendingPossession();
+      expect(findings[0].type).toBe('pending_possession');
+    });
+
+    it('flags complaints left open for days', async () => {
+      prisma.ticket = { findMany: jest.fn().mockResolvedValue([{ id: 'tk1' }, { id: 'tk2' }]) };
+      const findings = await (scheduler as any).checkOpenComplaints();
+      expect(findings[0].type).toBe('open_complaints');
+      expect(findings[0].count).toBe(2);
+    });
+
+    it('ranks a stalled booking above a stale lead', () => {
+      const ranked = (scheduler as any).rankByImpact([
+        { type: 'source_drop', severity: 'critical', count: 9 },
+        { type: 'stalled_money_trail', severity: 'critical', count: 1 },
+        { type: 'stale_hot_leads', severity: 'critical', count: 4 },
+      ]);
+      expect(ranked.map((f: any) => f.type)).toEqual([
+        'stalled_money_trail', 'stale_hot_leads', 'source_drop',
+      ]);
+    });
+
+    it('pushes at most three alerts, so an owner actually reads them', async () => {
+      const events = (scheduler as any).events;
+      const many = Array.from({ length: 8 }, (_, i) => ({
+        type: 'stale_hot_leads', severity: 'critical', title: `t${i}`, description: 'd', count: i, metadata: {},
+      }));
+      (scheduler as any).lastPushAt = 0;
+
+      await (scheduler as any).pushCriticalFindings(many);
+
+      expect(events.emit).toHaveBeenCalledTimes(3);
+    });
+  });
+
   describe('30 second first-contact SLA (section 5)', () => {
     // Pin the clock so these do not pass or fail depending on what time the
     // suite happens to run.

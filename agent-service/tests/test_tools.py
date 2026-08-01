@@ -84,3 +84,83 @@ async def test_book_appointment(tool_ctx):
         )
         result = await ba.ainvoke({"booking_type": "Consultation"})
     assert "appointment" in result or "ok:" in result
+
+
+# --- Phase 3: buyer-facing money-trail tools ---
+
+@pytest.fixture
+def realestate_ctx():
+    s = Settings(
+        backend_api_url="http://test:3001",
+        agent_service_jwt="test-jwt",
+        anthropic_api_key="test-key",
+    )
+    return ToolContext(
+        client=BackendClient(s), lead_id="lead-1", tenant_id="tenant-1",
+        features={"projects": True},
+    )
+
+
+def test_money_tools_are_approval_gated():
+    """A price commitment or a stock block must never run on model say-so."""
+    from app.tools import HIGH_IMPACT_TOOLS
+    assert "generate_cost_sheet" in HIGH_IMPACT_TOOLS
+    assert "hold_unit" in HIGH_IMPACT_TOOLS
+
+
+@pytest.mark.asyncio
+async def test_generate_cost_sheet(realestate_ctx):
+    tools = build_tools(realestate_ctx)
+    tool = next(t for t in tools if t.name == "generate_cost_sheet")
+    with respx.mock:
+        respx.post("http://test:3001/cost-sheets").mock(
+            return_value=httpx.Response(201, json={"id": "cs-1"})
+        )
+        result = await tool.ainvoke({"unit_id": "u-1", "project_id": "p-1"})
+    assert result.startswith("ok:")
+    assert "cs-1" in result
+
+
+@pytest.mark.asyncio
+async def test_hold_unit(realestate_ctx):
+    tools = build_tools(realestate_ctx)
+    tool = next(t for t in tools if t.name == "hold_unit")
+    with respx.mock:
+        respx.post("http://test:3001/unit-holds").mock(
+            return_value=httpx.Response(201, json={"id": "h-1"})
+        )
+        result = await tool.ainvoke({"unit_id": "u-1", "hold_hours": 48})
+    assert "48h" in result
+
+
+@pytest.mark.asyncio
+async def test_inventory_tools_off_for_non_project_niches(tool_ctx):
+    """A broker niche has no Project->Tower->Unit inventory to price or hold."""
+    tools = build_tools(tool_ctx)
+    tool = next(t for t in tools if t.name == "hold_unit")
+    result = await tool.ainvoke({"unit_id": "u-1"})
+    assert result.startswith("error:")
+
+
+@pytest.mark.asyncio
+async def test_payment_status_with_no_schedule(realestate_ctx):
+    tools = build_tools(realestate_ctx)
+    tool = next(t for t in tools if t.name == "payment_status")
+    with respx.mock:
+        respx.get("http://test:3001/payment-schedules?leadId=lead-1").mock(
+            return_value=httpx.Response(200, json=[])
+        )
+        result = await tool.ainvoke({})
+    assert "no payment schedule" in result
+
+
+@pytest.mark.asyncio
+async def test_loan_status_reports_backend_value(realestate_ctx):
+    tools = build_tools(realestate_ctx)
+    tool = next(t for t in tools if t.name == "loan_status")
+    with respx.mock:
+        respx.get("http://test:3001/bookings/b-1/loan-registration").mock(
+            return_value=httpx.Response(200, json={"status": "SANCTIONED"})
+        )
+        result = await tool.ainvoke({"booking_id": "b-1"})
+    assert "SANCTIONED" in result
