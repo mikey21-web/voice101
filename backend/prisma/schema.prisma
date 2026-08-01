@@ -142,6 +142,8 @@ model Tenant {
   adSpendImports               AdSpendImport[]
   onboardingSteps              TenantOnboardingStep[]
   workflowDefinitions          WorkflowDefinition[]
+  voiceCallers                 VoiceCaller[]
+  voiceTrainingExamples        VoiceTrainingExample[]
 
   @@index([slug])
   @@map("tenants")
@@ -179,7 +181,12 @@ enum LeadStatus {
   QUALIFIED
   PROPOSAL_SENT
   APPOINTMENT_BOOKED
-  CONVERTED
+  CONVERTED          // retained: treat as an alias of BOOKED, do not delete
+  BOOKED
+  AGREEMENT
+  LOAN_PROCESSING
+  REGISTERED
+  POSSESSION
   LOST
   COLD
   SPAM
@@ -804,6 +811,7 @@ model Lead {
   campaignId  String?
   qualifiedAt DateTime?
   convertedAt DateTime?
+  firstContactAttemptedAt DateTime?
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
@@ -5814,6 +5822,7 @@ model VoiceEmployee {
   leads      VoiceLead[]
   calls      VoiceCall[]
   campaigns  VoiceCampaign[]
+  trainingExamples VoiceTrainingExample[]
 
   @@index([tenantId])
   @@map("voice_employees")
@@ -5947,6 +5956,22 @@ model VoicePhoneNumber {
   @@map("voice_phone_numbers")
 }
 
+/// Persistent caller memory: stores extracted facts (name, intent, preferences, etc.)
+/// per phone number, retrieved and enriched on each new call from that number.
+/// Facts are JSON to allow flexible schema evolution without migrations.
+model VoiceCaller {
+  id           String   @id @default(uuid())
+  tenantId     String   @map("tenant_id")
+  tenant       Tenant   @relation(fields: [tenantId], references: [id])
+  phoneNumber  String   @map("phone_number")
+  facts        Json     @default("{}") /// { "name": "...", "intent": "...", "budget": "...", etc. }
+  updatedAt    DateTime @updatedAt
+
+  @@unique([tenantId, phoneNumber])
+  @@index([tenantId])
+  @@map("voice_callers")
+}
+
 /// A completed (or in-progress) call placed/received by a VoiceEmployee.
 /// Deliberately separate from the pre-existing CallLog model: CallLog is the
 /// general cross-channel call record used by the human-agent telephony path
@@ -6017,6 +6042,32 @@ model VoiceLead {
   @@index([tenantId])
   @@index([employeeId])
   @@map("voice_leads")
+}
+
+/// Training examples mined from calls: owner-annotated corrections that improve future call quality.
+/// These are injected into LLM context ("learn from past mistakes") on subsequent calls.
+model VoiceTrainingExample {
+  id         String   @id @default(uuid())
+  tenantId   String   @map("tenant_id")
+  tenant     Tenant   @relation(fields: [tenantId], references: [id])
+  employeeId String   @map("employee_id")
+  employee   VoiceEmployee @relation(fields: [employeeId], references: [id])
+  callId     String?  @map("call_id")
+
+  issue      String   @db.Text /// "Agent didn't ask about budget"
+  correction String   @db.Text /// "Ask: What's your budget range for this property?"
+  context    String?  @db.Text /// optional: call transcript snippet or extra context
+
+  status     String   @default("active") /// active | archived | applied
+  appliedAt  DateTime? @map("applied_at") /// when this example was last used in a call
+
+  createdAt DateTime @default(now())
+  createdBy  String?  @map("created_by") /// user ID who annotated this
+
+  @@index([tenantId])
+  @@index([employeeId])
+  @@index([status])
+  @@map("voice_training_examples")
 }
 
 /// A bulk-calling run against a list of contacts. Named VoiceCampaign (not

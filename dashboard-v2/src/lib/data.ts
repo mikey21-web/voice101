@@ -283,6 +283,13 @@ export async function fetchVoiceCallLogs(page = 1, limit = 50) {
 export interface VoiceDashboardStats { totalCalls: number; answerRate: number; avgDurationSeconds: number; totalMinutesUsed: number; dispositionCounts: Record<string, number>; }
 export async function fetchVoiceDashboardStats() { return api('/voice-agent/dashboard-stats') as Promise<VoiceDashboardStats>; }
 
+export interface VoiceAnalytics {
+  totalCalls: number; totalDuration: number; totalCost: number; avgDuration: number; successRate: number;
+  byEmployee: Array<{ employeeId: string; name: string; calls: number; duration: number; cost: number }>;
+  funnel: { entered: number; engaged: number; completed: number; engagementRate: number; completionRate: number };
+}
+export async function fetchVoiceAnalytics(hours = 24) { return api(`/voice-analytics/overview?hours=${hours}`) as Promise<VoiceAnalytics>; }
+
 // ===== Multi-employee voice engine (VoiceEmployee, VoiceCall, VoiceLead, VoiceCampaign) =====
 
 export interface VoiceEmployeeSection {
@@ -325,6 +332,7 @@ export async function deleteVoiceEmployee(id: string) { return api(`/voice-emplo
 export async function publishVoiceEmployee(id: string) { return api(`/voice-employees/${id}/publish`, { method: 'POST' }) as Promise<VoiceEmployee>; }
 export async function activateVoiceEmployee(id: string) { return api(`/voice-employees/${id}/activate`, { method: 'POST' }) as Promise<VoiceEmployee>; }
 export async function deactivateVoiceEmployee(id: string) { return api(`/voice-employees/${id}/deactivate`, { method: 'POST' }) as Promise<VoiceEmployee>; }
+export async function fetchVoiceTrainingExamples(employeeId: string) { return api(`/voice-training/employee/${employeeId}`) as Promise<any[]>; }
 export interface VoiceEmployeeVersion { id: string; revision: number; snapshot: any; createdAt: string; }
 export async function fetchVoiceEmployeeVersions(id: string) { return api(`/voice-employees/${id}/versions`) as Promise<VoiceEmployeeVersion[]>; }
 export async function restoreVoiceEmployeeVersion(id: string, revision: number) {
@@ -355,6 +363,14 @@ export async function fetchVoiceEngineCalls(filters: { employeeId?: string; dire
 }
 export async function fetchVoiceEngineCall(id: string) { return api(`/voice-calls/${id}`) as Promise<VoiceEngineCall>; }
 export async function redialVoiceEngineCall(id: string) { return api(`/voice-calls/${id}/redial`, { method: 'POST' }); }
+
+export interface CallStruggle {
+  rule: string; severity: 'high' | 'medium' | 'low'; turn: number; detail: string; excerpt?: string;
+}
+export interface CallStrugglesReport {
+  struggles: CallStruggle[]; score: number; teachable: Array<{ issue: string; detail: string; turn: number; excerpt?: string }>;
+}
+export async function fetchCallStruggles(callId: string) { return api(`/voice-calls/${callId}/struggles`) as Promise<CallStrugglesReport>; }
 
 export interface VoiceEngineLead {
   id: string; employeeId: string; phone: string; outcome: string | null; captured: any; summary: string | null; createdAt: string;
