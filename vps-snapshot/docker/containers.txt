@@ -1,0 +1,12 @@
+demo-realestate-backend-1	demo-realestate-backend	Up 31 hours (healthy)	127.0.0.1:4002->3001/tcp
+demo-realestate-dashboard-1	demo-realestate-dashboard	Up 32 hours (healthy)	80/tcp, 127.0.0.1:4001->3000/tcp
+demo-realestate-postgres-1	postgres:16-alpine	Up 37 hours (healthy)	5432/tcp
+demo-realestate-redis-1	redis:7-alpine	Up 37 hours (healthy)	6379/tcp
+demo-realestate-agent-service-1	demo-realestate-agent-service	Up 2 days (healthy)	8000/tcp
+tour-proxy	tour-proxy	Up 4 days	0.0.0.0:4010->4010/tcp, [::]:4010->4010/tcp
+dograh-api-1	dograhai/dograh-api:latest	Up 2 days (healthy)	0.0.0.0:8010->8000/tcp, [::]:8010->8000/tcp
+dograh-ui-1	dograhai/dograh-ui:latest	Up 12 days (healthy)	0.0.0.0:3010->3010/tcp, [::]:3010->3010/tcp
+dograh-redis-1	redis:7	Up 12 days (healthy)	6379/tcp
+dograh-postgres-1	pgvector/pgvector:pg17	Up 12 days (healthy)	5432/tcp
+minio	minio/minio	Up 12 days (healthy)	0.0.0.0:9000->9000/tcp, [::]:9000->9000/tcp
+strix-worker	strix-worker:latest	Up 2 weeks (healthy)	

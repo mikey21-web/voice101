@@ -1,0 +1,15 @@
+[Unit]
+Description=Prema LiveKit Voice Agent Worker
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/prema-voice-agent
+ExecStart=/opt/prema-voice-agent/.venv/bin/python agent.py start
+Restart=always
+RestartSec=3
+StandardOutput=append:/var/log/prema-voice-agent.log
+StandardError=append:/var/log/prema-voice-agent.log
+
+[Install]
+WantedBy=multi-user.target

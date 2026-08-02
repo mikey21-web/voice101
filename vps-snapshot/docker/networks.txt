@@ -1,0 +1,7 @@
+NETWORK ID     NAME                      DRIVER    SCOPE
+079db7ffc80a   bridge                    bridge    local
+e6f0f0fcfea1   demo-realestate_default   bridge    local
+3067c0426366   dograh_app-network        bridge    local
+df1c0724fa36   host                      host      local
+b2d9ae6bfe01   none                      null      local
+1280f881d8bc   openwa-network            bridge    local

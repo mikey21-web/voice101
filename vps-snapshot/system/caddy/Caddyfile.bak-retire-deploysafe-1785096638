@@ -1,0 +1,24 @@
+{
+	servers {
+		protocols h1 h2
+	}
+}
+
+deploysafe.in {
+	encode gzip
+	tls admin@deploysafe.in
+
+	handle_path /api/* {
+		reverse_proxy localhost:3001
+	}
+	handle_path /dograh/* {
+		reverse_proxy localhost:8010
+	}
+	handle_path /n8n/* {
+		reverse_proxy localhost:5678
+	}
+	handle {
+		reverse_proxy localhost:3000
+	}
+}
+import /opt/lead-automation-demo/deploy-demo/Caddyfile.additions

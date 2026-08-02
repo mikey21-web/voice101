@@ -1,0 +1,23 @@
+VPS SNAPSHOT - 160.250.204.162 - captured 2026-08-02
+
+GIT-TRACKED CODE (restore by cloning, no files needed here):
+  /opt/lead-automation-demo   github.com/mikey21-web/vritual-assistant  branch single-tenant-arch  @ 502e124616755dfaf57bf262d75a52561f2f7bb8
+  /root/virtual-assistant     github.com/mikey21-web/vritual-assistant  branch master              @ dc2799c0bd68d765f82e05529e7b1ac086471481
+  /opt/OpenWA                 github.com/rmyndharis/OpenWA                                         @ 1109ea7a44008fbf784e2b1e185e5c7986351f94  (clean)
+
+NOT IN ANY GIT (must restore from this snapshot):
+  code/prema-voice-agent/             systemd svc, LiveKit worker, /opt/prema-voice-agent
+  code/virtual-assistant-untracked/    prisma migration + docker-compose.override.yml
+  code/env.realestate.diff             DOGRAH_API_KEY added by hand
+  system/envs/                         all 5 live .env files (SECRETS)
+  system/caddy/                        /etc/caddy
+  system/systemd/                      prema-voice-agent, hermes-*, caddy units
+  db/                                  pg_dumpall of both postgres containers
+  volumes/                             uploads + minio object storage
+  docker/                              container/image/volume/network inventory
+
+RUNNING STACKS:
+  demo-realestate : /opt/lead-automation-demo/docker-compose.demo.yml  env deploy-demo/.env.realestate
+  dograh          : /root/virtual-assistant/dograh/docker-compose.yaml env dograh/.env
+  prema-voice-agent : systemd, /opt/prema-voice-agent/.venv/bin/python agent.py start
+  tour-proxy, strix-worker : started manually, see docker/manual-containers.json

@@ -1,0 +1,49 @@
+{
+	servers {
+		protocols h1 h2
+	}
+}
+
+deploysafe.in {
+	tls admin@deploysafe.in
+	encode gzip
+	log {
+		output file /var/log/caddy/access.log
+		format json
+	}
+
+	reverse_proxy localhost:3000
+
+	handle /chat/* {
+		reverse_proxy localhost:3001
+	}
+
+	handle_path /api/* {
+		reverse_proxy localhost:3001
+	}
+
+	handle /webhooks/* {
+		reverse_proxy localhost:3001
+	}
+
+	handle_path /n8n/* {
+		reverse_proxy localhost:5678
+	}
+}
+
+deploysafe.info {
+	tls admin@deploysafe.info
+	encode gzip
+	log {
+		output file /var/log/caddy/hermes-access.log
+		format json
+	}
+
+
+	reverse_proxy localhost:9119
+}
+
+:80 {
+	bind 0.0.0.0
+	redir https://{host}{uri} permanent
+}
