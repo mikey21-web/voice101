@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { TimelineService } from './timeline.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { SpineDriverService } from '../leads/spine-driver.service';
 
 describe('TimelineService', () => {
   let service: TimelineService;
@@ -36,10 +37,15 @@ describe('TimelineService', () => {
       },
     };
 
+    const spineDriver = { onLifecycleEvent: jest.fn().mockResolvedValue(undefined) };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         TimelineService,
         { provide: PrismaService, useValue: prisma },
+        // Every timeline write also offers the fact to the spine driver, which
+        // is how Mikey advances stages 5-10 off real events.
+        { provide: SpineDriverService, useValue: spineDriver },
       ],
     }).compile();
 

@@ -172,6 +172,8 @@ const rawNavGroups = [
       { label: "Agents", icon: Truck, path: "/channel-partners" },
       { label: "Partner Claims", icon: Truck, path: "/partner-claims" },
       { label: "Approvals", icon: CheckSquare, path: "/approvals" },
+      { label: "Needs a Person", icon: CheckSquare, path: "/escalations" },
+      { label: "Sales Coach", icon: BarChart3, path: "/coach" },
       { label: "Payments & Collections", icon: ClipboardList, path: "/payment-schedules" },
       { label: "Collections Ledger", icon: ClipboardList, path: "/collections" },
       { label: "Portfolio", icon: BarChart3, path: "/portfolio" },

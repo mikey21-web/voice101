@@ -105,6 +105,8 @@ const PageComponents: Record<string, React.LazyExoticComponent<React.ComponentTy
   Collections: lazy(() => import("./pages/CollectionsPage")),
   PartnerClaims: lazy(() => import("./pages/PartnerClaimsPage")),
   Approvals: lazy(() => import("./pages/ApprovalsPage")),
+  Coach: lazy(() => import("./pages/CoachPage")),
+  Escalations: lazy(() => import("./pages/EscalationsPage")),
   SourceHealth: lazy(() => import("./pages/SourceHealthPage")),
   CampaignDetail: lazy(() => import("./pages/CampaignDetailPage")),
   MarketingJourneys: lazy(() => import("./pages/MarketingJourneysPage")),
@@ -226,6 +228,8 @@ function getPageKey(raw: string): string {
     "/collections": "Collections",
     "/partner-claims": "PartnerClaims",
     "/approvals": "Approvals",
+    "/coach": "Coach",
+    "/escalations": "Escalations",
     "/source-health": "SourceHealth",
     "/marketing-journeys": "MarketingJourneys",
     "/marketing-events": "MarketingEvents",
@@ -285,10 +289,23 @@ function fallbackTitle(type: string): string {
   return suffix.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 }
 
+/**
+ * An event only earns a banner or a toast if it actually says something.
+ *
+ * Every autonomous action Mikey takes emits a `mikey.*` event, and most carry
+ * no title or description because they are telemetry for the audit log, not
+ * news for a human. Those were falling through to fallbackTitle() and stacking
+ * up as identical "Autonomous Action" cards that said nothing and could not be
+ * dismissed fast enough. Bare telemetry is now silent.
+ */
+function isWorthShowing(payload: any): boolean {
+  return Boolean(payload?.title || payload?.description);
+}
+
 function MikeyConnectedBanner() {
   const { eventBuffer } = useSocket();
   const findings = eventBuffer
-    .filter(e => stripEventPrefix(e.type).startsWith('mikey.'))
+    .filter(e => stripEventPrefix(e.type).startsWith('mikey.') && isWorthShowing(e.payload))
     .slice(-5)
     .map(e => ({
       id: `${e.type}-${e.timestamp}`,
@@ -307,6 +324,7 @@ function MikeyConnectedToast() {
     const semanticType = stripEventPrefix(lastEvent.type);
     if (!semanticType.startsWith('mikey.')) return;
     const p = lastEvent.payload as any;
+    if (!isWorthShowing(p)) return;
     showMikeyToast({
       title: p?.title || fallbackTitle(semanticType),
       description: p?.description || '',

@@ -5,6 +5,8 @@ import { LeadsService } from '../leads/leads.service';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { ConversationsService } from '../conversations/conversations.service';
 import { AgentClientService } from '../agent/agent-client.service';
+import { ResolveLeadService } from '../leads/resolve-lead.service';
+import { getTenantId } from '../shared/tenant-helper';
 
 /** Keys that are stripped from the submission payload before storing as form field data. */
 const SUBMISSION_META_KEYS = ['_source', '_pageUrl', '_utm', '_startedAt', '_completedAt'];
@@ -33,6 +35,7 @@ export class FormsService {
     private prisma: PrismaService,
     private contactsService: ContactsService,
     private leadsService: LeadsService,
+    private resolveLead: ResolveLeadService,
     private auditLogs: AuditLogsService,
     private conversationsService: ConversationsService,
     private agentClient: AgentClientService,
@@ -129,7 +132,6 @@ export class FormsService {
     const whatsapp = firstOf(fieldData, WHATSAPP_KEYS) ?? payload.whatsapp;
     const company = firstOf(fieldData, COMPANY_KEYS) ?? payload.company;
 
-    const contact = await this.contactsService.findOrCreate({ name, email, phone, whatsapp, company }, req);
 
     // Only trust a client-supplied qrCodeId if it's a real QR code, so a made-up id
     // can't misattribute a lead's source.
@@ -152,13 +154,19 @@ export class FormsService {
       .join('. ');
     const message = [summary, explicitMessage].filter(Boolean).join('. ') || undefined;
 
-    const lead = await this.leadsService.create({
-      contactId: contact.id,
+    // Phase 4: one resolve path for every capture source, so the same buyer
+    // arriving by form and by portal is one lead and one salesperson.
+    const resolved = await this.resolveLead.resolveLead({
+      tenantId: getTenantId(req),
+      name, email, phone, whatsapp, company,
       source: leadSource,
       message,
       interest: payload.interest,
       metadata: payload,
+      req,
     });
+    const contact = { id: resolved.contactId };
+    const lead = await this.prisma.lead.findUniqueOrThrow({ where: { id: resolved.leadId } });
 
     // Strip prefixed meta keys — they are submission metadata, not form field values
     const cleanPayload = this.stripMetaKeys(fieldData);

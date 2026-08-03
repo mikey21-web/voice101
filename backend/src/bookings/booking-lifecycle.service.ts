@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { BookingStatus } from '@prisma/client';
+import { FollowUpSchedulerService, FollowupKind } from '../automation/follow-up-scheduler.service';
 
 /**
  * BookingLifecycleService
@@ -25,7 +26,10 @@ export class BookingLifecycleService {
   // How long past the visit end time before we treat it as a no-show.
   private readonly NO_SHOW_GRACE_MS = 30 * 60 * 1000;
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private followUps: FollowUpSchedulerService,
+  ) {}
 
   // ── Scheduling ────────────────────────────────────────────────────────────
 
@@ -388,18 +392,16 @@ export class BookingLifecycleService {
     payload: Record<string, unknown>;
   }): Promise<void> {
     try {
-      await this.prisma.scheduledAction.upsert({
-        where: { dedupeKey: a.dedupeKey },
-        create: {
-          leadId: a.leadId,
-          kind: a.kind,
-          runAt: a.runAt,
-          dedupeKey: a.dedupeKey,
-          payload: a.payload as any,
-          status: 'pending',
-        },
-        // If it already fired (done/failed) leave it; otherwise refresh timing/text.
-        update: { runAt: a.runAt, payload: a.payload as any, status: 'pending' },
+      // Phase 8: one typed API over the shared clock. revive:true keeps the
+      // original behaviour here, where a booking whose date moves re-arms its
+      // reminder rather than staying superseded.
+      await this.followUps.schedule({
+        leadId: a.leadId,
+        kind: a.kind as FollowupKind,
+        runAt: a.runAt,
+        dedupeKey: a.dedupeKey,
+        payload: a.payload,
+        revive: true,
       });
     } catch (e: any) {
       this.logger.warn(`Failed to upsert scheduled action ${a.dedupeKey}: ${e.message}`);

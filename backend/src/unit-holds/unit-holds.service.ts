@@ -5,6 +5,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { TimelineService } from '../timeline/timeline.service';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { UnitHoldStatus, UnitStatus } from '@prisma/client';
+import { FollowUpSchedulerService } from '../automation/follow-up-scheduler.service';
 
 @Injectable()
 export class UnitHoldsService {
@@ -16,6 +17,7 @@ export class UnitHoldsService {
     private config: ConfigService,
     private timeline: TimelineService,
     private auditLogs: AuditLogsService,
+    private followUps: FollowUpSchedulerService,
   ) {
     this.holdHours = Number(this.config.get('HOLD_DURATION_HOURS', '48'));
   }
@@ -197,17 +199,13 @@ export class UnitHoldsService {
         const unitNum = (hold as any).unit?.unitNumber || '';
         const text = `Hi, the hold on unit ${unitNum} for ${buyerName} has expired and been released automatically. Please follow up if the buyer is still interested.`;
 
-        await this.prisma.scheduledAction.upsert({
-          where: { dedupeKey: `hold_expired_notif:${hold.id}` },
-          create: {
-            leadId: hold.leadId,
-            kind: 'notification',
-            runAt: new Date(Date.now() + 1000),
-            dedupeKey: `hold_expired_notif:${hold.id}`,
-            payload: { channel: 'WHATSAPP', text, unitHoldId: hold.id, unitId: hold.unitId },
-            status: 'pending',
-          },
-          update: { runAt: new Date(Date.now() + 1000), status: 'pending' },
+        await this.followUps.schedule({
+          leadId: hold.leadId,
+          kind: 'notification',
+          runAt: new Date(Date.now() + 1000),
+          dedupeKey: `hold_expired_notif:${hold.id}`,
+          payload: { channel: 'WHATSAPP', text, unitHoldId: hold.id, unitId: hold.unitId },
+          revive: true,
         });
 
         released++;

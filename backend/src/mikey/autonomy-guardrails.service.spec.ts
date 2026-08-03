@@ -58,6 +58,16 @@ describe('AutonomyGuardrailsService', () => {
     expect(send.reason).toContain('escalated');
   });
 
+  it('stage bookkeeping does not eat the daily action budget', async () => {
+    // Every advanceStage writes a MikeyAutonomousAction row. Counting those
+    // meant a busy pipeline day silently switched Mikey off.
+    prisma.mikeyAutonomousAction.count.mockResolvedValue(0);
+    await service.isUnderDailyCap('t1');
+
+    const where = prisma.mikeyAutonomousAction.count.mock.calls[0][0].where;
+    expect(where.tool).toEqual({ not: 'advance_stage' });
+  });
+
   it('turning off money leaves scheduling free to act', async () => {
     prisma.tenant.findUnique.mockResolvedValue({
       settings: { mikeyAutonomyCategories: { money: 'off', scheduling: 'autonomous' } },

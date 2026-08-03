@@ -4,6 +4,7 @@ import { TimelineService } from '../timeline/timeline.service';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { AutomationSchedulerService } from '../automation/automation-scheduler.service';
 import { SiteVisitStatus } from '@prisma/client';
+import { FollowUpSchedulerService } from '../automation/follow-up-scheduler.service';
 
 const OPEN_STATUSES: SiteVisitStatus[] = [SiteVisitStatus.SCHEDULED, SiteVisitStatus.CONFIRMED];
 // Grace period past a visit's scheduled end before the heartbeat treats it as a no-show.
@@ -18,6 +19,7 @@ export class SiteVisitsService {
     private timeline: TimelineService,
     private auditLogs: AuditLogsService,
     private automationScheduler: AutomationSchedulerService,
+    private followUps: FollowUpSchedulerService,
   ) {}
 
   async create(data: {
@@ -424,17 +426,14 @@ export class SiteVisitsService {
     const when = this.formatWhen(visit.startAt);
     const project = await this.prisma.project.findUnique({ where: { id: visit.projectId }, select: { name: true } });
     const text = `Hi ${name}, your site visit at ${project?.name || 'the project'} is confirmed for ${when}. We look forward to showing you around! Reply here if you need any help.`;
-    await this.prisma.scheduledAction.upsert({
-      where: { dedupeKey: `sv_conf:${visit.id}` },
-      create: {
-        leadId: visit.leadId,
-        kind: 'site_visit_reminder',
-        runAt: new Date(Date.now() + 5000),
-        dedupeKey: `sv_conf:${visit.id}`,
-        payload: { siteVisitId: visit.id, channel: 'WHATSAPP', text },
-        status: 'pending',
-      },
-      update: { runAt: new Date(Date.now() + 5000), status: 'pending' },
+    // revive:true — a rescheduled visit re-arms its confirmation.
+    await this.followUps.schedule({
+      leadId: visit.leadId,
+      kind: 'site_visit_reminder',
+      runAt: new Date(Date.now() + 5000),
+      dedupeKey: `sv_conf:${visit.id}`,
+      payload: { siteVisitId: visit.id, channel: 'WHATSAPP', text },
+      revive: true,
     });
   }
 
@@ -448,17 +447,13 @@ export class SiteVisitsService {
     ];
     const base = Date.now();
     for (const s of steps) {
-      await this.prisma.scheduledAction.upsert({
-        where: { dedupeKey: `pv_nurture:${visitId}:${s.suffix}` },
-        create: {
-          leadId,
-          kind: 'post_visit_followup',
-          runAt: new Date(base + s.offsetMs),
-          dedupeKey: `pv_nurture:${visitId}:${s.suffix}`,
-          payload: { siteVisitId: visitId, channel: 'WHATSAPP', text: s.text },
-          status: 'pending',
-        },
-        update: { runAt: new Date(base + s.offsetMs), status: 'pending' },
+      await this.followUps.schedule({
+        leadId,
+        kind: 'post_visit_followup',
+        runAt: new Date(base + s.offsetMs),
+        dedupeKey: `pv_nurture:${visitId}:${s.suffix}`,
+        payload: { siteVisitId: visitId, channel: 'WHATSAPP', text: s.text },
+        revive: true,
       });
     }
   }
@@ -480,17 +475,13 @@ export class SiteVisitsService {
     for (const o of offsets) {
       const runAt = new Date(visit.startAt.getTime() - o.ms);
       if (runAt.getTime() <= now) continue;
-      await this.prisma.scheduledAction.upsert({
-        where: { dedupeKey: `sitevisit_reminder:${visit.id}:${o.suffix}` },
-        create: {
-          leadId: visit.leadId,
-          kind: 'site_visit_reminder',
-          runAt,
-          dedupeKey: `sitevisit_reminder:${visit.id}:${o.suffix}`,
-          payload: { siteVisitId: visit.id, channel: 'WHATSAPP' },
-          status: 'pending',
-        },
-        update: { runAt, status: 'pending' },
+      await this.followUps.schedule({
+        leadId: visit.leadId,
+        kind: 'site_visit_reminder',
+        runAt,
+        dedupeKey: `sitevisit_reminder:${visit.id}:${o.suffix}`,
+        payload: { siteVisitId: visit.id, channel: 'WHATSAPP' },
+        revive: true,
       });
     }
   }

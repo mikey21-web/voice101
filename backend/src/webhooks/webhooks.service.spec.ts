@@ -4,6 +4,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { ContactsService } from '../contacts/contacts.service';
 import { LeadsService } from '../leads/leads.service';
 import { ResolveLeadService } from '../leads/resolve-lead.service';
+import { EscalationService } from '../mikey/escalation.service';
 import { ConversationsService } from '../conversations/conversations.service';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { AgentClientService } from '../agent/agent-client.service';
@@ -20,6 +21,7 @@ describe('WebhooksService', () => {
   let leads: any;
   let conversations: any;
   let resolveLead: any;
+  let escalation: any;
   const auditLogs = { log: jest.fn().mockResolvedValue({}) };
   const agentClient = { trigger: jest.fn().mockResolvedValue(undefined) };
   const metrics = { incrementCounter: jest.fn() };
@@ -45,6 +47,10 @@ describe('WebhooksService', () => {
         findUnique: jest.fn().mockResolvedValue(mockContact),
         update: jest.fn().mockResolvedValue(mockContact),
       },
+    };
+    escalation = {
+      detectTrigger: jest.fn().mockReturnValue(null),
+      raise: jest.fn().mockResolvedValue({ escalationId: 'esc-1', alreadyPaused: false }),
     };
     resolveLead = {
       resolveLead: jest.fn().mockResolvedValue({
@@ -79,6 +85,7 @@ describe('WebhooksService', () => {
         { provide: ConfigService, useValue: { get: jest.fn() } },
         { provide: FlowRuntimeService, useValue: { handleInbound: jest.fn().mockResolvedValue(undefined) } },
         { provide: ResolveLeadService, useValue: resolveLead },
+        { provide: EscalationService, useValue: escalation },
       ],
     }).compile();
 
@@ -154,3 +161,49 @@ describe('WebhooksService', () => {
 });
 
 
+
+describe('WebhooksService — Rail C on inbound messages', () => {
+  // dispatchInbound is the one chokepoint every channel flows through, so
+  // these cover WhatsApp, Telegram and ad-click in one place.
+  const makeService = (trigger: any) => {
+    const escalation = {
+      detectTrigger: jest.fn().mockReturnValue(trigger),
+      raise: jest.fn().mockResolvedValue({ escalationId: 'esc-1', alreadyPaused: false }),
+    };
+    const agentClient = { trigger: jest.fn() };
+    const flowRuntime = { handleInbound: jest.fn().mockResolvedValue(false) };
+    const prisma = { businessSettings: { findFirst: jest.fn().mockResolvedValue({ agentMode: 'AI' }) } };
+    const svc: any = Object.create(require('./webhooks.service').WebhooksService.prototype);
+    svc.escalation = escalation;
+    svc.agentClient = agentClient;
+    svc.flowRuntime = flowRuntime;
+    svc.prisma = prisma;
+    svc.logger = { error: jest.fn() };
+    return { svc, escalation, agentClient };
+  };
+
+  it('escalates and does not let the AI answer when a lead asks for a person', async () => {
+    const { svc, escalation, agentClient } = makeService({
+      trigger: 'LEAD_REQUESTED_HUMAN', detail: 'Lead asked to speak to a person',
+    });
+
+    svc.dispatchInbound('lead-1', 'c1', 'WHATSAPP', 'can I talk to a human', 'msg-1', 't1');
+    await new Promise(r => setImmediate(r));
+
+    expect(escalation.raise).toHaveBeenCalledWith(expect.objectContaining({
+      leadId: 'lead-1', trigger: 'LEAD_REQUESTED_HUMAN',
+    }));
+    // Two answers to "can I speak to someone" is worse than one slower one.
+    expect(agentClient.trigger).not.toHaveBeenCalled();
+  });
+
+  it('leaves an ordinary message to the AI', async () => {
+    const { svc, escalation, agentClient } = makeService(null);
+
+    svc.dispatchInbound('lead-1', 'c1', 'WHATSAPP', 'yes 2BHK sounds good', 'msg-1', 't1');
+    await new Promise(r => setImmediate(r));
+
+    expect(escalation.raise).not.toHaveBeenCalled();
+    expect(agentClient.trigger).toHaveBeenCalled();
+  });
+});

@@ -22,10 +22,17 @@ const validDraft = {
 
 /** Stubs the OpenAI client's chat completion to return a fixed JSON string, bypassing network
  * calls entirely — this only tests the validation logic, not the model. */
-function makeService(responseJson: string) {
+function makeService(responseJson: string, onMessages?: (messages: any[]) => void) {
   const svc = new CallFlowGeneratorService(fakeConfig);
   (svc as any).client = {
-    chat: { completions: { create: async () => ({ choices: [{ message: { content: responseJson } }] }) } },
+    chat: {
+      completions: {
+        create: async ({ messages }: any) => {
+          onMessages?.(messages);
+          return { choices: [{ message: { content: responseJson } }] };
+        },
+      },
+    },
   };
   return svc;
 }
@@ -82,6 +89,20 @@ describe('CallFlowGeneratorService', () => {
     const svc = new CallFlowGeneratorService(fakeConfig);
     (svc as any).client = { chat: { completions: { create: async () => ({ choices: [{ message: {} }] }) } } };
     await expect(svc.generate('qualify leads')).rejects.toThrow('AI returned an empty response');
+  });
+
+  it('embeds the universal spoken layers (pronunciation, listening, memory, data, errors) in the system prompt', async () => {
+    let systemContent = '';
+    const svc = makeService(JSON.stringify(validDraft), (messages) => {
+      systemContent = messages.find((m) => m.role === 'system')?.content || '';
+    });
+    await svc.generate('qualify real estate leads', 'Skyline Heights');
+    expect(systemContent).toContain('PRONUNCIATION');
+    expect(systemContent).toContain('S-F-T');
+    expect(systemContent).toContain('LISTENING');
+    expect(systemContent).toContain('MEMORY');
+    expect(systemContent).toContain('DATA');
+    expect(systemContent).toContain('ERRORS');
   });
 });
 

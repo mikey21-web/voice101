@@ -102,7 +102,7 @@ export default function VoiceAnalyticsPage() {
         <div className="space-y-2">
           <p className="text-sm text-[var(--muted-foreground)]">Engagement Rate</p>
           <p className="text-3xl font-bold text-[var(--foreground)]">{(analytics.funnel.engagementRate * 100).toFixed(1)}%</p>
-          <p className="text-xs text-[var(--muted-foreground)]">calls lasted >30s</p>
+          <p className="text-xs text-[var(--muted-foreground)]">calls lasted over 30s</p>
         </div>
         <div className="space-y-2">
           <p className="text-sm text-[var(--muted-foreground)]">Completion Rate</p>

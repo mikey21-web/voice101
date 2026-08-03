@@ -164,3 +164,46 @@ async def test_loan_status_reports_backend_value(realestate_ctx):
         )
         result = await tool.ainvoke({"booking_id": "b-1"})
     assert "SANCTIONED" in result
+
+
+@pytest.mark.asyncio
+async def test_phase3_acceptance_show_price_hold_approve(realestate_ctx):
+    """Phase 3 acceptance: in one conversation Mikey shows a unit, prices it,
+    holds it, and the money steps are raised for approval rather than executed."""
+    from app.tools import HIGH_IMPACT_TOOLS
+    tools = {t.name: t for t in build_tools(realestate_ctx)}
+
+    with respx.mock:
+        # 1. show the buyer what is actually available
+        respx.get(url__regex=r"http://test:3001/units.*").mock(
+            return_value=httpx.Response(200, json=[
+                {"id": "u-1", "unitNumber": "A-402", "unitType": "2BHK",
+                 "price": 7800000, "areaSqft": 1180, "tower": {"name": "Tower A"}},
+            ])
+        )
+        shown = await tools["search_units"].ainvoke(
+            {"project_id": "p-1", "unit_type": "2BHK", "budget_max": 8000000}
+        )
+        assert "A-402" in shown
+
+        # 2. price it
+        respx.post("http://test:3001/cost-sheets").mock(
+            return_value=httpx.Response(201, json={"id": "cs-1"})
+        )
+        priced = await tools["generate_cost_sheet"].ainvoke(
+            {"unit_id": "u-1", "project_id": "p-1"}
+        )
+        assert priced.startswith("ok:")
+
+        # 3. block it so nobody else is sold it while they decide
+        respx.post("http://test:3001/unit-holds").mock(
+            return_value=httpx.Response(201, json={"id": "h-1"})
+        )
+        held = await tools["hold_unit"].ainvoke({"unit_id": "u-1", "hold_hours": 24})
+        assert "u-1" in held
+
+    # 4. the two money steps never run on model say-so
+    assert "generate_cost_sheet" in HIGH_IMPACT_TOOLS
+    assert "hold_unit" in HIGH_IMPACT_TOOLS
+    # ...while simply showing inventory does not need an owner's approval.
+    assert "search_units" not in HIGH_IMPACT_TOOLS

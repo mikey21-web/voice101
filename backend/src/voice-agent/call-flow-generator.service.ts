@@ -30,9 +30,16 @@ export interface GeneratedFlowDraft {
   outcomes: GeneratedOutcome[];
 }
 
-const SYSTEM_PROMPT = `You design phone-call flows for an AI voice sales/qualification agent. The
-user describes what a call should accomplish in plain language. Output ONLY a JSON object with
-this exact shape, no markdown, no explanation:
+/** Section key → spoken language name, matching Dograh's per-language workflows. */
+const LANGUAGE_NAMES: Record<string, string> = {
+  te: 'Telugu',
+  en: 'English',
+  hi: 'Hindi',
+};
+
+const SYSTEM_PROMPT = (languageName: string) => `You design phone-call flows for an AI voice sales/qualification agent. The
+user describes what a call should accomplish in plain language, and may provide business facts
+the agent must know. Output ONLY a JSON object with this exact shape, no markdown, no explanation:
 
 {
   "name": "short_snake_case_id",
@@ -43,7 +50,7 @@ this exact shape, no markdown, no explanation:
     {
       "key": "snake_case_key",
       "label": "Short label",
-      "prompt": "One instruction: what this step should ask or do, in ONE turn. Never ask two things.",
+      "prompt": "What this step should do and how to say it, in natural spoken ${languageName}. Include ONE example line: 'For example you might say: ...'.",
       "extract": [ { "name": "snake_case_var", "type": "string|number|boolean", "prompt": "what this variable captures" } ]
     }
   ],
@@ -52,19 +59,45 @@ this exact shape, no markdown, no explanation:
       "key": "snake_case_key",
       "label": "Short label, e.g. 'Qualified' or 'Not interested'",
       "condition": "Plain-English condition over the extracted variables from the steps above, e.g. \\"timeline is 'immediate' and budget_confirmed is true\\"",
-      "closingPrompt": "What the agent should say to close the call this way, in 1-2 sentences."
+      "closingPrompt": "What the agent should say to close the call this way, in 1-2 sentences, in natural spoken ${languageName}."
     }
   ]
 }
+
+LANGUAGE & VOICE (CRITICAL):
+- Write persona, greeting, every step's prompt, and every outcome's closingPrompt in NATURAL
+  SPOKEN ${languageName}, the way a real person actually talks on a phone — never bookish or
+  written-style words. Prefer the spoken word over the literary one (e.g. నమస్తే not నమస్కారం,
+  సారీ not క్షమించండి, డీటెయిల్స్ not వివరాలు, ప్రైస్ not ధరలు, ఏంటి not ఏమిటి).
+- English words ${languageName} speakers say naturally inside their own sentences stay in LATIN
+  script (e.g. "మీ booking confirm అయ్యింది", "site visit", "budget", "EMI", "WhatsApp").
+- Embed the provided business facts DIRECTLY into the prompts — opening hours, location,
+  services/products, prices, offers — so the agent can answer naturally instead of guessing.
+- Every step prompt must contain ONE concrete example line: "For example you might say: '<natural
+  spoken ${languageName} line>'". It shows tone and naturalness and is illustrative only.
+- NEVER invent a fact that was not provided. If no facts were given for something a caller will
+  likely ask (price, hours, location), phrase the step so the agent handles it with a warm
+  "let me confirm and follow up" rather than guessing.
+- Keep "condition" fields in plain ENGLISH — they route the call graph and are never spoken.
+- Never repeat the same acknowledgement or filler twice in any one prompt.
+
+UNIVERSAL SPOKEN LAYERS (apply to every flow, in every step prompt):
+- PRONUNCIATION: spell acronyms out loud, never as a word — "S-F-T" not "sft", "O-R-R" not "orr",
+  "Three B-H-K" not "3bhk". Brand names stay clear ("Skyline Heights").
+- LISTENING: do not interrupt; wait one extra beat (300-500ms) for fillers like "ఆ..."/"అంటే...".
+  Acknowledge with a 1-2 word confirmation before responding.
+- MEMORY: remember facts the caller shared earlier in the call and reference them later; never re-ask
+  a question already answered.
+- DATA (capture silently): note numbers/dates/times without reading them back; confirm critical
+  scheduling details (date + time + morning/afternoon/evening) in the closing step.
+- ERRORS: if the transcript is garbled, ask once briefly ("మళ్ళీ ఒక్కసారి చెప్తారా?") — never guess.
 
 Rules:
 - 3 to 6 steps. Each step captures 1-2 variables maximum, asked as ONE question per turn.
 - 2 to 4 outcomes. Always include one clearly positive/qualified outcome and one clearly negative/not-interested outcome.
 - Every outcome's condition must only reference variable names that some step actually extracts.
-- Do not write any language-specific style rules (no Telugu-specific phrasing, no acknowledgement
-  patterns) — that layer is handled separately. Write plain, tone-neutral instructions.
 - Do not include any safety/compliance/escalation logic — that is added automatically.
-- Keep every "prompt" field to plain instructions for the AGENT, not example dialogue.`;
+- Each "prompt" is an instruction to the AGENT (what to do and how to say it), not a transcript of both sides.`;
 
 /** The section shape editFlow reads and writes: an already-hired employee's LIVE call script
  * (VoiceEmployeeSection, same as SectionInput) — not the pre-creation draft from generate().
@@ -126,16 +159,25 @@ export class CallFlowGeneratorService {
   /** Pure generation — no side effects, nothing is applied to the live workflow. The caller
    * reviews (and, for non-English output, gets native sign-off on) the draft before calling
    * DograhService.applyGeneratedFlow. */
-  async generate(description: string, businessName?: string): Promise<GeneratedFlowDraft> {
+  async generate(
+    description: string,
+    businessName?: string,
+    options: { businessFacts?: string; language?: string } = {},
+  ): Promise<GeneratedFlowDraft> {
     if (!this.client) throw new Error('AI API key not configured (OPENAI_API_KEY or DEEPSEEK_API_KEY)');
     if (!description?.trim()) throw new Error('Description is required');
 
-    const userPrompt = businessName ? `Business: ${businessName}\n\nCall goal: ${description}` : description;
+    const language = options.language || 'te';
+    const languageName = LANGUAGE_NAMES[language] || 'Telugu';
+    const factsBlock = options.businessFacts?.trim()
+      ? `\n\nBusiness facts (embed these into the relevant steps, never invent any others):\n${options.businessFacts.trim()}`
+      : '';
+    const userPrompt = `${businessName ? `Business: ${businessName}\n\n` : ''}Call goal: ${description}${factsBlock}\n\nOutput language: ${languageName}.`;
 
     const response = await this.client.chat.completions.create({
       model: this.config.get<string>('WORKFLOW_MODEL') || 'gpt-4o-mini',
       messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'system', content: SYSTEM_PROMPT(languageName) },
         { role: 'user', content: userPrompt },
       ],
       temperature: 0.4,

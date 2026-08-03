@@ -213,7 +213,10 @@ export class VoiceEmployeeService {
     });
 
     const webhookSecret = this.config.get<string>('WEBHOOK_API_KEY_DOGRAH', '');
-    const publicUrl = this.config.get<string>('PUBLIC_URL', 'http://host.docker.internal:3001');
+    // Dograh is a separate container that must reach this backend over the docker bridge —
+    // PUBLIC_URL is browser-facing (localhost on the host) and unreachable from inside the
+    // dograh container, so the webhook callback gets its own container-reachable base.
+    const publicUrl = this.config.get<string>('DOGRAH_WEBHOOK_URL', 'http://host.docker.internal:3001');
 
     const definition = this.dograh.compileEmployeeDefinition({
       employeeId: employee.id,

@@ -17,8 +17,13 @@ export class VoiceEmployeeController {
    * comes in, a full section-graph draft comes back for the user to review before create(). */
   @Post('generate-draft')
   @Roles('OWNER', 'ADMIN')
-  async generateDraft(@Body() body: { description: string; businessName?: string }) {
-    return this.generator.generate(body.description, body.businessName);
+  async generateDraft(
+    @Body() body: { description: string; businessName?: string; businessFacts?: string; language?: string },
+  ) {
+    return this.generator.generate(body.description, body.businessName, {
+      businessFacts: body.businessFacts,
+      language: body.language,
+    });
   }
 
   /** "Swara"-style conversational script editor: one plain-English instruction patches the

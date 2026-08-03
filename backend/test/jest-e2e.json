@@ -2,7 +2,7 @@
   "moduleFileExtensions": ["js", "json", "ts"],
   "rootDir": "..",
   "testEnvironment": "node",
-  "testRegex": "(integration|tenant-isolation|spine-walk)\\.spec\\.ts$|spine-walk\\.e2e-spec\\.ts$",
+  "testRegex": "(integration|tenant-isolation|spine-walk)\\.spec\\.ts$|(spine-walk|rails)\\.e2e-spec\\.ts$",
   "transform": {
     "^.+\\.(t|j)s$": "ts-jest"
   },

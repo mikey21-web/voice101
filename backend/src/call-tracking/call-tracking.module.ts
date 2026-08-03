@@ -13,9 +13,10 @@ import { ContactsModule } from '../contacts/contacts.module';
 import { LeadsModule } from '../leads/leads.module';
 import { RealtimeModule } from '../realtime/realtime.module';
 import { CoachModule } from '../coach/coach.module';
+import { EscalationModule } from '../mikey/escalation.module';
 
 @Module({
-  imports: [ScheduleModule.forRoot(), PrismaModule, ContactsModule, LeadsModule, RealtimeModule, HttpModule, CoachModule],
+  imports: [ScheduleModule.forRoot(), PrismaModule, ContactsModule, LeadsModule, RealtimeModule, HttpModule, CoachModule, EscalationModule],
   controllers: [CallTrackingController, WorkforceController],
   providers: [CallTrackingService, CallSummaryService, RecordingCleanupService, WorkforceService, DeviceAuthGuard],
   exports: [CallTrackingService, CallSummaryService, WorkforceService],

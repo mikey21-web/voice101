@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ContactsService } from '../contacts/contacts.service';
 import { LeadsService } from '../leads/leads.service';
@@ -14,9 +14,12 @@ import { ConfigService } from '@nestjs/config';
 import { FlowRuntimeService } from '../flows/flow-runtime.service';
 import { getTenantId } from '../shared/tenant-helper';
 import * as crypto from 'crypto';
+import { EscalationService } from '../mikey/escalation.service';
 
 @Injectable()
 export class WebhooksService {
+  private readonly logger = new Logger(WebhooksService.name);
+
   constructor(
     private prisma: PrismaService,
     private contactsService: ContactsService,
@@ -30,6 +33,7 @@ export class WebhooksService {
     private config: ConfigService,
     private flowRuntime: FlowRuntimeService,
     private resolveLead: ResolveLeadService,
+    private escalation: EscalationService,
   ) {}
 
   // The "off switch" for the freeform AI agent — when a business has flipped to
@@ -43,6 +47,19 @@ export class WebhooksService {
   }
 
   private dispatchInbound(leadId: string, contactId: string, channel: string, text: string, triggerId: string, tenantId: string): void {
+    // Rail C runs on every inbound message, whatever the channel. This is the
+    // one chokepoint all of WhatsApp/Telegram/ad-click flow through, so the
+    // check lives here rather than being repeated at each caller.
+    const trigger = this.escalation.detectTrigger({ text });
+    if (trigger) {
+      this.escalation
+        .raise({ tenantId, leadId, trigger: trigger.trigger, detail: trigger.detail })
+        .catch(err => this.logger.error(`Inbound escalation failed for lead ${leadId}: ${err.message}`));
+      // A human has been paged, so the AI does not also reply. Two answers to
+      // "can I speak to someone" is worse than a slightly slower one.
+      return;
+    }
+
     this.tryFlow(leadId, contactId, channel, text)
       .then(handled => { if (!handled) this.agentClient.trigger(leadId, triggerId, channel, text, tenantId); })
       .catch(() => this.agentClient.trigger(leadId, triggerId, channel, text, tenantId));

@@ -11,6 +11,14 @@ export class AdvanceStageService {
     private events: EventsService,
   ) {}
 
+  /** Minimal lookup so callers that only have a leadId can resolve its tenant. */
+  async getLead(leadId: string): Promise<{ id: string; tenantId: string; status: LeadStatus } | null> {
+    return this.prisma.lead.findUnique({
+      where: { id: leadId },
+      select: { id: true, tenantId: true, status: true },
+    });
+  }
+
   /**
    * The only way a lead's status moves. Validates the transition, records it as
    * a Mikey autonomous action (audit + undo), and emits lead.stage_advanced.

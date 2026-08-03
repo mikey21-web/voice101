@@ -5,8 +5,10 @@ import { TimelineService } from '../timeline/timeline.service';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { AutomationSchedulerService } from '../automation/automation-scheduler.service';
 import { ForbiddenException } from '@nestjs/common';
+import { FollowUpSchedulerService } from '../automation/follow-up-scheduler.service';
 
 describe('SiteVisitsService', () => {
+  let followUps: any;
   let service: SiteVisitsService;
   let prisma: any;
 
@@ -44,6 +46,12 @@ describe('SiteVisitsService', () => {
       $transaction: jest.fn().mockImplementation((fn: any) => fn(prisma)),
     };
 
+    followUps = {
+      schedule: jest.fn().mockResolvedValue(undefined),
+      cancel: jest.fn().mockResolvedValue(undefined),
+      cancelAllForLead: jest.fn().mockResolvedValue(0),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         SiteVisitsService,
@@ -51,6 +59,7 @@ describe('SiteVisitsService', () => {
         { provide: TimelineService, useValue: { add: jest.fn() } },
         { provide: AuditLogsService, useValue: { log: jest.fn() } },
         { provide: AutomationSchedulerService, useValue: { schedule: jest.fn(), cancel: jest.fn() } },
+        { provide: FollowUpSchedulerService, useValue: followUps },
       ],
     }).compile();
 
@@ -65,7 +74,10 @@ describe('SiteVisitsService', () => {
       startAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
     });
     expect(visit.leadId).toBe('lead-1');
-    expect(prisma.scheduledAction.upsert).toHaveBeenCalled();
+    // Phase 8: scheduling goes through the one typed API, not raw prisma.
+    expect(followUps.schedule).toHaveBeenCalledWith(
+      expect.objectContaining({ leadId: 'lead-1', kind: 'site_visit_reminder' }),
+    );
   });
 
   it('creates a follow-up task when a visit is completed', async () => {

@@ -60,6 +60,15 @@ export class FollowUpSchedulerService {
     runAt: Date;
     dedupeKey: string;
     payload?: Record<string, unknown>;
+    /**
+     * Put a superseded or finished row back into `pending`.
+     *
+     * Off by default, because reviving a row the poller may already have
+     * claimed can send the same nudge twice. Callers that legitimately need it
+     * — rescheduling a site visit, re-arming a booking reminder after the date
+     * moves — pass it explicitly so the risk is visible at the call site.
+     */
+    revive?: boolean;
   }): Promise<void> {
     const { leadId, kind, runAt, dedupeKey } = params;
     const payload = (params.payload ?? {}) as any;
@@ -68,9 +77,7 @@ export class FollowUpSchedulerService {
       await this.prisma.scheduledAction.upsert({
         where: { dedupeKey },
         create: { leadId, kind, runAt, dedupeKey, payload, status: 'pending' },
-        // Only reschedule work that has not been claimed. Rewriting a claimed
-        // row races the poller and can send the same nudge twice.
-        update: { runAt, payload },
+        update: params.revive ? { runAt, payload, status: 'pending' } : { runAt, payload },
       });
     } catch (err: any) {
       // A follow-up that fails to schedule must never take down the booking or

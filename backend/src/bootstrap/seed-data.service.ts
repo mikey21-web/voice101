@@ -176,6 +176,12 @@ export class SeedDataService implements OnApplicationBootstrap {
       { name: 'Token Reminder', type: 'PAYMENT_LINK' as const, body: 'Hi {{buyerName}}, just a reminder that the booking token of {{tokenAmount}} for {{unitNumber}} at {{projectName}} is due. Let me know if you need payment details.' },
       { name: 'Payment Due', type: 'PAYMENT_LINK' as const, body: 'Hi {{buyerName}}, your payment of {{amount}} for {{unitNumber}} at {{projectName}} is due on {{dueDate}}. Please make the payment to avoid late fees.' },
       { name: 'Possession Update', type: 'CRM_CONFIRMATION' as const, body: 'Hi {{buyerName}}, great news! Possession of your {{unitNumber}} at {{projectName}} is expected by {{possessionDate}}. We\'ll keep you updated on the handover process.' },
+      // POST_CALL_TEMPLATE_NAME in voice-agent/post-call-dispatch.service.ts.
+      // Required by name: the details promised on a voice call are sent to a
+      // number that has never messaged us, so the 24h session window is shut
+      // and only an approved template gets through. Without this row every
+      // post-call WhatsApp is blocked by design.
+      { name: 'post_call_details', type: 'FOLLOW_UP' as const, body: 'Hi {{buyerName}}, thanks for the call. Here are the details on {{topic}} as promised. Reply here anytime if you have questions.' },
     ];
 
     for (const t of templates) {

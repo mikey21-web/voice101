@@ -19,11 +19,14 @@ const DEFAULT_TELEPHONY_CONFIG_ID = process.env.DOGRAH_TELEPHONY_CONFIG_ID || '1
  * on a clean line — on an 8kHz Indian phone line with Telugu fillers ('అ..', 'మ్మ్') the 2s stop
  * window reads as the agent being slow to respond.
  *
+ * Calibrated toward Outpero's ~300ms endpointing: 0.4s stop detection makes pauses feel human
+ * instead of stiff. Going below ~0.3s risks the agent cutting callers off mid-word on noisy lines.
+ *
  * ponytail: these are a starting point, not a truth. Calibrate against real call recordings —
  * raise smart_turn_stop_secs if the agent starts talking over people, lower it if it feels slow.
  */
 const TURN_TAKING = {
-  smart_turn_stop_secs: 0.8,
+  smart_turn_stop_secs: 0.4,
   max_user_idle_timeout: 8,
   turn_start_strategy: 'default',
   turn_stop_strategy: 'transcription',
@@ -775,10 +778,14 @@ export class DograhService {
 
     const sectionNodeByKey = new Map<string, any>();
     for (const section of enabledSections) {
-      const nodeType = section.nodeType || 'agentNode';
-      const isFaq = nodeType === 'faq';
+      // Dograh validates node.type against a fixed set (globalNode/startCall/agentNode/
+      // endCall/webhook). Our own nodeType vocabulary is internal and must never be passed
+      // through to it: rows created by the hire wizard carry nodeType 'llm', which Dograh
+      // rejects with "unknown node type", failing the whole publish. Every section is
+      // conversational, so every section compiles to agentNode; 'faq' only changes the data.
+      const isFaq = section.nodeType === 'faq';
       const node = {
-        id: id(), type: isFaq ? 'agentNode' : nodeType, position: pos,
+        id: id(), type: 'agentNode', position: pos,
         data: {
           name: section.sectionKey,
           prompt: section.prompt,

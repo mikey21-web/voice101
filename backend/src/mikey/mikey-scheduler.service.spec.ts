@@ -123,6 +123,34 @@ describe('MikeySchedulerService reliability', () => {
       expect(findings[0].count).toBe(2);
     });
 
+    it('sees more than one spine stage in a single scan', async () => {
+      // Phase 9 acceptance is "why are bookings down?" citing causes from more
+      // than one stage. The answer itself needs an LLM, so what is asserted
+      // here is the substance behind it: one scan surfaces problems from the
+      // front of the funnel, the money trail and post-sale at the same time.
+      jest.useFakeTimers().setSystemTime(new Date('2026-08-01T11:00:00'));
+      prisma.lead.findMany.mockResolvedValue([{ id: 'l1', tenantId: 't1', contact: { name: 'Ravi' } }]);
+      prisma.ticket = { findMany: jest.fn().mockResolvedValue([{ id: 'tk1' }]) };
+
+      const [sla, money, possession, complaints] = await Promise.all([
+        (scheduler as any).checkFirstContactSlaBreaches(),
+        (scheduler as any).checkStalledMoneyTrail(),
+        (scheduler as any).checkPendingPossession(),
+        (scheduler as any).checkOpenComplaints(),
+      ]);
+      jest.useRealTimers();
+
+      const types = [...sla, ...money, ...possession, ...complaints].map((f: any) => f.type);
+      expect(types).toEqual(expect.arrayContaining([
+        'first_contact_sla_breach',  // ENGAGE
+        'stalled_money_trail',       // MONEY_TRAIL
+        'pending_possession',        // POST_SALE
+        'open_complaints',           // POST_SALE
+      ]));
+      // More than one stage, which is the whole point of the claim.
+      expect(new Set(types).size).toBeGreaterThan(1);
+    });
+
     it('ranks a stalled booking above a stale lead', () => {
       const ranked = (scheduler as any).rankByImpact([
         { type: 'source_drop', severity: 'critical', count: 9 },

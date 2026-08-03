@@ -6,6 +6,7 @@ import { LeadsService } from '../leads/leads.service';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { ConversationsService } from '../conversations/conversations.service';
 import { AgentClientService } from '../agent/agent-client.service';
+import { ResolveLeadService } from '../leads/resolve-lead.service';
 import { NotFoundException } from '@nestjs/common';
 
 describe('FormsService', () => {
@@ -13,6 +14,7 @@ describe('FormsService', () => {
   let prisma: any;
   let contactsService: any;
   let leadsService: any;
+  let resolveLeadService: any;
   let auditLogs: any;
   let conversationsService: any;
   let agentClient: any;
@@ -166,6 +168,7 @@ describe('FormsService', () => {
         update: jest.fn().mockResolvedValue(mockField),
         delete: jest.fn().mockResolvedValue(mockField),
       },
+      lead: { findUniqueOrThrow: jest.fn().mockResolvedValue(mockLead) },
       formSubmission: {
         create: jest.fn().mockResolvedValue(mockSubmission),
         findMany: jest.fn().mockResolvedValue([mockSubmission]),
@@ -187,6 +190,15 @@ describe('FormsService', () => {
       create: jest.fn().mockResolvedValue(mockLead),
     };
 
+    resolveLeadService = {
+      resolveLead: jest.fn().mockResolvedValue({
+        leadId: mockLead.id, contactId: 'contact-1',
+        isReturning: false, reusedExistingLead: false,
+        segment: 'WARM', assignedRepId: null,
+        history: { previousLeads: 0, conversations: 0, callsAnswered: 0, callsMissed: 0, campaigns: [] },
+      }),
+    };
+
     auditLogs = {
       log: jest.fn().mockResolvedValue({}),
     };
@@ -205,6 +217,7 @@ describe('FormsService', () => {
         { provide: PrismaService, useValue: prisma },
         { provide: ContactsService, useValue: contactsService },
         { provide: LeadsService, useValue: leadsService },
+        { provide: ResolveLeadService, useValue: resolveLeadService },
         { provide: AuditLogsService, useValue: auditLogs },
         { provide: ConversationsService, useValue: conversationsService },
         { provide: AgentClientService, useValue: agentClient },
@@ -378,20 +391,13 @@ describe('FormsService', () => {
     };
     const result = await service.submit('form-1', payload, {});
 
-    expect(contactsService.findOrCreate).toHaveBeenCalledWith(
-      {
+    // Phase 4: contact + lead now go through the one resolve path, so the same
+    // buyer arriving by form and by portal is a single lead on a single rep.
+    expect(resolveLeadService.resolveLead).toHaveBeenCalledWith(
+      expect.objectContaining({
         name: payload.name,
         email: payload.email,
         phone: payload.phone,
-        whatsapp: undefined,
-        company: undefined,
-      },
-      {},
-    );
-
-    expect(leadsService.create).toHaveBeenCalledWith(
-      expect.objectContaining({
-        contactId: 'contact-1',
         source: 'FORM',
         message: 'Interested in your services',
         metadata: payload,
@@ -415,7 +421,7 @@ describe('FormsService', () => {
     expect(result.data.contact.id).toBe('contact-1');
   });
 
-  it('should pass optional whatsapp and company fields to findOrCreate', async () => {
+  it('should pass optional whatsapp and company fields through to resolve', async () => {
     const payload = {
       name: 'Jane',
       email: 'jane@example.com',
@@ -424,12 +430,11 @@ describe('FormsService', () => {
       company: 'Corp',
     };
     await service.submit('form-1', payload, {});
-    expect(contactsService.findOrCreate).toHaveBeenCalledWith(
+    expect(resolveLeadService.resolveLead).toHaveBeenCalledWith(
       expect.objectContaining({
         whatsapp: '+1987654321',
         company: 'Corp',
       }),
-      {},
     );
   });
 
@@ -441,7 +446,7 @@ describe('FormsService', () => {
   it('should include interest in lead creation', async () => {
     const payload = { name: 'Test', email: 'test@test.com', interest: 'Premium Plan' };
     await service.submit('form-1', payload, {});
-    expect(leadsService.create).toHaveBeenCalledWith(
+    expect(resolveLeadService.resolveLead).toHaveBeenCalledWith(
       expect.objectContaining({
         interest: 'Premium Plan',
       }),
@@ -520,13 +525,13 @@ describe('FormsService', () => {
     prisma.qrCode.findUnique.mockResolvedValue({ id: 'qr-1' });
     await service.submit('form-1', { name: 'Test', email: 'test@test.com', qrCodeId: 'qr-1' }, {});
     expect(prisma.qrCode.findUnique).toHaveBeenCalledWith({ where: { id: 'qr-1' } });
-    expect(leadsService.create).toHaveBeenCalledWith(expect.objectContaining({ source: 'QR_CODE' }));
+    expect(resolveLeadService.resolveLead).toHaveBeenCalledWith(expect.objectContaining({ source: 'QR_CODE' }));
   });
 
   it('should fall back to FORM when the submitted qrCodeId does not exist', async () => {
     prisma.qrCode.findUnique.mockResolvedValue(null);
     await service.submit('form-1', { name: 'Test', email: 'test@test.com', qrCodeId: 'bogus' }, {});
-    expect(leadsService.create).toHaveBeenCalledWith(expect.objectContaining({ source: 'FORM' }));
+    expect(resolveLeadService.resolveLead).toHaveBeenCalledWith(expect.objectContaining({ source: 'FORM' }));
   });
 
   // ── findSubmissions ─────────────────────────────

@@ -4,6 +4,8 @@ import { ContactsService } from '../contacts/contacts.service';
 import { LeadsService } from '../leads/leads.service';
 import { ConversationsService } from '../conversations/conversations.service';
 import * as crypto from 'crypto';
+import { ResolveLeadService } from '../leads/resolve-lead.service';
+import { getTenantId } from '../shared/tenant-helper';
 
 export interface PortalLeadPayload {
   name?: string;
@@ -24,6 +26,7 @@ export class PortalIntegrationsService {
     private prisma: PrismaService,
     private contactsService: ContactsService,
     private leadsService: LeadsService,
+    private resolveLead: ResolveLeadService,
     private conversationsService: ConversationsService,
   ) {}
 
@@ -36,25 +39,17 @@ export class PortalIntegrationsService {
   }
 
   private async dedupAndCreate(payload: PortalLeadPayload, source: string, req?: any) {
-    const contact = await this.contactsService.findOrCreate({
+    // Phase 4: one resolve path. The hand-rolled dedupe that used to live here
+    // only matched an open lead; it did not keep the sticky rep, raise the
+    // score on a repeat enquiry, or record which portal the touch came from.
+    const resolved = await this.resolveLead.resolveLead({
+      tenantId: getTenantId(req),
       name: payload.name,
       phone: payload.phone,
       email: payload.email,
-    }, req);
-
-    const existingLead = await this.prisma.lead.findFirst({
-      where: {
-        contactId: contact.id,
-        status: { notIn: ['LOST', 'CONVERTED', 'SPAM'] },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
-
-    const isNewLead = !existingLead;
-    const lead = existingLead || await this.leadsService.create({
-      contactId: contact.id,
       source: source as any,
       message: payload.message || payload.requirement || '',
+      budget: payload.budget,
       metadata: {
         portalSource: source,
         city: payload.city,
@@ -62,7 +57,12 @@ export class PortalIntegrationsService {
         requirement: payload.requirement,
         ...(payload.metadata || {}),
       },
+      req,
     });
+
+    const isNewLead = !resolved.reusedExistingLead;
+    const contact = await this.prisma.contact.findUniqueOrThrow({ where: { id: resolved.contactId } });
+    const lead = await this.prisma.lead.findUniqueOrThrow({ where: { id: resolved.leadId } });
 
     if (isNewLead) {
       this.sendFirstResponseAck(lead.id, contact).catch(err =>

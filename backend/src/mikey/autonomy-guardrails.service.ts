@@ -6,6 +6,8 @@ const DEFAULT_QUIET_HOURS_END = 8;
 const DEFAULT_DAILY_CAP = 50;
 const DEFAULT_LEAD_COOLDOWN_HOURS = 24;
 const DEFAULT_AUTO_SEND_MODE = 'enabled';
+/** advanceStage writes one of these per transition for audit/undo. See isUnderDailyCap. */
+const STAGE_BOOKKEEPING_TOOL = 'advance_stage';
 
 /**
  * Every autonomous action belongs to exactly one category so an owner can dial
@@ -97,7 +99,16 @@ export class AutonomyGuardrailsService {
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
     const count = await this.prisma.mikeyAutonomousAction.count({
-      where: { tenantId, createdAt: { gte: todayStart } },
+      where: {
+        tenantId,
+        createdAt: { gte: todayStart },
+        // Stage advances are bookkeeping, not outbound actions. They are
+        // recorded here for audit and undo, but counting them means a busy
+        // day of leads simply moving through the pipeline exhausts the budget
+        // and silently switches Mikey off. The cap exists to stop a bug firing
+        // hundreds of messages, not to limit how many leads change status.
+        tool: { not: STAGE_BOOKKEEPING_TOOL },
+      },
     });
     return count < cap;
   }

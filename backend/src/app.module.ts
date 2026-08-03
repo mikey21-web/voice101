@@ -116,6 +116,7 @@ import { LaunchControlModule } from './launch-control/launch-control.module';
 import { StateTaxModule } from './state-tax/state-tax.module';
 import { WorkflowModule } from './workflow/workflow.module';
 import { CoachModule } from './coach/coach.module';
+import { EscalationModule } from './mikey/escalation.module';
 
 @Module({
   imports: [
@@ -143,6 +144,7 @@ import { CoachModule } from './coach/coach.module';
     ContactsModule,
     LeadsModule,
     CoachModule,
+    EscalationModule,
     CampaignsModule,
     FormsModule,
     QrCodesModule,

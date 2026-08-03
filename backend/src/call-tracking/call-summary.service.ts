@@ -7,6 +7,7 @@ import OpenAI from 'openai';
 import * as fs from 'fs';
 import * as path from 'path';
 import { CoachService } from '../coach/coach.service';
+import { EscalationService } from '../mikey/escalation.service';
 
 @Injectable()
 export class CallSummaryService {
@@ -20,6 +21,7 @@ export class CallSummaryService {
     private realtime: RealtimeGateway,
     private moonshine: MoonshineService,
     private coach: CoachService,
+    private escalation: EscalationService,
   ) {
     const openaiApiKey = this.config.get<string>('OPENAI_API_KEY');
     if (openaiApiKey) {
@@ -156,6 +158,23 @@ export class CallSummaryService {
       await this.coach.coachCall(callLogId).catch((err: any) =>
         this.logger.error(`Coaching failed for call ${callLogId}: ${err.message}`),
       );
+
+      // Rail C: the buyer may have asked for a person, opened a negotiation or
+      // raised a legal question mid-call. Read it off the transcript, because
+      // nobody is watching the live audio for those words.
+      if (callLog.leadId && transcript) {
+        const trigger = this.escalation.detectTrigger({ text: transcript });
+        if (trigger) {
+          await this.escalation
+            .raise({
+              tenantId: callLog.tenantId,
+              leadId: callLog.leadId,
+              trigger: trigger.trigger,
+              detail: `${trigger.detail} (on call ${callLogId})`,
+            })
+            .catch((err: any) => this.logger.error(`Escalation failed for call ${callLogId}: ${err.message}`));
+        }
+      }
     } catch (err: any) {
       this.logger.error(`Summarization failed for call ${callLogId}: ${err.message}`);
       await this.prisma.callLog.update({

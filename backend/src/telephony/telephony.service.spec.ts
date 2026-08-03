@@ -20,7 +20,11 @@ describe('TelephonyService', () => {
 
   beforeEach(async () => {
     prisma = {
-      lead: { findUnique: jest.fn().mockResolvedValue(mockLead) },
+      // initiateCall stamps firstContactAttemptedAt for the 30 second SLA clock.
+      lead: {
+        findUnique: jest.fn().mockResolvedValue(mockLead),
+        update: jest.fn().mockResolvedValue(mockLead),
+      },
       callLog: { create: jest.fn().mockResolvedValue({ id: 'call-1' }) },
       conversationMessage: { create: jest.fn().mockResolvedValue({ id: 'msg-1' }) },
     };

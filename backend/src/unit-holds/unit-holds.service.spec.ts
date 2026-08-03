@@ -5,6 +5,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { TimelineService } from '../timeline/timeline.service';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { ConflictException } from '@nestjs/common';
+import { FollowUpSchedulerService } from '../automation/follow-up-scheduler.service';
 
 describe('UnitHoldsService', () => {
   let service: UnitHoldsService;
@@ -41,6 +42,11 @@ describe('UnitHoldsService', () => {
         { provide: ConfigService, useValue: { get: (_k: string, d?: any) => d } },
         { provide: TimelineService, useValue: { add: jest.fn() } },
         { provide: AuditLogsService, useValue: { log: jest.fn() } },
+        { provide: FollowUpSchedulerService, useValue: {
+          schedule: jest.fn().mockResolvedValue(undefined),
+          cancel: jest.fn().mockResolvedValue(undefined),
+          cancelAllForLead: jest.fn().mockResolvedValue(0),
+        } },
       ],
     }).compile();
 

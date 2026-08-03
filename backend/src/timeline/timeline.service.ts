@@ -1,5 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger, forwardRef, Inject } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { SpineDriverService } from '../leads/spine-driver.service';
 
 export interface TimelineEntry {
   type: string;
@@ -13,10 +14,31 @@ export interface TimelineEntry {
 
 @Injectable()
 export class TimelineService {
-  constructor(private prisma: PrismaService) {}
+  private readonly logger = new Logger(TimelineService.name);
+
+  constructor(
+    private prisma: PrismaService,
+    // forwardRef: LeadsModule imports TimelineModule for its own writes, and
+    // the driver lives in LeadsModule, so the two modules reference each other.
+    @Inject(forwardRef(() => SpineDriverService))
+    private spineDriver: SpineDriverService,
+  ) {}
 
   async add(entry: TimelineEntry) {
-    return this.prisma.timelineItem.create({ data: entry as any });
+    const item = await this.prisma.timelineItem.create({ data: entry as any });
+
+    // Section 2: Mikey operates the spine. Every lifecycle service already
+    // records its business facts here, so this is the one place that can turn
+    // "a cost sheet went out" into "the lead is at PROPOSAL_SENT" without six
+    // services each remembering to write a status.
+    //
+    // Fire and forget: a stage that cannot advance must never fail the booking
+    // or site visit that produced this entry.
+    this.spineDriver
+      .onLifecycleEvent(entry)
+      .catch((err) => this.logger.warn(`Spine driver failed on ${entry.type}: ${err.message}`));
+
+    return item;
   }
 
   async getByLead(leadId: string) {
