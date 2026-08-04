@@ -52,7 +52,11 @@ describe('CoachService (Phase 7, Rail D)', () => {
       expect(res?.coachingId).toBe('coach-1');
       const created = prisma.callCoaching.create.mock.calls[0][0].data;
       expect(created.userId).toBe('agent-1');
-      expect(created.analysisStatus).toBe('DONE');
+      // DONE_RULES here because the test env has no DEEPSEEK_API_KEY. The
+      // status records which engine scored the call, so a run of DONE_RULES
+      // in production means the LLM is failing rather than the coach quietly
+      // getting worse.
+      expect(created.analysisStatus).toBe('DONE_RULES');
       expect(created.score).toBeGreaterThan(0);
     });
 
@@ -90,16 +94,19 @@ describe('CoachService (Phase 7, Rail D)', () => {
     });
   });
 
-  describe('analysis', () => {
-    it('scores a call that covered all four questions highly', () => {
-      const r = analysis.analyze(goodCall);
+  describe('analysis: keyword fallback', () => {
+    // No DEEPSEEK_API_KEY in the test env, so these exercise the rules path
+    // that keeps the coach answering when the model is unavailable.
+    it('scores a call that covered all four questions highly', async () => {
+      const r = await analysis.analyze(goodCall);
+      expect(r.method).toBe('rules');
       expect(r.missedQuestions).toEqual([]);
       expect(r.score).toBeGreaterThanOrEqual(85);
       expect(r.buyingSignals).toContain('asked to visit');
     });
 
-    it('names the questions a rep skipped', () => {
-      const r = analysis.analyze({
+    it('names the questions a rep skipped', async () => {
+      const r = await analysis.analyze({
         transcript: 'Hi, the project is lovely, lots of amenities, we have a clubhouse.',
         durationSec: 120,
       });
@@ -109,8 +116,8 @@ describe('CoachService (Phase 7, Rail D)', () => {
       expect(r.recommendedAction).toMatch(/basics you missed/);
     });
 
-    it('spots a price objection and does not suggest discounting', () => {
-      const r = analysis.analyze({
+    it('spots a price objection and does not suggest discounting', async () => {
+      const r = await analysis.analyze({
         transcript: 'What is your budget? This is too expensive for me, anything cheaper?',
         durationSec: 90,
       });
@@ -121,22 +128,91 @@ describe('CoachService (Phase 7, Rail D)', () => {
       expect(r.whatToSend).toMatch(/EMI/);
     });
 
-    it('drops the deal probability when objections pile up', () => {
-      const withObjections = analysis.analyze({
+    it('drops the deal probability when objections pile up', async () => {
+      const withObjections = await analysis.analyze({
         transcript: 'Too expensive and too far, and possession is delayed, comparing with another builder.',
         durationSec: 100,
       });
-      const clean = analysis.analyze(goodCall);
+      const clean = await analysis.analyze(goodCall);
       expect(withObjections.dealProbability!).toBeLessThan(clean.dealProbability!);
     });
 
-    it('never returns a probability outside 0 to 1', () => {
-      const r = analysis.analyze({
+    it('never returns a probability outside 0 to 1', async () => {
+      const r = await analysis.analyze({
         transcript: 'too expensive too far delayed comparing another builder ask my wife loan not sanctioned',
         durationSec: 30,
       });
       expect(r.dealProbability).toBeGreaterThanOrEqual(0);
       expect(r.dealProbability).toBeLessThanOrEqual(1);
+    });
+  });
+
+  describe('analysis: LLM path', () => {
+    const stubLlm = (content: string) => {
+      (analysis as any).llm = {
+        chat: { completions: { create: jest.fn().mockResolvedValue({ choices: [{ message: { content } }] }) } },
+      };
+    };
+
+    it('uses the model when one is configured', async () => {
+      stubLlm(JSON.stringify({
+        score: 72,
+        missedQuestions: ['loan or cash'],
+        objections: ['comparing competitors'],
+        buyingSignals: ['asked to visit'],
+        recommendedAction: 'Lock Sunday for the visit before he sees the other project.',
+        whatToSend: 'Location pin and floor plan',
+        dealProbability: 0.55,
+      }));
+
+      const r = await analysis.analyze(goodCall);
+
+      expect(r.method).toBe('llm');
+      expect(r.score).toBe(72);
+      expect(r.recommendedAction).toMatch(/Lock Sunday/);
+    });
+
+    it('survives the model wrapping its JSON in a markdown fence', async () => {
+      stubLlm('```json\n{"score":80,"missedQuestions":[],"objections":[],"buyingSignals":[],"recommendedAction":"Book the visit.","whatToSend":null,"dealProbability":0.6}\n```');
+
+      const r = await analysis.analyze(goodCall);
+
+      expect(r.method).toBe('llm');
+      expect(r.score).toBe(80);
+    });
+
+    it('clamps a score the model gets wrong instead of showing it to a rep', async () => {
+      stubLlm(JSON.stringify({
+        score: 150, missedQuestions: [], objections: [], buyingSignals: [],
+        recommendedAction: 'x', whatToSend: null, dealProbability: 4.2,
+      }));
+
+      const r = await analysis.analyze(goodCall);
+
+      expect(r.score).toBe(100);
+      expect(r.dealProbability).toBe(1);
+    });
+
+    it('falls back to rules when the model returns nonsense', async () => {
+      stubLlm('I am afraid I cannot help with that.');
+
+      const r = await analysis.analyze(goodCall);
+
+      // The coach must never go silent. A rep only learns from feedback that
+      // arrives every time.
+      expect(r.method).toBe('rules');
+      expect(r.score).toBeGreaterThan(0);
+    });
+
+    it('falls back to rules when the provider throws', async () => {
+      (analysis as any).llm = {
+        chat: { completions: { create: jest.fn().mockRejectedValue(new Error('429 rate limited')) } },
+      };
+
+      const r = await analysis.analyze(goodCall);
+
+      expect(r.method).toBe('rules');
+      expect(r.recommendedAction).toBeTruthy();
     });
   });
 

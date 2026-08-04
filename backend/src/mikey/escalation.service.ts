@@ -148,7 +148,13 @@ export class EscalationService {
       return { trigger: 'LEGAL_OR_COMMITMENT', detail: 'Legal or commitment question raised' };
     }
 
-    if (/\b(discount|negotiat|best price|lowest|reduce the price|final price|bargain)\b/.test(text)) {
+    // Deliberately narrow. In this market almost every buyer asks the price in
+    // the first two messages, and escalating on that made Mikey hand off
+    // immediately and look like it gives up. "What is the price" is a
+    // question Mikey should answer. Haggling is what needs a human.
+    if (/\b(discount|negotiat|bargain|best (price|rate|offer)|last price|final price|lowest)\b/.test(text)
+      || /\b(can you|could you|any)\b.{0,25}\b(reduce|lower|come down|do better|less)\b/.test(text)
+      || /\b(too (expensive|high|costly)|out of (my )?budget)\b/.test(text)) {
       return { trigger: 'PRICE_NEGOTIATION', detail: 'Buyer opened a price negotiation' };
     }
 

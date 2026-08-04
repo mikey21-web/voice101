@@ -59,6 +59,11 @@ describe('Spine walk: one lead to POSSESSION', () => {
   }, 60000);
 
   afterAll(async () => {
+    // SpineDriverService is deliberately fire-and-forget off TimelineService.add,
+    // so a stage advance never fails the booking that triggered it. That leaves
+    // in-flight queries after the last assertion, which jest reports as "cannot
+    // log after tests are done" and fails the suite despite every test passing.
+    await new Promise((r) => setTimeout(r, 1000));
     if (!leadId) return app.close();
     await prisma.buyerDocument.deleteMany({ where: { leadId } }).catch(() => {});
     await prisma.ledgerEntry.deleteMany({ where: { leadId } }).catch(() => {});

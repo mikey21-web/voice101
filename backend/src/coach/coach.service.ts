@@ -33,7 +33,7 @@ export class CoachService {
     const existing = await this.prisma.callCoaching.findUnique({ where: { callLogId } });
     if (existing) return { coachingId: existing.id };
 
-    const result = this.analysis.analyze({
+    const result = await this.analysis.analyze({
       transcript: callLog.transcript,
       summary: callLog.summary,
       durationSec: callLog.durationSec,
@@ -53,7 +53,11 @@ export class CoachService {
         whatToSend: result.whatToSend,
         dealProbability: result.dealProbability,
         isExemplar: (result.score ?? 0) >= EXEMPLAR_SCORE,
-        analysisStatus: result.score === null ? 'NO_TRANSCRIPT' : 'DONE',
+        // Which engine scored it, so a run of rules-only rows is a visible
+        // signal that the LLM has been failing rather than a silent quality drop.
+        analysisStatus: result.method === 'none' ? 'NO_TRANSCRIPT'
+          : result.method === 'rules' ? 'DONE_RULES'
+            : 'DONE',
       },
     });
 

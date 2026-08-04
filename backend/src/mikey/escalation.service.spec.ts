@@ -126,11 +126,31 @@ describe('EscalationService (Phase 5)', () => {
         .toBe('LEGAL_OR_COMMITMENT');
     });
 
-    it('fires when a price negotiation opens', () => {
-      expect(service.detectTrigger({ text: 'what is your best price' })?.trigger)
-        .toBe('PRICE_NEGOTIATION');
-      expect(service.detectTrigger({ text: 'can you give some discount' })?.trigger)
-        .toBe('PRICE_NEGOTIATION');
+    it('fires when a buyer actually starts haggling', () => {
+      for (const text of [
+        'what is your best price',
+        'can you give some discount',
+        'can you come down a bit',
+        'could you do better on the rate',
+        'this is too expensive for me',
+        'what is the last price',
+      ]) {
+        expect(service.detectTrigger({ text })?.trigger).toBe('PRICE_NEGOTIATION');
+      }
+    });
+
+    it('lets Mikey answer a plain price question itself', () => {
+      // Nearly every buyer in this market asks the price in the first two
+      // messages. Escalating on that made Mikey look like it gives up.
+      for (const text of [
+        'what is the price',
+        'how much for a 2BHK',
+        'price please',
+        'what are the rates in this project',
+        'send me the cost details',
+      ]) {
+        expect(service.detectTrigger({ text })).toBeNull();
+      }
     });
 
     it('fires on negative sentiment', () => {

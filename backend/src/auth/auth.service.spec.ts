@@ -97,7 +97,11 @@ describe('AuthService', () => {
 
   describe('login', () => {
     it('should login with valid credentials', async () => {
-      const hashed = await bcrypt.hash('password123', 12);
+      // Cost 1, not 12. bcryptjs is pure JS, so a cost-12 hash under parallel
+      // jest workers can exceed the default 5s timeout on a loaded machine.
+      // bcrypt.compare does not care what cost produced the hash, and the
+      // production cost lives in auth.service.ts where it belongs.
+      const hashed = await bcrypt.hash('password123', 1);
       prisma.user.findUnique.mockResolvedValue({ ...mockUser, password: hashed, mfaEnabled: false });
 
       const result: any = await service.login({ email: 'test@example.com', password: 'password123' });

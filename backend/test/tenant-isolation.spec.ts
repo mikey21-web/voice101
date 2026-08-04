@@ -8,10 +8,15 @@ import { PrismaService } from '../src/prisma/prisma.service';
 let app: INestApplication;
 let prisma: PrismaService;
 
-const TENANT_A = { name: 'Tenant A', slug: `tenant-a-${Date.now()}` };
-const TENANT_B = { name: 'Tenant B', slug: `tenant-b-${Date.now()}` };
-const USER_A = { email: `ta-user-${Date.now()}@test.com`, password: 'Test123456' };
-const USER_B = { email: `tb-user-${Date.now()}@test.com`, password: 'Test123456' };
+// Date.now() alone is millisecond precision, so two jest workers starting in
+// the same millisecond generated identical slugs and emails and one of them
+// died on the unique constraint. That was the whole flake.
+const RUN = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+
+const TENANT_A = { name: 'Tenant A', slug: `tenant-a-${RUN}` };
+const TENANT_B = { name: 'Tenant B', slug: `tenant-b-${RUN}` };
+const USER_A = { email: `ta-user-${RUN}@test.com`, password: 'Test123456' };
+const USER_B = { email: `tb-user-${RUN}@test.com`, password: 'Test123456' };
 
 let tokenA: string;
 let tokenB: string;
