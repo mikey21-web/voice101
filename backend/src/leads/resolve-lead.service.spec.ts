@@ -3,6 +3,7 @@ import { ResolveLeadService } from './resolve-lead.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { ContactsService } from '../contacts/contacts.service';
 import { NormalizationService } from '../shared/normalization.service';
+import { LeadOrchestratorService } from '../voice-agent/lead-orchestrator.service';
 
 describe('ResolveLeadService (Phase 4)', () => {
   let service: ResolveLeadService;
@@ -30,12 +31,14 @@ describe('ResolveLeadService (Phase 4)', () => {
       callLog: { count: jest.fn().mockResolvedValue(0) },
     };
     contacts = { findOrCreate: jest.fn().mockResolvedValue(contact) };
+    const orchestrator = { onLeadCreated: jest.fn().mockResolvedValue(undefined) };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ResolveLeadService,
         { provide: PrismaService, useValue: prisma },
         { provide: ContactsService, useValue: contacts },
+        { provide: LeadOrchestratorService, useValue: orchestrator },
         NormalizationService,
       ],
     }).compile();
@@ -59,6 +62,22 @@ describe('ResolveLeadService (Phase 4)', () => {
     expect(res.reusedExistingLead).toBe(false);
     expect(res.isReturning).toBe(false);
     expect(prisma.lead.create).toHaveBeenCalled();
+  });
+
+  it('fires the auto-action trigger only for a newly created lead', async () => {
+    const orchestrator = { onLeadCreated: jest.fn().mockResolvedValue(undefined) };
+    (service as any).orchestrator = orchestrator;
+
+    await service.resolveLead(base);
+    expect(orchestrator.onLeadCreated).toHaveBeenCalledWith('new-lead');
+
+    // Returning buyer on an open lead: no new lead, no trigger (already in play).
+    prisma.lead.findMany.mockResolvedValue([
+      { id: 'lead-1', status: 'QUALIFYING', assignedAgentId: 'agent-1', metadata: {} },
+    ]);
+    orchestrator.onLeadCreated.mockClear();
+    await service.resolveLead(base);
+    expect(orchestrator.onLeadCreated).not.toHaveBeenCalled();
   });
 
   it('reuses the open lead instead of creating a second one', async () => {

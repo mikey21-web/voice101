@@ -3,6 +3,7 @@ import { LeadSegment, LeadStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { ContactsService } from '../contacts/contacts.service';
 import { NormalizationService } from '../shared/normalization.service';
+import { LeadOrchestratorService } from '../voice-agent/lead-orchestrator.service';
 
 /** A lead that went nowhere. Re-enquiring after one of these is a RECONNECT. */
 const DEAD_STATUSES: LeadStatus[] = ['LOST', 'COLD', 'SPAM'];
@@ -49,6 +50,7 @@ export class ResolveLeadService {
     private prisma: PrismaService,
     private contacts: ContactsService,
     private normalization: NormalizationService,
+    private orchestrator: LeadOrchestratorService,
   ) {}
 
   async resolveLead(params: {
@@ -135,6 +137,13 @@ export class ResolveLeadService {
       },
     });
 
+    // New lead: hand it to the lead orchestrator for the source's auto-actions
+    // (FORM always calls). Fire-and-forget so a slow call trigger never blocks
+    // the submit response. Reused/open leads skip this — they are already in play.
+    this.orchestrator.onLeadCreated(created.id).catch((e: any) =>
+      this.logger.error(`Auto-action trigger failed for lead ${created.id}: ${e?.message}`),
+    );
+
     return {
       leadId: created.id,
       contactId: contact.id,
@@ -145,7 +154,6 @@ export class ResolveLeadService {
       history,
     };
   }
-
   /**
    * What Mikey knows about this person before it opens its mouth. Feeds the
    * "welcome back, last week you looked at a 2BHK" greeting.
