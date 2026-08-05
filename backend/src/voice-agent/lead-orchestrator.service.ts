@@ -292,9 +292,20 @@ export class LeadOrchestratorService {
 
     const lead = await this.prisma.lead.findUnique({
       where: { id: lead_id },
-      select: { id: true, tenantId: true, assignedAgentId: true },
+      select: { id: true, tenantId: true, assignedAgentId: true, contactId: true },
     });
     if (!lead) { this.logger.warn(`Call webhook: lead ${lead_id} not found`); return; }
+
+    // The caller confirmed a WhatsApp number during the call (employee engine outcome) —
+    // record it on the contact so the post-call dispatch goes to the number they actually
+    // confirmed rather than the one the lead was captured with.
+    const confirmedWhatsApp = payload.outcome?.whatsapp_number;
+    if (confirmedWhatsApp && lead.contactId) {
+      await this.prisma.contact.update({
+        where: { id: lead.contactId },
+        data: { whatsapp: String(confirmedWhatsApp) },
+      }).catch((e) => this.logger.warn(`Failed to record confirmed WhatsApp for lead ${lead_id}: ${e.message}`));
+    }
 
     const callStatus = this.mapCallStatus(status || 'COMPLETED', ended_reason);
 
@@ -498,8 +509,10 @@ export class LeadOrchestratorService {
 
   private extractCallFields(outcome: any, summary: string, transcript: string): { budget?: string; interest?: string; urgency?: string } {
     const fields: { budget?: string; interest?: string; urgency?: string } = {};
-    if (outcome.budget) fields.budget = String(outcome.budget);
-    if (outcome.property_type || outcome.interest) fields.interest = String(outcome.property_type || outcome.interest);
+    // Legacy workflow keys and the employee engine's own vocabulary (budget_bracket,
+    // configuration_requirement, buyer_intent) both feed the same CRM fields.
+    if (outcome.budget || outcome.budget_bracket) fields.budget = String(outcome.budget || outcome.budget_bracket);
+    if (outcome.property_type || outcome.interest || outcome.configuration_requirement) fields.interest = String(outcome.property_type || outcome.interest || outcome.configuration_requirement);
     if (outcome.timeline) fields.urgency = String(outcome.timeline);
     if (fields.budget && fields.interest && fields.urgency) return fields;
 
@@ -536,7 +549,7 @@ export class LeadOrchestratorService {
   private mapStructuredOutcome(outcome: any): { status?: string; followUpDays?: number; followUpTitle?: string } {
     const callStatus = outcome.call_status;
     if (callStatus === 'wrong_number' || callStatus === 'not_interested') return { status: 'LOST' };
-    if (outcome.wants_site_visit) return { status: 'APPOINTMENT_BOOKED', followUpDays: 1, followUpTitle: 'Confirm site visit' };
+    if (outcome.wants_site_visit || outcome.site_visit_date) return { status: 'APPOINTMENT_BOOKED', followUpDays: 1, followUpTitle: 'Confirm site visit' };
     if (outcome.timeline === 'immediate' || outcome.timeline === '3_months') return { status: 'QUALIFIED', followUpDays: 1, followUpTitle: 'Send project details' };
     if (outcome.timeline === '6_months') return { followUpDays: 5, followUpTitle: 'Follow-up call' };
     return { followUpDays: 3, followUpTitle: 'Follow-up call' };

@@ -41,7 +41,15 @@ export class VoiceAgentService {
 
     const toNumber = this.normalizePhone(lead.contact.phone);
     try {
-      const workflowUuid = this.dograh.workflowUuidFor(language);
+      // Prefer the tenant's active voice employee when one exists — their compiled workflow
+      // (voice, script, webhook) wins over the shared legacy language workflow, so a form
+      // submit calls through the same engine the "test call" button uses. Falls back to the
+      // legacy workflow when no employee is active, keeping the old path intact.
+      const activeEmployee = await this.prisma.voiceEmployee.findFirst({
+        where: { tenantId: lead.tenantId, status: 'active', isPublished: true, dograhWorkflowUuid: { not: null } },
+        orderBy: { updatedAt: 'desc' },
+      });
+      const workflowUuid = activeEmployee?.dograhWorkflowUuid || this.dograh.workflowUuidFor(language);
       const call = await this.dograh.triggerCall(workflowUuid, toNumber, {
         first_name: lead.contact.name || 'there',
         interest: lead.interest || 'properties',

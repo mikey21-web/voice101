@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { DograhService } from '../shared/dograh.service';
 import { CallerMemoryService } from './caller-memory.service';
 import { lintTranscript } from './call-quality';
+import { LeadOrchestratorService } from './lead-orchestrator.service';
 
 /**
  * Calls and leads produced by the VoiceEmployee engine. Deliberately separate from CallLog/Lead
@@ -14,7 +15,12 @@ import { lintTranscript } from './call-quality';
 export class VoiceCallService {
   private readonly logger = new Logger(VoiceCallService.name);
 
-  constructor(private prisma: PrismaService, private dograh: DograhService, private memory: CallerMemoryService) {}
+  constructor(
+    private prisma: PrismaService,
+    private dograh: DograhService,
+    private memory: CallerMemoryService,
+    private orchestrator: LeadOrchestratorService,
+  ) {}
 
   async list(tenantId: string, filters: { employeeId?: string; campaignId?: string; disposition?: string; direction?: string; limit?: number } = {}) {
     const calls = await this.prisma.voiceCall.findMany({
@@ -105,6 +111,44 @@ export class VoiceCallService {
         await this.memory.mergeFacts(employee.tenantId, call.toNumber, outcome);
       } catch (err) {
         this.logger.warn(`Failed to merge caller facts: ${err.message}`);
+      }
+    }
+
+    // The webhook payload itself carries no transcript/recording, but Dograh's runs API does —
+    // best-effort enrich so the dashboard shows the recording link + duration. Runs are listed
+    // newest-first, and this call just completed, so it's on page 1.
+    if (payload.call_sid) {
+      try {
+        const { runs } = await this.dograh.getUsageRuns({ page: 1, limit: 50 });
+        const run = (runs || []).find((r: any) => String(r.id) === String(payload.call_sid));
+        if (run?.recording_public_url) {
+          await this.prisma.voiceCall.update({
+            where: { id: call.id },
+            data: {
+              recordingUrl: run.recording_public_url,
+              durationS: run.call_duration_seconds ? Math.round(run.call_duration_seconds) : undefined,
+            },
+          });
+        }
+      } catch (err) {
+        this.logger.warn(`Failed to enrich call ${call.id} from runs API: ${err.message}`);
+      }
+    }
+
+    // When the call came from the lead pipeline (initial_context.lead_id was set by
+    // callLead), also run the CRM side: update the CallLog + fire the post-call WhatsApp
+    // through the same orchestrator path the legacy workflow uses. Test calls carry no
+    // lead_id, so they stay voiceCall-only.
+    if (payload.lead_id) {
+      try {
+        await this.orchestrator.handleCallWebhook({
+          call_sid: payload.call_sid,
+          lead_id: payload.lead_id,
+          status: payload.status || 'completed',
+          outcome,
+        });
+      } catch (err) {
+        this.logger.warn(`CRM handling for lead ${payload.lead_id} failed: ${err.message}`);
       }
     }
 
