@@ -90,6 +90,8 @@ services:
       PIPER_URL: http://piper-tts:8123
       DEEPGRAM_AUTH_TOKEN: ${DEEPGRAM_AUTH_TOKEN:-}
       AGENT_MODEL: ${AGENT_MODEL:-deepseek-v4-flash}
+      WORKFLOW_MODEL: ${WORKFLOW_MODEL:-deepseek-chat}
+      DEEPSEEK_BASE_URL: ${DEEPSEEK_BASE_URL:-https://api.deepseek.com/v1}
       POSTHOG_KEY: ${POSTHOG_KEY:-}
       POSTHOG_HOST: ${POSTHOG_HOST:-https://us.i.posthog.com}
       DOGRAH_URL: ${DOGRAH_URL:-http://host.docker.internal:8010}

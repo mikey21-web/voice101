@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react';
 import {
   fetchVoiceEmployee, updateVoiceEmployee, publishVoiceEmployee, fetchVoiceEmployeeVersions,
   restoreVoiceEmployeeVersion, testCallVoiceEmployee, fetchVoiceTrainingExamples, fetchVoices,
+  editVoiceEmployeeFlow,
   VoiceEmployee, VoiceEmployeeSection, VoiceEmployeeVariable, VoiceEmployeeVersion, VoiceOption, VOICE_PROVIDERS,
 } from '../lib/data';
-import { ArrowLeft, Plus, Trash2, Rocket, Loader2, Save, History, PhoneCall, GripVertical, ToggleLeft, ToggleRight, Mic, BookOpen, Users, Check } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Rocket, Loader2, Save, History, PhoneCall, GripVertical, ToggleLeft, ToggleRight, Mic, BookOpen, Users, Check, Sparkles } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 function getEmployeeIdFromHash(): string | null {
@@ -135,48 +136,15 @@ export default function VoiceEmployeeDetailPage() {
   };
 
   const handleSwaraUpdate = async () => {
-    if (!swaraInput.trim()) return;
+    if (!id || !swaraInput.trim()) return;
     setSwaraLoading(true);
     try {
-      const suggestions = generateSwaraSuggestions(swaraInput);
-      toast.success(`${suggestions.length} suggestion${suggestions.length === 1 ? '' : 's'} applied. Review and save.`);
+      const result = await editVoiceEmployeeFlow(id, swaraInput.trim());
+      setSections(result.sections.map((s, i) => ({ ...s, order: i + 1 })));
+      toast.success('AI rewrote the flow. Review below, then Save + Publish to go live.');
       setSwaraInput('');
     } catch (e: any) { toast.error(e.message); }
     finally { setSwaraLoading(false); }
-  };
-
-  const generateSwaraSuggestions = (input: string) => {
-    const lower = input.toLowerCase();
-    const suggestions: any[] = [];
-
-    if (lower.includes('friendly') || lower.includes('warm')) {
-      setAgentInformation((prev) => prev + '\n• Keep the tone warm and friendly, like talking to a friend.');
-      suggestions.push('Tone updated to friendly');
-    }
-    if (lower.includes('urgent') || lower.includes('hurry')) {
-      setCallEndRules((prev) => prev + '\n• Mention urgency or limited-time offer before closing.');
-      suggestions.push('Added urgency to call-end rules');
-    }
-    if (lower.includes('budget') || lower.includes('price')) {
-      if (!variables.find((v) => v.key === 'budget')) {
-        setVariables((prev) => [...prev, { key: 'budget', label: 'Budget range', source: 'capture', required: false, extractHint: null }]);
-        suggestions.push('Added budget capture variable');
-      }
-    }
-    if (lower.includes('knowledge') || lower.includes('faq')) {
-      setKnowledgeBase('Q: What are your hours?\nA: 9am-6pm, Monday to Saturday.\n\nQ: Do you offer discounts?\nA: Yes, special offers for first-time customers.');
-      suggestions.push('Added sample knowledge base');
-    }
-    if (lower.includes('strict') || lower.includes('follow script')) {
-      setScriptStrictness(5);
-      suggestions.push('Set script adherence to strict');
-    }
-    if (lower.includes('flexible') || lower.includes('natural')) {
-      setScriptStrictness(1);
-      suggestions.push('Set script adherence to flexible');
-    }
-
-    return suggestions.length > 0 ? suggestions : ['No changes detected — try "make it friendlier" or "add urgency"'];
   };
 
   const addSection = () => {
@@ -287,6 +255,26 @@ export default function VoiceEmployeeDetailPage() {
           <span className="text-sm font-medium text-[var(--foreground)]">Natural spoken-Telugu style</span>
           <button type="button" onClick={() => setStylePackEnabled((v) => !v)} className={`inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-medium ${stylePackEnabled ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' : 'bg-gray-100 dark:bg-gray-800 text-[var(--muted-foreground)]'}`}>
             {stylePackEnabled ? <ToggleRight size={14} /> : <ToggleLeft size={14} />} {stylePackEnabled ? 'On' : 'Off'}
+          </button>
+        </div>
+      </section>
+
+      <section className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-bold text-[var(--foreground)]">Edit with AI</h2>
+        </div>
+        <p className="text-sm text-[var(--muted-foreground)]">Describe the change in plain English — the AI rewrites the whole flow, which you review before publishing.</p>
+        <div className="flex gap-2">
+          <input
+            value={swaraInput}
+            onChange={(e) => setSwaraInput(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') handleSwaraUpdate(); }}
+            placeholder='e.g. "make the agent female, say numbers in English words, never call anyone sir or ma-am"'
+            className="flex-1 h-10 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)]"
+          />
+          <button onClick={handleSwaraUpdate} disabled={swaraLoading || !swaraInput.trim()}
+            className="h-10 px-4 rounded-lg bg-[var(--primary)] text-white text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-opacity flex items-center gap-2 shrink-0">
+            {swaraLoading ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />} Rewrite
           </button>
         </div>
       </section>

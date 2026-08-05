@@ -352,6 +352,12 @@ export async function generateVoiceEmployeeDraft(description: string, businessNa
   return api('/voice-employees/generate-draft', { method: 'POST', body: JSON.stringify({ description, businessName }) }) as Promise<GeneratedFlowDraft>;
 }
 
+// "Edit my script" — one plain-English instruction in, the whole section list out with only
+// that change applied (backend validates edges/keys; nothing saved until the owner reviews).
+export async function editVoiceEmployeeFlow(id: string, instruction: string) {
+  return api(`/voice-employees/${id}/edit-flow`, { method: 'POST', body: JSON.stringify({ instruction }) }) as Promise<{ sections: VoiceEmployeeSection[] }>;
+}
+
 export interface VoiceEngineCall {
   id: string; employeeId: string; toNumber: string; durationS: number | null; disposition: string | null;
   summary: string | null; outcome: any; createdAt: string; employee?: { name: string };

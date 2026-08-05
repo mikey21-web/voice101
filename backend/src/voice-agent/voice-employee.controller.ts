@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Delete, Param, Body, Query, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, Body, Query, Req, UseGuards, BadRequestException } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -38,7 +38,15 @@ export class VoiceEmployeeController {
       sectionKey: s.sectionKey, label: s.label, prompt: s.prompt, enabled: s.enabled,
       order: s.order, nodeType: s.nodeType, edges: s.edges as any,
     }));
-    return this.generator.editFlow(sections, body.instruction);
+    try {
+      return await this.generator.editFlow(sections, body.instruction);
+    } catch (e: any) {
+      const msg = (e?.error?.message || e?.message || '').toString().toLowerCase();
+      if (msg.includes('balance') || msg.includes('credit') || msg.includes('quota') || msg.includes('payment')) {
+        throw new BadRequestException('AI provider has no credits left — top up your LLM API key in .env before editing flows with AI.');
+      }
+      throw e;
+    }
   }
 
   @Get(':id/readiness')

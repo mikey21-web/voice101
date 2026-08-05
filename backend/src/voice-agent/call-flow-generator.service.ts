@@ -149,8 +149,8 @@ export class CallFlowGeneratorService {
   private client: OpenAI | undefined;
 
   constructor(private config: ConfigService) {
-    const apiKey = this.config.get<string>('OPENAI_API_KEY') || this.config.get<string>('DEEPSEEK_API_KEY');
-    const baseURL = this.config.get<string>('OPENAI_BASE_URL') || this.config.get<string>('DEEPSEEK_BASE_URL');
+    const apiKey = this.config.get<string>('DEEPSEEK_API_KEY') || this.config.get<string>('OPENAI_API_KEY');
+    const baseURL = this.config.get<string>('DEEPSEEK_BASE_URL') || this.config.get<string>('OPENAI_BASE_URL');
     if (apiKey) {
       this.client = new OpenAI({ apiKey, baseURL: baseURL || undefined, timeout: 45000, maxRetries: 1 });
     }
@@ -175,7 +175,7 @@ export class CallFlowGeneratorService {
     const userPrompt = `${businessName ? `Business: ${businessName}\n\n` : ''}Call goal: ${description}${factsBlock}\n\nOutput language: ${languageName}.`;
 
     const response = await this.client.chat.completions.create({
-      model: this.config.get<string>('WORKFLOW_MODEL') || 'gpt-4o-mini',
+      model: this.config.get<string>('WORKFLOW_MODEL') || 'deepseek-chat',
       messages: [
         { role: 'system', content: SYSTEM_PROMPT(languageName) },
         { role: 'user', content: userPrompt },
@@ -211,7 +211,7 @@ export class CallFlowGeneratorService {
     if (!currentSections?.length) throw new Error('There are no sections to edit yet');
 
     const response = await this.client.chat.completions.create({
-      model: this.config.get<string>('WORKFLOW_MODEL') || 'gpt-4o-mini',
+      model: this.config.get<string>('WORKFLOW_MODEL') || 'deepseek-chat',
       messages: [
         { role: 'system', content: EDIT_SYSTEM_PROMPT },
         { role: 'user', content: `Current sections:\n${JSON.stringify({ sections: currentSections }, null, 2)}\n\nRequested change:\n${instruction.trim()}` },
