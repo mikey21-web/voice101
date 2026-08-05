@@ -59,7 +59,7 @@ export class LeadOrchestratorService {
     const userId = lead.assignedAgentId || 'mikey-auto';
 
     const actions: Array<() => Promise<void>> = [];
-    if (plan.call) actions.push(() => this.executeCall(lead, plan.call!.lang, userId));
+    if (plan.call) actions.push(() => this.executeCall(lead, plan.call!.lang, lead.assignedAgentId || null));
     if (plan.whatsapp) actions.push(() => this.executeWhatsApp(lead, plan.whatsapp!.text, userId, plan.whatsapp!.templateId));
     if (plan.sms) actions.push(() => this.executeSms(lead, plan.sms!.text, userId));
     if (plan.telegram) actions.push(() => this.executeTelegram(lead, plan.telegram!.text, userId));
@@ -188,7 +188,7 @@ export class LeadOrchestratorService {
     return map[source] || [];
   }
 
-  private async executeCall(lead: any, lang: string, userId: string): Promise<void> {
+  private async executeCall(lead: any, lang: string, userId: string | null): Promise<void> {
     if (!lead.contact?.phone) return;
     const gate = await this.permissionGate.evaluate(lead.id, 'outbound_call', 'VOICE');
     if (gate.verdict === 'BLOCK') {

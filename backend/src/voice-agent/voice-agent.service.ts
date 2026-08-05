@@ -35,7 +35,7 @@ export class VoiceAgentService {
     private flowGenerator: CallFlowGeneratorService,
   ) {}
 
-  async callLead(leadId: string, userId: string, language = 'te'): Promise<{ success: boolean; callSid?: string; message?: string }> {
+  async callLead(leadId: string, userId: string | null, language = 'te'): Promise<{ success: boolean; callSid?: string; message?: string }> {
     const lead = await this.prisma.lead.findUnique({ where: { id: leadId }, include: { contact: true } });
     if (!lead?.contact?.phone) return { success: false, message: 'Lead has no phone number' };
 
@@ -59,7 +59,7 @@ export class VoiceAgentService {
       const callSid = String(call.workflow_run_id);
 
       await this.prisma.callLog.create({
-        data: { leadId, tenantId: lead.tenantId, direction: 'OUTBOUND', fromNumber: this.config.get('TWILIO_PHONE_NUMBER', ''), toNumber, status: 'INITIATED', providerSid: callSid, agentId: userId },
+        data: { leadId, tenantId: lead.tenantId, direction: 'OUTBOUND', fromNumber: this.config.get('TWILIO_PHONE_NUMBER', ''), toNumber, status: 'INITIATED', providerSid: callSid, agentId: userId || undefined },
       });
       this.logger.log(`Dograh call initiated to ${lead.contact.name} (${toNumber}) — run ${callSid}`);
       return { success: true, callSid };
