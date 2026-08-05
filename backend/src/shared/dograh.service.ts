@@ -492,6 +492,34 @@ export class DograhService {
     if (!putRes.ok) throw new Error(`Dograh set TTS voice failed: ${await putRes.text()}`);
   }
 
+  /** Switches the STT provider/model/language, carrying llm and tts over unchanged. Same
+   * read-full-config → replace-stt-block → PUT discipline as setTtsVoice. */
+  async setStt(provider: string, model: string, language?: string): Promise<void> {
+    const apiKey = this.providerApiKey(provider);
+    const res = await fetch(`${this.baseUrl}/api/v1/organizations/model-configurations/v2`, {
+      headers: { 'X-API-Key': this.apiKey },
+    });
+    if (!res.ok) throw new Error(`Dograh get model configuration failed: ${await res.text()}`);
+    const current = (await res.json()).configuration;
+    if (current?.mode !== 'byok' || !current.byok?.pipeline) {
+      throw new Error('STT switching is only supported in BYOK pipeline mode; current org configuration is not in that mode.');
+    }
+
+    current.byok.pipeline.stt = {
+      provider,
+      api_key: apiKey,
+      model,
+      ...(language ? { language } : {}),
+    };
+
+    const putRes = await fetch(`${this.baseUrl}/api/v1/organizations/model-configurations/v2`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'X-API-Key': this.apiKey },
+      body: JSON.stringify(current),
+    });
+    if (!putRes.ok) throw new Error(`Dograh set STT failed: ${await putRes.text()}`);
+  }
+
   /** Presigned URL for the owner to upload their own background-noise clip (max 10MB per Dograh's schema). No credentials involved — safe to call freely, unlike setTtsVoice. */
   async getAmbientNoiseUploadUrl(language: string, filename: string, fileSize: number, mimeType = 'audio/wav'): Promise<{ uploadUrl: string; storageKey: string }> {
     const workflowId = WORKFLOW_ID_BY_LANGUAGE[language] || WORKFLOW_ID_BY_LANGUAGE.te;

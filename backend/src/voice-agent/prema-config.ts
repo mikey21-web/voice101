@@ -38,6 +38,8 @@ export const PREMA_PERSONA = {
   mode: 'conversational-tenglish',
 };
 
+export const PREMA_WELCOME_MESSAGE = 'హలో అండి, నేను ప్రేమ మాట్లాడుతున్నాను, స్కైలైన్ హైట్స్ నుంచి. మీరు కొద్దిసేపటి క్రితం కోకాపేట్ ప్రాజెక్ట్ గురించి ఎంక్వైరీ పెట్టారు కదా అండి, అందుకే కాల్ చేశాను.';
+
 export const PREMA_KNOWLEDGE_BASE = `
 ## Skyline Heights — Premium Gated Community
 

@@ -368,6 +368,12 @@ export class VoiceAgentService {
     return this.getVoiceConfig();
   }
 
+  async setStt(provider: string, model: string, language?: string) {
+    await this.dograh.setStt(provider, model, language);
+    const cfg = await this.dograh.getModelConfiguration();
+    return { provider: cfg?.stt?.provider ?? null, model: cfg?.stt?.model ?? null, language: cfg?.stt?.language ?? null };
+  }
+
   async getAmbientNoiseUploadUrl(language: string, filename: string, fileSize: number, mimeType?: string) {
     return this.dograh.getAmbientNoiseUploadUrl(language, filename, fileSize, mimeType);
   }

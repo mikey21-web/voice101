@@ -103,6 +103,7 @@ services:
       COMPANY_NAME: ${COMPANY_NAME:-Diyaa}
       SARVAM_API_KEY: ${SARVAM_API_KEY:-}
       CARTESIA_API_KEY: ${CARTESIA_API_KEY:-}
+      SMALLEST_API_KEY: ${SMALLEST_API_KEY:-}
     volumes:
       - uploads:/app/uploads
       - ./niche.config.yaml:/app/niche.config.yaml:ro

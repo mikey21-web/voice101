@@ -93,6 +93,13 @@ export class VoiceAgentController {
     return this.service.setVoice(body.provider, body.voiceId, body.speed, body.language);
   }
 
+  @Patch('stt-config')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('OWNER', 'ADMIN')
+  async setStt(@Body() body: { provider: string; model: string; language?: string }) {
+    return this.service.setStt(body.provider, body.model, body.language);
+  }
+
   @Post('ambient-noise/upload-url')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('OWNER', 'ADMIN')
