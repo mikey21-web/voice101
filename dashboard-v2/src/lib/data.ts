@@ -313,7 +313,7 @@ export interface VoiceEmployee {
 }
 export interface VoiceEmployeeInput {
   name: string; role: string; mode?: string; voiceProvider: string; voiceId: string; voiceName?: string;
-  language?: string; welcomeMessage?: string; agentInformation?: string; callEndRules?: string;
+  language?: string; ttsSpeed?: number; welcomeMessage?: string; agentInformation?: string; callEndRules?: string;
   stylePackEnabled?: boolean; aiAcknowledgementEnabled?: boolean;
   sections?: VoiceEmployeeSection[]; variables?: VoiceEmployeeVariable[];
 }

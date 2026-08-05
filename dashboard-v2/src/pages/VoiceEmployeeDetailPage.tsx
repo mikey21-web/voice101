@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import {
   fetchVoiceEmployee, updateVoiceEmployee, publishVoiceEmployee, fetchVoiceEmployeeVersions,
-  restoreVoiceEmployeeVersion, testCallVoiceEmployee, fetchVoiceTrainingExamples, VoiceEmployee, VoiceEmployeeSection,
-  VoiceEmployeeVariable, VoiceEmployeeVersion,
+  restoreVoiceEmployeeVersion, testCallVoiceEmployee, fetchVoiceTrainingExamples, fetchVoices,
+  VoiceEmployee, VoiceEmployeeSection, VoiceEmployeeVariable, VoiceEmployeeVersion, VoiceOption, VOICE_PROVIDERS,
 } from '../lib/data';
-import { ArrowLeft, Plus, Trash2, Rocket, Loader2, Save, History, PhoneCall, GripVertical, ToggleLeft, ToggleRight, Mic, BookOpen, Users } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Rocket, Loader2, Save, History, PhoneCall, GripVertical, ToggleLeft, ToggleRight, Mic, BookOpen, Users, Check } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 function getEmployeeIdFromHash(): string | null {
@@ -42,6 +42,13 @@ export default function VoiceEmployeeDetailPage() {
   const [swaraInput, setSwaraInput] = useState('');
   const [swaraLoading, setSwaraLoading] = useState(false);
 
+  const [voiceProvider, setVoiceProvider] = useState('smallest');
+  const [voiceId, setVoiceId] = useState('');
+  const [voiceName, setVoiceName] = useState('');
+  const [ttsSpeed, setTtsSpeed] = useState(1);
+  const [voices, setVoices] = useState<VoiceOption[]>([]);
+  const [voicesLoading, setVoicesLoading] = useState(false);
+
   useEffect(() => {
     const onHashChange = () => setId(getEmployeeIdFromHash());
     window.addEventListener('hashchange', onHashChange);
@@ -58,10 +65,22 @@ export default function VoiceEmployeeDetailPage() {
       setStylePackEnabled(e.stylePackEnabled); setAiAcknowledgementEnabled(e.aiAcknowledgementEnabled);
       setSections(e.sections.map((s) => ({ ...s })));
       setVariables(e.variables.map((v) => ({ ...v })));
+      setVoiceProvider(e.voiceProvider || 'smallest');
+      setVoiceId(e.voiceId || '');
+      setVoiceName(e.voiceName || '');
+      setTtsSpeed(e.ttsSpeed ?? 1);
       fetchVoiceTrainingExamples(id).then(setTrainingExamples).catch(() => {});
     }).catch((err) => toast.error(err.message)).finally(() => setLoading(false));
   };
   useEffect(() => { load(); }, [id]);
+
+  useEffect(() => {
+    setVoicesLoading(true);
+    fetchVoices(voiceProvider)
+      .then(setVoices)
+      .catch((e) => toast.error(e.message))
+      .finally(() => setVoicesLoading(false));
+  }, [voiceProvider]);
 
   const handleSave = async () => {
     if (!id) return;
@@ -70,6 +89,7 @@ export default function VoiceEmployeeDetailPage() {
       const updated = await updateVoiceEmployee(id, {
         name, role, welcomeMessage, agentInformation, callEndRules,
         stylePackEnabled, aiAcknowledgementEnabled,
+        voiceProvider, voiceId, voiceName, ttsSpeed,
         sections: sections.map((s, i) => ({ ...s, order: i + 1 })),
         variables,
       });
@@ -393,6 +413,59 @@ export default function VoiceEmployeeDetailPage() {
               className="w-full h-10 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)] text-center" />
             <p className="text-xs text-[var(--muted-foreground)] mt-3">Higher = faster but more expensive.</p>
           </div>
+        </div>
+      </section>
+
+      <section className="space-y-4 border-t border-[var(--border)] pt-6">
+        <h2 className="text-lg font-bold text-[var(--foreground)]">Voice</h2>
+        <div className="flex items-center gap-2">
+          {VOICE_PROVIDERS.map((p) => (
+            <button
+              key={p}
+              type="button"
+              onClick={() => setVoiceProvider(p)}
+              className={`h-7 px-3 rounded-full text-xs font-medium capitalize transition-colors ${
+                voiceProvider === p
+                  ? 'bg-[var(--primary)] text-white'
+                  : 'bg-gray-100 dark:bg-gray-800 text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
+              }`}
+            >
+              {p}
+            </button>
+          ))}
+        </div>
+
+        {voicesLoading ? (
+          <div className="py-6 text-center text-[var(--muted-foreground)]"><Loader2 size={16} className="animate-spin inline mr-2" />Loading voices...</div>
+        ) : voices.length === 0 ? (
+          <p className="text-xs text-[var(--muted-foreground)] py-3">No voices available for {voiceProvider}.</p>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {voices.map((v) => {
+              const isCurrent = voiceId === v.voice_id;
+              return (
+                <button
+                  key={v.voice_id}
+                  type="button"
+                  onClick={() => { setVoiceId(v.voice_id); setVoiceName(v.name); }}
+                  className={`text-left rounded-lg border px-3 py-2 transition-colors ${
+                    isCurrent ? 'border-[var(--primary)] bg-[var(--primary)]/5' : 'border-[var(--border)] hover:border-[var(--primary)]/50'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-[var(--foreground)]">{v.name}</span>
+                    {isCurrent ? <Check size={13} className="text-[var(--primary)]" /> : null}
+                  </div>
+                  <span className="text-[11px] text-[var(--muted-foreground)] capitalize">{[v.gender, v.accent].filter(Boolean).join(' · ') || ' '}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        <div>
+          <label className="block text-sm font-medium text-[var(--foreground)] mb-1.5">Speed ({ttsSpeed.toFixed(2)}x)</label>
+          <input type="range" min={0.5} max={1.5} step={0.05} value={ttsSpeed} onChange={(e) => setTtsSpeed(Number(e.target.value))} className="w-full" />
         </div>
       </section>
 
