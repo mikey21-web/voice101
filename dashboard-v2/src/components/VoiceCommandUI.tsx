@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Mic, MicOff, Sparkles, Ear, EarOff, Radio } from 'lucide-react';
 import { setPendingFilter } from '../lib/pendingSearch';
 import { apiUpload } from '../lib/api';
+import { getSocket } from '../lib/realtime';
 import { useVoiceInput } from '../lib/useVoiceInput';
 import { PAGE_MAP, PAGE_ALIASES, fuzzyPageMatch, resolvePage, canonical } from '../lib/pageMap';
 import { speakStreamed, resetSpeech, queueSpeechSegment, stopSpeaking, waitUntilDoneSpeaking } from '../lib/streamingAudioPlayer';
@@ -143,7 +144,9 @@ export default function VoiceCommandUI() {
   // active at a time, but nothing here prevents both existing side by side.
   const voiceSession = useVoiceSession();
 
-  const [wakeWordOn, setWakeWordOn] = useState(() => localStorage.getItem('mikeyWakeWordOn') === 'true');
+  const [wakeWordOn, setWakeWordOn] = useState(() => localStorage.getItem('mikeyWakeWordOn') !== 'false');
+  const [userCaption, setUserCaption] = useState('');
+  const [mikeyCaption, setMikeyCaption] = useState('');
   const wakeWord = useVoiceInput();
 
   // Reuses the same voice-on preference the Mikey chat page uses, so turning
@@ -180,8 +183,8 @@ export default function VoiceCommandUI() {
   // Shared downstream handling for a transcript, whichever engine produced it.
   const handleTranscript = useCallback((text: string) => {
     setMode('copilot');
-
-    const transcriptLine = `You said: "${text}"`;
+    setUserCaption(text);
+    setMikeyCaption('');
 
     const cmd = matchCommand(text);
     if (cmd) {
@@ -197,59 +200,47 @@ export default function VoiceCommandUI() {
       setPendingFilter(cmd.page, { filters: Object.keys(filters).length ? filters : undefined });
       window.location.hash = PAGE_MAP[cmd.page];
       const spoken = `Showing ${cmd.page}${cmd.filter ? ', ' + cmd.filter : ''}`;
-      // mikeyVoiceOn is one shared on/off switch across four surfaces (this
-      // component, MikeyWidget, CopilotPage, OverviewPage's briefing mute) — muting
-      // it anywhere silently kills voice everywhere else too, with nothing telling
-      // you why a command "worked" but said nothing. Surface it right here instead.
-      const mutedNote = localStorage.getItem('mikeyVoiceOn') === 'false' ? ' (voice is muted)' : '';
-      setResult(`${transcriptLine}\n→ ${spoken}${mutedNote}`);
+      setMikeyCaption(spoken);
+      setResult(spoken);
       speakReply(spoken);
-      // Wait for the audio to actually finish before dropping back to idle —
-      // setting mode('idle') immediately here (the old behavior) meant the Stop
-      // button, which only shows while mode === 'copilot', never had a chance to
-      // render: speakReply()'s fetch+playback is async, so Mikey was still
-      // audibly talking well after the UI had already gone silent.
       waitUntilDoneSpeaking().finally(() => {
         setMode('idle');
         setListening(false);
+        setUserCaption('');
+        setMikeyCaption('');
         if (wakeWordOn) wakeWord.start();
       });
       return;
     }
 
-    // Fallback to copilot — it handles messy phrases and multi-step actions.
-    // Streamed: sentence-sized segments get spoken as they arrive (queueSpeechSegment)
-    // instead of waiting for the whole reply. resetSpeech() once up front interrupts
-    // whatever Mikey was already saying and starts a fresh generation; each segment
-    // after that queues onto it rather than cutting the previous one off.
     if (localStorage.getItem('mikeyVoiceOn') !== 'false') resetSpeech();
-    // Live subtitles: each segment is shown the moment it's queued for speech,
-    // so the on-screen text tracks what Mikey is actually saying as she says it,
-    // rather than only appearing once the whole reply has finished generating.
-    let liveCaption = '';
+    let liveReply = '';
     const controller = new AbortController();
     chatAbortRef.current = controller;
     chatStream(text, undefined, {
       onSegment: (segment) => {
         if (localStorage.getItem('mikeyVoiceOn') !== 'false') queueSpeechSegment(segment);
-        liveCaption += (liveCaption ? ' ' : '') + segment;
-        setResult(`${transcriptLine}\n→ ${liveCaption}`);
+        liveReply += (liveReply ? ' ' : '') + segment;
+        setMikeyCaption(liveReply);
+        setResult(liveReply);
       },
     }, controller.signal).then((res) => {
-      const mutedNote = localStorage.getItem('mikeyVoiceOn') === 'false' ? ' (voice is muted)' : '';
       const nav = (res.actions || []).find((a: any) => a.tool === 'navigate_ui' && a.status !== 'error');
       if (nav) {
         const page = resolvePage(nav.args.page);
         setPendingFilter(page, { filters: nav.args.filters, highlightId: nav.args.highlightId, zoom: nav.args.zoom, summary: nav.args.summary });
         window.location.hash = PAGE_MAP[page] || '/' + page;
         const summary = nav.args.summary || `Navigated to ${page}`;
-        setResult(`${transcriptLine}\n→ ${summary}${mutedNote}`);
+        setMikeyCaption(summary);
+        setResult(summary);
       } else {
         const reply = res.reply || 'Done';
-        setResult(`${transcriptLine}\n→ ${reply}${mutedNote}`);
+        setMikeyCaption(reply);
+        setResult(reply);
       }
     }).catch(() => {
-      setResult(`${transcriptLine}\n→ Couldn't reach Mikey just now. Check your connection and try again.`);
+      setMikeyCaption("Couldn't reach Mikey. Check your connection.");
+      setResult("Couldn't reach Mikey. Check your connection.");
     }).finally(() => {
       setMode('idle');
       setListening(false);
@@ -560,7 +551,29 @@ export default function VoiceCommandUI() {
     setResult(null);
     setMode('idle');
     setListening(false);
+    setUserCaption('');
+    setMikeyCaption('');
   }, []);
+
+  // Proactive alerts — Mikey speaks up when business events happen (hot lead, new lead, etc.)
+  // Only fires when not already listening/speaking so it doesn't interrupt an active session.
+  useEffect(() => {
+    const sock = getSocket();
+    if (!sock) return;
+    const handler = (data: { type: string; message: string }) => {
+      if (localStorage.getItem('mikeyVoiceOn') === 'false') return;
+      if (mode !== 'idle' || voiceSession.state !== 'idle') return;
+      setMikeyCaption(data.message);
+      setResult(data.message);
+      speakStreamed(data.message);
+      waitUntilDoneSpeaking().finally(() => {
+        setMikeyCaption('');
+        setResult(null);
+      });
+    };
+    sock.on('mikey:alert', handler);
+    return () => { sock.off('mikey:alert', handler); };
+  }, [mode, voiceSession.state]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -646,57 +659,48 @@ export default function VoiceCommandUI() {
     );
   }
 
-  // Covers both "still generating, nothing to show yet" (mode === 'copilot' with
-  // no result text) and "streaming the reply in" (result set) — a Stop control
-  // must be reachable for the entire time Mikey could be talking, not just once
-  // captions exist. Previously there was a real gap here: the moment listening
-  // flips to false but before the first streamed segment arrives, nothing
-  // rendered a stop control at all.
-  if (result && mode === 'copilot') {
-    const lines = result.split('\n');
-    const hasTranscript = lines.length > 1;
+  // Subtitle panel — shown whenever there's user speech or Mikey's reply to display.
+  // Both captions live independently so they can appear/disappear at their own pace.
+  if ((userCaption || mikeyCaption || mode === 'copilot') && voiceSession.state === 'idle') {
     return (
-      <div className="fixed bottom-28 left-1/2 -translate-x-1/2 z-[9999] max-w-lg w-full mx-4 animate-fade-up flex flex-col items-center gap-2 [body.mikey-panel-open_&]:hidden">
-        <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] px-5 py-4 shadow-2xl flex flex-col gap-2 w-full pointer-events-none">
-          {hasTranscript && (
-            <div className="flex items-start gap-2">
-              <Mic size={14} className="text-[var(--primary)] mt-0.5 shrink-0" />
-              <p className="text-xs text-[var(--muted-foreground)]">{lines[0]}</p>
+      <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-[9999] max-w-2xl w-full px-4 animate-fade-up flex flex-col items-center gap-2 [body.mikey-panel-open_&]:hidden">
+        <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)]/95 backdrop-blur px-5 py-4 shadow-2xl flex flex-col gap-3 w-full">
+          {/* User caption — what the user said */}
+          {userCaption && (
+            <div className="flex items-start gap-3">
+              <div className="w-6 h-6 rounded-full bg-[var(--accent)] flex items-center justify-center shrink-0 mt-0.5">
+                <Mic size={12} className="text-[var(--primary)]" />
+              </div>
+              <div>
+                <p className="text-[10px] font-semibold text-[var(--muted-foreground)] uppercase tracking-wide mb-0.5">You</p>
+                <p className="text-sm text-[var(--foreground)]">{userCaption}</p>
+              </div>
             </div>
           )}
-          <div className="flex items-start gap-2">
-            <Sparkles size={16} className="text-[var(--primary)] mt-0.5 shrink-0" />
-            <p className="text-sm text-[var(--foreground)] leading-relaxed flex-1">{hasTranscript ? lines.slice(1).join('\n') : result}</p>
-          </div>
-        </div>
-        <button
-          onClick={stopMikey}
-          className="flex items-center gap-2 rounded-full bg-[var(--card)] border border-[var(--border)] text-[var(--foreground)] px-5 py-2.5 shadow-2xl active:scale-95 transition-transform"
-        >
-          <MicOff size={16} />
-          <span className="text-sm font-medium">Stop</span>
-        </button>
-      </div>
-    );
-  }
-
-  if (result) {
-    const lines = result.split('\n');
-    const hasTranscript = lines.length > 1;
-    return (
-      <div className="fixed bottom-28 left-1/2 -translate-x-1/2 z-[9999] max-w-lg w-full mx-4 animate-fade-up pointer-events-none [body.mikey-panel-open_&]:hidden">
-        <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] px-5 py-4 shadow-2xl flex flex-col gap-2">
-          {hasTranscript && (
-            <div className="flex items-start gap-2">
-              <Mic size={14} className="text-[var(--primary)] mt-0.5 shrink-0" />
-              <p className="text-xs text-[var(--muted-foreground)]">{lines[0]}</p>
+          {/* Mikey caption — streaming reply */}
+          <div className="flex items-start gap-3">
+            <div className="w-6 h-6 rounded-full bg-[var(--primary)] flex items-center justify-center shrink-0 mt-0.5">
+              <Sparkles size={12} className="text-white" />
             </div>
-          )}
-          <div className="flex items-start gap-2">
-            <Sparkles size={16} className="text-[var(--primary)] mt-0.5 shrink-0" />
-            <p className="text-sm text-[var(--foreground)] leading-relaxed flex-1">{hasTranscript ? lines.slice(1).join('\n') : result}</p>
+            <div className="flex-1">
+              <p className="text-[10px] font-semibold text-[var(--primary)] uppercase tracking-wide mb-0.5">Mikey</p>
+              {mikeyCaption
+                ? <p className="text-sm text-[var(--foreground)] leading-relaxed">{mikeyCaption}</p>
+                : <div className="flex items-center gap-1 mt-1">{[0,1,2].map(i => <span key={i} className="w-1.5 h-1.5 rounded-full bg-[var(--primary)] animate-bounce" style={{ animationDelay: `${i * 150}ms` }} />)}</div>
+              }
+            </div>
           </div>
         </div>
+        {/* Stop button — always reachable while Mikey is active */}
+        {mode === 'copilot' && (
+          <button
+            onClick={stopMikey}
+            className="flex items-center gap-2 rounded-full bg-red-500 text-white px-5 py-2 shadow-xl active:scale-95 transition-transform text-sm font-medium"
+          >
+            <MicOff size={15} />
+            Stop Mikey
+          </button>
+        )}
       </div>
     );
   }
@@ -704,70 +708,109 @@ export default function VoiceCommandUI() {
   if (listening || mode === 'copilot') {
     const thinking = mode === 'copilot';
     return (
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999] animate-fade-up flex flex-col items-center gap-2 max-w-lg w-full mx-4">
-        {!thinking && interimText && (
-          <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] px-5 py-3 shadow-2xl flex items-start gap-2 w-full pointer-events-none">
-            <Mic size={14} className="text-[var(--primary)] mt-0.5 shrink-0 animate-pulse" />
-            <p className="text-xs text-[var(--muted-foreground)] italic">{interimText}</p>
+      <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-[9999] animate-fade-up flex flex-col items-center gap-2 max-w-2xl w-full px-4">
+        {/* Live subtitle panel — user speech + Mikey's thinking state */}
+        <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)]/95 backdrop-blur px-5 py-4 shadow-2xl flex flex-col gap-3 w-full">
+          <div className="flex items-start gap-3">
+            <div className="w-6 h-6 rounded-full bg-[var(--accent)] flex items-center justify-center shrink-0 mt-0.5">
+              <Mic size={12} className={`text-[var(--primary)] ${!thinking ? 'animate-pulse' : ''}`} />
+            </div>
+            <div className="flex-1">
+              <p className="text-[10px] font-semibold text-[var(--muted-foreground)] uppercase tracking-wide mb-0.5">You</p>
+              <p className="text-sm text-[var(--foreground)] min-h-[1.25rem]">
+                {interimText || (thinking ? userCaption : <span className="italic text-[var(--muted-foreground)]">Listening...</span>)}
+              </p>
+            </div>
           </div>
-        )}
-        <div className="rounded-full border border-[var(--border)] bg-[var(--card)] px-5 py-2.5 shadow-2xl flex items-center gap-3 pointer-events-none">
-          <div className="flex items-end gap-0.5 h-5">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="w-1 rounded-full bg-[var(--primary)] animate-pulse" style={{ height: `${20 + Math.random() * 60}%` }} />
-            ))}
-          </div>
-          <span className="text-xs text-[var(--muted-foreground)] whitespace-nowrap">
-            {thinking ? 'Thinking...' : 'Listening... speak, then it sends automatically'}
-          </span>
-          {!thinking && <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />}
+          {thinking && (
+            <div className="flex items-start gap-3">
+              <div className="w-6 h-6 rounded-full bg-[var(--primary)] flex items-center justify-center shrink-0 mt-0.5">
+                <Sparkles size={12} className="text-white" />
+              </div>
+              <div>
+                <p className="text-[10px] font-semibold text-[var(--primary)] uppercase tracking-wide mb-0.5">Mikey</p>
+                <div className="flex items-center gap-1 mt-1">{[0,1,2].map(i => <span key={i} className="w-1.5 h-1.5 rounded-full bg-[var(--primary)] animate-bounce" style={{ animationDelay: `${i * 150}ms` }} />)}</div>
+              </div>
+            </div>
+          )}
         </div>
-        {/* Big, thumb-friendly stop control. Auto-stop handles most cases, but
-            this is the obvious tap target on mobile where there's no Esc key —
-            and, while thinking, the only way to interrupt at all. */}
         <button
           onClick={thinking ? stopMikey : stopListening}
-          className="flex items-center gap-2 rounded-full bg-[var(--primary)] text-white px-6 py-3 shadow-2xl active:scale-95 transition-transform"
+          className="flex items-center gap-2 rounded-full bg-red-500 text-white px-6 py-3 shadow-2xl active:scale-95 transition-transform"
         >
           <MicOff size={18} />
-          <span className="text-sm font-medium">{thinking ? 'Stop' : 'Tap to send'}</span>
+          <span className="text-sm font-medium">{thinking ? 'Stop Mikey' : 'Tap to send'}</span>
         </button>
       </div>
     );
   }
 
+  // Idle state — persistent bottom bar so Mikey's status is always visible
+  const stopEverything = useCallback(() => {
+    chatAbortRef.current?.abort();
+    stopSpeaking();
+    stopListening();
+    voiceSession.stop();
+    wakeWord.stop();
+    setResult(null);
+    setMode('idle');
+    setListening(false);
+    setWakeWordOn(false);
+    localStorage.setItem('mikeyWakeWordOn', 'false');
+  }, [stopListening, voiceSession, wakeWord]);
+
   return (
-    <>
-      <button
-        onClick={startListening}
-        className="fixed bottom-24 sm:bottom-20 right-6 z-[9999] w-12 h-12 rounded-full shadow-lg flex items-center justify-center bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] hover:bg-[var(--accent)] hover:scale-105 transition-all duration-200 [body.overlay-open_&]:hidden [body.mikey-panel-open_&]:hidden"
-        title="Activate Mikey Voice (Ctrl+H)"
-      >
-        <Mic size={18} />
-      </button>
-      {/* Wake-word toggle and continuous-conversation buttons crowd the same corner
-          as Mikey's chat FAB on a phone-width screen with no room to spread out
-          horizontally the way they do on desktop — hide them below sm and let the
-          single mic button (which already reaches every voice feature) carry mobile. */}
-      <button
-        onClick={toggleWakeWord}
-        className={`hidden sm:flex fixed bottom-20 right-20 z-[9999] w-9 h-9 rounded-full shadow-lg items-center justify-center border transition-all duration-200 [body.overlay-open_&]:hidden [body.mikey-panel-open_&]:hidden ${
-          wakeWordOn ? 'bg-[var(--primary)] text-white border-transparent' : 'bg-[var(--card)] text-[var(--muted-foreground)] border-[var(--border)] hover:bg-[var(--accent)]'
-        }`}
-        title={wakeWordOn ? '"Okay Mikey" listening is on — click to turn off' : 'Turn on hands-free "Okay Mikey" listening'}
-      >
-        {wakeWordOn ? <Ear size={15} /> : <EarOff size={15} />}
-      </button>
-      <button
-        onClick={() => { wakeWord.stop(); voiceSession.start(); }}
-        className="hidden sm:flex fixed bottom-20 right-32 z-[9999] w-9 h-9 rounded-full shadow-lg items-center justify-center border bg-[var(--card)] text-[var(--muted-foreground)] border-[var(--border)] hover:bg-[var(--accent)] transition-all duration-200 [body.overlay-open_&]:hidden [body.mikey-panel-open_&]:hidden"
-        title="Start a continuous conversation — always listening, talk over Mikey anytime"
-      >
-        <Radio size={15} />
-      </button>
-      <div className="hidden sm:block fixed bottom-[5.5rem] right-6 z-[9999] text-[10px] text-[var(--muted-foreground)] opacity-50 text-right [body.overlay-open_&]:hidden [body.mikey-panel-open_&]:hidden">
-        <kbd className="px-1 py-0.5 rounded bg-[var(--accent)] font-mono">Ctrl+H</kbd>
+    <div className="fixed bottom-0 left-0 right-0 z-[9990] [body.overlay-open_&]:hidden [body.mikey-panel-open_&]:hidden">
+      <div className="mx-auto max-w-2xl px-4 pb-3">
+        <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)]/95 backdrop-blur shadow-2xl px-4 py-2.5 flex items-center gap-3">
+          {/* Status dot */}
+          <span className={`w-2 h-2 rounded-full shrink-0 ${wakeWordOn ? 'bg-emerald-500 animate-pulse' : 'bg-[var(--muted-foreground)] opacity-40'}`} />
+
+          {/* Mikey label + status */}
+          <span className="text-xs font-semibold text-[var(--foreground)] shrink-0">Mikey</span>
+          <span className="text-xs text-[var(--muted-foreground)] flex-1 truncate">
+            {wakeWordOn ? 'Listening for "Okay Mikey"...' : 'Voice off — tap mic or say "Okay Mikey"'}
+          </span>
+
+          {/* Tap-to-talk */}
+          <button
+            onClick={startListening}
+            className="w-8 h-8 rounded-full flex items-center justify-center bg-[var(--primary)] text-white hover:opacity-90 active:scale-95 transition-all shrink-0"
+            title="Tap to talk (Ctrl+H)"
+          >
+            <Mic size={14} />
+          </button>
+
+          {/* Wake word toggle */}
+          <button
+            onClick={toggleWakeWord}
+            className={`w-8 h-8 rounded-full flex items-center justify-center border transition-all shrink-0 ${
+              wakeWordOn ? 'bg-emerald-500 text-white border-transparent' : 'bg-[var(--accent)] text-[var(--muted-foreground)] border-[var(--border)]'
+            }`}
+            title={wakeWordOn ? 'Wake word ON — click to disable' : 'Enable "Okay Mikey" wake word'}
+          >
+            {wakeWordOn ? <Ear size={14} /> : <EarOff size={14} />}
+          </button>
+
+          {/* Continuous conversation */}
+          <button
+            onClick={() => { wakeWord.stop(); voiceSession.start(); }}
+            className="w-8 h-8 rounded-full flex items-center justify-center border bg-[var(--accent)] text-[var(--muted-foreground)] border-[var(--border)] hover:bg-[var(--primary)] hover:text-white transition-all shrink-0"
+            title="Start always-on conversation"
+          >
+            <Radio size={14} />
+          </button>
+
+          {/* Kill switch — stops everything */}
+          <button
+            onClick={stopEverything}
+            className="w-8 h-8 rounded-full flex items-center justify-center border border-red-200 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-all shrink-0"
+            title="Stop Mikey completely"
+          >
+            <MicOff size={14} />
+          </button>
+        </div>
       </div>
-    </>
+    </div>
   );
 }

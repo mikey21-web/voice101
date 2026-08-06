@@ -284,6 +284,10 @@ export class LeadsService {
     }
 
     this.realtimeGateway.emitToTenant(lead.tenantId, 'lead.created', lead);
+    this.realtimeGateway.emitToTenant(lead.tenantId, 'mikey:alert', {
+      type: 'new_lead',
+      message: `New lead just came in from ${lead.source || 'unknown source'}.`,
+    });
 
     // Phase 1: context enrichment + AI scoring (fire-and-forget, non-blocking)
     this.leadContext.enrich(lead.id).catch((e: any) =>
@@ -426,6 +430,11 @@ export class LeadsService {
         // (per audit) never actually fires since leads are auto-assigned before scoring.
         if (result.segment === 'HOT' && oldSegment !== 'HOT') {
           this.notifyOwnersOfHotLead(result).catch((e: any) => this.logger.warn(`Hot-lead notify failed for ${id}: ${e.message}`));
+          const name = (result as any).contact?.name || 'A lead';
+          this.realtimeGateway.emitToTenant(result.tenantId, 'mikey:alert', {
+            type: 'hot_lead',
+            message: `${name} just went hot. Score: ${result.score}. They may be ready to talk now.`,
+          });
         }
         return result;
       } catch (err) {

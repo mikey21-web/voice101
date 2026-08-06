@@ -18,6 +18,7 @@ import { MikeyService } from '../mikey/mikey.service';
 import { OutcomeEngineService } from '../mikey/outcome-engine.service';
 import { MemoryService } from '../mikey/memory.service';
 import { ApprovalsService } from '../approvals/approvals.service';
+import { PiperTtsService } from '../shared/piper-tts.service';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { randomUUID } from 'crypto';
 import { WebSocket } from 'ws';
@@ -73,6 +74,7 @@ export class CopilotService {
     private outcomeEngine: OutcomeEngineService,
     private memory: MemoryService,
     private approvals: ApprovalsService,
+    private piperTts: PiperTtsService,
   ) {}
 
   private can(role: string, permission: string): boolean {
@@ -187,6 +189,19 @@ export class CopilotService {
       }
     } catch {}
 
+    // Live business snapshot — Mikey always knows the current state of the pipeline
+    let businessSnapshot = '';
+    try {
+      const [totalLeads, hotLeads, newToday, pendingApprovals, todayVisits] = await Promise.all([
+        this.prisma.lead.count({ where: { tenantId } }),
+        this.prisma.lead.count({ where: { tenantId, segment: 'HOT' } }),
+        this.prisma.lead.count({ where: { tenantId, createdAt: { gte: new Date(new Date().setHours(0,0,0,0)) } } }),
+        this.prisma.approvalRequest.count({ where: { tenantId, status: 'PENDING' } }),
+        this.prisma.booking.count({ where: { tenantId, startTime: { gte: new Date(new Date().setHours(0,0,0,0)), lt: new Date(new Date().setHours(23,59,59,999)) } } }).catch(() => 0),
+      ]);
+      businessSnapshot = `Live business state: ${totalLeads} total leads, ${hotLeads} hot, ${newToday} new today, ${pendingApprovals} pending approvals, ${todayVisits} site visits today.`;
+    } catch {}
+
     await this.prisma.copilotMessage.create({
       data: { conversationId: conversation.id, role: 'user', content: message },
     });
@@ -209,7 +224,7 @@ export class CopilotService {
         compliance: businessSettings?.compliance || [],
       },
       khojContext,
-      memoryContext,
+      memoryContext: businessSnapshot ? `${businessSnapshot}\n\n${memoryContext}`.trim() : memoryContext,
     };
 
     return { agentServiceUrl, agentInboundKey, conversation, requestBody };
@@ -433,9 +448,20 @@ export class CopilotService {
    * do line up cleanly for the frontend's Web Audio buffer queue with no decode step. */
   async speakStream(text: string, onChunk: (buf: Buffer) => void, abortSignal?: AbortSignal): Promise<void> {
     const apiKey = this.config.get<string>('CARTESIA_API_KEY');
-    if (!apiKey) throw new BadRequestException('CARTESIA_API_KEY not configured');
     const clean = (text || '').replace(/[#*`]/g, '').slice(0, 1000);
     if (!clean.trim()) return;
+
+    // Piper fallback: if Cartesia is not configured or fails, use self-hosted Piper TTS.
+    // Piper returns a WAV buffer — send it as one chunk (no streaming, but still works).
+    if (!apiKey) {
+      try {
+        const buf = await this.piperTts.speak(clean, 'en');
+        onChunk(buf);
+      } catch (e) {
+        this.logger.warn('piper_tts_fallback_failed', { error: String(e) });
+      }
+      return;
+    }
 
     const contextId = randomUUID();
     const url = `wss://api.cartesia.ai/tts/websocket?api_key=${encodeURIComponent(apiKey)}&cartesia_version=2026-03-01`;
@@ -485,6 +511,15 @@ export class CopilotService {
 
       socket.on('error', (err: Error) => finish(err));
       socket.on('close', () => finish());
+    }).catch(async (err: Error) => {
+      this.logger.warn('cartesia_stream_failed_falling_back_to_piper', { error: err.message });
+      if (abortSignal?.aborted) return;
+      try {
+        const buf = await this.piperTts.speak(clean, 'en');
+        onChunk(buf);
+      } catch (piperErr) {
+        this.logger.warn('piper_tts_fallback_also_failed', { error: String(piperErr) });
+      }
     });
   }
 
