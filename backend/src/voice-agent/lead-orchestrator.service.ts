@@ -449,86 +449,158 @@ export class LeadOrchestratorService {
     // path uses, then re-score, so a qualifying call can move a lead's segment just like
     // qualifying info from any other channel does.
     const fields = this.extractCallFields(payload.outcome || {}, payload.summary || '', payload.transcript || '');
-    if (fields.budget || fields.interest || fields.urgency) {
-      await this.prisma.lead.update({ where: { id: leadId }, data: fields }).catch(() => {});
+    const { location, ...leadFields } = fields;
+    if (leadFields.budget || leadFields.interest || leadFields.urgency || location) {
+      const existingLead = await this.prisma.lead.findUnique({ where: { id: leadId }, select: { metadata: true } });
+      const existingMeta = (existingLead?.metadata || {}) as any;
+      await this.prisma.lead.update({
+        where: { id: leadId },
+        data: {
+          ...leadFields,
+          ...(location ? { metadata: { ...existingMeta, location } } : {}),
+        },
+      }).catch(() => {});
     }
     await this.leadsService.score(leadId).catch((e: any) =>
       this.logger.warn(`Post-call re-score failed for lead ${leadId}: ${e.message}`)
     );
 
-    // A call that qualifies the lead or books a visit is exactly the moment to get the
-    // matching brochure/photos into their hands.
-    if (outcome.status === 'QUALIFIED' || outcome.status === 'APPOINTMENT_BOOKED') {
-      this.sendPropertyMedia(leadId).catch((e: any) =>
+    // Send matching property cards on every answered call — not just QUALIFIED/APPOINTMENT_BOOKED.
+    // The lead already told us what they want on the call; waiting for a status gate means
+    // they get nothing if Dograh maps the outcome differently than expected.
+    if (outcome.status !== 'LOST') {
+      this.sendPropertyMedia(leadId, payload.outcome || {}, payload.summary || '', payload.transcript || '').catch((e: any) =>
         this.logger.warn(`Property media send failed for lead ${leadId}: ${e.message}`)
       );
     }
   }
 
-  private async sendPropertyMedia(leadId: string): Promise<void> {
+  private async sendPropertyMedia(leadId: string, outcome: any = {}, summary = '', transcript = ''): Promise<void> {
     const lead = await this.prisma.lead.findUnique({
       where: { id: leadId },
-      select: { tenantId: true, interest: true, contact: { select: { whatsapp: true, phone: true } } },
+      select: {
+        tenantId: true, interest: true, budget: true, metadata: true,
+        contact: { select: { name: true, whatsapp: true, phone: true } },
+      },
     });
     const to = lead?.contact?.whatsapp || lead?.contact?.phone;
-    if (!to || !lead?.interest) return;
-
-    const PROPERTY_TYPES = ['APARTMENT', 'VILLA', 'PLOT', 'COMMERCIAL', 'PENTHOUSE', 'DUPLEX', 'STUDIO'];
-    const normalizedType = lead.interest.replace(/\s+/g, '').toUpperCase();
-    const matchedType = PROPERTY_TYPES.includes(normalizedType) ? normalizedType : undefined;
-
-    const property = await this.prisma.property.findFirst({
-      where: {
-        tenantId: lead.tenantId,
-        OR: [
-          { title: { contains: lead.interest, mode: 'insensitive' } },
-          ...(matchedType ? [{ propertyType: matchedType as any }] : []),
-        ],
-      },
-      include: { images: { orderBy: { orderIndex: 'asc' } } },
-    });
-    if (!property) return;
+    if (!to) return;
 
     const waConfig = {
       phoneNumberId: this.config.get<string>('WHATSAPP_PHONE_NUMBER_ID') || '',
       accessToken: this.config.get<string>('WHATSAPP_ACCESS_TOKEN') || '',
     };
+    if (!waConfig.phoneNumberId || !waConfig.accessToken) {
+      this.logger.warn('WhatsApp creds not set — skipping property media send');
+      return;
+    }
 
-    const photo = property.images.find((i) => i.isPrimary) || property.images[0];
-    if (photo) {
-      await this.whatsAppAdapter.sendMessage(to, property.title, {
-        ...waConfig, mediaUrl: photo.url, mediaType: 'image', caption: property.title,
-      });
+    // Extract all context: structured outcome → lead fields → transcript regex
+    const extracted = this.extractCallFields(outcome, summary, transcript);
+    const interest = extracted.interest || lead?.interest || '';
+    const budget = extracted.budget || lead?.budget || '';
+    const location = extracted.location || (lead?.metadata as any)?.location || '';
+
+    // Search properties: match on type/config + location
+    const PROPERTY_TYPES = ['APARTMENT', 'VILLA', 'PLOT', 'COMMERCIAL', 'PENTHOUSE', 'DUPLEX', 'STUDIO'];
+    const bhkMatch = interest.match(/(\d)\s?bhk/i);
+    const bedroomCount = bhkMatch ? parseInt(bhkMatch[1]) : undefined;
+    const normalizedType = interest.replace(/\s+/g, '').replace(/\d+bhk/i, '').toUpperCase();
+    const matchedType = PROPERTY_TYPES.includes(normalizedType) ? normalizedType : 'APARTMENT';
+
+    const whereConditions: any[] = [];
+    if (interest) whereConditions.push({ title: { contains: interest, mode: 'insensitive' as const } });
+    if (matchedType) whereConditions.push({ propertyType: matchedType as any });
+    if (bedroomCount) whereConditions.push({ bedrooms: bedroomCount });
+    if (location) {
+      whereConditions.push({ location: { contains: location, mode: 'insensitive' as const } });
+      whereConditions.push({ title: { contains: location, mode: 'insensitive' as const } });
     }
-    if (property.brochureUrl) {
-      await this.whatsAppAdapter.sendMessage(to, `${property.title} brochure`, {
-        ...waConfig, mediaUrl: property.brochureUrl, mediaType: 'document', fileName: `${property.title}.pdf`,
-      });
+
+    const properties = await this.prisma.property.findMany({
+      where: {
+        tenantId: lead!.tenantId,
+        status: { not: 'SOLD' as any },
+        OR: whereConditions.length ? whereConditions : [{ tenantId: lead!.tenantId }],
+      },
+      include: { images: { orderBy: { orderIndex: 'asc' }, take: 3 } },
+      orderBy: { createdAt: 'desc' },
+      take: 3,
+    });
+
+    if (!properties.length) {
+      this.logger.warn(`No matching properties for lead ${leadId} (interest="${interest}", location="${location}")`);
+      return;
     }
+
+    const firstName = lead!.contact!.name?.split(' ')[0] || 'there';
+    const locationPart = location ? ` in ${location}` : '';
+    const budgetPart = budget ? ` within ${budget}` : '';
+    const configPart = interest ? interest : 'property';
+
+    // Text summary first
+    const intro = `Hi ${firstName}! Based on our call, here are ${properties.length} matching ${configPart}${locationPart}${budgetPart} options for you:\n\n` +
+      properties.map((p, i) => {
+        const price = p.price ? `₹${(Number(p.price) / 100).toLocaleString('en-IN')}` : 'Price on request';
+        const loc = (p as any).location || '';
+        return `${i + 1}. *${p.title}*\n   📍 ${loc || 'Location details shared separately'}\n   💰 ${price}\n   ${p.description ? p.description.slice(0, 80) + '...' : ''}`;
+      }).join('\n\n') +
+      '\n\nReply with a number to know more, or just call us back anytime! 🏠';
+
+    await this.whatsAppAdapter.sendMessage(to, intro, waConfig);
+
+    // Send up to 3 photos across all matched properties
+    for (const property of properties) {
+      const photo = property.images.find((i: any) => i.isPrimary) || property.images[0];
+      if (photo?.url) {
+        const caption = `${property.title}${(property as any).location ? ' — ' + (property as any).location : ''}`;
+        await this.whatsAppAdapter.sendMessage(to, caption, {
+          ...waConfig, mediaUrl: photo.url, mediaType: 'image', caption,
+        }).catch((e: any) => this.logger.warn(`Photo send failed for ${property.id}: ${e.message}`));
+      }
+      if ((property as any).brochureUrl) {
+        await this.whatsAppAdapter.sendMessage(to, `${property.title} — Brochure`, {
+          ...waConfig,
+          mediaUrl: (property as any).brochureUrl,
+          mediaType: 'document',
+          fileName: `${property.title.replace(/\s+/g, '_')}.pdf`,
+        }).catch((e: any) => this.logger.warn(`Brochure send failed for ${property.id}: ${e.message}`));
+      }
+    }
+
+    this.logger.log(`Property media sent to ${to} for lead ${leadId}: ${properties.map(p => p.title).join(', ')}`);
   }
 
-  private extractCallFields(outcome: any, summary: string, transcript: string): { budget?: string; interest?: string; urgency?: string } {
-    const fields: { budget?: string; interest?: string; urgency?: string } = {};
-    // Legacy workflow keys and the employee engine's own vocabulary (budget_bracket,
-    // configuration_requirement, buyer_intent) both feed the same CRM fields.
+  private extractCallFields(outcome: any, summary: string, transcript: string): { budget?: string; interest?: string; urgency?: string; location?: string } {
+    const fields: { budget?: string; interest?: string; urgency?: string; location?: string } = {};
+    // Structured outcome from Dograh takes priority — it's already parsed by the AI
     if (outcome.budget || outcome.budget_bracket) fields.budget = String(outcome.budget || outcome.budget_bracket);
     if (outcome.property_type || outcome.interest || outcome.configuration_requirement) fields.interest = String(outcome.property_type || outcome.interest || outcome.configuration_requirement);
     if (outcome.timeline) fields.urgency = String(outcome.timeline);
-    if (fields.budget && fields.interest && fields.urgency) return fields;
+    if (outcome.location || outcome.preferred_location || outcome.area || outcome.locality) {
+      fields.location = String(outcome.location || outcome.preferred_location || outcome.area || outcome.locality);
+    }
+    if (fields.budget && fields.interest && fields.urgency && fields.location) return fields;
 
     const text = `${summary} ${transcript}`.toLowerCase();
     if (!fields.budget) {
-      const budgetMatch = text.match(/([\d.]+)\s*(cr|crore|l|lakh)\b/i);
-      if (budgetMatch) fields.budget = budgetMatch[0];
+      const m = text.match(/([\d.]+)\s*(cr|crore|l|lakh)\b/i);
+      if (m) fields.budget = m[0];
     }
     if (!fields.interest) {
-      const interestMatch = text.match(/\b(\d\s?bhk|studio|villa|plot|penthouse)\b/i);
-      if (interestMatch) fields.interest = interestMatch[0];
+      const m = text.match(/\b(\d\s?bhk|studio|villa|plot|penthouse|apartment|flat)\b/i);
+      if (m) fields.interest = m[0];
     }
     if (!fields.urgency) {
       if (/\b(immediate|urgent|asap|this week|right away)\b/.test(text)) fields.urgency = 'immediate';
       else if (/\b(3 months|next quarter|soon)\b/.test(text)) fields.urgency = '3_months';
       else if (/\b(6 months|exploring|just looking)\b/.test(text)) fields.urgency = '6_months';
+    }
+    if (!fields.location) {
+      // Common Hyderabad/Indian real-estate locality patterns — extend as needed
+      const LOCALITY_PATTERN = /\b(gachibowli|hitech\s*city|madhapur|kondapur|nallagandla|kokapet|narsingi|financial\s*district|banjara\s*hills|jubilee\s*hills|manikonda|puppalaguda|tellapur|miyapur|kukatpally|bachupally|kompally|shamirpet|medchal|shadnagar|shamshabad|adibatla|tukkuguda|srisailam\s*highway|outer\s*ring\s*road|orr|whitefield|sarjapur|electronic\s*city|hsr\s*layout|koramangala|indiranagar|hebbal|devanahalli|yelahanka|jp\s*nagar|bannerghatta)\b/i;
+      const m = text.match(LOCALITY_PATTERN);
+      if (m) fields.location = m[0];
     }
     return fields;
   }
