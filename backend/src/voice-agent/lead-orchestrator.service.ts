@@ -469,11 +469,17 @@ export class LeadOrchestratorService {
     // The lead already told us what they want on the call; waiting for a status gate means
     // they get nothing if Dograh maps the outcome differently than expected.
     if (outcome.status !== 'LOST') {
-      this.sendPropertyMedia(leadId, payload.outcome || {}, payload.summary || '', payload.transcript || '').catch((e: any) =>
-        this.logger.warn(`Property media send failed for lead ${leadId}: ${e.message}`)
-      );
+      const dedupKey = `${leadId}:${call_sid || 'nosid'}`;
+      if (!this._sentPropertyMedia.has(dedupKey)) {
+        this._sentPropertyMedia.add(dedupKey);
+        this.sendPropertyMedia(leadId, payload.outcome || {}, payload.summary || '', payload.transcript || '').catch((e: any) =>
+          this.logger.warn(`Property media send failed for lead ${leadId}: ${e.message}`)
+        );
+      }
     }
   }
+
+  private readonly _sentPropertyMedia = new Set<string>();
 
   private async sendPropertyMedia(leadId: string, outcome: any = {}, summary = '', transcript = ''): Promise<void> {
     const lead = await this.prisma.lead.findUnique({
