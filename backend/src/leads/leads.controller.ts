@@ -3,6 +3,7 @@ import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery, ApiBody } from '@nestjs
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
+import { Public } from '../auth/public.decorator';
 import { LeadsService } from './leads.service';
 import { CreateLeadDto, UpdateLeadDto, AssignLeadDto, LeadQueryDto, CreateManualLeadDto } from './dto/lead.dto';
 import { PaginationDto } from '../shared/dto/pagination.dto';
@@ -14,6 +15,17 @@ import { MoveStageDto } from '../advanced-features/dto/advanced-features.dto';
 @ApiBearerAuth()
 export class LeadsController {
   constructor(private service: LeadsService) {}
+
+  @Post('demo')
+  @Public()
+  @ApiOperation({ summary: 'Public demo form — creates a lead and triggers an immediate AI call. No auth required.' })
+  @ApiBody({ schema: { type: 'object', properties: { name: { type: 'string' }, phone: { type: 'string' }, email: { type: 'string' }, company: { type: 'string' } }, required: ['name', 'phone'] } })
+  async demoSubmit(@Body() body: { name?: string; phone?: string; email?: string; company?: string }) {
+    if (!body.name?.trim()) throw new BadRequestException('name is required');
+    if (!body.phone?.trim()) throw new BadRequestException('phone is required');
+    await this.service.intake({ name: body.name, phone: body.phone, email: body.email, source: 'DEMO_FORM', message: body.company ? `Company: ${body.company}` : undefined });
+    return { ok: true, message: 'Submitted! Mikey is calling you now.' };
+  }
 
   @Get()
   @Roles('OWNER', 'ADMIN', 'MANAGER', 'SALES_AGENT', 'SUPPORT_AGENT', 'VIEWER')
