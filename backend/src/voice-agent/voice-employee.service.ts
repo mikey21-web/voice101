@@ -210,6 +210,7 @@ export class VoiceEmployeeService {
       antiEarlyHangupEnabled: true,
       scriptAdherence: employee.scriptAdherence,
       callEndRules: employee.callEndRules ?? undefined,
+      language: employee.language,
     });
 
     const webhookSecret = this.config.get<string>('WEBHOOK_API_KEY_DOGRAH', '');

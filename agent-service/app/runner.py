@@ -14,6 +14,7 @@ from app.lead_agent import build_lead_graph
 from app.tools import build_tools, ToolContext
 from app.logging_config import utc_now_iso
 from app.idempotency import already_processed, mark_processing, mark_done
+from app.khoj_client import KhojClient
 
 logger = structlog.get_logger()
 
@@ -63,7 +64,8 @@ async def execute_run(settings: Settings, req: AgentRunRequest) -> str:
     logger.info("run_started", leadId=req.leadId, trigger=req.trigger, supervisor=USE_SUPERVISOR)
 
     client = BackendClient(settings)
-    memory = MemoryClient(settings, req.tenantId) if req.messageText else None
+    memory = MemoryClient(settings, req.tenantId)
+    khoj = KhojClient(settings) if settings.khoj_api_url else None
     ctx = ToolContext(client=client, lead_id=req.leadId, tenant_id=req.tenantId, channel=req.channel)
 
     checkpointer_error: str | None = None
@@ -128,6 +130,16 @@ async def execute_run(settings: Settings, req: AgentRunRequest) -> str:
         logger.info("run_completed", leadId=req.leadId)
         if checkpointer_error:
             logger.error("run_completed_degraded_no_checkpointing", leadId=req.leadId, reason=checkpointer_error)
+            try:
+                await memory.store(MemoryEntry(
+                    type="EPISODIC",
+                    key=f"checkpointer_failure:{req.tenantId}:{started_at}",
+                    value=f"Checkpointer failed — conversation state not persisted for lead {req.leadId}. Error: {checkpointer_error}",
+                    source="system",
+                    lead_id=req.leadId,
+                ))
+            except Exception:
+                pass
         await mark_done(req.triggerId, success=True)
 
         if memory and final_state:
@@ -169,6 +181,7 @@ async def execute_run_and_get_response(settings: Settings, req: AgentRunRequest)
 
     client = BackendClient(settings)
     memory = MemoryClient(settings, req.tenantId)
+    khoj = KhojClient(settings) if settings.khoj_api_url else None
     ctx = ToolContext(client=client, lead_id=req.leadId, tenant_id=req.tenantId, channel=req.channel)
 
     checkpointer_error: str | None = None
@@ -182,6 +195,7 @@ async def execute_run_and_get_response(settings: Settings, req: AgentRunRequest)
                 tenant_id=req.tenantId,
                 memory=memory,
                 checkpointer=checkpointer,
+                khoj=khoj,
             )
 
             initial_state: SharedMikeyState = {

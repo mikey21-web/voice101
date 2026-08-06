@@ -42,3 +42,24 @@ class KhojClient:
             return r.is_success
         except Exception:
             return False
+
+    async def search(self, query: str, limit: int = 3) -> str:
+        """Query Khoj and return a plain-text context string, empty string on failure."""
+        if not query:
+            return ""
+        try:
+            r = await self.client.post(
+                f"{self.base}/api/search",
+                json={"q": query, "n": limit},
+            )
+            if not r.is_success:
+                return ""
+            results = r.json()
+            if isinstance(results, list):
+                return "\n\n".join(
+                    item.get("entry", item.get("corpus_id", "")) if isinstance(item, dict) else str(item)
+                    for item in results[:limit]
+                ).strip()
+            return ""
+        except Exception:
+            return ""

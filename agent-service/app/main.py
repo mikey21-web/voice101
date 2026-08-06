@@ -44,19 +44,20 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="AI Lead Agent Service", version="1.0.0", lifespan=lifespan)
 
-# Runs are dispatched as fire-and-forget background tasks per inbound message, so two
-# messages arriving close together for the same lead (e.g. "/start" then "Hi") would
-# otherwise run concurrently, each reading the same empty history and independently
-# generating its own greeting, both getting sent. Serialize per lead so the second run
-# always sees the first one's reply already in history.
-# ponytail: grows one entry per distinct lead for the process lifetime, never evicted.
-# Fine at demo scale; switch to an LRU or TTL cache if lead volume gets large.
+# Serialize runs per lead so two messages arriving close together don't both
+# read empty history and each send their own greeting.
 _lead_locks: dict[str, asyncio.Lock] = {}
+_LOCK_MAX = 1000
 
 
 def _lock_for(lead_id: str) -> asyncio.Lock:
     lock = _lead_locks.get(lead_id)
     if lock is None:
+        if len(_lead_locks) >= _LOCK_MAX:
+            # evict all idle (unlocked) entries to bound memory
+            idle = [k for k, v in _lead_locks.items() if not v.locked()]
+            for k in idle:
+                del _lead_locks[k]
         lock = asyncio.Lock()
         _lead_locks[lead_id] = lock
     return lock

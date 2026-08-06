@@ -147,7 +147,7 @@ export class VoiceAgentService {
 
     // Every save is a clean rebuild from the raw config, never a mutation of the previous
     // compiled text — this is what makes repeated saves idempotent.
-    const composed = composeGlobalPrompt(next);
+    const composed = composeGlobalPrompt({ ...next, language });
     const tasks: Promise<void>[] = [this.dograh.setGlobalPrompt(language, composed)];
     if (changes.greeting !== undefined) tasks.push(this.dograh.updateGreeting(language, changes.greeting));
     if (changes.checklistCopy !== undefined) tasks.push(this.dograh.updateChecklistCopy(language, changes.checklistCopy));

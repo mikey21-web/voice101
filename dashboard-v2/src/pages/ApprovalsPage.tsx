@@ -30,14 +30,20 @@ export default function ApprovalsPage() {
 
   useEffect(() => { load(); }, [load]);
 
+  const isCopilotAction = (item: any) => item.type?.startsWith("copilot_");
+
   const act = async (item: any, decision: "approve" | "reject") => {
     try {
       const [prefix, id] = item.id.split(":");
-      const path = prefix === "offer" ? `/offers/${id}/${decision}`
-        : prefix === "cost-sheet" ? `/cost-sheets/${id}/approve`
-        : `/approvals/${id}/${decision}`;
-      await api(path, { method: "POST" });
-      toast.success(`${decision === "approve" ? "Approved" : "Rejected"}`);
+      if (prefix === "approval" && isCopilotAction(item) && decision === "approve") {
+        await api("/copilot/confirm-action", { method: "POST", body: JSON.stringify({ pendingActionId: id }) });
+      } else {
+        const path = prefix === "offer" ? `/offers/${id}/${decision}`
+          : prefix === "cost-sheet" ? `/cost-sheets/${id}/approve`
+          : `/approvals/${id}/${decision}`;
+        await api(path, { method: "POST" });
+      }
+      toast.success(decision === "approve" ? "Approved" : "Rejected");
       load();
     } catch (e: any) {
       toast.error(e.message || "Action failed");
@@ -82,20 +88,28 @@ export default function ApprovalsPage() {
               Nothing waiting on you right now.
             </TableCell></TableRow>
           ) : (
-            items.map(item => (
+            items.map(item => {
+              const iscopilot = isCopilotAction(item);
+              const toolLabel = iscopilot ? item.type.replace("copilot_", "").replace(/_/g, " ") : item.type.replace(/_/g, " ");
+              return (
               <TableRow key={item.id}>
-                <TableCell><Badge variant="warning">{item.type.replace(/_/g, " ")}</Badge></TableCell>
+                <TableCell>
+                  <div className="flex flex-col gap-1">
+                    {iscopilot && <span className="text-[10px] font-semibold text-violet-600 uppercase tracking-wide">Mikey</span>}
+                    <Badge variant={iscopilot ? "default" : "warning"}>{toolLabel}</Badge>
+                  </div>
+                </TableCell>
                 <TableCell className="text-sm text-[var(--foreground)]">{item.summary}</TableCell>
                 <TableCell className="text-sm text-[var(--foreground)]">{formatPaise(item.amountPaise)}</TableCell>
                 <TableCell className="text-xs text-[var(--muted-foreground)] inline-flex items-center gap-1"><Clock size={12} /> {new Date(item.requestedAt).toLocaleDateString()}</TableCell>
                 <TableCell>
                   <div className="flex gap-1">
-                    <button onClick={() => act(item, "approve")} className="text-xs px-2 py-1 rounded-md bg-emerald-100 text-emerald-700 hover:bg-emerald-200 inline-flex items-center gap-1"><Check size={12} /> Approve</button>
+                    <button onClick={() => act(item, "approve")} className="text-xs px-2 py-1 rounded-md bg-emerald-100 text-emerald-700 hover:bg-emerald-200 inline-flex items-center gap-1"><Check size={12} /> {iscopilot ? "Run it" : "Approve"}</button>
                     <button onClick={() => act(item, "reject")} className="text-xs px-2 py-1 rounded-md bg-red-100 text-red-700 hover:bg-red-200 inline-flex items-center gap-1"><X size={12} /> Reject</button>
                   </div>
                 </TableCell>
               </TableRow>
-            ))
+            );}))
           )}
         </TableBody>
       </Table>

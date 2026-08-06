@@ -11,6 +11,7 @@ from langchain_core.messages import HumanMessage, SystemMessage, AIMessage, Tool
 from langchain_core.runnables import RunnableConfig
 
 from app.config import Settings, resolve_llm_credentials
+from app.supervisor_graph import _get_langfuse_callbacks
 from app.schemas import AgentState
 from app.backend_client import BackendClient, BackendError
 from app.niche_config import normalize_niche_config, load_niche_config_from_file
@@ -151,12 +152,14 @@ async def _agent_node(state: AgentState, config: RunnableConfig) -> AgentState:
     if not settings.deepseek_api_key and not settings.openai_api_key:
         raise RuntimeError("Neither DEEPSEEK_API_KEY nor OPENAI_API_KEY configured — agent cannot run")
     api_key, base_url, model_name, supports_reasoning_effort = resolve_llm_credentials(settings)
+    _lf_callbacks = _get_langfuse_callbacks(settings)
     model = ChatOpenAI(
         model=model_name,
         max_tokens=settings.agent_max_tokens,
         api_key=api_key,
         base_url=base_url,
         model_kwargs={"reasoning_effort": settings.agent_reasoning_effort} if supports_reasoning_effort else {},
+        callbacks=_lf_callbacks if _lf_callbacks else None,
     ).bind_tools(tools)
 
     msg_types = [f"{type(m).__name__}(tool_calls={hasattr(m,'tool_calls') and bool(m.tool_calls)})" for m in state["messages"]]
@@ -166,9 +169,10 @@ async def _agent_node(state: AgentState, config: RunnableConfig) -> AgentState:
     try:
         response = await model.ainvoke(state["messages"])
     except Exception as e:
-        logger.error("agent_model_error", error=str(e))
+        logger.error("agent_model_error", error=str(e), error_type=type(e).__name__,
+                     lead_id=state.get("lead_id"), tenant_id=state.get("tenant_id"))
         response = AIMessage(
-            content="Thanks for reaching out! I'm here to help you with event planning. What kind of event are you looking to plan?",
+            content="Thanks for reaching out! I'll be right with you.",
             tool_calls=[],
         )
 
@@ -177,11 +181,11 @@ async def _agent_node(state: AgentState, config: RunnableConfig) -> AgentState:
     content_preview = str(response.content)[:200] if response.content else "(empty)"
     logger.warning("agent_model_response", has_content=has_content, has_tool_calls=has_tc, content_preview=content_preview)
 
-    # Fallback: if model returned empty content with no tool calls, use a default greeting
+    # Fallback: if model returned empty content with no tool calls, use a generic hold message
     if not has_content and not has_tc:
-        logger.warning("agent_empty_response_fallback")
+        logger.warning("agent_empty_response_fallback", lead_id=state.get("lead_id"))
         response = AIMessage(
-            content="Thanks for messaging! I'd love to help you plan your event. What type of event are you thinking about?",
+            content="Thanks for reaching out! I'll be right with you.",
             tool_calls=[],
         )
 

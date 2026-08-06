@@ -75,6 +75,13 @@ services:
       DOGRAH_URL: ${DOGRAH_URL:-http://host.docker.internal:8010}
       DOGRAH_API_KEY: ${DOGRAH_API_KEY:-}
       DOGRAH_TELEPHONY_CONFIG_ID: ${DOGRAH_TELEPHONY_CONFIG_ID:-1}
+      # Where Dograh's container can reach this backend for the post-call webhook.
+      # Dograh runs on its own bridge network, so localhost/host-gateway ports are
+      # unreachable — the public URL through Caddy (/api -> 127.0.0.1:4002) is the
+      # only route that works. Must include the /api prefix; the route that follows is
+      # /voice-calls/webhook/employee-call-completed.
+      DOGRAH_WEBHOOK_URL: ${DOGRAH_WEBHOOK_URL:-https://realestate.deploysafe.in/api}
+      WEBHOOK_API_KEY_DOGRAH: ${WEBHOOK_API_KEY_DOGRAH:-}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:

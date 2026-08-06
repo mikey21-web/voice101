@@ -26,6 +26,21 @@ import structlog
 logger = structlog.get_logger()
 
 
+def _get_langfuse_callbacks(settings: Settings) -> list:
+    if not settings.langfuse_host or not settings.langfuse_public_key or not settings.langfuse_secret_key:
+        return []
+    try:
+        from langfuse.callback import CallbackHandler
+        return [CallbackHandler(
+            public_key=settings.langfuse_public_key,
+            secret_key=settings.langfuse_secret_key,
+            host=settings.langfuse_host,
+        )]
+    except ImportError:
+        logger.warning("langfuse_not_installed", hint="pip install langfuse")
+        return []
+
+
 def merge_tools(primary: list, secondary: list) -> list:
     """Combine two tool lists, keeping primary's version of any name both define
     (e.g. lead_voice's own send_message/create_task/search_properties/search_units
@@ -40,16 +55,19 @@ def build_supervisor(
     tenant_id: str,
     memory: MemoryClient | None = None,
     checkpointer=None,
+    khoj=None,
 ):
     graph = StateGraph(SharedMikeyState)
 
     api_key, base_url, model_name, supports_reasoning_effort = resolve_llm_credentials(settings)
+    _lf_callbacks = _get_langfuse_callbacks(settings)
     model = ChatOpenAI(
         model=model_name,
         max_tokens=settings.agent_max_tokens,
         api_key=api_key,
         base_url=base_url,
         model_kwargs={"reasoning_effort": settings.agent_reasoning_effort} if supports_reasoning_effort else {},
+        callbacks=_lf_callbacks if _lf_callbacks else None,
     )
 
     async def load_context_node(state: SharedMikeyState, config: RunnableConfig) -> dict:
@@ -101,6 +119,15 @@ def build_supervisor(
 
         incoming_context = state.get("incoming_text", "")
 
+        khoj_context = ""
+        if khoj and incoming_context:
+            try:
+                khoj_context = await khoj.search(incoming_context, limit=3)
+            except Exception:
+                pass
+        if khoj_context:
+            memory_context = f"{memory_context}\n\n## Knowledge Base\n{khoj_context}".strip()
+
         procedural_rules = []
         if memory:
             try:
@@ -114,7 +141,7 @@ def build_supervisor(
         benchmarks = []
         if memory and incoming_context:
             try:
-                benchmarks = await memory.get_benchmarks("")
+                benchmarks = await memory.get_benchmarks(state.get("tenant_id", ""))
             except Exception:
                 pass
 
@@ -411,6 +438,36 @@ def build_supervisor(
             source="supervisor",
             lead_id=lead_id,
         ))
+
+        actions = state.get("actions_taken", [])
+        outcome_type = "converted" if any(a.get("tool") == "record_conversion" for a in actions) else \
+                       "lost" if any(a.get("tool") == "mark_lost" for a in actions) else \
+                       "escalated" if any(a.get("tool") == "escalate_to_human" for a in actions) else \
+                       "progressed"
+        trajectory = [{"tool": a.get("tool"), "status": a.get("status")} for a in actions]
+        try:
+            await memory.log_reflexion(
+                outcome_type=outcome_type,
+                entity_id=lead_id,
+                trajectory=trajectory,
+                reflection=summary,
+                candidate_rule=None,
+                perspectives=None,
+            )
+        except Exception:
+            pass
+
+        if outcome_type in ("converted", "lost") and actions:
+            tool_sequence = " → ".join(a.get("tool", "") for a in actions if a.get("status") == "success")
+            rule = f"When lead outcome is {outcome_type}, the action sequence was: {tool_sequence}"
+            try:
+                await memory.propose_rule(
+                    rule=rule,
+                    rationale=f"Observed from lead {lead_id} run. Outcome: {outcome_type}.",
+                    category="lead_outcome",
+                )
+            except Exception:
+                pass
 
     async def persist_node(state: SharedMikeyState, config: RunnableConfig) -> dict:
         if state.get("trigger") == "copilot_chat":
