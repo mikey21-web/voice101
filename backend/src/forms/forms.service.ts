@@ -6,6 +6,7 @@ import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { ConversationsService } from '../conversations/conversations.service';
 import { AgentClientService } from '../agent/agent-client.service';
 import { ResolveLeadService } from '../leads/resolve-lead.service';
+import { VoiceAgentService } from '../voice-agent/voice-agent.service';
 import { getTenantId } from '../shared/tenant-helper';
 
 /** Keys that are stripped from the submission payload before storing as form field data. */
@@ -39,6 +40,7 @@ export class FormsService {
     private auditLogs: AuditLogsService,
     private conversationsService: ConversationsService,
     private agentClient: AgentClientService,
+    private voiceAgentService: VoiceAgentService,
   ) {}
 
   findAll() {
@@ -206,6 +208,14 @@ export class FormsService {
     }
 
     await this.auditLogs.log('form_submitted', 'LeadForm', formId);
+
+    // Auto-call the lead with the tenant's active voice employee (e.g. Priya) right
+    // after a completed form submit — callLead no-ops when the lead has no phone or no
+    // employee is active. Partial/abandoned submits (completed=false) must not ring.
+    // Fire-and-forget: the submit response must not wait on Twilio.
+    if (completed) {
+      this.voiceAgentService.callLead(lead.id, null, 'hi').catch((e) => this.auditLogs.log('form_autocall_failed', 'LeadForm', formId, undefined, { message: e?.message }));
+    }
     return { data: { lead, contact } };
   }
 

@@ -6,7 +6,8 @@ import { LeadsService } from '../leads/leads.service';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { ConversationsService } from '../conversations/conversations.service';
 import { AgentClientService } from '../agent/agent-client.service';
-import { ResolveLeadService } from '../leads/resolve-lead.service';
+  import { ResolveLeadService } from '../leads/resolve-lead.service';
+  import { VoiceAgentService } from '../voice-agent/voice-agent.service';
 import { NotFoundException } from '@nestjs/common';
 
 describe('FormsService', () => {
@@ -18,6 +19,7 @@ describe('FormsService', () => {
   let auditLogs: any;
   let conversationsService: any;
   let agentClient: any;
+  let voiceAgentService: any;
 
   const mockForm = {
     id: 'form-1',
@@ -211,6 +213,10 @@ describe('FormsService', () => {
       trigger: jest.fn().mockResolvedValue(undefined),
     };
 
+    voiceAgentService = {
+      callLead: jest.fn().mockResolvedValue({ success: true }),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         FormsService,
@@ -221,6 +227,7 @@ describe('FormsService', () => {
         { provide: AuditLogsService, useValue: auditLogs },
         { provide: ConversationsService, useValue: conversationsService },
         { provide: AgentClientService, useValue: agentClient },
+        { provide: VoiceAgentService, useValue: voiceAgentService },
       ],
     }).compile();
 
@@ -493,6 +500,7 @@ describe('FormsService', () => {
     expect(createdCall.data.completed).toBe(true);
     expect(createdCall.data.startedAt).toEqual(new Date('2025-01-01T10:00:00Z'));
     expect(createdCall.data.completedAt).toEqual(new Date('2025-01-01T10:05:00Z'));
+    expect(voiceAgentService.callLead).toHaveBeenCalledWith('lead-1', null, 'hi');
   });
 
   it('should handle partial submissions with completed=false when _completedAt is absent', async () => {
@@ -511,6 +519,7 @@ describe('FormsService', () => {
     expect(createdCall.data.completedAt).toBeNull();
     expect(createdCall.data.startedAt).toEqual(new Date('2025-01-02T10:00:00Z'));
     expect(createdCall.data.source).toBe('embed');
+    expect(voiceAgentService.callLead).not.toHaveBeenCalled();
   });
 
   it('should default source to "direct" when _source is not provided', async () => {

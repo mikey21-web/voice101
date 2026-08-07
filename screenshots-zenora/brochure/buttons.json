@@ -1,0 +1,74 @@
+[
+  {
+    "text": "",
+    "tag": "BUTTON",
+    "type": "submit",
+    "class": "cursor-pointer flex items-center justify-center rounded-md bg-gradient-to-b from-gray-800/60 to-blac"
+  },
+  {
+    "text": "",
+    "tag": "BUTTON",
+    "type": "submit",
+    "class": "cursor-pointer flex items-center justify-center rounded-md bg-gradient-to-b from-gray-800/60 to-blac"
+  },
+  {
+    "text": "",
+    "tag": "BUTTON",
+    "type": "submit",
+    "class": "cursor-pointer flex items-center justify-center rounded-full text-white bg-black/70 border border-wh"
+  },
+  {
+    "text": "",
+    "tag": "BUTTON",
+    "type": "submit",
+    "class": "cursor-pointer"
+  },
+  {
+    "text": "",
+    "tag": "BUTTON",
+    "type": "submit",
+    "class": "cursor-pointer hidden"
+  },
+  {
+    "text": "",
+    "tag": "BUTTON",
+    "type": "submit",
+    "class": "cursor-pointer flex items-center justify-center rounded-full text-white bg-black/70 border border-wh"
+  },
+  {
+    "text": "Aerial View",
+    "tag": "LI",
+    "type": "",
+    "class": "tab-btn group relative cursor-pointer border border-white/40 h-8 w-8 lg:h-10 lg:w-10 inline-flex jus"
+  },
+  {
+    "text": "Community",
+    "tag": "LI",
+    "type": "",
+    "class": "tab-btn group relative cursor-pointer border border-white/40 h-8 w-8 lg:h-10 lg:w-10 inline-flex jus"
+  },
+  {
+    "text": "Interior",
+    "tag": "LI",
+    "type": "",
+    "class": "tab-btn group relative cursor-pointer border border-white/40 h-8 w-8 lg:h-10 lg:w-10 inline-flex jus"
+  },
+  {
+    "text": "Google Maps",
+    "tag": "LI",
+    "type": "",
+    "class": "tab-btn group relative cursor-pointer border border-white/40 h-8 w-8 lg:h-10 lg:w-10 inline-flex jus"
+  },
+  {
+    "text": "Zone IQ",
+    "tag": "LI",
+    "type": "",
+    "class": "tab-btn group relative cursor-pointer border border-white/40 h-8 w-8 lg:h-10 lg:w-10 inline-flex jus"
+  },
+  {
+    "text": "",
+    "tag": "BUTTON",
+    "type": "submit",
+    "class": "h-10 w-10 rounded-full bg-black border border-white/20 cursor-pointer shrink-0 text-white"
+  }
+]

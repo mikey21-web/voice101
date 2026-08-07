@@ -300,6 +300,26 @@ export class VoiceAgentService {
   async getCallLogs(page = 1, limit = 50, startDate?: string, endDate?: string) {
     const data = await this.dograh.getUsageRuns({ page, limit, startDate, endDate });
     const runs = (data.runs || []).map((r: any) => this.normalizeRun(r));
+    // Dograh's usage API serves transcript as a file download, not text — the webhook path
+    // already saved the fetched transcript + DeepSeek summary into voice_calls (keyed by run
+    // id), so overlay those here or the Call Logs page stays empty for completed calls.
+    const runIds = runs.map((r: any) => String(r.id)).filter(Boolean);
+    if (runIds.length > 0) {
+      try {
+        const saved = await this.prisma.voiceCall.findMany({ where: { dograhRunId: { in: runIds } }, select: { dograhRunId: true, transcript: true, summary: true, recordingUrl: true } });
+        const byRun = new Map(saved.map((c) => [c.dograhRunId, c]));
+        for (const run of runs) {
+          const c = byRun.get(String(run.id));
+          if (!c) continue;
+          if (c.transcript) run.transcript = c.transcript;
+          if (c.summary) run.summary = c.summary;
+          if (c.recordingUrl) run.recordingUrl = c.recordingUrl;
+          run.quality = run.transcript ? lintTranscript(run.transcript) : null;
+        }
+      } catch (err) {
+        this.logger.warn(`Failed to overlay saved call details: ${err.message}`);
+      }
+    }
     return { runs, totalCount: data.total_count, page: data.page, limit: data.limit, totalPages: data.total_pages, totalDurationSeconds: data.total_duration_seconds };
   }
 

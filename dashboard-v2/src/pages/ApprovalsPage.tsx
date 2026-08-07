@@ -109,7 +109,8 @@ export default function ApprovalsPage() {
                   </div>
                 </TableCell>
               </TableRow>
-            );}))
+            );
+            })
           )}
         </TableBody>
       </Table>

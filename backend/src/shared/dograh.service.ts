@@ -837,13 +837,26 @@ export class DograhService {
     edges.push({ id: `${greetingNode.id}-${voicemailNode.id}`, source: greetingNode.id, target: voicemailNode.id, data: { label: 'voicemail', condition: "answered_by is 'machine_start', 'machine_end_beep', 'machine_end_silence', 'machine_end_other', or 'fax'" } });
 
     // The section graph's own edges, exactly as authored — this is where real branching
-    // (not just a linear chain) comes from.
+    // (not just a linear chain) comes from. Dograh emits one LLM function per outgoing
+    // edge, named after the edge label. A node with several outgoing edges must therefore
+    // carry distinct labels, or the model sees the same function declared twice and the
+    // whole call fails with "Duplicate function declaration found: <label>". Two conditions
+    // that route to the same target (e.g. intent_gate -> qual_config on both 'Own Use' and
+    // 'Investment') are merged into one edge with an OR'd condition, and multi-target nodes
+    // get a per-target label so every emitted function name is unique.
     for (const section of enabledSections) {
       const fromNode = sectionNodeByKey.get(section.sectionKey);
+      const byTarget = new Map<string, string[]>();
       for (const e of section.edges || []) {
-        const toNode = sectionNodeByKey.get(e.to_key);
-        if (!toNode) continue; // dangling reference to a disabled/missing section — skip rather than crash the publish
-        edges.push({ id: `${fromNode.id}-${toNode.id}`, source: fromNode.id, target: toNode.id, data: { label: 'next', condition: e.condition } });
+        if (!sectionNodeByKey.has(e.to_key)) continue; // dangling reference to a disabled/missing section — skip rather than crash the publish
+        const conds = byTarget.get(e.to_key) || [];
+        if (e.condition) conds.push(e.condition);
+        byTarget.set(e.to_key, conds);
+      }
+      for (const [toKey, conds] of byTarget) {
+        const toNode = sectionNodeByKey.get(toKey);
+        const label = byTarget.size > 1 ? `next_to_${toKey}` : 'next';
+        edges.push({ id: `${fromNode.id}-${toNode.id}`, source: fromNode.id, target: toNode.id, data: { label, condition: conds.join(' OR ') } });
       }
     }
 

@@ -1,0 +1,380 @@
+[
+  {
+    "tag": "A",
+    "text": "",
+    "class": "logo-container",
+    "id": "",
+    "href": "https://www.spimproject.com/about.html#"
+  },
+  {
+    "tag": "A",
+    "text": "HOME",
+    "class": "",
+    "id": "",
+    "href": "https://www.spimproject.com/index.html"
+  },
+  {
+    "tag": "A",
+    "text": "SERVICES",
+    "class": "",
+    "id": "",
+    "href": "https://www.spimproject.com/about.html#"
+  },
+  {
+    "tag": "A",
+    "text": "",
+    "class": "",
+    "id": "",
+    "href": "https://www.spimproject.com/webverse.html"
+  },
+  {
+    "tag": "A",
+    "text": "",
+    "class": "",
+    "id": "",
+    "href": "https://www.spimproject.com/zone-iq-drone-mapping.html"
+  },
+  {
+    "tag": "A",
+    "text": "",
+    "class": "",
+    "id": "",
+    "href": "https://hookbot.co.in/"
+  },
+  {
+    "tag": "A",
+    "text": "",
+    "class": "",
+    "id": "",
+    "href": "https://www.spimproject.com/360-virtual-property-tour.html"
+  },
+  {
+    "tag": "A",
+    "text": "",
+    "class": "",
+    "id": "",
+    "href": "https://www.spimproject.com/vr.html"
+  },
+  {
+    "tag": "A",
+    "text": "",
+    "class": "",
+    "id": "",
+    "href": "https://www.spimproject.com/digiverse.html"
+  },
+  {
+    "tag": "A",
+    "text": "",
+    "class": "",
+    "id": "",
+    "href": "https://www.spimproject.com/real-estate-immersion-center.html"
+  },
+  {
+    "tag": "A",
+    "text": "MORE",
+    "class": "",
+    "id": "",
+    "href": "https://www.spimproject.com/about.html#"
+  },
+  {
+    "tag": "A",
+    "text": "",
+    "class": "",
+    "id": "",
+    "href": "https://www.spimproject.com/about.html"
+  },
+  {
+    "tag": "A",
+    "text": "",
+    "class": "",
+    "id": "",
+    "href": "https://www.spimproject.com/blog.html"
+  },
+  {
+    "tag": "A",
+    "text": "CONTACT",
+    "class": "contact-btn",
+    "id": "",
+    "href": "https://www.spimproject.com/contact.html"
+  },
+  {
+    "tag": "BUTTON",
+    "text": "×",
+    "class": "",
+    "id": "close-menu-btn"
+  },
+  {
+    "tag": "A",
+    "text": "HOME",
+    "class": "",
+    "id": "",
+    "href": "https://www.spimproject.com/about.html#"
+  },
+  {
+    "tag": "A",
+    "text": "SERVICES",
+    "class": "",
+    "id": "",
+    "href": "https://www.spimproject.com/about.html#"
+  },
+  {
+    "tag": "A",
+    "text": "MORE",
+    "class": "",
+    "id": "",
+    "href": "https://www.spimproject.com/about.html#"
+  },
+  {
+    "tag": "A",
+    "text": "CONTACT",
+    "class": "",
+    "id": "",
+    "href": "https://www.spimproject.com/contact.html"
+  },
+  {
+    "tag": "DIV",
+    "text": "Startup India Recognition Certificate\n\n2022\n\nRecognition\nStartup India Recogniti",
+    "class": "award-card",
+    "id": ""
+  },
+  {
+    "tag": "DIV",
+    "text": "Emerging PropTech Company of the Year\n\n2024\n\nAccomplishment\nEmerging PropTech Co",
+    "class": "award-card",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "text": "❮",
+    "class": "carousel-arrow prev",
+    "id": ""
+  },
+  {
+    "tag": "A",
+    "text": "",
+    "class": "linkedin-below",
+    "id": "",
+    "href": "https://in.linkedin.com/in/raghuram-vaddamanu"
+  },
+  {
+    "tag": "A",
+    "text": "",
+    "class": "linkedin-below",
+    "id": "",
+    "href": "https://in.linkedin.com/in/vijay-billy-graham-03795311b"
+  },
+  {
+    "tag": "A",
+    "text": "",
+    "class": "linkedin-below",
+    "id": "",
+    "href": "https://in.linkedin.com/in/vemulapalli-nagasri-b824751b0"
+  },
+  {
+    "tag": "A",
+    "text": "",
+    "class": "linkedin-below",
+    "id": "",
+    "href": "https://in.linkedin.com/in/shiva-rama-krishna-bailapudi"
+  },
+  {
+    "tag": "A",
+    "text": "",
+    "class": "linkedin-below",
+    "id": "",
+    "href": "https://in.linkedin.com/in/alluri-meher-gayatri-devi-748846279"
+  },
+  {
+    "tag": "A",
+    "text": "",
+    "class": "linkedin-below",
+    "id": "",
+    "href": "https://www.linkedin.com/in/tanishqa-m-70656b307/"
+  },
+  {
+    "tag": "BUTTON",
+    "text": "❯",
+    "class": "carousel-arrow next",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "text": "",
+    "class": "active",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "text": "",
+    "class": "",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "text": "What is the WebVerse by SPIM?",
+    "class": "faq-question",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "text": "Do I need VR equipment to experience the WebVerse?",
+    "class": "faq-question",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "text": "Can I schedule a live tour through the WebVerse?",
+    "class": "faq-question",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "text": "Is the WebVerse available for commercial properties?",
+    "class": "faq-question",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "text": "What services does SPIM offer?",
+    "class": "faq-question",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "text": "Can I access SPIM's services remotely?",
+    "class": "faq-question",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "text": "How does Hookbot work?",
+    "class": "faq-question",
+    "id": ""
+  },
+  {
+    "tag": "A",
+    "text": "VR/AR",
+    "class": "",
+    "id": "",
+    "href": "https://www.spimproject.com/vr.html"
+  },
+  {
+    "tag": "A",
+    "text": "Drone Shoot",
+    "class": "",
+    "id": "",
+    "href": "https://www.spimproject.com/contact.html"
+  },
+  {
+    "tag": "A",
+    "text": "3D Modeling",
+    "class": "",
+    "id": "",
+    "href": "https://www.spimproject.com/contact.html"
+  },
+  {
+    "tag": "A",
+    "text": "Availability",
+    "class": "",
+    "id": "",
+    "href": "https://www.spimproject.com/contact.html"
+  },
+  {
+    "tag": "A",
+    "text": "AI Chatbot",
+    "class": "",
+    "id": "",
+    "href": "https://www.spimproject.com/contact.html"
+  },
+  {
+    "tag": "A",
+    "text": "Rent Property",
+    "class": "",
+    "id": "",
+    "href": "https://rentsphere.spimproject.com/"
+  },
+  {
+    "tag": "A",
+    "text": "Webverse",
+    "class": "",
+    "id": "",
+    "href": "https://www.spimproject.com/webverse.html"
+  },
+  {
+    "tag": "A",
+    "text": "Zone IQ",
+    "class": "",
+    "id": "",
+    "href": "https://www.spimproject.com/zone-iq-drone-mapping.html"
+  },
+  {
+    "tag": "A",
+    "text": "Hookbot",
+    "class": "",
+    "id": "",
+    "href": "https://hookbot.co.in/"
+  },
+  {
+    "tag": "A",
+    "text": "Virtual Tour",
+    "class": "",
+    "id": "",
+    "href": "https://www.spimproject.com/360-virtual-property-tour.html"
+  },
+  {
+    "tag": "A",
+    "text": "Digiverse",
+    "class": "",
+    "id": "",
+    "href": "https://www.spimproject.com/digiverse.html"
+  },
+  {
+    "tag": "A",
+    "text": "Immersion Center",
+    "class": "",
+    "id": "",
+    "href": "https://www.spimproject.com/real-estate-immersion-center.html"
+  },
+  {
+    "tag": "A",
+    "text": "Privacy policy",
+    "class": "",
+    "id": "",
+    "href": "https://www.spimproject.com/privacy-policy.html"
+  },
+  {
+    "tag": "A",
+    "text": "Terms of service",
+    "class": "",
+    "id": "",
+    "href": "https://www.spimproject.com/terms-and-conditions.html"
+  },
+  {
+    "tag": "A",
+    "text": "",
+    "class": "icon li",
+    "id": "",
+    "href": "https://www.linkedin.com/company/spim-innovation-pvt-ltd/"
+  },
+  {
+    "tag": "A",
+    "text": "",
+    "class": "icon fb",
+    "id": "",
+    "href": "https://www.facebook.com/profile.php?id=61567063386573"
+  },
+  {
+    "tag": "A",
+    "text": "",
+    "class": "icon ig",
+    "id": "",
+    "href": "https://www.instagram.com/spim.innovations?igsh=MTB5dm90MHF4cHFrMg=="
+  },
+  {
+    "tag": "A",
+    "text": "",
+    "class": "whatsapp-float",
+    "id": "",
+    "href": "https://wa.me/918247084303"
+  }
+]

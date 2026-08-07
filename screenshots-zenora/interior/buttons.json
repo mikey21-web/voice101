@@ -1,0 +1,224 @@
+[
+  {
+    "text": "",
+    "tag": "BUTTON",
+    "type": "submit",
+    "class": "cursor-pointer flex items-center justify-center rounded-md bg-gradient-to-b from-gray-800/60 to-blac"
+  },
+  {
+    "text": "",
+    "tag": "BUTTON",
+    "type": "submit",
+    "class": "cursor-pointer flex items-center justify-center rounded-md bg-gradient-to-b from-gray-800/60 to-blac"
+  },
+  {
+    "text": "",
+    "tag": "BUTTON",
+    "type": "submit",
+    "class": "cursor-pointer"
+  },
+  {
+    "text": "",
+    "tag": "BUTTON",
+    "type": "submit",
+    "class": "cursor-pointer hidden"
+  },
+  {
+    "text": "",
+    "tag": "BUTTON",
+    "type": "submit",
+    "class": "cursor-pointer flex items-center justify-center rounded-full text-white bg-black/70 border border-wh"
+  },
+  {
+    "text": "",
+    "tag": "BUTTON",
+    "type": "submit",
+    "class": "bg-red-500 h-8 w-8 rounded-full cursor-pointer absolute top-4 right-4 z-9"
+  },
+  {
+    "text": "VIEW FLOOR PLAN",
+    "tag": "BUTTON",
+    "type": "submit",
+    "class": "cursor-pointer w-full py-1.5 sm:py-2 rounded bg-gradient-to-r from-[#b49c6e] to-[#8e7b56] text-white"
+  },
+  {
+    "text": "VIRTUAL TOUR",
+    "tag": "BUTTON",
+    "type": "submit",
+    "class": "cursor-pointer w-full py-1.5 sm:py-2 rounded bg-[#2A2D35] text-white text-[10px] sm:text-[11px] font"
+  },
+  {
+    "text": "VIEW FLOOR PLAN",
+    "tag": "BUTTON",
+    "type": "submit",
+    "class": "cursor-pointer w-full py-1.5 sm:py-2 rounded bg-gradient-to-r from-[#b49c6e] to-[#8e7b56] text-white"
+  },
+  {
+    "text": "VIRTUAL TOUR",
+    "tag": "BUTTON",
+    "type": "submit",
+    "class": "cursor-pointer w-full py-1.5 sm:py-2 rounded bg-[#2A2D35] text-white text-[10px] sm:text-[11px] font"
+  },
+  {
+    "text": "VIEW FLOOR PLAN",
+    "tag": "BUTTON",
+    "type": "submit",
+    "class": "cursor-pointer w-full py-1.5 sm:py-2 rounded bg-gradient-to-r from-[#b49c6e] to-[#8e7b56] text-white"
+  },
+  {
+    "text": "VIRTUAL TOUR",
+    "tag": "BUTTON",
+    "type": "submit",
+    "class": "cursor-pointer w-full py-1.5 sm:py-2 rounded bg-[#2A2D35] text-white text-[10px] sm:text-[11px] font"
+  },
+  {
+    "text": "VIEW FLOOR PLAN",
+    "tag": "BUTTON",
+    "type": "submit",
+    "class": "cursor-pointer w-full py-1.5 sm:py-2 rounded bg-gradient-to-r from-[#b49c6e] to-[#8e7b56] text-white"
+  },
+  {
+    "text": "VIRTUAL TOUR",
+    "tag": "BUTTON",
+    "type": "submit",
+    "class": "cursor-pointer w-full py-1.5 sm:py-2 rounded bg-[#2A2D35] text-white text-[10px] sm:text-[11px] font"
+  },
+  {
+    "text": "VIEW FLOOR PLAN",
+    "tag": "BUTTON",
+    "type": "submit",
+    "class": "cursor-pointer w-full py-1.5 sm:py-2 rounded bg-gradient-to-r from-[#b49c6e] to-[#8e7b56] text-white"
+  },
+  {
+    "text": "VIRTUAL TOUR",
+    "tag": "BUTTON",
+    "type": "submit",
+    "class": "cursor-pointer w-full py-1.5 sm:py-2 rounded bg-[#2A2D35] text-white text-[10px] sm:text-[11px] font"
+  },
+  {
+    "text": "VIEW FLOOR PLAN",
+    "tag": "BUTTON",
+    "type": "submit",
+    "class": "cursor-pointer w-full py-1.5 sm:py-2 rounded bg-gradient-to-r from-[#b49c6e] to-[#8e7b56] text-white"
+  },
+  {
+    "text": "VIRTUAL TOUR",
+    "tag": "BUTTON",
+    "type": "submit",
+    "class": "cursor-pointer w-full py-1.5 sm:py-2 rounded bg-[#2A2D35] text-white text-[10px] sm:text-[11px] font"
+  },
+  {
+    "text": "VIEW FLOOR PLAN",
+    "tag": "BUTTON",
+    "type": "submit",
+    "class": "cursor-pointer w-full py-1.5 sm:py-2 rounded bg-gradient-to-r from-[#b49c6e] to-[#8e7b56] text-white"
+  },
+  {
+    "text": "VIRTUAL TOUR",
+    "tag": "BUTTON",
+    "type": "submit",
+    "class": "cursor-pointer w-full py-1.5 sm:py-2 rounded bg-[#2A2D35] text-white text-[10px] sm:text-[11px] font"
+  },
+  {
+    "text": "VIEW FLOOR PLAN",
+    "tag": "BUTTON",
+    "type": "submit",
+    "class": "cursor-pointer w-full py-1.5 sm:py-2 rounded bg-gradient-to-r from-[#b49c6e] to-[#8e7b56] text-white"
+  },
+  {
+    "text": "VIRTUAL TOUR",
+    "tag": "BUTTON",
+    "type": "submit",
+    "class": "cursor-pointer w-full py-1.5 sm:py-2 rounded bg-[#2A2D35] text-white text-[10px] sm:text-[11px] font"
+  },
+  {
+    "text": "VIEW FLOOR PLAN",
+    "tag": "BUTTON",
+    "type": "submit",
+    "class": "cursor-pointer w-full py-1.5 sm:py-2 rounded bg-gradient-to-r from-[#b49c6e] to-[#8e7b56] text-white"
+  },
+  {
+    "text": "VIRTUAL TOUR",
+    "tag": "BUTTON",
+    "type": "submit",
+    "class": "cursor-pointer w-full py-1.5 sm:py-2 rounded bg-[#2A2D35] text-white text-[10px] sm:text-[11px] font"
+  },
+  {
+    "text": "VIEW FLOOR PLAN",
+    "tag": "BUTTON",
+    "type": "submit",
+    "class": "cursor-pointer w-full py-1.5 sm:py-2 rounded bg-gradient-to-r from-[#b49c6e] to-[#8e7b56] text-white"
+  },
+  {
+    "text": "VIRTUAL TOUR",
+    "tag": "BUTTON",
+    "type": "submit",
+    "class": "cursor-pointer w-full py-1.5 sm:py-2 rounded bg-[#2A2D35] text-white text-[10px] sm:text-[11px] font"
+  },
+  {
+    "text": "VIEW FLOOR PLAN",
+    "tag": "BUTTON",
+    "type": "submit",
+    "class": "cursor-pointer w-full py-1.5 sm:py-2 rounded bg-gradient-to-r from-[#b49c6e] to-[#8e7b56] text-white"
+  },
+  {
+    "text": "VIRTUAL TOUR",
+    "tag": "BUTTON",
+    "type": "submit",
+    "class": "cursor-pointer w-full py-1.5 sm:py-2 rounded bg-[#2A2D35] text-white text-[10px] sm:text-[11px] font"
+  },
+  {
+    "text": "VIEW FLOOR PLAN",
+    "tag": "BUTTON",
+    "type": "submit",
+    "class": "cursor-pointer w-full py-1.5 sm:py-2 rounded bg-gradient-to-r from-[#b49c6e] to-[#8e7b56] text-white"
+  },
+  {
+    "text": "VIRTUAL TOUR",
+    "tag": "BUTTON",
+    "type": "submit",
+    "class": "cursor-pointer w-full py-1.5 sm:py-2 rounded bg-[#2A2D35] text-white text-[10px] sm:text-[11px] font"
+  },
+  {
+    "text": "VIEW FLOOR PLAN",
+    "tag": "BUTTON",
+    "type": "submit",
+    "class": "cursor-pointer w-full py-1.5 sm:py-2 rounded bg-gradient-to-r from-[#b49c6e] to-[#8e7b56] text-white"
+  },
+  {
+    "text": "VIRTUAL TOUR",
+    "tag": "BUTTON",
+    "type": "submit",
+    "class": "cursor-pointer w-full py-1.5 sm:py-2 rounded bg-[#2A2D35] text-white text-[10px] sm:text-[11px] font"
+  },
+  {
+    "text": "VIEW FLOOR PLAN",
+    "tag": "BUTTON",
+    "type": "submit",
+    "class": "cursor-pointer w-full py-1.5 sm:py-2 rounded bg-gradient-to-r from-[#b49c6e] to-[#8e7b56] text-white"
+  },
+  {
+    "text": "VIRTUAL TOUR",
+    "tag": "BUTTON",
+    "type": "submit",
+    "class": "cursor-pointer w-full py-1.5 sm:py-2 rounded bg-[#2A2D35] text-white text-[10px] sm:text-[11px] font"
+  },
+  {
+    "text": "VIEW FLOOR PLAN",
+    "tag": "BUTTON",
+    "type": "submit",
+    "class": "cursor-pointer w-full py-1.5 sm:py-2 rounded bg-gradient-to-r from-[#b49c6e] to-[#8e7b56] text-white"
+  },
+  {
+    "text": "VIRTUAL TOUR",
+    "tag": "BUTTON",
+    "type": "submit",
+    "class": "cursor-pointer w-full py-1.5 sm:py-2 rounded bg-[#2A2D35] text-white text-[10px] sm:text-[11px] font"
+  },
+  {
+    "text": "",
+    "tag": "BUTTON",
+    "type": "submit",
+    "class": "h-10 w-10 rounded-full bg-black border border-white/20 cursor-pointer shrink-0 text-white"
+  }
+]

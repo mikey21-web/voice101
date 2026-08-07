@@ -1,0 +1,146 @@
+{
+  "metas": [
+    {
+      "name": "viewport",
+      "content": "width=device-width, initial-scale=1.0"
+    },
+    {
+      "name": "description",
+      "content": "Zone IQ by SPIM Innovations shows real-time drone views, location insights & connectivity advantages to help real estate developers sell properties faster."
+    },
+    {
+      "name": "robots",
+      "content": "index, follow"
+    },
+    {
+      "name": "og:type",
+      "content": "website"
+    },
+    {
+      "name": "og:title",
+      "content": "Zone IQ by SPIM Innovations – Real-Time Drone Mapping & Location Intelligence"
+    },
+    {
+      "name": "og:description",
+      "content": "Real-time drone views & location intelligence with Zone IQ by SPIM Innovations. Boost property sales with better connectivity visuals."
+    },
+    {
+      "name": "og:url",
+      "content": "https://www.spimproject.com/zone-iq-drone-mapping.html"
+    },
+    {
+      "name": "og:image",
+      "content": "https://www.spimproject.com/assets/images/logo/spim.webp"
+    },
+    {
+      "name": "og:site_name",
+      "content": "SPIM Innovations"
+    },
+    {
+      "name": "twitter:card",
+      "content": "summary_large_image"
+    },
+    {
+      "name": "twitter:title",
+      "content": "Zone IQ by SPIM Innovations – Real-Time Drone Mapping & Location Intelligence"
+    },
+    {
+      "name": "twitter:description",
+      "content": "Drone-based location intelligence to help developers showcase connectivity and boost real estate sales with Zone IQ."
+    },
+    {
+      "name": "twitter:image",
+      "content": "https://www.spimproject.com/assets/images/logo/spim.webp"
+    }
+  ],
+  "headings": [
+    {
+      "level": "H3",
+      "text": "Menu"
+    },
+    {
+      "level": "H1",
+      "text": "Zone IQ – Real-Time Drone Mapping & Location Intelligence"
+    },
+    {
+      "level": "H3",
+      "text": "Urban Connectivity"
+    },
+    {
+      "level": "H3",
+      "text": "Livability Score"
+    },
+    {
+      "level": "H3",
+      "text": "Price Evolution Insight"
+    },
+    {
+      "level": "H2",
+      "text": "Hyderabad - Environmental Intelligence Report"
+    },
+    {
+      "level": "H3",
+      "text": "Air Quality Metrics"
+    },
+    {
+      "level": "H3",
+      "text": "Nearby Landmarks"
+    },
+    {
+      "level": "H3",
+      "text": "Livability Score"
+    },
+    {
+      "level": "H3",
+      "text": "Price Ranges"
+    },
+    {
+      "level": "H3",
+      "text": "Project Information"
+    },
+    {
+      "level": "H3",
+      "text": "Location Insights"
+    },
+    {
+      "level": "H2",
+      "text": "How Developers Use Zone IQ"
+    },
+    {
+      "level": "H3",
+      "text": "Pre-Launch Sales Enablement"
+    },
+    {
+      "level": "H3",
+      "text": "Buyer Confidence & Transparency"
+    },
+    {
+      "level": "H3",
+      "text": "Sales Team Productivity"
+    },
+    {
+      "level": "H3",
+      "text": "Competitive Project Positioning"
+    },
+    {
+      "level": "H3",
+      "text": "Our Services"
+    },
+    {
+      "level": "H3",
+      "text": "Quick Links"
+    }
+  ],
+  "buttons": [
+    {
+      "text": "",
+      "type": "submit",
+      "class": ""
+    },
+    {
+      "text": "×",
+      "type": "submit",
+      "class": ""
+    }
+  ]
+}

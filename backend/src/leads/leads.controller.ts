@@ -23,7 +23,7 @@ export class LeadsController {
   async demoSubmit(@Body() body: { name?: string; phone?: string; email?: string; company?: string }) {
     if (!body.name?.trim()) throw new BadRequestException('name is required');
     if (!body.phone?.trim()) throw new BadRequestException('phone is required');
-    await this.service.intake({ name: body.name, phone: body.phone, email: body.email, source: 'DEMO_FORM', message: body.company ? `Company: ${body.company}` : undefined });
+    await this.service.intake({ name: body.name, phone: body.phone, email: body.email, source: 'FORM', message: body.company ? `Company: ${body.company}` : undefined });
     return { ok: true, message: 'Submitted! Mikey is calling you now.' };
   }
 

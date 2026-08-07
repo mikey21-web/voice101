@@ -1,0 +1,157 @@
+[
+  {
+    "tag": "BUTTON",
+    "text": "",
+    "class": "cursor-pointer",
+    "id": "fullScreenBtn",
+    "x": 1832,
+    "y": 36,
+    "visible": true
+  },
+  {
+    "tag": "BUTTON",
+    "text": "",
+    "class": "cursor-pointer",
+    "id": "featurePanelBtn",
+    "x": 1884,
+    "y": 36,
+    "visible": true
+  },
+  {
+    "tag": "A",
+    "text": "",
+    "class": "fixed z-50 left-[max(8px,env(safe-area-inset-left))] bottom-[max(8px,env(safe-ar",
+    "id": "",
+    "href": "https://www.spimproject.com/",
+    "x": 40,
+    "y": 1040,
+    "visible": true
+  },
+  {
+    "tag": "A",
+    "text": "",
+    "class": "absolute left-0 top-0 p-3",
+    "id": "",
+    "href": "https://zenvistas.spimproject.com/",
+    "x": 52,
+    "y": 52,
+    "visible": true
+  },
+  {
+    "tag": "A",
+    "text": "Webverse",
+    "class": "cursor-pointer flex flex-col items-center gap-1 group",
+    "id": "",
+    "href": "https://zenvistas.spimproject.com/webverse.html",
+    "x": 744.2578125,
+    "y": 989,
+    "visible": true
+  },
+  {
+    "tag": "A",
+    "text": "Community",
+    "class": "cursor-pointer flex flex-col items-center gap-1 group",
+    "id": "",
+    "href": "https://zenvistas.spimproject.com/exterior.html",
+    "x": 916.8515625,
+    "y": 989,
+    "visible": true
+  },
+  {
+    "tag": "A",
+    "text": "Zone IQ",
+    "class": "cursor-pointer flex flex-col items-center gap-1 group",
+    "id": "",
+    "href": "https://zenvistas.spimproject.com/zoneiq.html",
+    "x": 1003.1484375,
+    "y": 989,
+    "visible": true
+  },
+  {
+    "tag": "A",
+    "text": "Location",
+    "class": "cursor-pointer flex flex-col items-center gap-1 group",
+    "id": "",
+    "href": "https://zenvistas.spimproject.com/maps.html",
+    "x": 1089.4453125,
+    "y": 989,
+    "visible": true
+  },
+  {
+    "tag": "A",
+    "text": "Enquiry",
+    "class": "cursor-pointer flex flex-col items-center gap-1 group",
+    "id": "",
+    "href": "https://zenvistas.spimproject.com/contact.html",
+    "x": 1175.7421875,
+    "y": 989,
+    "visible": true
+  },
+  {
+    "tag": "BUTTON",
+    "text": "",
+    "class": "cursor-pointer h-8 w-8 rounded-lg flex items-center justify-center bg-white/10 h",
+    "id": "infoModalOpenBtn",
+    "x": 2147,
+    "y": 33,
+    "visible": true
+  },
+  {
+    "tag": "BUTTON",
+    "text": "",
+    "class": "cursor-pointer h-8 w-8 rounded-lg flex items-center justify-center bg-white/10 h",
+    "id": "interiorsPanelCloseBtn",
+    "x": 2187,
+    "y": 33,
+    "visible": true
+  },
+  {
+    "tag": "BUTTON",
+    "text": "",
+    "class": "h-10 w-10 rounded-full bg-black border border-white/20 cursor-pointer shrink-0 t",
+    "id": "featurePanelCloseBtn",
+    "x": 1970,
+    "y": 32,
+    "visible": true
+  },
+  {
+    "tag": "A",
+    "text": "About",
+    "class": "inline-flex flex-col items-center gap-2",
+    "id": "",
+    "href": "https://zenvistas.spimproject.com/about.html",
+    "x": 1970,
+    "y": 113,
+    "visible": true
+  },
+  {
+    "tag": "A",
+    "text": "Gallery",
+    "class": "inline-flex flex-col items-center gap-2",
+    "id": "",
+    "href": "https://zenvistas.spimproject.com/gallery.html",
+    "x": 1970,
+    "y": 203,
+    "visible": true
+  },
+  {
+    "tag": "A",
+    "text": "Brochure",
+    "class": "inline-flex flex-col items-center gap-2",
+    "id": "",
+    "href": "https://zenvistas.spimproject.com/brochure.html",
+    "x": 1970,
+    "y": 293,
+    "visible": true
+  },
+  {
+    "tag": "A",
+    "text": "Contact",
+    "class": "inline-flex flex-col items-center gap-2",
+    "id": "",
+    "href": "https://zenvistas.spimproject.com/contact.html",
+    "x": 1970,
+    "y": 383,
+    "visible": true
+  }
+]

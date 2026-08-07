@@ -1,0 +1,44 @@
+[
+  {
+    "text": "",
+    "tag": "BUTTON",
+    "type": "submit",
+    "class": "cursor-pointer flex items-center justify-center rounded-md bg-gradient-to-b from-gray-800/60 to-blac"
+  },
+  {
+    "text": "",
+    "tag": "BUTTON",
+    "type": "submit",
+    "class": "cursor-pointer flex items-center justify-center rounded-md bg-gradient-to-b from-gray-800/60 to-blac"
+  },
+  {
+    "text": "Submit Enquiry",
+    "tag": "BUTTON",
+    "type": "submit",
+    "class": "select-none bg-[#BE9B42] hover:bg-blue-700 cursor-pointer text-white py-2.5 px-4 rounded-md transiti"
+  },
+  {
+    "text": "",
+    "tag": "BUTTON",
+    "type": "submit",
+    "class": "cursor-pointer"
+  },
+  {
+    "text": "",
+    "tag": "BUTTON",
+    "type": "submit",
+    "class": "cursor-pointer hidden"
+  },
+  {
+    "text": "",
+    "tag": "BUTTON",
+    "type": "submit",
+    "class": "cursor-pointer flex items-center justify-center rounded-full text-white bg-black/70 backdrop-blur-sm"
+  },
+  {
+    "text": "",
+    "tag": "BUTTON",
+    "type": "submit",
+    "class": "h-10 w-10 inline-flex flex-col justify-center items-center rounded-full bg-black border border-white"
+  }
+]

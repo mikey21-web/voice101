@@ -1,4 +1,5 @@
 import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { DograhService } from '../shared/dograh.service';
 import { CallerMemoryService } from './caller-memory.service';
@@ -20,6 +21,7 @@ export class VoiceCallService {
     private dograh: DograhService,
     private memory: CallerMemoryService,
     private orchestrator: LeadOrchestratorService,
+    private config: ConfigService,
   ) {}
 
   async list(tenantId: string, filters: { employeeId?: string; campaignId?: string; disposition?: string; direction?: string; limit?: number } = {}) {
@@ -117,22 +119,12 @@ export class VoiceCallService {
     // The webhook payload itself carries no transcript/recording, but Dograh's runs API does —
     // best-effort enrich so the dashboard shows the recording link + duration. Runs are listed
     // newest-first, and this call just completed, so it's on page 1.
+    // ponytail: fire-and-forget so the webhook returns fast — a slow runs API / DeepSeek call
+    // could otherwise time out on Dograh's side and trigger a duplicate webhook.
     if (payload.call_sid) {
-      try {
-        const { runs } = await this.dograh.getUsageRuns({ page: 1, limit: 50 });
-        const run = (runs || []).find((r: any) => String(r.id) === String(payload.call_sid));
-        if (run?.recording_public_url) {
-          await this.prisma.voiceCall.update({
-            where: { id: call.id },
-            data: {
-              recordingUrl: run.recording_public_url,
-              durationS: run.call_duration_seconds ? Math.round(run.call_duration_seconds) : undefined,
-            },
-          });
-        }
-      } catch (err) {
-        this.logger.warn(`Failed to enrich call ${call.id} from runs API: ${err.message}`);
-      }
+      this.enrichCallFromRuns(call, payload.call_sid).catch((err) =>
+        this.logger.warn(`Failed to enrich call ${call.id} from runs API: ${err.message}`),
+      );
     }
 
     // When the call came from the lead pipeline (initial_context.lead_id was set by
@@ -140,19 +132,78 @@ export class VoiceCallService {
     // through the same orchestrator path the legacy workflow uses. Test calls carry no
     // lead_id, so they stay voiceCall-only.
     if (payload.lead_id) {
-      try {
-        await this.orchestrator.handleCallWebhook({
+      this.orchestrator
+        .handleCallWebhook({
           call_sid: payload.call_sid,
           lead_id: payload.lead_id,
           status: payload.status || 'completed',
           outcome,
-        });
-      } catch (err) {
-        this.logger.warn(`CRM handling for lead ${payload.lead_id} failed: ${err.message}`);
-      }
+        })
+        .catch((err) => this.logger.warn(`CRM handling for lead ${payload.lead_id} failed: ${err.message}`));
     }
 
     this.logger.log(`Ingested call ${call.id} for employee ${employee.id} (${employee.name})`);
     return { received: true, callId: call.id };
+  }
+
+  private async enrichCallFromRuns(call: any, callSid: string): Promise<void> {
+    const { runs } = await this.dograh.getUsageRuns({ page: 1, limit: 50 });
+    const run = (runs || []).find((r: any) => String(r.id) === String(callSid));
+    if (run?.recording_public_url) {
+      await this.prisma.voiceCall.update({
+        where: { id: call.id },
+        data: {
+          recordingUrl: run.recording_public_url,
+          durationS: run.call_duration_seconds ? Math.round(run.call_duration_seconds) : undefined,
+        },
+      });
+    }
+    // The runs API also exposes the transcript as a text download — pull it and have DeepSeek
+    // summarise it, so the dashboard's Call Logs / Conversations views are not empty even though
+    // the webhook itself carries no transcript or summary.
+    const transcriptUrl = run?.transcript_public_url || run?.transcript_url;
+    if (transcriptUrl && !call.transcript) {
+      const transcript = await this.fetchTranscriptText(transcriptUrl);
+      let summary = call.summary;
+      if (transcript && !summary) {
+        summary = await this.summarizeTranscript(transcript);
+      }
+      if (transcript || summary) {
+        await this.prisma.voiceCall.update({
+          where: { id: call.id },
+          data: { transcript: transcript || undefined, summary: summary || undefined },
+        });
+      }
+    }
+  }
+
+  private async fetchTranscriptText(url: string): Promise<string> {
+    const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
+    if (!res.ok) throw new Error(`Transcript download failed: ${res.status}`);
+    return await res.text();
+  }
+
+  private async summarizeTranscript(transcript: string): Promise<string> {
+    const apiKey = this.config.get<string>('DEEPSEEK_API_KEY');
+    if (!apiKey) throw new Error('DEEPSEEK_API_KEY not configured');
+    const baseUrl = this.config.get<string>('DEEPSEEK_BASE_URL') || 'https://api.deepseek.com/v1';
+    const res = await fetch(`${baseUrl}/chat/completions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+      body: JSON.stringify({
+        model: this.config.get<string>('AGENT_MODEL') || 'deepseek-v4-flash',
+        messages: [
+          {
+            role: 'system',
+            content:
+              'You are a real-estate sales call summariser. Summarise the transcript in exactly 2 sentences: what the caller was looking for (budget, location, unit type if mentioned), and the outcome/next step.',
+          },
+          { role: 'user', content: transcript.slice(0, 12000) },
+        ],
+      }),
+    });
+    if (!res.ok) throw new Error(`DeepSeek summarise failed: ${res.status} ${await res.text()}`);
+    const data: any = await res.json();
+    return data?.choices?.[0]?.message?.content || 'Summary unavailable.';
   }
 }

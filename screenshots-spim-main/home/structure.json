@@ -1,0 +1,207 @@
+{
+  "metas": [
+    {
+      "name": "viewport",
+      "content": "width=device-width, initial-scale=1.0"
+    },
+    {
+      "name": "og:type",
+      "content": "website"
+    },
+    {
+      "name": "og:url",
+      "content": "https://www.spimproject.com/"
+    },
+    {
+      "name": "og:title",
+      "content": "SPIM Innovations | Virtual Reality & PropTech Solutions"
+    },
+    {
+      "name": "og:description",
+      "content": "SPIM Innovations delivers immersive 3D walkthroughs, WebVerse platforms, and PropTech solutions for real estate developers."
+    },
+    {
+      "name": "og:image",
+      "content": "https://www.spimproject.com/assets/images/spim/og-spim.webp"
+    },
+    {
+      "name": "og:image:width",
+      "content": "1200"
+    },
+    {
+      "name": "og:image:height",
+      "content": "630"
+    },
+    {
+      "name": "twitter:card",
+      "content": "summary_large_image"
+    },
+    {
+      "name": "twitter:title",
+      "content": "SPIM Innovations | Virtual Reality & PropTech Solutions"
+    },
+    {
+      "name": "twitter:description",
+      "content": "Immersive 3D visualization, WebVerse platforms, and intelligent PropTech tools for real estate developers."
+    },
+    {
+      "name": "twitter:image",
+      "content": "https://www.spimproject.com/assets/images/spim/og-spim.webp"
+    },
+    {
+      "name": "description",
+      "content": "SPIM Innovations delivers VR tours, 3D walkthroughs, WebVerse platforms, and AI PropTech tools for real estate developers in Hyderabad."
+    },
+    {
+      "name": "keywords",
+      "content": "SPIM, VR real estate, 3D walkthroughs, PropTech Hyderabad"
+    },
+    {
+      "name": "robots",
+      "content": "index, follow"
+    }
+  ],
+  "headings": [
+    {
+      "level": "H3",
+      "text": "Menu"
+    },
+    {
+      "level": "H1",
+      "text": "Virtual Reality & PropTech Solutions for\nReal Estate Developers"
+    },
+    {
+      "level": "H2",
+      "text": "OUR CLIENTS"
+    },
+    {
+      "level": "H2",
+      "text": "Everything You Need — All in One Place"
+    },
+    {
+      "level": "H3",
+      "text": "Webverse"
+    },
+    {
+      "level": "H3",
+      "text": "Hookbot"
+    },
+    {
+      "level": "H3",
+      "text": "Digiverse"
+    },
+    {
+      "level": "H3",
+      "text": "Zone IQ"
+    },
+    {
+      "level": "H3",
+      "text": "VR/AR"
+    },
+    {
+      "level": "H3",
+      "text": "Immersion Center"
+    },
+    {
+      "level": "H2",
+      "text": "Why Choose SPIM?"
+    },
+    {
+      "level": "H3",
+      "text": "3D Walkthroughs"
+    },
+    {
+      "level": "H3",
+      "text": "VR & AR Ecosystem"
+    },
+    {
+      "level": "H3",
+      "text": "PropTech Automation"
+    },
+    {
+      "level": "H2",
+      "text": "How SPIM Elevates\nReal Estate Sales"
+    },
+    {
+      "level": "H3",
+      "text": "WebVerse Platforms"
+    },
+    {
+      "level": "H3",
+      "text": "Immersive VR"
+    },
+    {
+      "level": "H3",
+      "text": "Lead Conversion"
+    },
+    {
+      "level": "H3",
+      "text": "Location Intelligence (Zone IQ)"
+    },
+    {
+      "level": "H2",
+      "text": "Experience WebVerse in Action"
+    },
+    {
+      "level": "H3",
+      "text": "Apartments"
+    },
+    {
+      "level": "H3",
+      "text": "Villas"
+    },
+    {
+      "level": "H3",
+      "text": "Plots"
+    },
+    {
+      "level": "H2",
+      "text": "What Our Clients Say"
+    },
+    {
+      "level": "H3",
+      "text": "6+"
+    },
+    {
+      "level": "H3",
+      "text": "30+"
+    },
+    {
+      "level": "H3",
+      "text": "33%"
+    },
+    {
+      "level": "H3",
+      "text": "15%"
+    },
+    {
+      "level": "H2",
+      "text": "Everything You Need to Know"
+    },
+    {
+      "level": "H3",
+      "text": "Our Services"
+    },
+    {
+      "level": "H3",
+      "text": "Quick Links"
+    }
+  ],
+  "buttons": [
+    {
+      "text": "",
+      "type": "submit",
+      "class": ""
+    },
+    {
+      "text": "×",
+      "type": "submit",
+      "class": ""
+    },
+    {
+      "text": "Show All",
+      "type": "submit",
+      "class": "show-all-btn"
+    }
+  ]
+}

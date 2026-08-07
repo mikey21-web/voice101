@@ -100,6 +100,7 @@ const rawNavGroups = [
   {
     label: "Voice · Calling",
     items: [
+      { label: "Call Logs", icon: Phone, path: "/voice-call-logs" },
       { label: "Instant Leads", icon: Phone, path: "/voice-instant-leads" },
       { label: "Bulk Campaigns", icon: Megaphone, path: "/voice-campaigns" },
       { label: "Inbound Calls", icon: PhoneCall, path: "/voice-inbound-calls" },

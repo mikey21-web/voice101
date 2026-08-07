@@ -300,7 +300,8 @@ export class LeadOrchestratorService {
     // record it on the contact so the post-call dispatch goes to the number they actually
     // confirmed rather than the one the lead was captured with.
     const confirmedWhatsApp = payload.outcome?.whatsapp_number;
-    if (confirmedWhatsApp && lead.contactId) {
+    const isValidNumber = confirmedWhatsApp && confirmedWhatsApp !== 'not stated' && /^\d{7,}/.test(String(confirmedWhatsApp).replace(/\D/g, ''));
+    if (isValidNumber && lead.contactId) {
       await this.prisma.contact.update({
         where: { id: lead.contactId },
         data: { whatsapp: String(confirmedWhatsApp) },
@@ -469,17 +470,11 @@ export class LeadOrchestratorService {
     // The lead already told us what they want on the call; waiting for a status gate means
     // they get nothing if Dograh maps the outcome differently than expected.
     if (outcome.status !== 'LOST') {
-      const dedupKey = `${leadId}:${call_sid || 'nosid'}`;
-      if (!this._sentPropertyMedia.has(dedupKey)) {
-        this._sentPropertyMedia.add(dedupKey);
-        this.sendPropertyMedia(leadId, payload.outcome || {}, payload.summary || '', payload.transcript || '').catch((e: any) =>
-          this.logger.warn(`Property media send failed for lead ${leadId}: ${e.message}`)
-        );
-      }
+      this.sendPropertyMedia(leadId, payload.outcome || {}, payload.summary || '', payload.transcript || '').catch((e: any) =>
+        this.logger.warn(`Property media send failed for lead ${leadId}: ${e.message}`)
+      );
     }
   }
-
-  private readonly _sentPropertyMedia = new Set<string>();
 
   private async sendPropertyMedia(leadId: string, outcome: any = {}, summary = '', transcript = ''): Promise<void> {
     const lead = await this.prisma.lead.findUnique({
@@ -489,14 +484,20 @@ export class LeadOrchestratorService {
         contact: { select: { name: true, whatsapp: true, phone: true } },
       },
     });
-    const to = lead?.contact?.whatsapp || lead?.contact?.phone;
+    const validPhone = (v?: string | null) => v && v !== 'not stated' && /\d{7}/.test(v) ? v : null;
+    const to = validPhone(lead?.contact?.whatsapp) || validPhone(lead?.contact?.phone);
     if (!to) return;
 
+    const provider = this.config.get<string>('WHATSAPP_PROVIDER') || 'cloud';
+    const openwaUrl = this.config.get<string>('OPENWA_URL') || '';
+    const openwaKey = this.config.get<string>('OPENWA_API_KEY') || '';
     const waConfig = {
       phoneNumberId: this.config.get<string>('WHATSAPP_PHONE_NUMBER_ID') || '',
       accessToken: this.config.get<string>('WHATSAPP_ACCESS_TOKEN') || '',
     };
-    if (!waConfig.phoneNumberId || !waConfig.accessToken) {
+    const hasOpenwa = provider === 'openwa' && !!openwaUrl && !!openwaKey;
+    const hasCloudApi = !!waConfig.phoneNumberId && !!waConfig.accessToken;
+    if (!hasOpenwa && !hasCloudApi) {
       this.logger.warn('WhatsApp creds not set — skipping property media send');
       return;
     }
@@ -547,7 +548,7 @@ export class LeadOrchestratorService {
     // Text summary first
     const intro = `Hi ${firstName}! Based on our call, here are ${properties.length} matching ${configPart}${locationPart}${budgetPart} options for you:\n\n` +
       properties.map((p, i) => {
-        const price = p.price ? `₹${(Number(p.price) / 100).toLocaleString('en-IN')}` : 'Price on request';
+        const price = p.price ? `₹${(Number(p.price) / 100000).toFixed(0)} Lakhs` : 'Price on request';
         const loc = (p as any).location || '';
         return `${i + 1}. *${p.title}*\n   📍 ${loc || 'Location details shared separately'}\n   💰 ${price}\n   ${p.description ? p.description.slice(0, 80) + '...' : ''}`;
       }).join('\n\n') +

@@ -1,0 +1,16 @@
+{
+  "metas": [
+    {
+      "name": "viewport",
+      "content": "width=device-width, initial-scale=1.0"
+    }
+  ],
+  "headings": [],
+  "buttons": [
+    {
+      "text": "",
+      "type": "submit",
+      "class": "cursor-pointer flex items-center justify-center rounded-lg bg-gradient-to-b from-gray-800/60 to-black/30 backdrop-blur-md border border-[#D4AF37]/40 hover:border-[#D4AF37] hover:shadow-[0_0_15px_rgba(212,175,55,0.7)] transition-all duration-300 h-8 w-8 text-lg active:scale-95"
+    }
+  ]
+}

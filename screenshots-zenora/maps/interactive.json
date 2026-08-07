@@ -1,0 +1,190 @@
+[
+  {
+    "tag": "A",
+    "text": "by ZENVISTAS\n\nVeeriampalayam, Coimbatore",
+    "class": "flex items-center gap-2 no-underline",
+    "id": "",
+    "href": "https://zenvistas.spimproject.com/maps.html",
+    "x": 109.7890625,
+    "y": 51.125,
+    "visible": true
+  },
+  {
+    "tag": "BUTTON",
+    "text": "",
+    "class": "cursor-pointer flex items-center justify-center rounded-md bg-gradient-to-b from",
+    "id": "",
+    "x": 233.578125,
+    "y": 51.125,
+    "visible": true
+  },
+  {
+    "tag": "BUTTON",
+    "text": "",
+    "class": "cursor-pointer flex items-center justify-center rounded-md bg-gradient-to-b from",
+    "id": "backBtn",
+    "x": 271.578125,
+    "y": 51.125,
+    "visible": true
+  },
+  {
+    "tag": "BUTTON",
+    "text": "",
+    "class": "cursor-pointer",
+    "id": "fullScreenBtn",
+    "x": 1832,
+    "y": 36,
+    "visible": true
+  },
+  {
+    "tag": "BUTTON",
+    "text": "",
+    "class": "cursor-pointer flex items-center justify-center rounded-full text-white bg-black",
+    "id": "featurePanelBtn",
+    "x": 1884,
+    "y": 36,
+    "visible": true
+  },
+  {
+    "tag": "BUTTON",
+    "text": "",
+    "class": "gm-ui-hover-effect",
+    "id": "",
+    "x": 1386,
+    "y": -65,
+    "visible": true
+  },
+  {
+    "tag": "BUTTON",
+    "text": "",
+    "class": "gm-control-active",
+    "id": "",
+    "x": 30,
+    "y": 520,
+    "visible": true
+  },
+  {
+    "tag": "BUTTON",
+    "text": "",
+    "class": "gm-control-active",
+    "id": "",
+    "x": 30,
+    "y": 561,
+    "visible": true
+  },
+  {
+    "tag": "A",
+    "text": "",
+    "class": "",
+    "id": "",
+    "href": "https://maps.google.com/maps?ll=11.031367,77.019791&z=14&t=k&hl=en-US&gl=US&mapclient=apiv3",
+    "x": 38,
+    "y": 1067,
+    "visible": true
+  },
+  {
+    "tag": "BUTTON",
+    "text": "Map",
+    "class": "",
+    "id": "",
+    "x": 910.8125,
+    "y": 1050,
+    "visible": true
+  },
+  {
+    "tag": "BUTTON",
+    "text": "Satellite",
+    "class": "",
+    "id": "",
+    "x": 995.4453125,
+    "y": 1050,
+    "visible": true
+  },
+  {
+    "tag": "BUTTON",
+    "text": "Keyboard shortcuts",
+    "class": "",
+    "id": "",
+    "x": 1361.75,
+    "y": 1073.09375,
+    "visible": true
+  },
+  {
+    "tag": "A",
+    "text": "Terms",
+    "class": "",
+    "id": "",
+    "href": "https://www.google.com/intl/en-US_US/help/terms_maps.html",
+    "x": 1804.4765625,
+    "y": 1072.59375,
+    "visible": true
+  },
+  {
+    "tag": "A",
+    "text": "Report a map error",
+    "class": "",
+    "id": "",
+    "href": "https://www.google.com/maps/@11.0313668,77.0197908,14z/data=!3m1!1e3!10m1!1e1!12b1?source=apiv3&rapsrc=apiv3",
+    "x": 1872.265625,
+    "y": 1072.59375,
+    "visible": true
+  },
+  {
+    "tag": "BUTTON",
+    "text": "",
+    "class": "h-10 w-10 rounded-full bg-black border border-white/20 cursor-pointer shrink-0 t",
+    "id": "featurePanelCloseBtn",
+    "x": 1970,
+    "y": 32,
+    "visible": true
+  },
+  {
+    "tag": "A",
+    "text": "About",
+    "class": "inline-flex flex-col items-center gap-2",
+    "id": "",
+    "href": "https://zenvistas.spimproject.com/about.html",
+    "x": 1970,
+    "y": 113,
+    "visible": true
+  },
+  {
+    "tag": "A",
+    "text": "Gallery",
+    "class": "inline-flex flex-col items-center gap-2",
+    "id": "",
+    "href": "https://zenvistas.spimproject.com/gallery.html",
+    "x": 1970,
+    "y": 203,
+    "visible": true
+  },
+  {
+    "tag": "A",
+    "text": "Brochure",
+    "class": "inline-flex flex-col items-center gap-2",
+    "id": "",
+    "href": "https://zenvistas.spimproject.com/brochure.html",
+    "x": 1970,
+    "y": 293,
+    "visible": true
+  },
+  {
+    "tag": "A",
+    "text": "Contact",
+    "class": "inline-flex flex-col items-center gap-2",
+    "id": "",
+    "href": "https://wa.me/9600811632",
+    "x": 1970,
+    "y": 383,
+    "visible": true
+  },
+  {
+    "tag": "BUTTON",
+    "text": "Filters",
+    "class": "relative group h-8 w-8 lg:h-12 lg:w-12 border-2 border-[#BE9B42] cursor-pointer ",
+    "id": "mapFilterBtn",
+    "x": 1880,
+    "y": 1040,
+    "visible": true
+  }
+]

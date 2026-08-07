@@ -1,0 +1,14 @@
+=== MAIN NCD SITE ===
+Page height: 13700px
+Headings: 35
+Videos/iframes: 0
+Block/floor tabs: 0
+
+=== VERCEl SITE ===
+Floor plan images: 3
+Total links: 34
+Vercel text: 8936 chars
+
+=== NCD MAIN SITE ===
+SPIM refs: {"hasSpim":false,"hasWebverse":false,"hasRoyal":true}
+NCD text: 10300 chars

@@ -1,0 +1,29 @@
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+class CreateNotificationsTable extends Migration
+{
+    public function up()
+    {
+        Schema::create('notifications', function (Blueprint $table) {
+            $table->bigIncrements('id');
+            $table->char('uuid', 50);
+            $table->unsignedBigInteger('user_id');
+            $table->string('title', 191)->nullable();
+            $table->text('comment')->nullable();
+            $table->string('url', 191)->nullable();
+            $table->boolean('seen')->default(false);
+            $table->timestamp('created_at')->nullable();
+            $table->timestamp('updated_at')->nullable();
+
+            $table->unique('uuid');
+        });
+    }
+
+    public function down()
+    {
+        Schema::dropIfExists('notifications');
+    }
+}
+{"message":"Something went wrong on our end. Our team has been notified.","error_id":"ERR-BAH0Y6MYYK","issue":{"id":"ERR-BAH0Y6MYYK","type":"Database error","detail":"An unexpected error occurred while processing your request."}}
