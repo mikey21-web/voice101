@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Mic, Phone, Sparkles, Loader2 } from 'lucide-react';
+import { Mic, Phone, Sparkles, Loader2, X, ExternalLink } from 'lucide-react';
 import { fetchVoiceEmployees, VoiceEmployee, testCallVoiceEmployee } from '../lib/data';
 import toast from 'react-hot-toast';
 
@@ -8,7 +8,7 @@ export default function TalkToEmployeePage() {
   const [selected, setSelected] = useState<VoiceEmployee | null>(null);
   const [phone, setPhone] = useState('');
   const [calling, setCalling] = useState(false);
-  const [browserCalling, setBrowserCalling] = useState(false);
+  const [webCallUrl, setWebCallUrl] = useState<string | null>(null);
 
   useEffect(() => {
     fetchVoiceEmployees().then((list) => {
@@ -76,13 +76,15 @@ export default function TalkToEmployeePage() {
             <button
               onClick={() => {
                 if (!selected?.isPublished) return toast.error('Publish this employee first');
-                setBrowserCalling(true);
-                setTimeout(() => setBrowserCalling(false), 2000);
-                toast('Browser calling uses your Dograh workflow — open http://localhost:3010 to test with mic', { duration: 5000 });
+                if (selected.dograhWorkflowId) {
+                  setWebCallUrl(`http://localhost:3010/workflow/${selected.dograhWorkflowId}/run`);
+                } else {
+                  toast.error('No published workflow on this employee');
+                }
               }}
               className="flex items-center gap-2 rounded-full bg-white px-8 py-3 text-sm font-bold text-[#1a1030] shadow-lg transition hover:bg-gray-50 disabled:opacity-50"
               disabled={!selected?.isPublished}>
-              {browserCalling ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mic className="h-4 w-4" />}
+              <Mic className="h-4 w-4" />
               Start talking
             </button>
             <div className="flex items-center gap-2">
@@ -93,6 +95,7 @@ export default function TalkToEmployeePage() {
                 {calling ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Or call my actual phone'}
               </button>
             </div>
+            <p className="text-xs text-violet-400/60">Browser call runs in the engine — grant microphone access when prompted.</p>
           </div>
 
           <div className="mt-6 flex flex-wrap justify-center gap-2 text-xs">
@@ -112,6 +115,23 @@ export default function TalkToEmployeePage() {
           )}
         </div>
       </div>
+
+      {webCallUrl && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={() => setWebCallUrl(null)}>
+          <div className="relative flex h-[85vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-[#0d0918]" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+              <p className="text-sm font-semibold text-white">🔊 Talk to {selected?.name}</p>
+              <div className="flex items-center gap-2">
+                <a href={webCallUrl} target="_blank" rel="noreferrer" className="rounded-lg bg-white/10 px-3 py-1.5 text-xs font-medium text-white hover:bg-white/20">
+                  <ExternalLink className="mr-1 inline h-3 w-3" />Open full screen
+                </a>
+                <button onClick={() => setWebCallUrl(null)} className="rounded-lg bg-white/10 p-1.5 text-white hover:bg-white/20"><X className="h-4 w-4" /></button>
+              </div>
+            </div>
+            <iframe src={webCallUrl} className="flex-1 border-0" allow="camera; microphone; autoplay; display-capture" title="Browser call" />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

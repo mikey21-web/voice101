@@ -39,6 +39,9 @@ export default function VoiceEmployeeDetailPage() {
   const [knowledgeBase, setKnowledgeBase] = useState('');
   const [scriptStrictness, setScriptStrictness] = useState(2);
   const [maxConcurrentCalls, setMaxConcurrentCalls] = useState(5);
+  const [maxCallDurationS, setMaxCallDurationS] = useState(300);
+  const [callTimeoutMessage, setCallTimeoutMessage] = useState('');
+  const [recordingNotice, setRecordingNotice] = useState(false);
   const [trainingExamples, setTrainingExamples] = useState<any[]>([]);
   const [swaraInput, setSwaraInput] = useState('');
   const [swaraLoading, setSwaraLoading] = useState(false);
@@ -70,6 +73,9 @@ export default function VoiceEmployeeDetailPage() {
       setVoiceId(e.voiceId || '');
       setVoiceName(e.voiceName || '');
       setTtsSpeed(e.ttsSpeed ?? 1);
+      setMaxCallDurationS(e.maxCallDurationS ?? 300);
+      setCallTimeoutMessage(e.callTimeoutMessage || '');
+      setRecordingNotice(e.recordingNotice ?? false);
       fetchVoiceTrainingExamples(id).then(setTrainingExamples).catch(() => {});
     }).catch((err) => toast.error(err.message)).finally(() => setLoading(false));
   };
@@ -91,6 +97,7 @@ export default function VoiceEmployeeDetailPage() {
         name, role, welcomeMessage, agentInformation, callEndRules,
         stylePackEnabled, aiAcknowledgementEnabled,
         voiceProvider, voiceId, voiceName, ttsSpeed,
+        maxCallDurationS, callTimeoutMessage, recordingNotice,
         sections: sections.map((s, i) => ({ ...s, order: i + 1 })),
         variables,
       });
@@ -414,6 +421,26 @@ export default function VoiceEmployeeDetailPage() {
             <p className="text-xs text-[var(--muted-foreground)] mt-3">Higher = faster but more expensive.</p>
           </div>
         </div>
+
+        <div className="grid grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-medium text-[var(--foreground)] mb-1.5">Max call duration (seconds)</label>
+            <input type="number" min="30" max="3600" value={maxCallDurationS} onChange={(e) => setMaxCallDurationS(Number(e.target.value))}
+              className="w-full h-10 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)]" />
+            <p className="text-xs text-[var(--muted-foreground)] mt-2">Hard timeout — the call hangs up politely at this limit.</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-[var(--foreground)] mb-1.5">Call timeout message</label>
+            <textarea value={callTimeoutMessage} onChange={(e) => setCallTimeoutMessage(e.target.value)} rows={2}
+              className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--foreground)] resize-none"
+              placeholder="The agent's final line when the max duration is reached" />
+          </div>
+        </div>
+
+        <label className="flex items-center gap-3 cursor-pointer">
+          <input type="checkbox" checked={recordingNotice} onChange={(e) => setRecordingNotice(e.target.checked)} className="accent-[var(--primary)] h-4 w-4" />
+          <span className="text-sm text-[var(--foreground)]">Inform the caller they are being recorded</span>
+        </label>
       </section>
 
       <section className="space-y-4 border-t border-[var(--border)] pt-6">

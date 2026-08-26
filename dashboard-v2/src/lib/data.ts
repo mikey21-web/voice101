@@ -259,6 +259,9 @@ export interface VoiceCallRun {
   disposition: string; answered: boolean; leadName: string | null; leadId: string | null;
   recordingUrl: string | null; transcriptUrl: string | null;
   summary: string | null; transcript: string | null;
+  talkRatio?: { agent: number; caller: number } | null;
+  sentiment?: string | null;
+  recommendedNextStep?: string | null;
   gatheredContext: Record<string, any>;
   quality: CallQualityReport | null;
 }
@@ -304,6 +307,7 @@ export interface VoiceEmployee {
   id: string; name: string; role: string; mode: string; status: string;
   voiceProvider: string; voiceId: string; voiceName?: string | null; ttsSpeed: number;
   language: string; ambientSound?: string | null; ambientVolume: number;
+  maxCallDurationS: number; callTimeoutMessage?: string | null; recordingNotice?: boolean;
   welcomeMessage?: string | null; agentInformation?: string | null; callEndRules?: string | null;
   scriptAdherence: number; stylePackEnabled: boolean; aiAcknowledgementEnabled: boolean;
   dograhWorkflowId?: string | null; dograhWorkflowUuid?: string | null;
@@ -315,6 +319,7 @@ export interface VoiceEmployeeInput {
   name: string; role: string; mode?: string; voiceProvider: string; voiceId: string; voiceName?: string;
   language?: string; ttsSpeed?: number; welcomeMessage?: string; agentInformation?: string; callEndRules?: string;
   stylePackEnabled?: boolean; aiAcknowledgementEnabled?: boolean;
+  maxCallDurationS?: number; callTimeoutMessage?: string | null; recordingNotice?: boolean;
   sections?: VoiceEmployeeSection[]; variables?: VoiceEmployeeVariable[];
 }
 
@@ -362,6 +367,8 @@ export async function editVoiceEmployeeFlow(id: string, instruction: string) {
 export interface VoiceEngineCall {
   id: string; employeeId: string; toNumber: string; durationS: number | null; disposition: string | null;
   summary: string | null; outcome: any; createdAt: string; employee?: { name: string };
+  recordingUrl?: string | null; transcript?: any; talkRatio?: { agent: number; caller: number } | null;
+  sentiment?: string | null; recommendedNextStep?: string | null;
   quality: { score: number; violations: any[]; agentTurns: number } | null;
 }
 export async function fetchVoiceEngineCalls(filters: { employeeId?: string; direction?: string; disposition?: string; limit?: number } = {}) {
