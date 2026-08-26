@@ -35,7 +35,7 @@
     "jsvoice": "^1.1.1",
     "lucide-react": "^0.546.0",
     "motion": "^12.23.24",
-    "posthog-js": "^1.403.0",
+    "posthog-js": "^1.418.10",
     "react": "^19.0.1",
     "react-dom": "^19.0.1",
     "react-hook-form": "^7.79.0",
