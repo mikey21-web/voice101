@@ -512,6 +512,32 @@ export default function VoiceEmployeeDetailPage() {
       )}
 
       <section className="border-t border-[var(--border)] pt-6">
+        <h2 className="text-lg font-bold text-[var(--foreground)] mb-1">Actions &amp; tools</h2>
+        <p className="text-sm text-[var(--muted-foreground)] mb-4">What the agent can do during and after a call. Tools with a gate need that integration connected first.</p>
+        <div className="space-y-2">
+          {(employee.actions?.length ? employee.actions : [
+            { actionKey: 'end_call', label: 'End the call politely when the conversation is done', enabled: true, gated: false, gateReason: null },
+            { actionKey: 'transfer_call', label: 'Transfer the call to a human teammate', enabled: false, gated: true, gateReason: 'telephony' },
+            { actionKey: 'book_appointment', label: 'Book an appointment on a connected calendar', enabled: false, gated: true, gateReason: 'calendar integration' },
+            { actionKey: 'send_whatsapp', label: 'Send a WhatsApp message after the call', enabled: false, gated: true, gateReason: 'WhatsApp integration' },
+            { actionKey: 'custom_api', label: "Call a custom API you've configured", enabled: false, gated: false, gateReason: null },
+          ]).map((a: any) => (
+            <div key={a.actionKey} className="flex items-center justify-between rounded-lg border border-[var(--border)] px-4 py-3">
+              <div>
+                <p className="text-sm font-medium text-[var(--foreground)]">{a.label}</p>
+                {a.gated && (
+                  <p className="text-xs text-amber-600 dark:text-amber-400 mt-0.5">Requires {a.gateReason}</p>
+                )}
+              </div>
+              <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${a.enabled ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' : 'bg-gray-100 dark:bg-gray-800 text-gray-500'}`}>
+                {a.enabled ? 'On' : a.gated ? 'Locked' : 'Off'}
+              </span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="border-t border-[var(--border)] pt-6">
         <h2 className="text-lg font-bold text-[var(--foreground)] mb-4">Test call</h2>
         {!employee.isPublished && <p className="text-sm text-amber-600 dark:text-amber-400 mb-4">Publish first to test.</p>}
         <div className="flex gap-2">
