@@ -76,7 +76,7 @@ export class LeadsService {
   /**
    * Pre-visit brief — everything an agent needs on one screen before walking
    * into a site visit, so they never pitch blind: who the buyer is, what they
-   * told us, what they've pushed back on, and which live units actually match.
+   * told us, what they've pushed back on, and what's already been booked.
    */
   async getBrief(id: string) {
     const lead = await this.prisma.lead.findUnique({
@@ -87,7 +87,7 @@ export class LeadsService {
         customFields: { include: { definition: true } },
         internalNotes: { orderBy: { createdAt: 'desc' }, take: 10, include: { user: { select: { name: true } } } },
         conversations: { orderBy: { createdAt: 'desc' }, take: 20 },
-        bookings: { orderBy: { startTime: 'asc' }, include: { property: true } },
+        bookings: { orderBy: { startTime: 'asc' } },
       },
     });
     if (!lead) throw new NotFoundException('Lead not found');
@@ -103,37 +103,6 @@ export class LeadsService {
       .sort((a, b) => a.startTime.getTime() - b.startTime.getTime())[0] || null;
 
     const pastBookings = lead.bookings.filter(b => b.startTime < now || !['PENDING', 'CONFIRMED'].includes(b.status));
-
-    // Matching live inventory, using whatever preference fields this lead has captured
-    // (property_type / budget_range / bedrooms / location are the real-estate niche's
-    // custom-field keys — this degrades gracefully to no matches for other niches).
-    const budgetNum = this.parseBudget(fields['budget_range'] || lead.budget || '');
-    const propertyWhere: Prisma.PropertyWhereInput = { deletedAt: null, status: 'AVAILABLE' };
-    if (fields['bedrooms']) propertyWhere.bedrooms = parseInt(fields['bedrooms'], 10) || undefined;
-    if (fields['location']) propertyWhere.location = { contains: fields['location'], mode: 'insensitive' };
-    if (fields['property_type']) propertyWhere.propertyType = fields['property_type'].toUpperCase() as any;
-    if (budgetNum) propertyWhere.price = { lte: budgetNum * 1.15, gte: budgetNum * 0.7 };
-
-    const matchingProperties = await this.prisma.property.findMany({
-      where: propertyWhere,
-      take: 5,
-      orderBy: { featured: 'desc' },
-      include: { images: { where: { isPrimary: true }, take: 1 } },
-    });
-
-    // Builders sell Units, not flat Properties, so a pure-builder tenant would
-    // otherwise get an empty brief. Same preference fields, different model.
-    const unitWhere: Prisma.UnitWhereInput = { status: 'AVAILABLE' };
-    if (fields['property_type']) unitWhere.unitType = { contains: fields['property_type'], mode: 'insensitive' };
-    if (fields['location']) unitWhere.project = { location: { contains: fields['location'], mode: 'insensitive' } };
-    if (budgetNum) unitWhere.price = { lte: budgetNum * 1.15, gte: budgetNum * 0.7 };
-
-    const matchingUnits = await this.prisma.unit.findMany({
-      where: unitWhere,
-      take: 5,
-      orderBy: { price: 'asc' },
-      include: { project: { select: { name: true, location: true, images: true } }, tower: { select: { name: true } } },
-    });
 
     // Objections: heuristic scan of inbound messages for common pushback language,
     // so the agent isn't caught off guard by something the buyer already raised.
@@ -163,8 +132,6 @@ export class LeadsService {
       preferences: fields,
       upcomingBooking,
       pastBookingsCount: pastBookings.length,
-      matchingProperties,
-      matchingUnits,
       objections,
       recentMessages,
       notes: lead.internalNotes.map(n => ({ content: n.content, by: n.user?.name || 'Unknown', at: n.createdAt })),
@@ -172,30 +139,19 @@ export class LeadsService {
   }
 
   /**
-   * The agent's "my day" home screen: their hot leads, today's site visits
-   * (with a link straight to the pre-visit brief), and their overdue follow-ups.
-   * Scoped to a single agent so nobody has to dig through the whole team's queue.
+   * The agent's "my day" home screen: their hot leads and their overdue
+   * follow-ups. Scoped to a single agent so nobody has to dig through the
+   * whole team's queue.
    */
   async getAgentWorklist(agentId: string) {
     const now = new Date();
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
 
-    const [hotLeads, todayVisits, overdueTasks] = await Promise.all([
+    const [hotLeads, overdueTasks] = await Promise.all([
       this.prisma.lead.findMany({
         where: { assignedAgentId: agentId, segment: 'HOT', status: { notIn: ['CONVERTED', 'LOST', 'SPAM'] } },
         include: { contact: { select: { name: true, phone: true } } },
         orderBy: { score: 'desc' },
         take: 10,
-      }),
-      this.prisma.siteVisit.findMany({
-        where: {
-          lead: { assignedAgentId: agentId },
-          startAt: { gte: todayStart, lt: todayEnd },
-          status: { in: ['SCHEDULED', 'CONFIRMED'] },
-        },
-        include: { lead: { include: { contact: { select: { name: true, phone: true } } } }, project: { select: { name: true } } },
-        orderBy: { startAt: 'asc' },
       }),
       this.prisma.task.findMany({
         where: { assigneeId: agentId, dueAt: { lt: now }, status: { not: 'completed' } },
@@ -205,20 +161,7 @@ export class LeadsService {
       }),
     ]);
 
-    return { hotLeads, todayVisits, overdueTasks };
-  }
-
-  private parseBudget(raw: string): number | null {
-    if (!raw) return null;
-    // Handles "5000000", "50L", "5 Cr", "50-80L" (takes the lower bound) etc.
-    const match = raw.replace(/,/g, '').match(/([\d.]+)\s*(cr|crore|l|lakh)?/i);
-    if (!match) return null;
-    let num = parseFloat(match[1]);
-    if (isNaN(num)) return null;
-    const unit = (match[2] || '').toLowerCase();
-    if (unit.startsWith('cr')) num *= 10000000;
-    else if (unit.startsWith('l')) num *= 100000;
-    return num;
+    return { hotLeads, overdueTasks };
   }
 
   async create(data: any, userId?: string) {

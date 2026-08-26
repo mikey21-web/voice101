@@ -1,9 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Bell, Menu, Search, X, GraduationCap } from "lucide-react";
-import { fetchLeads, fetchContacts, fetchNotifications, fetchUnreadNotificationCount, markNotificationRead, markAllNotificationsRead, type AppNotification } from "../../lib/data";
-import { setPendingSearch } from "../../lib/pendingSearch";
-import { startExplainFlow } from "../../lib/explainMode";
-import { GUIDED_TOURS } from "../../lib/guidedTours";
+import { Bell, Menu, Search, X } from "lucide-react";
+import { fetchNotifications, fetchUnreadNotificationCount, markNotificationRead, markAllNotificationsRead, type AppNotification } from "../../lib/data";
 
 function timeAgo(iso: string) {
   const diffMs = Date.now() - new Date(iso).getTime();
@@ -15,12 +12,19 @@ function timeAgo(iso: string) {
   return `${Math.floor(hrs / 24)}d ago`;
 }
 
-function GlobalSearch() {
+const QUICK_PAGES = [
+  { label: "Dashboard", path: "/voice-dashboard" },
+  { label: "My Employees", path: "/voice-employees" },
+  { label: "Hire with AI", path: "/talk-to-build" },
+  { label: "Instant Leads", path: "/voice-instant-leads" },
+  { label: "Bulk Campaigns", path: "/voice-campaigns" },
+  { label: "Call Logs", path: "/voice-call-logs" },
+  { label: "Billing", path: "/voice-billing" },
+];
+
+function PageSearch() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const [leadResults, setLeadResults] = useState<any[]>([]);
-  const [contactResults, setContactResults] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -41,59 +45,28 @@ function GlobalSearch() {
     };
   }, []);
 
-  useEffect(() => {
-    if (!query.trim()) { setLeadResults([]); setContactResults([]); return; }
-    setLoading(true);
-    const t = setTimeout(async () => {
-      try {
-        const [leads, contacts] = await Promise.all([
-          fetchLeads(1, { search: query }).catch(() => ({ data: [] })),
-          fetchContacts(1, query).catch(() => ({ data: [] })),
-        ]);
-        setLeadResults((leads.data || []).slice(0, 5));
-        setContactResults(((contacts as any).data || contacts || []).slice(0, 5));
-      } finally {
-        setLoading(false);
-      }
-    }, 300);
-    return () => clearTimeout(t);
-  }, [query]);
-
-  const goToLeads = (searchTerm: string) => {
-    setPendingSearch("leads", searchTerm);
-    window.location.hash = "/leads";
-    setOpen(false);
-    setQuery("");
-  };
-
-  const goToContacts = (searchTerm: string) => {
-    setPendingSearch("contacts", searchTerm);
-    window.location.hash = "/contacts";
-    setOpen(false);
-    setQuery("");
-  };
-
-  const hasResults = leadResults.length > 0 || contactResults.length > 0;
+  const results = QUICK_PAGES.filter((p) => p.label.toLowerCase().includes(query.trim().toLowerCase()));
 
   return (
     <div ref={containerRef} className="relative">
       <button
         onClick={() => setOpen((v) => !v)}
         className="rounded-md p-2 text-[var(--muted-foreground)] hover:bg-[var(--accent)] hover:text-[var(--foreground)] transition-all duration-150 active:scale-95"
-        title="Search"
+        title="Go to page (⌘K)"
       >
         <Search size={15} />
       </button>
 
       {open && (
-        <div className="fixed inset-x-3 top-16 rounded-lg border border-[var(--border)] bg-[var(--card)] shadow-lg z-50 overflow-hidden sm:absolute sm:inset-auto sm:right-0 sm:top-full sm:mt-2 sm:w-80">
+        <div className="fixed inset-x-3 top-16 rounded-lg border border-[var(--border)] bg-[var(--card)] shadow-lg z-50 overflow-hidden sm:absolute sm:inset-auto sm:right-0 sm:top-full sm:mt-2 sm:w-64">
           <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-2">
             <Search size={14} className="text-[var(--muted-foreground)]" />
             <input
               ref={inputRef}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search leads or contacts..."
+              onKeyDown={(e) => { if (e.key === "Enter" && results.length) { window.location.hash = results[0].path; setOpen(false); setQuery(""); } }}
+              placeholder="Jump to a page..."
               className="min-w-0 flex-1 bg-transparent text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none"
             />
             {query && (
@@ -102,90 +75,15 @@ function GlobalSearch() {
               </button>
             )}
           </div>
-
-          <div className="max-h-80 overflow-y-auto">
-            {loading && <p className="px-3 py-3 text-xs text-[var(--muted-foreground)]">Searching...</p>}
-
-            {!loading && query.trim() && !hasResults && (
-              <p className="px-3 py-3 text-xs text-[var(--muted-foreground)]">No results for "{query}"</p>
-            )}
-
-            {!loading && leadResults.length > 0 && (
-              <div className="py-1">
-                <p className="px-3 pt-1 pb-0.5 text-[10px] font-semibold text-[var(--muted-foreground-light)] uppercase tracking-wider">Leads</p>
-                {leadResults.map((lead) => (
-                  <button
-                    key={lead.id}
-                    onClick={() => goToLeads(lead.contact?.email || lead.contact?.name || query)}
-                    className="w-full text-left px-3 py-2 text-sm hover:bg-[var(--accent)] transition-colors"
-                  >
-                    <p className="truncate text-[var(--foreground)] font-medium">{lead.contact?.name || "Unnamed"}</p>
-                    <p className="truncate text-xs text-[var(--muted-foreground)]">{lead.contact?.email || lead.status}</p>
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {!loading && contactResults.length > 0 && (
-              <div className="py-1">
-                <p className="px-3 pt-1 pb-0.5 text-[10px] font-semibold text-[var(--muted-foreground-light)] uppercase tracking-wider">Contacts</p>
-                {contactResults.map((contact) => (
-                  <button
-                    key={contact.id}
-                    onClick={() => goToContacts(contact.email || contact.name || query)}
-                    className="w-full text-left px-3 py-2 text-sm hover:bg-[var(--accent)] transition-colors"
-                  >
-                    <p className="truncate text-[var(--foreground)] font-medium">{contact.name || "Unnamed"}</p>
-                    <p className="truncate text-xs text-[var(--muted-foreground)]">{contact.email}</p>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function GuidedToursMenu() {
-  const [open, setOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const onClickOutside = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener("mousedown", onClickOutside);
-    return () => document.removeEventListener("mousedown", onClickOutside);
-  }, []);
-
-  const launch = (steps: typeof GUIDED_TOURS[number]["steps"]) => {
-    startExplainFlow(steps);
-    setOpen(false);
-  };
-
-  return (
-    <div ref={containerRef} className="relative">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="rounded-md p-2 text-[var(--muted-foreground)] hover:bg-[var(--accent)] hover:text-[var(--foreground)] transition-all duration-150 active:scale-95"
-        title="Guided Tours"
-      >
-        <GraduationCap size={15} />
-      </button>
-
-      {open && (
-        <div className="absolute right-0 top-full mt-2 w-56 rounded-lg border border-[var(--border)] bg-[var(--card)] shadow-lg z-50 overflow-hidden">
-          <p className="px-3 pt-2.5 pb-1 text-[10px] font-semibold text-[var(--muted-foreground-light)] uppercase tracking-wider">Guided Tours</p>
-          <div className="py-1">
-            {GUIDED_TOURS.map((tour) => (
+          <div className="max-h-80 overflow-y-auto py-1">
+            {results.length === 0 && <p className="px-3 py-3 text-xs text-[var(--muted-foreground)]">No matching pages</p>}
+            {results.map((p) => (
               <button
-                key={tour.id}
-                onClick={() => launch(tour.steps)}
+                key={p.path}
+                onClick={() => { window.location.hash = p.path; setOpen(false); setQuery(""); }}
                 className="w-full text-left px-3 py-2 text-sm text-[var(--foreground)] hover:bg-[var(--accent)] transition-colors"
               >
-                {tour.title}
+                {p.label}
               </button>
             ))}
           </div>
@@ -306,8 +204,7 @@ export function Topbar({ onMenuToggle }: { onMenuToggle: () => void }) {
 
       <div className="min-w-0 flex-1" />
 
-      <GlobalSearch />
-      <GuidedToursMenu />
+      <PageSearch />
       <NotificationsBell />
     </header>
   );

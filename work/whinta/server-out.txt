@@ -1,1 +1,0 @@
-demo server up: http://localhost:8123  (hit the endpoints with curl/PowerShell)

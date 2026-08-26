@@ -31,18 +31,6 @@ export class SpineDriverService {
     // Stage 6, SITE_VISIT.
     site_visit_scheduled: 'APPOINTMENT_BOOKED',
     site_visit_confirmed: 'APPOINTMENT_BOOKED',
-    // Stage 8, BOOKING. Money has changed hands.
-    booking_confirmed: 'BOOKED',
-    // Stage 10, POST_SALE.
-    handed_over: 'POSSESSION',
-  };
-
-  /** Post-sales runs its own stage machine; these are the points that move the lead. */
-  private static readonly POST_SALES_STAGE: Record<string, LeadStatus> = {
-    AGREEMENT_IN_PROGRESS: 'AGREEMENT',
-    AGREEMENT_REGISTERED: 'REGISTERED',
-    PAYMENT_ACTIVE: 'LOAN_PROCESSING',
-    HANDED_OVER: 'POSSESSION',
   };
 
   constructor(private advanceStage: AdvanceStageService) {}
@@ -88,10 +76,6 @@ export class SpineDriverService {
     const direct = SpineDriverService.EVENT_STAGE[entry.type];
     if (direct) return direct;
 
-    if (entry.type === 'post_sales_stage_changed') {
-      const toStage = String(entry.metadata?.toStage ?? '');
-      return SpineDriverService.POST_SALES_STAGE[toStage] ?? null;
-    }
     return null;
   }
 }

@@ -2,7 +2,7 @@ import { LeadStatus } from '@prisma/client';
 
 export type SpineStage =
   | 'CAPTURE' | 'RESOLVE' | 'ENGAGE' | 'QUALIFY' | 'MATCH'
-  | 'SITE_VISIT' | 'HUMAN_SALES' | 'BOOKING' | 'MONEY_TRAIL' | 'POST_SALE'
+  | 'APPOINTMENT' | 'HUMAN_SALES' | 'BOOKING'
   | 'CLOSED_LOST';
 
 export const STATUS_TO_STAGE: Record<LeadStatus, SpineStage> = {
@@ -12,21 +12,16 @@ export const STATUS_TO_STAGE: Record<LeadStatus, SpineStage> = {
   QUALIFYING: 'QUALIFY',
   QUALIFIED: 'QUALIFY',
   PROPOSAL_SENT: 'MATCH',
-  APPOINTMENT_BOOKED: 'SITE_VISIT',
+  APPOINTMENT_BOOKED: 'APPOINTMENT',
   CONVERTED: 'BOOKING',
-  BOOKED: 'BOOKING',
-  AGREEMENT: 'MONEY_TRAIL',
-  LOAN_PROCESSING: 'MONEY_TRAIL',
-  REGISTERED: 'MONEY_TRAIL',
-  POSSESSION: 'POST_SALE',
   LOST: 'CLOSED_LOST',
   COLD: 'CLOSED_LOST',
   SPAM: 'CLOSED_LOST',
 };
 
 export const STAGE_ORDER: SpineStage[] = [
-  'CAPTURE', 'RESOLVE', 'ENGAGE', 'QUALIFY', 'MATCH', 'SITE_VISIT',
-  'HUMAN_SALES', 'BOOKING', 'MONEY_TRAIL', 'POST_SALE', 'CLOSED_LOST',
+  'CAPTURE', 'RESOLVE', 'ENGAGE', 'QUALIFY', 'MATCH', 'APPOINTMENT',
+  'HUMAN_SALES', 'BOOKING', 'CLOSED_LOST',
 ];
 
 export function stageOf(status: LeadStatus): SpineStage {

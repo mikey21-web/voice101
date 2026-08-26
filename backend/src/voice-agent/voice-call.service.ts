@@ -45,14 +45,76 @@ export class VoiceCallService {
   async get(tenantId: string, id: string) {
     const call = await this.prisma.voiceCall.findFirst({ where: { id, tenantId }, include: { employee: { select: { name: true, role: true } } } });
     if (!call) throw new NotFoundException('Call not found');
-    return { ...call, quality: call.transcript ? lintTranscript(call.transcript) : null };
+    const transcriptText = this.transcriptToText(call.transcript);
+    let insights = { talkRatio: call.talkRatio as any, sentiment: call.sentiment, recommendedNextStep: call.recommendedNextStep };
+    if (transcriptText && (!call.sentiment || !call.talkRatio || !call.recommendedNextStep)) {
+      try {
+        insights = await this.analyzeTranscript(transcriptText, call.disposition || 'completed');
+        await this.prisma.voiceCall.update({
+          where: { id: call.id },
+          data: { talkRatio: insights.talkRatio as any, sentiment: insights.sentiment, recommendedNextStep: insights.recommendedNextStep },
+        });
+      } catch (err: any) {
+        this.logger.warn(`AI insight generation failed for call ${call.id}: ${err.message}`);
+      }
+    }
+    return { ...call, quality: call.transcript ? lintTranscript(call.transcript) : null, ...insights };
   }
 
   /** No live-call streaming in this engine yet (Dograh doesn't expose an in-progress-call feed
-   * over this API) — returns the shape Outpero's /calls/live exposes, always empty for now
+   * over this API) - returns the shape Outpero's /calls/live exposes, always empty for now
    * rather than omitting the endpoint, so a frontend built against that contract doesn't 404. */
   async listLive(_tenantId: string) {
     return [];
+  }
+
+  private transcriptToText(transcript: any): string {
+    if (!transcript) return '';
+    if (typeof transcript === 'string') return transcript;
+    if (Array.isArray(transcript)) {
+      return transcript
+        .map((m) => {
+          const role = typeof m === 'string' ? '' : m?.role === 'agent' ? 'Agent' : m?.role === 'caller' ? 'Caller' : m?.role === 'user' ? 'Caller' : '';
+          const text = typeof m === 'string' ? m : m?.text || m?.content || '';
+          return role ? `${role}: ${text}` : text;
+        })
+        .filter(Boolean)
+        .join('\n');
+    }
+    if (typeof transcript === 'object' && transcript.messages) return this.transcriptToText(transcript.messages);
+    return JSON.stringify(transcript);
+  }
+
+  private async analyzeTranscript(transcript: string, disposition: string): Promise<{ talkRatio: { agent: number; caller: number }; sentiment: string; recommendedNextStep: string }> {
+    const apiKey = this.config.get<string>('DEEPSEEK_API_KEY');
+    if (!apiKey) throw new Error('DEEPSEEK_API_KEY not configured');
+    const baseUrl = this.config.get<string>('DEEPSEEK_BASE_URL') || 'https://api.deepseek.com/v1';
+    const res = await fetch(`${baseUrl}/chat/completions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+      body: JSON.stringify({
+        model: this.config.get<string>('AGENT_MODEL') || 'deepseek-chat',
+        messages: [
+          {
+            role: 'system',
+            content:
+              'You analyze a phone-call transcript between an AI voice agent and a caller. Estimate the talk ratio, overall sentiment, and the recommended next step. Output ONLY JSON: {"talkRatio":{"agent":number,"caller":number},"sentiment":"positive|neutral|negative","recommendedNextStep":"one short actionable line"}. talkRatio should sum to roughly 100. Keep recommendedNextStep concrete and specific to this conversation.',
+          },
+          { role: 'user', content: `Disposition: ${disposition}\n\nTranscript:\n${transcript.slice(0, 12000)}` },
+        ],
+      }),
+    });
+    if (!res.ok) throw new Error(`AI insight generation failed: ${res.status} ${await res.text()}`);
+    const data: any = await res.json();
+    const content = data?.choices?.[0]?.message?.content || '';
+    const match = content.match(/\{[\s\S]*\}/);
+    if (!match) throw new Error('No JSON in AI insight response');
+    const parsed = JSON.parse(match[0]);
+    return {
+      talkRatio: { agent: Number(parsed.talkRatio?.agent ?? 50), caller: Number(parsed.talkRatio?.caller ?? 50) },
+      sentiment: ['positive', 'neutral', 'negative'].includes(parsed.sentiment) ? parsed.sentiment : 'neutral',
+      recommendedNextStep: parsed.recommendedNextStep || 'Follow up with the caller.',
+    };
   }
 
   async redial(tenantId: string, id: string) {
@@ -196,7 +258,7 @@ export class VoiceCallService {
           {
             role: 'system',
             content:
-              'You are a real-estate sales call summariser. Summarise the transcript in exactly 2 sentences: what the caller was looking for (budget, location, unit type if mentioned), and the outcome/next step.',
+              'You are a sales call summariser. Summarise the transcript in exactly 2 sentences: what the caller was looking for and the outcome/next step.',
           },
           { role: 'user', content: transcript.slice(0, 12000) },
         ],

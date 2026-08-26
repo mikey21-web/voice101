@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lead Auto — Talk to Mikey</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Caveat:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; overflow-x: clip; }
+    body { overflow-x: clip; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; background: #FAFAF8; color: #111; -webkit-font-smoothing: antialiased; }
+    .font-script { font-family: 'Caveat', cursive; }
+    @keyframes glow {
+      0%, 100% { text-shadow: 0 0 16px rgba(16,185,129,0.15), 0 0 48px rgba(16,185,129,0.08); }
+      50% { text-shadow: 0 0 28px rgba(16,185,129,0.3), 0 0 64px rgba(16,185,129,0.12); }
+    }
+    .mikey-glow { animation: glow 3s ease-in-out infinite; }
+  </style>
+</head>
+<body>
+
+  <nav class="fixed top-0 left-0 right-0 z-50 border-b border-black/5" style="background:rgba(250,250,248,0.95);backdrop-filter:blur(12px);">
+    <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+      <a href="/" class="flex items-center gap-2.5 font-bold text-[15px] text-[#111] no-underline">
+        <span class="w-7 h-7 rounded-lg bg-emerald-500 flex items-center justify-center text-white text-xs font-bold">L</span>
+        Lead Auto
+      </a>
+      <a href="/" class="text-[13px] font-semibold text-gray-500 hover:text-gray-900 transition">&larr; Back</a>
+    </div>
+  </nav>
+
+  <div class="min-h-screen flex items-center justify-center px-6 pt-20">
+    <div class="w-full max-w-md">
+      <div class="text-center mb-10">
+        <h1 class="text-[2.2rem] font-extrabold tracking-[-0.03em] text-[#111] mb-2">
+          Talk to <span class="font-script text-emerald-500 text-[2.6rem] tracking-normal mikey-glow">Mikey</span>
+        </h1>
+        <p class="text-[14px] text-gray-500 font-medium">Sign in to start your conversation.</p>
+      </div>
+
+      <div class="bg-white rounded-[28px] border border-black/5 p-8 shadow-[0_8px_30px_rgba(0,0,0,0.03)]">
+        <form id="loginForm" class="flex flex-col gap-5">
+          <div>
+            <label class="text-[12px] font-bold text-gray-500 uppercase tracking-wider mb-2 block">Email</label>
+            <input
+              id="email"
+              type="email"
+              autocomplete="email"
+              placeholder="you@company.com"
+              class="w-full px-4 py-3.5 rounded-[16px] border border-gray-200 text-[14px] font-medium text-gray-900 bg-[#FAFAF8] outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/10"
+            />
+          </div>
+          <div>
+            <label class="text-[12px] font-bold text-gray-500 uppercase tracking-wider mb-2 block">Password</label>
+            <input
+              id="password"
+              type="password"
+              autocomplete="current-password"
+              placeholder="Enter your password"
+              class="w-full px-4 py-3.5 rounded-[16px] border border-gray-200 text-[14px] font-medium text-gray-900 bg-[#FAFAF8] outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/10"
+            />
+          </div>
+
+          <div id="errorMsg" class="hidden text-[13px] font-medium text-red-500 bg-red-50 rounded-[12px] px-4 py-3"></div>
+
+          <button
+            id="submitBtn"
+            type="submit"
+            class="w-full bg-[#111] text-white py-4 rounded-full font-bold text-[15px] hover:bg-gray-800 hover:-translate-y-0.5 transition-all shadow-sm mt-2"
+          >
+            Talk to Mikey
+          </button>
+        </form>
+
+        <div class="mt-6 text-center">
+          <a href="/dashboard/#/forgot-password" class="text-[13px] text-gray-400 hover:text-gray-600 font-medium transition">Forgot password?</a>
+        </div>
+      </div>
+
+      <div class="text-center mt-8">
+        <p class="text-[12px] text-gray-400 font-medium">&copy; 2026 Lead Auto. Mikey AI Business Operating System.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('loginForm').addEventListener('submit', async function(e){
+      e.preventDefault();
+      var email = document.getElementById('email').value.trim();
+      var password = document.getElementById('password').value;
+      var btn = document.getElementById('submitBtn');
+      var err = document.getElementById('errorMsg');
+
+      if(!email || !password){
+        err.textContent = 'Please enter both email and password.';
+        err.classList.remove('hidden');
+        return;
+      }
+
+      err.classList.add('hidden');
+      btn.disabled = true;
+      btn.textContent = 'Connecting to Mikey...';
+
+      try {
+        var res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email.toLowerCase(), password })
+        });
+        var data = await res.json();
+
+        if(!res.ok){
+          err.textContent = data.message || 'Invalid credentials. Try again.';
+          err.classList.remove('hidden');
+          btn.disabled = false;
+          btn.textContent = 'Talk to Mikey';
+          return;
+        }
+
+        localStorage.setItem('token', data.accessToken);
+        localStorage.setItem('refreshToken', data.refreshToken);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        sessionStorage.setItem('user', JSON.stringify(data.user));
+
+        window.location.href = '/dashboard/';
+      } catch(e) {
+        err.textContent = 'Could not connect. Please try again.';
+        err.classList.remove('hidden');
+        btn.disabled = false;
+        btn.textContent = 'Talk to Mikey';
+      }
+    });
+  </script>
+</body>
+</html>

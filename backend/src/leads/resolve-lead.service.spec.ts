@@ -86,7 +86,7 @@ describe('ResolveLeadService (Phase 4)', () => {
       { id: 'lead-1', status: 'QUALIFYING', assignedAgentId: 'agent-1', interest: '2BHK', metadata: {} },
     ]);
 
-    const res = await service.resolveLead({ ...base, source: 'MAGICBRICKS' });
+    const res = await service.resolveLead({ ...base, source: 'META_ADS' });
 
     expect(prisma.lead.create).not.toHaveBeenCalled();
     expect(res.reusedExistingLead).toBe(true);
@@ -165,7 +165,7 @@ describe('ResolveLeadService (Phase 4)', () => {
       return Promise.resolve({ ...stored, segment: 'WARM' });
     });
 
-    for (const source of ['FORM', 'MAGICBRICKS', '99ACRES', 'HOUSING']) {
+    for (const source of ['FORM', 'META_ADS', 'GOOGLE_ADS', 'REFERRAL']) {
       await service.resolveLead({ ...base, source });
     }
 

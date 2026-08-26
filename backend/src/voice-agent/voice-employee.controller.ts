@@ -55,6 +55,12 @@ export class VoiceEmployeeController {
     return this.service.checkReadiness(req.user.tenantId, id);
   }
 
+  @Post(':id/duplicate')
+  @Roles('OWNER', 'ADMIN')
+  duplicate(@Req() req: any, @Param('id') id: string) {
+    return this.service.duplicate(req.user.tenantId, id);
+  }
+
   @Get()
   @Roles('OWNER', 'ADMIN', 'MANAGER')
   list(@Req() req: any, @Query('include_archived') includeArchived?: string) {

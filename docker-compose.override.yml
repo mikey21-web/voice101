@@ -1,4 +1,0 @@
-volumes:
-  pgdata:
-    external: true
-    name: lead-automation_pgdata

@@ -1,7 +1,6 @@
 export type LeadStatus = 'NEW' | 'CONTACTED' | 'ENGAGED' | 'QUALIFYING' | 'QUALIFIED' | 'PROPOSAL_SENT' | 'APPOINTMENT_BOOKED' | 'CONVERTED' | 'LOST' | 'COLD' | 'SPAM';
 export type LeadSegment = 'HOT' | 'WARM' | 'COLD' | 'UNQUALIFIED' | 'EXISTING_CUSTOMER' | 'RECONNECT';
-export type LeadSource = 'CAMPAIGN' | 'QR_CODE' | 'FORM' | 'CHATBOT' | 'MOBILE_APP' | 'WHATSAPP' | 'SOCIAL_MEDIA' | 'PHONE_CALL'
-  | 'INDIAMART' | 'NINETY_NINE_ACRES' | 'JUSTDIAL' | 'MAGICBRICKS' | 'HOUSING_COM' | 'TRADEINDIA';
+export type LeadSource = 'CAMPAIGN' | 'QR_CODE' | 'FORM' | 'CHATBOT' | 'MOBILE_APP' | 'WHATSAPP' | 'SOCIAL_MEDIA' | 'PHONE_CALL' | 'META_ADS' | 'GOOGLE_ADS' | 'MANUAL' | 'REFERRAL' | 'AI';
 
 export interface Lead {
   id: string;

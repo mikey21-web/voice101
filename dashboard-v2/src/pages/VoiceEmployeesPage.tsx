@@ -1,10 +1,10 @@
 import { useMemo, useState, useEffect } from 'react';
 import {
   fetchVoiceEmployees, createVoiceEmployee, publishVoiceEmployee, activateVoiceEmployee,
-  deactivateVoiceEmployee, deleteVoiceEmployee, generateVoiceEmployeeDraft,
+  deactivateVoiceEmployee, deleteVoiceEmployee, duplicateVoiceEmployee, generateVoiceEmployeeDraft,
   VoiceEmployee, GeneratedFlowDraft,
 } from '../lib/data';
-import { Users, Plus, Loader2, Rocket, Power, Trash2, X, ChevronRight, Sparkles, ArrowLeft } from 'lucide-react';
+import { Users, Plus, Loader2, Rocket, Power, Trash2, X, ChevronRight, Copy, Sparkles, ArrowLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 type StatusFilter = 'all' | 'active' | 'draft';
@@ -57,6 +57,13 @@ export default function VoiceEmployeesPage() {
     if (!confirm(`Remove ${name}? This can't be undone.`)) return;
     setBusyId(id);
     try { await deleteVoiceEmployee(id); toast.success('Removed'); load(); }
+    catch (e: any) { toast.error(e.message); }
+    finally { setBusyId(null); }
+  };
+
+  const handleDuplicate = async (id: string) => {
+    setBusyId(id);
+    try { await duplicateVoiceEmployee(id); toast.success('Duplicated'); load(); }
     catch (e: any) { toast.error(e.message); }
     finally { setBusyId(null); }
   };
@@ -179,6 +186,14 @@ export default function VoiceEmployeesPage() {
                   className="h-9 w-9 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/20 text-[var(--muted-foreground)] hover:text-rose-600 transition-colors flex items-center justify-center disabled:opacity-50"
                 >
                   <Trash2 size={14} />
+                </button>
+                <button
+                  onClick={() => handleDuplicate(emp.id)}
+                  disabled={busyId === emp.id}
+                  title="Duplicate"
+                  className="h-9 w-9 rounded-lg hover:bg-violet-50 dark:hover:bg-violet-950/20 text-[var(--muted-foreground)] hover:text-violet-600 transition-colors flex items-center justify-center disabled:opacity-50"
+                >
+                  <Copy size={14} />
                 </button>
               </div>
             </div>

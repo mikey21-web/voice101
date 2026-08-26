@@ -66,80 +66,15 @@ model Tenant {
   voiceCampaigns                VoiceCampaign[]
   notifications                Notification[]
   adCampaigns                  AdCampaign[]
-  events                       Event[]
   devices                      Device[]
   bookings                     Booking[]
-  properties                   Property[]
-  shipments                    Shipment[]
-  paymentSchedules             PaymentSchedule[]
-  channelPartners              ChannelPartner[]
-  projects                     Project[]
-  units                        Unit[]
   mediaCollections             MediaCollection[]
-  siteVisits                   SiteVisit[]
-  unitHolds                    UnitHold[]
-  costSheets                   CostSheet[]
-  offers                       Offer[]
-  buyerDocuments               BuyerDocument[]
-  kycVerifications             KycVerification[]
-  documentTemplates            DocumentTemplate[]
-  generatedDocuments           GeneratedDocument[]
-  esignRequests                ESignRequest[]
-  paymentReceipts              PaymentReceipt[]
-  ledgerEntries                LedgerEntry[]
-  partnerPortalUsers           PartnerPortalUser[]
-  partnerLeadClaims            PartnerLeadClaim[]
-  commissionPlans              CommissionPlan[]
-  commissionAccruals           CommissionAccrual[]
-  commissionPayouts            CommissionPayout[]
   integrationEvents            IntegrationEvent[]
-  slaBreaches                  SlaBreach[]
   approvalRequests             ApprovalRequest[]
-  buyerPortalTokens            BuyerPortalToken[]
-  paymentPlanTemplates         PaymentPlanTemplate[]
-  marketingJourneys            MarketingJourney[]
-  marketingJourneyEnrollments  MarketingJourneyEnrollment[]
-  marketingEvents              MarketingEvent[]
-  cashFlowForecastEntries      CashFlowForecastEntry[]
-  revenueShareParties          RevenueShareParty[]
-  revenueShareAllocations      RevenueShareAllocation[]
-  resaleListings               ResaleListing[]
-  referralPrograms             ReferralProgram[]
-  referrals                    Referral[]
-  nriBuyerProfiles             NriBuyerProfile[]
-  constructionErpConnections   ConstructionErpConnection[]
-  constructionMilestoneUpdates ConstructionMilestoneUpdate[]
-  physicalDocumentCustodies    PhysicalDocumentCustody[]
-  territoryAssignments         TerritoryAssignment[]
   approvalPolicies             ApprovalPolicy[]
   shifts                       Shift[]
   agentAvailabilities          AgentAvailability[]
   callQualityReviews           CallQualityReview[]
-  visitAttendances             VisitAttendance[]
-  postSalesTransitions         PostSalesTransition[]
-  transferCases                TransferCase[]
-  unitShiftCases               UnitShiftCase[]
-  cancellationCases            CancellationCase[]
-  refundCases                  RefundCase[]
-  possessionCases              PossessionCase[]
-  interestPolicies             InterestPolicy[]
-  creditNotes                  CreditNote[]
-  loanRegistrationCases        LoanRegistrationCase[]
-  projectPhases                ProjectPhase[]
-  alliedInventoryItems         AlliedInventoryItem[]
-  alliedInventoryAllocations   AlliedInventoryAllocation[]
-  inventoryReleaseBatches      InventoryReleaseBatch[]
-  salesTargets                 SalesTarget[]
-  buyerSessions                BuyerSession[]
-  unitShortlists               UnitShortlist[]
-  checkoutHolds                CheckoutHold[]
-  checkoutAttempts             CheckoutAttempt[]
-  paymentIntents               PaymentIntent[]
-  digitalSalesEvents           DigitalSalesEvent[]
-  landingPages                 LandingPage[]
-  audienceSegments             AudienceSegment[]
-  suppressionEntries           SuppressionEntry[]
-  adSpendImports               AdSpendImport[]
   onboardingSteps              TenantOnboardingStep[]
   workflowDefinitions          WorkflowDefinition[]
   voiceCallers                 VoiceCaller[]
@@ -164,12 +99,6 @@ enum LeadSource {
   EMAIL
   META_ADS
   GOOGLE_ADS
-  INDIAMART
-  NINETY_NINE_ACRES
-  JUSTDIAL
-  MAGICBRICKS
-  HOUSING_COM
-  TRADEINDIA
   MANUAL
   REFERRAL
   AI
@@ -183,12 +112,7 @@ enum LeadStatus {
   QUALIFIED
   PROPOSAL_SENT
   APPOINTMENT_BOOKED
-  CONVERTED          // retained: treat as an alias of BOOKED, do not delete
-  BOOKED
-  AGREEMENT
-  LOAN_PROCESSING
-  REGISTERED
-  POSSESSION
+  CONVERTED
   LOST
   COLD
   SPAM
@@ -346,23 +270,6 @@ model CallQualityReview {
 }
 
 /// Field check-in for a site visit (spec 64.2) — GPS-consented or manual fallback; never used alone for employment decisions.
-model VisitAttendance {
-  id            String    @id @default(uuid())
-  tenantId      String    @map("tenant_id")
-  tenant        Tenant    @relation(fields: [tenantId], references: [id])
-  siteVisitId   String
-  siteVisit     SiteVisit @relation(fields: [siteVisitId], references: [id], onDelete: Cascade)
-  checkedInById String?
-  checkedInBy   User?     @relation(fields: [checkedInById], references: [id])
-  method        String    @default("MANUAL") // GPS | MANUAL
-  lat           Float?
-  lng           Float?
-  checkedInAt   DateTime  @default(now())
-
-  @@index([tenantId])
-  @@index([siteVisitId])
-  @@map("visit_attendances")
-}
 
 model CallSyncLog {
   id            String           @id @default(uuid())
@@ -572,10 +479,8 @@ model User {
   managerId                 String?
   manager                   User?                 @relation("UserManager", fields: [managerId], references: [id])
   directReports             User[]                @relation("UserManager")
-  territoryAssignments      TerritoryAssignment[]
   agentAvailability         AgentAvailability?
   callQualityReviewsGiven   CallQualityReview[]
-  visitAttendancesCheckedIn VisitAttendance[]
   createdAt                 DateTime              @default(now())
   updatedAt                 DateTime              @updatedAt
 
@@ -603,51 +508,15 @@ model User {
   callLogs                        CallLog[]
   notifications                   Notification[]
   devices                         Device[]
-  eventAssignments                EventTeamAssignment[]
   leaveRequests                   LeaveRequest[]              @relation("LeaveRequestUser")
   approvedLeaveRequests           LeaveRequest[]              @relation("LeaveRequestApprover")
   salaryRecords                   SalaryRecord[]
   timesheetEntries                TimesheetEntry[]
   modulePermissions               ModulePermission[]          @relation("ModulePermissionUser")
   customFieldValues               CustomFieldValue[]          @relation("CustomFieldValueUser")
-  assignedSiteVisits              SiteVisit[]                 @relation("AssignedSiteVisits")
-  createdSiteVisits               SiteVisit[]                 @relation("CreatedSiteVisits")
-  unitStatusChanges               UnitStatusHistory[]
-  requestedUnitHolds              UnitHold[]                  @relation("UnitHoldRequestedBy")
-  approvedUnitHolds               UnitHold[]                  @relation("UnitHoldApprovedBy")
-  approvedInventoryReleaseBatches InventoryReleaseBatch[]
-  salesTargets                    SalesTarget[]
-  createdCostSheets               CostSheet[]                 @relation("CostSheetCreatedBy")
-  approvedCostSheets              CostSheet[]                 @relation("CostSheetApprovedBy")
-  requestedOffers                 Offer[]                     @relation("OfferRequestedBy")
-  offerApprovals                  OfferApproval[]
-  requestedBuyerDocuments         BuyerDocument[]             @relation("BuyerDocumentRequestedBy")
-  verifiedBuyerDocuments          BuyerDocument[]             @relation("BuyerDocumentVerifiedBy")
-  kycVerifications                KycVerification[]
-  approvedDocumentTemplates       DocumentTemplate[]
-  generatedDocuments              GeneratedDocument[]
-  confirmedPaymentReceipts        PaymentReceipt[]            @relation("PaymentReceiptConfirmedBy")
-  ledgerEntriesCreated            LedgerEntry[]
-  decidedPartnerLeadClaims        PartnerLeadClaim[]
-  approvedCommissionAccruals      CommissionAccrual[]
-  approvedCommissionPayouts       CommissionPayout[]
-  escalatedSlaBreaches            SlaBreach[]
   requestedApprovals              ApprovalRequest[]           @relation("ApprovalRequestedBy")
   decidedApprovals                ApprovalRequest[]           @relation("ApprovalDecidedBy")
   confirmedBookings               Booking[]                   @relation("BookingConfirmedBy")
-  bookingStatusChanges            BookingStatusHistoryEntry[]
-  physicalDocumentCheckouts       PhysicalDocumentCustody[]   @relation("PhysicalDocumentCheckedOutBy")
-  postSalesTransitionsChanged     PostSalesTransition[]
-  transferCasesRequested          TransferCase[]              @relation("TransferRequestedBy")
-  transferCasesApproved           TransferCase[]              @relation("TransferApprovedBy")
-  unitShiftCasesRequested         UnitShiftCase[]             @relation("UnitShiftRequestedBy")
-  unitShiftCasesApproved          UnitShiftCase[]             @relation("UnitShiftApprovedBy")
-  cancellationCasesRequested      CancellationCase[]          @relation("CancellationRequestedBy")
-  cancellationCasesApproved       CancellationCase[]          @relation("CancellationApprovedBy")
-  refundCasesRequested            RefundCase[]                @relation("RefundRequestedBy")
-  refundCasesApproved             RefundCase[]                @relation("RefundApprovedBy")
-  possessionCasesAcknowledged     PossessionCase[]
-  creditNotesApproved             CreditNote[]
   department                      String?
   salaryType                      String?
   monthlySalary                   Float?
@@ -778,15 +647,6 @@ model Contact {
   consentEvents       ConsentEvent[]
   tickets             Ticket[]
   callLogs            CallLog[]
-  events              Event[]
-  invoices            Invoice[]
-  quotations          Quotation[]
-  contracts           Contract[]
-  bookingApplicant    BookingApplicant[]
-  buyerPortalTokens   BuyerPortalToken[]
-  referralsAsReferrer Referral[]            @relation("ReferrerContact")
-  transferCasesFrom   TransferCase[]        @relation("TransferFromApplicant")
-  transferCasesTo     TransferCase[]        @relation("TransferToApplicant")
 
   @@index([email])
   @@index([phone])
@@ -844,32 +704,8 @@ model Lead {
   scheduledActions            ScheduledAction[]
   tickets                     Ticket[]
   callLogs                    CallLog[]
-  events                      Event[]
   bookings                    Booking[]
-  shipments                   Shipment[]
-  paymentSchedules            PaymentSchedule[]
-  bookedUnits                 Unit[]
-  siteVisits                  SiteVisit[]
-  unitHolds                   UnitHold[]
-  costSheets                  CostSheet[]
-  offers                      Offer[]
-  buyerDocuments              BuyerDocument[]
-  kycVerifications            KycVerification[]
-  generatedDocuments          GeneratedDocument[]
-  paymentReceipts             PaymentReceipt[]
-  ledgerEntries               LedgerEntry[]
-  partnerLeadClaims           PartnerLeadClaim[]
-  slaBreaches                 SlaBreach[]
-  marketingJourneyEnrollments MarketingJourneyEnrollment[]
-  marketingEventInvitees      MarketingEventInvitee[]
-  referralsAsReferred         Referral[]                   @relation("ReferredLead")
-  nriProfile                  NriBuyerProfile?
-  physicalDocumentCustodies   PhysicalDocumentCustody[]    @relation("PhysicalDocumentLead")
-  buyerSessions               BuyerSession[]
   escalations                 LeadEscalation[]
-
-  channelPartnerId String?
-  channelPartner   ChannelPartner? @relation(fields: [channelPartnerId], references: [id])
 
   @@index([status])
   @@index([segment])
@@ -879,7 +715,6 @@ model Lead {
   @@index([assignedAgentId])
   @@index([contactId])
   @@index([createdAt])
-  @@index([channelPartnerId])
   @@map("leads")
 }
 
@@ -1143,8 +978,6 @@ model MediaCollection {
   name          String
   description   String?
   coverImageUrl String?
-  projectId     String?
-  propertyId    String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -1184,8 +1017,6 @@ model MediaFile {
   tags              String[]      @default([])
   isDigitalDownload Boolean       @default(false)
   downloadStatus    String?
-  projectId         String?
-  propertyId        String?
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
 
@@ -1200,11 +1031,6 @@ model MediaFile {
   templateId            String?
   template              MessageTemplate?          @relation("TemplateMedia", fields: [templateId], references: [id])
   collections           MediaCollectionItem[]
-  buyerDocuments        BuyerDocument[]
-  generatedDocuments    GeneratedDocument[]
-  paymentReceipts       PaymentReceipt[]
-  physicalDocumentScans PhysicalDocumentCustody[] @relation("PhysicalDocumentScanMedia")
-  expenseReceipts       Transaction[]
 
   @@index([category])
   @@index([fileType])
@@ -1212,8 +1038,6 @@ model MediaFile {
   @@index([leadId])
   @@index([campaignId])
   @@index([templateId])
-  @@index([projectId])
-  @@index([propertyId])
   @@map("media_files")
 }
 
@@ -1321,8 +1145,6 @@ model Task {
   lead        Lead?     @relation(fields: [leadId], references: [id])
   assigneeId  String?
   assignee    User?     @relation(fields: [assigneeId], references: [id])
-  eventId     String?
-  event       Event?    @relation(fields: [eventId], references: [id])
   createdBy   String    @default("agent")
   source      String    @default("manual")
   createdAt   DateTime  @default(now())
@@ -1331,7 +1153,6 @@ model Task {
   @@index([status])
   @@index([assigneeId])
   @@index([leadId])
-  @@index([eventId])
   @@map("tasks")
 }
 
@@ -1357,651 +1178,6 @@ model Conversion {
   @@map("conversions")
 }
 
-// === PROPERTY / LISTING (Real Estate) ===
-
-enum PropertyType {
-  APARTMENT
-  VILLA
-  PLOT
-  COMMERCIAL
-  PENTHOUSE
-  DUPLEX
-  STUDIO
-
-  @@map("property_type")
-}
-
-enum PropertyStatus {
-  AVAILABLE
-  SOLD
-  UNDER_OFFER
-  ON_HOLD
-  RENTED
-  DRAFT
-
-  @@map("property_status")
-}
-
-model Property {
-  id            String         @id @default(uuid())
-  tenantId      String         @map("tenant_id")
-  tenant        Tenant         @relation(fields: [tenantId], references: [id])
-  deletedAt     DateTime?
-  title         String
-  description   String?
-  propertyType  PropertyType   @default(APARTMENT)
-  status        PropertyStatus @default(AVAILABLE)
-  price         Float?
-  currency      String         @default("INR")
-  bedrooms      Int?
-  bathrooms     Int?
-  areaSqft      Float?
-  areaUnit      String         @default("sqft")
-  location      String?
-  address       String?
-  latitude      Float?
-  longitude     Float?
-  features      String[]       @default([])
-  amenities     String[]       @default([])
-  reraId        String?
-  metadata      Json           @default("{}")
-  featured      Boolean        @default(false)
-  availableFrom DateTime?
-  brochureUrl   String?
-  slug          String?        @unique
-  viewCount     Int            @default(0)
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-
-  images      PropertyImage[]
-  bookings    Booking[]
-  invoices    Invoice[]
-  quotations  Quotation[]
-
-  @@index([tenantId])
-  @@index([propertyType])
-  @@index([status])
-  @@index([price])
-  @@index([location])
-  @@index([bedrooms])
-  @@map("properties")
-}
-
-model PropertyImage {
-  id         String   @id @default(uuid())
-  propertyId String   @map("property_id")
-  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  url        String
-  caption    String?
-  isPrimary  Boolean  @default(false)
-  orderIndex Int      @default(0)
-  createdAt  DateTime @default(now())
-
-  @@index([propertyId])
-  @@map("property_images")
-}
-
-enum ProjectStatus {
-  PLANNING
-  UNDER_CONSTRUCTION
-  READY_TO_MOVE
-  COMPLETED
-
-  @@map("project_status")
-}
-
-enum UnitStatus {
-  AVAILABLE
-  BLOCKED
-  BOOKED
-  SOLD
-  ON_HOLD
-
-  @@map("unit_status")
-}
-
-/// A builder's development — sold as units inside towers/floors, not flat
-/// listings. Separate from Property (broker/resale flat listings) because a
-/// builder's inventory has structure (tower → floor → unit) that a broker's
-/// standalone listings never need.
-model Project {
-  id             String        @id @default(uuid())
-  tenantId       String        @map("tenant_id")
-  tenant         Tenant        @relation(fields: [tenantId], references: [id])
-  deletedAt      DateTime?
-  name           String
-  description    String?
-  location       String?
-  address        String?
-  reraId         String?
-  status         ProjectStatus @default(UNDER_CONSTRUCTION)
-  possessionDate DateTime?
-  amenities      String[]      @default([])
-  images         Json          @default("[]")
-  brochureUrl    String?
-  metadata       Json          @default("{}")
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-
-  towers                       Tower[]
-  units                        Unit[]
-  siteVisits                   SiteVisit[]
-  costSheets                   CostSheet[]
-  marketingEvents              MarketingEvent[]
-  cashFlowForecastEntries      CashFlowForecastEntry[]
-  revenueShareParties          RevenueShareParty[]
-  constructionErpConnections   ConstructionErpConnection[]
-  constructionMilestoneUpdates ConstructionMilestoneUpdate[]
-  territoryAssignments         TerritoryAssignment[]
-  phases                       ProjectPhase[]
-  alliedInventoryItems         AlliedInventoryItem[]
-  inventoryReleaseBatches      InventoryReleaseBatch[]
-  landingPages                 LandingPage[]
-  salesTargets                 SalesTarget[]
-  buyerSessions                BuyerSession[]
-  adSpendImports               AdSpendImport[]
-  invoices                     Invoice[]
-  quotations                   Quotation[]
-
-  @@index([tenantId])
-  @@index([status])
-  @@map("projects")
-}
-
-/// Optional grouping between Project and Tower for builders who sell in phases —
-/// a phase controls its own inventory-release timing independent of the rest of the project (spec 63.2).
-model ProjectPhase {
-  id        String   @id @default(uuid())
-  tenantId  String   @map("tenant_id")
-  tenant    Tenant   @relation(fields: [tenantId], references: [id])
-  projectId String
-  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  name      String
-  status    String   @default("PLANNED")
-  createdAt DateTime @default(now())
-
-  towers         Tower[]
-  releaseBatches InventoryReleaseBatch[]
-
-  @@index([tenantId])
-  @@index([projectId])
-  @@map("project_phases")
-}
-
-/// Scopes which projects (territories) a user can see/act on; absence of any row for a user means unrestricted (managers/admins).
-model TerritoryAssignment {
-  id        String   @id @default(uuid())
-  tenantId  String   @map("tenant_id")
-  tenant    Tenant   @relation(fields: [tenantId], references: [id])
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  projectId String
-  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
-
-  @@unique([userId, projectId])
-  @@index([tenantId])
-  @@index([projectId])
-  @@map("territory_assignments")
-}
-
-enum SalesTargetScope {
-  TENANT
-  PROJECT
-  TEAM
-  AGENT
-
-  @@map("sales_target_scope")
-}
-
-enum SalesTargetMetric {
-  LEAD_RESPONSE
-  SITE_VISITS
-  BOOKINGS
-  AGREEMENT_VALUE_PAISE
-  COLLECTIONS_PAISE
-
-  @@map("sales_target_metric")
-}
-
-/// A monthly/quarterly quota against a scope (tenant/project/team/agent) and
-/// metric — comparisons must always show the scope so an agent with a small
-/// territory isn't unfairly measured against one with a large one (spec 65.2).
-model SalesTarget {
-  id          String            @id @default(uuid())
-  tenantId    String            @map("tenant_id")
-  tenant      Tenant            @relation(fields: [tenantId], references: [id])
-  scope       SalesTargetScope
-  projectId   String?
-  project     Project?          @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  userId      String?
-  user        User?             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  metric      SalesTargetMetric
-  periodStart DateTime
-  periodEnd   DateTime
-  targetValue Float
-  createdById String?
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
-
-  @@index([tenantId])
-  @@index([projectId])
-  @@index([userId])
-  @@index([periodStart, periodEnd])
-  @@map("sales_targets")
-}
-
-model Tower {
-  id          String        @id @default(uuid())
-  projectId   String
-  project     Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  phaseId     String?
-  phase       ProjectPhase? @relation(fields: [phaseId], references: [id], onDelete: SetNull)
-  name        String
-  totalFloors Int?
-  createdAt   DateTime      @default(now())
-
-  units                        Unit[]
-  constructionMilestoneUpdates ConstructionMilestoneUpdate[]
-  alliedInventoryItems         AlliedInventoryItem[]
-
-  @@index([projectId])
-  @@index([phaseId])
-  @@map("towers")
-}
-
-enum AlliedInventoryType {
-  PARKING
-  STORAGE
-  TERRACE
-  SERVANT_ROOM
-  OTHER
-
-  @@map("allied_inventory_type")
-}
-
-enum AlliedInventoryStatus {
-  AVAILABLE
-  ALLOCATED
-  BLOCKED
-
-  @@map("allied_inventory_status")
-}
-
-/// A sellable/allocatable item that isn't a Unit itself — parking bay, storage,
-/// terrace. Allocated to a booking through InventoryAllocation, never encoded
-/// as a free-text note on the unit (spec 63.2).
-model AlliedInventoryItem {
-  id          String                @id @default(uuid())
-  tenantId    String                @map("tenant_id")
-  tenant      Tenant                @relation(fields: [tenantId], references: [id])
-  projectId   String
-  project     Project               @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  towerId     String?
-  tower       Tower?                @relation(fields: [towerId], references: [id], onDelete: SetNull)
-  type        AlliedInventoryType
-  label       String
-  priceRupees Float?
-  status      AlliedInventoryStatus @default(AVAILABLE)
-  createdAt   DateTime              @default(now())
-
-  allocations AlliedInventoryAllocation[]
-
-  @@index([tenantId])
-  @@index([projectId])
-  @@index([status])
-  @@map("allied_inventory_items")
-}
-
-/// Links an AlliedInventoryItem to the Booking it was sold with — an explicit
-/// join row instead of a free-text note (spec 63.2). Named distinctly from
-/// the unrelated procurement `InventoryAllocation` (event/InventoryItem) model.
-model AlliedInventoryAllocation {
-  id             String              @id @default(uuid())
-  tenantId       String              @map("tenant_id")
-  tenant         Tenant              @relation(fields: [tenantId], references: [id])
-  itemId         String              @unique
-  item           AlliedInventoryItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
-  bookingId      String
-  booking        Booking             @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  pricePaidPaise BigInt?
-  createdAt      DateTime            @default(now())
-
-  @@index([tenantId])
-  @@index([bookingId])
-  @@map("allied_inventory_allocations")
-}
-
-enum InventoryReleaseBatchStatus {
-  PLANNED
-  RELEASED
-  CANCELLED
-
-  @@map("inventory_release_batch_status")
-}
-
-/// A controlled, audited launch-day inventory release — turns "opening a
-/// spreadsheet" into a governed action with an approver and a fixed unit list
-/// (spec 63.2/63.3).
-model InventoryReleaseBatch {
-  id           String                      @id @default(uuid())
-  tenantId     String                      @map("tenant_id")
-  tenant       Tenant                      @relation(fields: [tenantId], references: [id])
-  projectId    String
-  project      Project                     @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  phaseId      String?
-  phase        ProjectPhase?               @relation(fields: [phaseId], references: [id], onDelete: SetNull)
-  name         String
-  unitIds      String[]                    @default([])
-  releaseAt    DateTime
-  status       InventoryReleaseBatchStatus @default(PLANNED)
-  approvedById String?
-  approvedBy   User?                       @relation(fields: [approvedById], references: [id])
-  releasedAt   DateTime?
-  createdById  String?
-  createdAt    DateTime                    @default(now())
-
-  @@index([tenantId])
-  @@index([projectId])
-  @@index([status])
-  @@map("inventory_release_batches")
-}
-
-/// A single sellable unit inside a project (optionally inside a tower). The
-/// availability grid and inventory velocity are both derived from this table's
-/// status + statusHistory — no spreadsheet needed.
-model Unit {
-  id         String     @id @default(uuid())
-  tenantId   String     @map("tenant_id")
-  tenant     Tenant     @relation(fields: [tenantId], references: [id])
-  projectId  String
-  project    Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  towerId    String?
-  tower      Tower?     @relation(fields: [towerId], references: [id], onDelete: SetNull)
-  unitNumber String
-  floor      Int?
-  unitType   String?
-  areaSqft   Float?
-  price      Float?
-  currency   String     @default("INR")
-  status     UnitStatus @default(AVAILABLE)
-  facing     String?
-  leadId     String?
-  lead       Lead?      @relation(fields: [leadId], references: [id], onDelete: SetNull)
-  bookedAt   DateTime?
-  soldAt     DateTime?
-  version    Int        @default(0)
-  metadata   Json       @default("{}")
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
-
-  statusHistory           UnitStatusHistory[]
-  bookings                Booking[]
-  siteVisits              SiteVisit[]
-  holds                   UnitHold[]
-  costSheets              CostSheet[]
-  revenueShareAllocations RevenueShareAllocation[]
-  resaleListings          ResaleListing[]
-  unitShiftCasesFrom      UnitShiftCase[]          @relation("UnitShiftFrom")
-  unitShiftCasesTo        UnitShiftCase[]          @relation("UnitShiftTo")
-  checkoutHolds           CheckoutHold[]
-  shortlists              UnitShortlist[]
-  checkoutAttempts        CheckoutAttempt[]
-
-  @@unique([projectId, unitNumber])
-  @@index([tenantId])
-  @@index([projectId])
-  @@index([towerId])
-  @@index([status])
-  @@index([leadId])
-  @@map("units")
-}
-
-/// Every status transition a unit goes through, timestamped — this is what
-/// makes "units sold this month" a real query instead of a manual count.
-model UnitStatusHistory {
-  id          String      @id @default(uuid())
-  unitId      String
-  unit        Unit        @relation(fields: [unitId], references: [id], onDelete: Cascade)
-  fromStatus  UnitStatus?
-  toStatus    UnitStatus
-  reason      String?
-  changedById String?
-  changedBy   User?       @relation(fields: [changedById], references: [id], onDelete: SetNull)
-  changedAt   DateTime    @default(now())
-
-  @@index([unitId])
-  @@index([changedAt])
-  @@map("unit_status_history")
-}
-
-enum UnitHoldStatus {
-  ACTIVE
-  RELEASED
-  EXPIRED
-  CONSUMED
-
-  @@map("unit_hold_status")
-}
-
-/// A concurrency-safe, time-boxed reservation of a Unit for a Lead — the
-/// atomic-hold algorithm (spec 48.7) relies on Unit.version so two
-/// salespeople racing to hold the same unit can't both succeed.
-model UnitHold {
-  id            String         @id @default(uuid())
-  tenantId      String         @map("tenant_id")
-  tenant        Tenant         @relation(fields: [tenantId], references: [id])
-  unitId        String
-  unit          Unit           @relation(fields: [unitId], references: [id], onDelete: Cascade)
-  leadId        String
-  lead          Lead           @relation(fields: [leadId], references: [id])
-  requestedById String?
-  requestedBy   User?          @relation("UnitHoldRequestedBy", fields: [requestedById], references: [id])
-  approvedById  String?
-  approvedBy    User?          @relation("UnitHoldApprovedBy", fields: [approvedById], references: [id])
-  status        UnitHoldStatus @default(ACTIVE)
-  expiresAt     DateTime
-  releasedAt    DateTime?
-  releaseReason String?
-  metadata      Json           @default("{}")
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-
-  @@index([tenantId, status])
-  @@index([unitId, status])
-  @@index([leadId])
-  @@index([expiresAt])
-  @@map("unit_holds")
-}
-
-enum CostSheetStatus {
-  DRAFT
-  PENDING_APPROVAL
-  APPROVED
-  SENT
-  EXPIRED
-  SUPERSEDED
-
-  @@map("cost_sheet_status")
-}
-
-/// A versioned, snapshotted price breakdown for one unit/buyer (spec 48.8).
-/// Money is stored in paise (Int) per the project's money-handling contract —
-/// never float — so later price changes can never silently alter a sheet
-/// that has already been sent to a buyer.
-model CostSheet {
-  id              String          @id @default(uuid())
-  tenantId        String          @map("tenant_id")
-  tenant          Tenant          @relation(fields: [tenantId], references: [id])
-  leadId          String
-  lead            Lead            @relation(fields: [leadId], references: [id])
-  unitId          String
-  unit            Unit            @relation(fields: [unitId], references: [id])
-  projectId       String
-  project         Project         @relation(fields: [projectId], references: [id])
-  status          CostSheetStatus @default(DRAFT)
-  currency        String          @default("INR")
-  totalPaise      BigInt
-  templateVersion Int             @default(1)
-  snapshot        Json            @default("{}")
-  createdById     String?
-  createdBy       User?           @relation("CostSheetCreatedBy", fields: [createdById], references: [id])
-  approvedById    String?
-  approvedBy      User?           @relation("CostSheetApprovedBy", fields: [approvedById], references: [id])
-  expiresAt       DateTime?
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
-
-  lineItems CostSheetLineItem[]
-  offers    Offer[]
-  bookings  Booking[]
-
-  @@index([tenantId, status])
-  @@index([leadId])
-  @@index([unitId])
-  @@map("cost_sheets")
-}
-
-model CostSheetLineItem {
-  id              String    @id @default(uuid())
-  costSheetId     String
-  costSheet       CostSheet @relation(fields: [costSheetId], references: [id], onDelete: Cascade)
-  code            String
-  label           String
-  calculationType String    @default("FLAT") // FLAT | PER_SQFT | PERCENT
-  amountPaise     BigInt
-  taxable         Boolean   @default(false)
-  displayOrder    Int       @default(0)
-  metadata        Json      @default("{}")
-
-  @@index([costSheetId])
-  @@map("cost_sheet_line_items")
-}
-
-enum OfferStatus {
-  PENDING
-  APPROVED
-  REJECTED
-  REVISED
-  EXPIRED
-
-  @@map("offer_status")
-}
-
-/// A requested discount/negotiation against a CostSheet, gated by an approval
-/// chain (spec 48.8) — sales can request, but only a manager/owner within
-/// policy can approve.
-model Offer {
-  id                   String      @id @default(uuid())
-  tenantId             String      @map("tenant_id")
-  tenant               Tenant      @relation(fields: [tenantId], references: [id])
-  costSheetId          String
-  costSheet            CostSheet   @relation(fields: [costSheetId], references: [id])
-  leadId               String
-  lead                 Lead        @relation(fields: [leadId], references: [id])
-  requestedById        String?
-  requestedBy          User?       @relation("OfferRequestedBy", fields: [requestedById], references: [id])
-  discountPaise        BigInt?
-  discountPercent      Float?
-  reason               String?
-  proposedValuePaise   BigInt?
-  policyThresholdPaise BigInt?
-  status               OfferStatus @default(PENDING)
-  expiresAt            DateTime?
-  createdAt            DateTime    @default(now())
-  updatedAt            DateTime    @updatedAt
-
-  approvals OfferApproval[]
-
-  @@index([tenantId, status])
-  @@index([costSheetId])
-  @@index([leadId])
-  @@map("offers")
-}
-
-enum OfferDecision {
-  APPROVED
-  REJECTED
-
-  @@map("offer_decision")
-}
-
-model OfferApproval {
-  id         String        @id @default(uuid())
-  offerId    String
-  offer      Offer         @relation(fields: [offerId], references: [id], onDelete: Cascade)
-  approverId String?
-  approver   User?         @relation(fields: [approverId], references: [id])
-  decision   OfferDecision
-  reason     String?
-  decidedAt  DateTime      @default(now())
-
-  @@index([offerId])
-  @@map("offer_approvals")
-}
-
-enum SiteVisitStatus {
-  SCHEDULED
-  CONFIRMED
-  COMPLETED
-  NO_SHOW
-  RESCHEDULED
-  CANCELLED
-
-  @@map("site_visit_status")
-}
-
-/// A dedicated model for a buyer visiting a project/unit in person — kept
-/// separate from Booking (which represents the purchase/agreement side) per
-/// the sell-do-small-builder spec section 48.6. Legacy site-visit-shaped rows
-/// living in Booking are left as-is; this model is used for all NEW visits.
-model SiteVisit {
-  id              String  @id @default(uuid())
-  tenantId        String  @map("tenant_id")
-  tenant          Tenant  @relation(fields: [tenantId], references: [id])
-  leadId          String
-  lead            Lead    @relation(fields: [leadId], references: [id])
-  projectId       String
-  project         Project @relation(fields: [projectId], references: [id])
-  unitId          String?
-  unit            Unit?   @relation(fields: [unitId], references: [id], onDelete: SetNull)
-  assignedAgentId String?
-  assignedAgent   User?   @relation("AssignedSiteVisits", fields: [assignedAgentId], references: [id])
-  createdById     String?
-  createdBy       User?   @relation("CreatedSiteVisits", fields: [createdById], references: [id])
-
-  startAt             DateTime
-  endAt               DateTime?
-  status              SiteVisitStatus @default(SCHEDULED)
-  meetingPoint        String?
-  mapsUrl             String?
-  attendeeCount       Int?
-  transportNote       String?
-  language            String?
-  confirmationChannel String?
-
-  confirmationAt DateTime?
-  checkedInAt    DateTime?
-  checkedOutAt   DateTime?
-
-  outcome          Json?     @default("{}")
-  noShowReason     String?
-  rescheduleReason String?
-  nextActionAt     DateTime?
-
-  metadata  Json     @default("{}")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  attendances VisitAttendance[]
-
-  @@index([tenantId, status, startAt])
-  @@index([leadId])
-  @@index([assignedAgentId])
-  @@index([projectId])
-  @@map("site_visits")
-}
-
 enum BookingStatus {
   PENDING
   CONFIRMED
@@ -2016,8 +1192,6 @@ model Booking {
   id            String        @id @default(uuid())
   tenantId      String
   leadId        String
-  propertyId    String?       @map("property_id")
-  unitId        String?
   title         String
   description   String?
   startTime     DateTime
@@ -2035,8 +1209,6 @@ model Booking {
   // Purchase-booking extension (spec 48.9) — a Booking that represents an
   // actual unit sale (as opposed to a legacy calendar-event-style booking)
   // carries these. version enables optimistic-lock confirmation.
-  costSheetId        String?
-  costSheet          CostSheet? @relation(fields: [costSheetId], references: [id])
   bookingNumber      String?    @unique
   bookingAmountPaise BigInt?
   confirmedById      String?
@@ -2045,38 +1217,8 @@ model Booking {
   cancellationReason String?
   version            Int        @default(0)
 
-  // Post-sales lifecycle (spec 67.1) — only meaningful once status=CONFIRMED.
-  // Kept as a separate field from `status` because a booking can be
-  // CONFIRMED while its post-sales stage moves through many sub-states over
-  // months; `status` stays the coarse PENDING/CONFIRMED/CANCELLED/etc lens.
-  postSalesStage          PostSalesStage?
-  postSalesStageChangedAt DateTime?
-
   lead                       Lead                        @relation(fields: [leadId], references: [id])
   tenant                     Tenant                      @relation(fields: [tenantId], references: [id])
-  property                   Property?                   @relation(fields: [propertyId], references: [id])
-  unit                       Unit?                       @relation(fields: [unitId], references: [id])
-  paymentSchedules           PaymentSchedule[]
-  buyerDocuments             BuyerDocument[]
-  generatedDocuments         GeneratedDocument[]
-  paymentReceipts            PaymentReceipt[]
-  ledgerEntries              LedgerEntry[]
-  commissionAccruals         CommissionAccrual[]
-  applicants                 BookingApplicant[]
-  statusHistory              BookingStatusHistoryEntry[]
-  portalTokens               BuyerPortalToken[]
-  revenueShareAllocations    RevenueShareAllocation[]
-  physicalDocumentCustodies  PhysicalDocumentCustody[]
-  postSalesTransitions       PostSalesTransition[]
-  transferCases              TransferCase[]
-  unitShiftCases             UnitShiftCase[]
-  cancellationCases          CancellationCase[]
-  refundCases                RefundCase[]
-  possessionCase             PossessionCase?
-  creditNotes                CreditNote[]
-  loanRegistrationCase       LoanRegistrationCase?
-  alliedInventoryAllocations AlliedInventoryAllocation[]
-  checkoutAttempts           CheckoutAttempt[]
 
   @@index([tenantId])
   @@index([leadId])
@@ -2084,440 +1226,29 @@ model Booking {
   @@map("bookings")
 }
 
-enum PostSalesStage {
-  BOOKING_CONFIRMED
-  KYC_IN_PROGRESS
-  ALLOTMENT_ISSUED
-  AGREEMENT_IN_PROGRESS
-  AGREEMENT_REGISTERED
-  PAYMENT_ACTIVE
-  PRE_POSSESSION
-  POSSESSION_OFFERED
-  HANDED_OVER
-  POST_POSSESSION_SUPPORT
-
-  @@map("post_sales_stage")
-}
-
 /// Every post-sales stage transition, with the precondition check result and
 /// who/when — this is what makes the lifecycle auditable instead of a single
 /// dropdown a manager could silently skip stages on (spec 67.1).
-model PostSalesTransition {
-  id                    String          @id @default(uuid())
-  tenantId              String          @map("tenant_id")
-  tenant                Tenant          @relation(fields: [tenantId], references: [id])
-  bookingId             String
-  booking               Booking         @relation(fields: [bookingId], references: [id])
-  fromStage             PostSalesStage?
-  toStage               PostSalesStage
-  preconditionsSnapshot Json            @default("{}")
-  reason                String?
-  changedById           String?
-  changedBy             User?           @relation(fields: [changedById], references: [id])
-  changedAt             DateTime        @default(now())
-
-  @@index([tenantId, bookingId])
-  @@map("post_sales_transitions")
-}
-
-enum CaseStatus {
-  REQUESTED
-  UNDER_REVIEW
-  APPROVED
-  REJECTED
-  COMPLETED
-
-  @@map("case_status")
-}
 
 /// Applicant/name transfer (spec 67.3) — a controlled case, not a direct edit
 /// to BookingApplicant, so the old and new applicant identity, charges, and
 /// approval chain all survive as history.
-model TransferCase {
-  id                     String     @id @default(uuid())
-  tenantId               String     @map("tenant_id")
-  tenant                 Tenant     @relation(fields: [tenantId], references: [id])
-  bookingId              String
-  booking                Booking    @relation(fields: [bookingId], references: [id])
-  fromApplicantContactId String?
-  fromApplicant          Contact?   @relation("TransferFromApplicant", fields: [fromApplicantContactId], references: [id])
-  toApplicantName        String
-  toApplicantContactId   String?
-  toApplicant            Contact?   @relation("TransferToApplicant", fields: [toApplicantContactId], references: [id])
-  toApplicantPanMasked   String?
-  reason                 String?
-  chargesPaise           BigInt?
-  status                 CaseStatus @default(REQUESTED)
-  requestedById          String?
-  requestedBy            User?      @relation("TransferRequestedBy", fields: [requestedById], references: [id])
-  approvedById           String?
-  approvedBy             User?      @relation("TransferApprovedBy", fields: [approvedById], references: [id])
-  requestedAt            DateTime   @default(now())
-  decidedAt              DateTime?
-  completedAt            DateTime?
-
-  @@index([tenantId, bookingId])
-  @@map("transfer_cases")
-}
 
 /// A buyer moving from one unit to another (spec 67.3) — both units'
 /// inventory transitions happen atomically when completed, and the price
 /// difference is recorded, not silently absorbed.
-model UnitShiftCase {
-  id                   String     @id @default(uuid())
-  tenantId             String     @map("tenant_id")
-  tenant               Tenant     @relation(fields: [tenantId], references: [id])
-  bookingId            String
-  booking              Booking    @relation(fields: [bookingId], references: [id])
-  fromUnitId           String
-  fromUnit             Unit       @relation("UnitShiftFrom", fields: [fromUnitId], references: [id])
-  toUnitId             String
-  toUnit               Unit       @relation("UnitShiftTo", fields: [toUnitId], references: [id])
-  priceDifferencePaise BigInt?
-  reason               String?
-  status               CaseStatus @default(REQUESTED)
-  requestedById        String?
-  requestedBy          User?      @relation("UnitShiftRequestedBy", fields: [requestedById], references: [id])
-  approvedById         String?
-  approvedBy           User?      @relation("UnitShiftApprovedBy", fields: [approvedById], references: [id])
-  requestedAt          DateTime   @default(now())
-  decidedAt            DateTime?
-  completedAt          DateTime?
-
-  @@index([tenantId, bookingId])
-  @@map("unit_shift_cases")
-}
 
 /// Booking cancellation (spec 67.3) — carries the policy snapshot and
 /// computed deduction/refund so a later policy change never rewrites a
 /// decision already made.
-model CancellationCase {
-  id                   String     @id @default(uuid())
-  tenantId             String     @map("tenant_id")
-  tenant               Tenant     @relation(fields: [tenantId], references: [id])
-  bookingId            String
-  booking              Booking    @relation(fields: [bookingId], references: [id])
-  reason               String
-  policySnapshot       Json       @default("{}")
-  deductionAmountPaise BigInt?
-  refundPayablePaise   BigInt?
-  status               CaseStatus @default(REQUESTED)
-  requestedById        String?
-  requestedBy          User?      @relation("CancellationRequestedBy", fields: [requestedById], references: [id])
-  approvedById         String?
-  approvedBy           User?      @relation("CancellationApprovedBy", fields: [approvedById], references: [id])
-  requestedAt          DateTime   @default(now())
-  decidedAt            DateTime?
-  completedAt          DateTime?
-
-  refundCases RefundCase[]
-
-  @@index([tenantId, bookingId])
-  @@map("cancellation_cases")
-}
-
-enum RefundCaseStatus {
-  REQUESTED
-  APPROVED
-  PROCESSING
-  PAID
-  REJECTED
-
-  @@map("refund_case_status")
-}
 
 /// A refund payable to a buyer — separate from CancellationCase since a
 /// refund can also arise from a simple overpayment, and bank-account
 /// verification must happen before payment initiation (spec 67.3).
-model RefundCase {
-  id                  String            @id @default(uuid())
-  tenantId            String            @map("tenant_id")
-  tenant              Tenant            @relation(fields: [tenantId], references: [id])
-  bookingId           String
-  booking             Booking           @relation(fields: [bookingId], references: [id])
-  cancellationCaseId  String?
-  cancellationCase    CancellationCase? @relation(fields: [cancellationCaseId], references: [id])
-  amountPaise         BigInt
-  bankAccountVerified Boolean           @default(false)
-  status              RefundCaseStatus  @default(REQUESTED)
-  requestedById       String?
-  requestedBy         User?             @relation("RefundRequestedBy", fields: [requestedById], references: [id])
-  approvedById        String?
-  approvedBy          User?             @relation("RefundApprovedBy", fields: [approvedById], references: [id])
-  paymentReference    String?
-  requestedAt         DateTime          @default(now())
-  decidedAt           DateTime?
-  paidAt              DateTime?
-
-  @@index([tenantId, bookingId])
-  @@map("refund_cases")
-}
-
-enum PossessionCaseStatus {
-  NOT_STARTED
-  PRECONDITIONS_PENDING
-  READY
-  OFFERED
-  ACKNOWLEDGED
-  HANDED_OVER
-
-  @@map("possession_case_status")
-}
 
 /// Possession preconditions (spec 67.4/68.3) tracked explicitly so
 /// "possession offered" is never just a date passing — every precondition
 /// is a real boolean someone confirmed.
-model PossessionCase {
-  id                         String               @id @default(uuid())
-  tenantId                   String               @map("tenant_id")
-  tenant                     Tenant               @relation(fields: [tenantId], references: [id])
-  bookingId                  String               @unique
-  booking                    Booking              @relation(fields: [bookingId], references: [id])
-  status                     PossessionCaseStatus @default(NOT_STARTED)
-  accountClearanceConfirmed  Boolean              @default(false)
-  documentClearanceConfirmed Boolean              @default(false)
-  unitReadinessConfirmed     Boolean              @default(false)
-  possessionOfferedAt        DateTime?
-  possessionAcknowledgedAt   DateTime?
-  possessionAcknowledgedById String?
-  possessionAcknowledgedBy   User?                @relation(fields: [possessionAcknowledgedById], references: [id])
-  keyHandoverAt              DateTime?
-  createdAt                  DateTime             @default(now())
-  updatedAt                  DateTime             @updatedAt
-
-  @@index([tenantId])
-  @@map("possession_cases")
-}
-
-enum BookingApplicantRole {
-  PRIMARY
-  CO_APPLICANT
-
-  @@map("booking_applicant_role")
-}
-
-/// Buyer/co-applicant identity captured at booking time (spec 48.9). PAN is
-/// stored only as a reference/masked value here — never the raw number in
-/// plaintext logs or exports (spec 46.2).
-model BookingApplicant {
-  id              String               @id @default(uuid())
-  bookingId       String
-  booking         Booking              @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  contactId       String?
-  contact         Contact?             @relation(fields: [contactId], references: [id])
-  role            BookingApplicantRole @default(PRIMARY)
-  name            String
-  panMasked       String?
-  addressSnapshot Json                 @default("{}")
-  createdAt       DateTime             @default(now())
-
-  @@index([bookingId])
-  @@map("booking_applicants")
-}
-
-/// Every Booking status transition, with reason and actor — mirrors
-/// UnitStatusHistory so a purchase booking's lifecycle is fully auditable.
-model BookingStatusHistoryEntry {
-  id          String         @id @default(uuid())
-  bookingId   String
-  booking     Booking        @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  fromStatus  BookingStatus?
-  toStatus    BookingStatus
-  reason      String?
-  changedById String?
-  changedBy   User?          @relation(fields: [changedById], references: [id])
-  changedAt   DateTime       @default(now())
-
-  @@index([bookingId])
-  @@map("booking_status_history")
-}
-
-enum PaymentScheduleStatus {
-  PENDING
-  PAID
-  OVERDUE
-  WAIVED
-
-  @@map("payment_schedule_status")
-}
-
-/// A scheduled collection milestone/installment for a lead (optionally tied to a
-/// booking) — e.g. real-estate booking amount, agreement, registration, possession.
-/// Automated reminders are queued as ScheduledActions on create and cancelled on payment.
-model PaymentSchedule {
-  id        String                @id @default(uuid())
-  tenantId  String                @map("tenant_id")
-  tenant    Tenant                @relation(fields: [tenantId], references: [id])
-  leadId    String
-  lead      Lead                  @relation(fields: [leadId], references: [id])
-  bookingId String?
-  booking   Booking?              @relation(fields: [bookingId], references: [id])
-  label     String
-  amount    Float
-  currency  String                @default("INR")
-  dueDate   DateTime?
-  status    PaymentScheduleStatus @default(PENDING)
-  paidAt    DateTime?
-  notes     String?
-  metadata  Json                  @default("{}")
-  createdAt DateTime              @default(now())
-  updatedAt DateTime              @updatedAt
-
-  allocations PaymentAllocation[]
-
-  @@index([tenantId])
-  @@index([leadId])
-  @@index([bookingId])
-  @@index([status])
-  @@index([dueDate])
-  @@map("payment_schedules")
-}
-
-enum ChannelPartnerOnboardingStatus {
-  INVITED
-  DOCS_PENDING
-  TRAINING_PENDING
-  ACTIVE
-
-  @@map("channel_partner_onboarding_status")
-}
-
-enum ChannelPartnerStatus {
-  ACTIVE
-  INACTIVE
-  SUSPENDED
-
-  @@map("channel_partner_status")
-}
-
-/// A broker / channel partner who sources leads for the business. In Indian real
-/// estate 60-80% of bookings come through channel partners, so this tracks
-/// onboarding, allocated leads, and commission terms in one place.
-model ChannelPartner {
-  id                  String                         @id @default(uuid())
-  tenantId            String                         @map("tenant_id")
-  tenant              Tenant                         @relation(fields: [tenantId], references: [id])
-  name                String
-  company             String?
-  phone               String?
-  email               String?
-  reraId              String?
-  reraExpiryAt        DateTime?
-  agreementSignedAt   DateTime?
-  agreementExpiryAt   DateTime?
-  onboardingStatus    ChannelPartnerOnboardingStatus @default(INVITED)
-  trainingCompletedAt DateTime?
-  commissionRate      Float? // percent
-  status              ChannelPartnerStatus           @default(ACTIVE)
-  notes               String?
-  metadata            Json                           @default("{}")
-  createdAt           DateTime                       @default(now())
-  updatedAt           DateTime                       @updatedAt
-
-  leads                  Lead[]
-  portalUsers            PartnerPortalUser[]
-  leadClaims             PartnerLeadClaim[]
-  commissionPlans        CommissionPlan[]
-  commissionAccruals     CommissionAccrual[]
-  commissionPayouts      CommissionPayout[]
-  marketingEventInvitees MarketingEventInvitee[]
-
-  @@index([tenantId])
-  @@index([status])
-  @@map("channel_partners")
-}
-
-// === SHIPMENT / CONSIGNMENT (Logistics) ===
-
-enum ShipmentType {
-  FTL
-  LTL
-  AIR_FREIGHT
-  SEA_FREIGHT
-  EXPRESS
-  COURIER
-
-  @@map("shipment_type")
-}
-
-enum ShipmentStatus {
-  QUOTE_REQUESTED
-  QUOTE_SENT
-  BOOKED
-  PICKED_UP
-  IN_TRANSIT
-  OUT_FOR_DELIVERY
-  DELIVERED
-  CANCELLED
-  EXCEPTION
-
-  @@map("shipment_status")
-}
-
-enum CargoType {
-  GENERAL
-  PERISHABLE
-  FRAGILE
-  HAZARDOUS
-  OVERSIZED
-  VEHICLE
-  ELECTRONICS
-
-  @@map("cargo_type")
-}
-
-model Shipment {
-  id                  String         @id @default(uuid())
-  tenantId            String         @map("tenant_id")
-  leadId              String
-  title               String?
-  origin              String
-  destination         String
-  cargoType           CargoType      @default(GENERAL)
-  shipmentType        ShipmentType   @default(FTL)
-  weight              Float?
-  weightUnit          String         @default("kg")
-  pickupDate          DateTime?
-  deliveryDate        DateTime?
-  scheduledPickupAt   DateTime?
-  scheduledDeliveryAt DateTime?
-  quotedPrice         Float?
-  currency            String         @default("INR")
-  finalPrice          Float?
-  trackingNumber      String?
-  vehicleType         String?
-  carrierId           String?
-  carrierName         String?
-  notes               String?
-  metadata            Json           @default("{}")
-  status              ShipmentStatus @default(QUOTE_REQUESTED)
-  createdAt           DateTime       @default(now())
-  updatedAt           DateTime       @updatedAt
-
-  lead          Lead                    @relation(fields: [leadId], references: [id])
-  tenant        Tenant                  @relation(fields: [tenantId], references: [id])
-  statusHistory ShipmentStatusHistory[]
-
-  @@index([tenantId])
-  @@index([leadId])
-  @@index([status])
-  @@index([trackingNumber])
-  @@index([createdAt])
-  @@map("shipments")
-}
-
-model ShipmentStatusHistory {
-  id         String         @id @default(uuid())
-  shipmentId String         @map("shipment_id")
-  shipment   Shipment       @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
-  status     ShipmentStatus
-  location   String?
-  notes      String?
-  createdAt  DateTime       @default(now())
-
-  @@index([shipmentId])
-  @@map("shipment_status_history")
-}
 
 model Integration {
   id         String    @id @default(uuid())
@@ -2819,7 +1550,6 @@ model SlaRule {
   active                 Boolean     @default(true)
   createdAt              DateTime    @default(now())
   tickets                Ticket[]
-  breaches               SlaBreach[]
 
   @@map("sla_rules")
 }
@@ -3124,7 +1854,6 @@ model RuleExecution {
   id        String         @id @default(uuid())
   ruleId    String
   rule      AutomationRule @relation(fields: [ruleId], references: [id], onDelete: Cascade)
-  eventId   String?
   result    String
   input     Json           @default("{}")
   output    Json?
@@ -3132,7 +1861,6 @@ model RuleExecution {
   createdAt DateTime       @default(now())
 
   @@index([ruleId])
-  @@index([eventId])
   @@index([createdAt])
   @@map("rule_executions")
 }
@@ -3418,558 +2146,11 @@ model OutboxMessage {
 
 // === EVENTS OPS (event/booking system of record) ===
 
-enum EventStatus {
-  PLANNING
-  UPCOMING
-  COMPLETED
-  CANCELLED
-}
-
-enum EventFileVisibility {
-  INTERNAL
-  SHARED
-}
-
-enum MoodboardIdeaStatus {
-  OPEN
-  CONSIDERING
-  FINALIZED
-  ARCHIVED
-}
-
-model Event {
-  id             String      @id @default(uuid())
-  tenantId       String      @map("tenant_id")
-  tenant         Tenant      @relation(fields: [tenantId], references: [id])
-  title          String
-  type           String
-  status         EventStatus @default(PLANNING)
-  eventDate      DateTime?
-  venue          String?
-  expectedGuests Int?
-  budget         Float?
-  description    String?
-  contactId      String?
-  contact        Contact?    @relation(fields: [contactId], references: [id])
-  leadId         String?
-  lead           Lead?       @relation(fields: [leadId], references: [id])
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
-
-  functions            EventFunction[]
-  moodboardIdeas       EventMoodboardIdea[]
-  teamAssignments      EventTeamAssignment[]
-  vendorAssignments    EventVendorAssignment[]
-  files                EventFile[]
-  expenses             EventExpense[]
-  paymentMilestones    PaymentMilestone[]
-  runSheetItems        RunSheetItem[]
-  tasks                Task[]
-  vendorBookings       VendorBooking[]
-  timesheetEntries     TimesheetEntry[]
-  inventoryAllocations InventoryAllocation[]
-
-  @@index([tenantId])
-  @@index([contactId])
-  @@index([leadId])
-  @@index([status])
-  @@index([eventDate])
-  @@map("events_ops")
-}
-
-model EventFunction {
-  id        String    @id @default(uuid())
-  eventId   String
-  event     Event     @relation(fields: [eventId], references: [id])
-  name      String
-  startAt   DateTime?
-  createdAt DateTime  @default(now())
-
-  @@index([eventId])
-  @@map("event_functions")
-}
-
-model EventMoodboardIdea {
-  id         String              @id @default(uuid())
-  eventId    String
-  event      Event               @relation(fields: [eventId], references: [id])
-  functionId String?
-  title      String
-  imageUrl   String?
-  status     MoodboardIdeaStatus @default(OPEN)
-  createdAt  DateTime            @default(now())
-
-  @@index([eventId])
-  @@map("event_moodboard_ideas")
-}
-
-model EventTeamAssignment {
-  id        String   @id @default(uuid())
-  eventId   String
-  event     Event    @relation(fields: [eventId], references: [id])
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  role      String?
-  createdAt DateTime @default(now())
-
-  @@index([eventId])
-  @@index([userId])
-  @@map("event_team_assignments")
-}
-
-model EventVendorAssignment {
-  id          String   @id @default(uuid())
-  eventId     String
-  event       Event    @relation(fields: [eventId], references: [id])
-  partnerId   String
-  partner     Partner  @relation(fields: [partnerId], references: [id])
-  roleOnEvent String?
-  createdAt   DateTime @default(now())
-
-  @@index([eventId])
-  @@index([partnerId])
-  @@map("event_vendor_assignments")
-}
-
-model EventFile {
-  id         String              @id @default(uuid())
-  eventId    String
-  event      Event               @relation(fields: [eventId], references: [id])
-  fileUrl    String
-  name       String
-  visibility EventFileVisibility @default(INTERNAL)
-  createdAt  DateTime            @default(now())
-
-  @@index([eventId])
-  @@map("event_files")
-}
-
-model EventExpense {
-  id               String   @id @default(uuid())
-  eventId          String
-  event            Event    @relation(fields: [eventId], references: [id])
-  description      String
-  category         String?
-  amount           Float
-  gstPercent       Float?
-  billableToClient Boolean  @default(false)
-  receiptUrl       String?
-  expenseDate      DateTime @default(now())
-  createdAt        DateTime @default(now())
-
-  @@index([eventId])
-  @@map("event_expenses")
-}
-
-model PaymentMilestone {
-  id        String    @id @default(uuid())
-  eventId   String
-  event     Event     @relation(fields: [eventId], references: [id])
-  label     String
-  amount    Float
-  dueDate   DateTime?
-  invoiceId String?   @unique
-  invoice   Invoice?  @relation(fields: [invoiceId], references: [id])
-  createdAt DateTime  @default(now())
-
-  @@index([eventId])
-  @@map("payment_milestones")
-}
-
-model RunSheetItem {
-  id        String    @id @default(uuid())
-  eventId   String
-  event     Event     @relation(fields: [eventId], references: [id])
-  time      DateTime?
-  title     String
-  notes     String?
-  createdAt DateTime  @default(now())
-
-  @@index([eventId])
-  @@map("run_sheet_items")
-}
-
-model Partner {
-  id        String   @id @default(uuid())
-  tenantId  String   @map("tenant_id")
-  name      String
-  type      String   @default("VENDOR") // VENDOR | SUPPLIER | BOTH
-  company   String?
-  email     String?
-  phone     String?
-  gstin     String?
-  location  String?
-  address   String?
-  category  String?
-  specialty String?
-  notes     String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  vendorAssignments EventVendorAssignment[]
-  vendorBookings    VendorBooking[]
-  purchaseOrders    PurchaseOrder[]
-
-  @@index([tenantId])
-  @@map("partners")
-}
-
 // === CLIENT FINANCE (invoices, quotations, contracts — distinct from platform subscription billing) ===
-
-enum InvoiceStatus {
-  DRAFT
-  SENT
-  PAID
-  OVERDUE
-  PENDING
-}
-
-enum QuotationStatus {
-  DRAFT
-  SENT
-  ACCEPTED
-  REJECTED
-  EXPIRED
-}
-
-enum ContractStatus {
-  DRAFT
-  SENT
-  SIGNED
-  CANCELLED
-}
-
-enum TransactionPartyType {
-  CUSTOMER
-  VENDOR
-  INTERNAL
-}
-
-enum TransactionType {
-  INCOME
-  EXPENSE
-}
-
-enum TransactionStatus {
-  RECEIVED
-  PAID
-  PENDING
-  OVERDUE
-}
-
-model Invoice {
-  id            String        @id @default(uuid())
-  tenantId      String        @map("tenant_id")
-  contactId     String?
-  contact       Contact?      @relation(fields: [contactId], references: [id])
-  eventId       String?
-  propertyId    String?
-  property      Property?     @relation(fields: [propertyId], references: [id])
-  projectId     String?
-  project       Project?      @relation(fields: [projectId], references: [id])
-  invoiceNumber String        @unique
-  dueDate       DateTime?
-  notes         String?
-  subtotal      Float         @default(0)
-  gstPercent    Float?
-  gstTotal      Float         @default(0)
-  grandTotal    Float         @default(0)
-  status        InvoiceStatus @default(DRAFT)
-  paidAt        DateTime?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-
-  lineItems InvoiceLineItem[]
-  milestone PaymentMilestone?
-
-  @@index([tenantId])
-  @@index([contactId])
-  @@index([eventId])
-  @@index([propertyId])
-  @@index([projectId])
-  @@index([status])
-  @@map("invoices")
-}
-
-model InvoiceLineItem {
-  id          String  @id @default(uuid())
-  invoiceId   String
-  invoice     Invoice @relation(fields: [invoiceId], references: [id])
-  description String
-  unit        String?
-  qty         Float   @default(1)
-  unitPrice   Float
-  gstPercent  Float?
-  notes       String?
-  total       Float
-
-  @@index([invoiceId])
-  @@map("invoice_line_items")
-}
-
-model Quotation {
-  id                      String          @id @default(uuid())
-  tenantId                String          @map("tenant_id")
-  contactId               String?
-  contact                 Contact?        @relation(fields: [contactId], references: [id])
-  eventId                 String?
-  propertyId              String?
-  property                Property?       @relation(fields: [propertyId], references: [id])
-  projectId               String?
-  project                 Project?        @relation(fields: [projectId], references: [id])
-  quoteNumber             String          @unique
-  validUntil              DateTime?
-  status                  QuotationStatus @default(DRAFT)
-  notes                   String?
-  termsAndPaymentSchedule String?
-  createdAt               DateTime        @default(now())
-  updatedAt               DateTime        @updatedAt
-
-  sections  QuoteSection[]
-  contracts Contract[]
-
-  @@index([tenantId])
-  @@index([contactId])
-  @@index([eventId])
-  @@index([propertyId])
-  @@index([projectId])
-  @@index([status])
-  @@map("quotations")
-}
-
-model QuoteSection {
-  id          String    @id @default(uuid())
-  quotationId String
-  quotation   Quotation @relation(fields: [quotationId], references: [id])
-  title       String
-  order       Int       @default(0)
-
-  lineItems QuoteLineItem[]
-
-  @@index([quotationId])
-  @@map("quote_sections")
-}
-
-model QuoteLineItem {
-  id          String       @id @default(uuid())
-  sectionId   String
-  section     QuoteSection @relation(fields: [sectionId], references: [id])
-  description String
-  qty         Float        @default(1)
-  unitPrice   Float
-  total       Float
-
-  @@index([sectionId])
-  @@map("quote_line_items")
-}
-
-model Contract {
-  id             String         @id @default(uuid())
-  tenantId       String         @map("tenant_id")
-  quotationId    String?
-  quotation      Quotation?     @relation(fields: [quotationId], references: [id])
-  contactId      String?
-  contact        Contact?       @relation(fields: [contactId], references: [id])
-  eventId        String?
-  contractNumber String         @unique
-  amount         Float          @default(0)
-  status         ContractStatus @default(DRAFT)
-  signedAt       DateTime?
-  acceptedAt     DateTime?
-  notes          String?
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
-
-  @@index([tenantId])
-  @@index([quotationId])
-  @@index([contactId])
-  @@index([eventId])
-  @@index([status])
-  @@map("contracts")
-}
-
-model Transaction {
-  id              String               @id @default(uuid())
-  tenantId        String               @map("tenant_id")
-  description     String
-  partyType       TransactionPartyType @default(INTERNAL)
-  type            TransactionType
-  amount          Float
-  category        String?
-  gstPercent      Float?
-  date            DateTime             @default(now())
-  status          TransactionStatus    @default(PENDING)
-  invoiceRef      String?
-  eventId         String?
-  receiptMediaId  String?
-  receiptMedia    MediaFile?           @relation(fields: [receiptMediaId], references: [id])
-  createdAt       DateTime             @default(now())
-
-  @@index([tenantId])
-  @@index([type])
-  @@index([status])
-  @@index([eventId])
-  @@map("transactions")
-}
 
 // === PROCUREMENT ===
 
-enum VendorBookingStatus {
-  DRAFT
-  SENT
-  CONFIRMED
-  IN_PROGRESS
-  COMPLETED
-  CANCELLED
-}
-
-enum PurchaseOrderStatus {
-  DRAFT
-  SUBMITTED
-  PARTIAL
-  RECEIVED
-  CANCELLED
-}
-
-model VendorBooking {
-  id                  String              @id @default(uuid())
-  tenantId            String              @map("tenant_id")
-  partnerId           String
-  partner             Partner             @relation(fields: [partnerId], references: [id])
-  eventId             String
-  event               Event               @relation(fields: [eventId], references: [id])
-  title               String
-  eventDate           DateTime?
-  vendorArrivalTime   DateTime?
-  venue               String?
-  deliverables        String[]            @default([])
-  specialRequirements String?
-  agreedFee           Float               @default(0)
-  advanceAmount       Float               @default(0)
-  balanceDueDate      DateTime?
-  cancellationTerms   String?
-  status              VendorBookingStatus @default(DRAFT)
-  internalNotes       String?
-  createdAt           DateTime            @default(now())
-  updatedAt           DateTime            @updatedAt
-
-  @@index([tenantId])
-  @@index([partnerId])
-  @@index([eventId])
-  @@index([status])
-  @@map("vendor_bookings")
-}
-
-model PurchaseOrder {
-  id               String              @id @default(uuid())
-  tenantId         String              @map("tenant_id")
-  partnerId        String
-  partner          Partner             @relation(fields: [partnerId], references: [id])
-  eventId          String?
-  expectedDelivery DateTime?
-  status           PurchaseOrderStatus @default(DRAFT)
-  notes            String?
-  totalValue       Float               @default(0)
-  createdAt        DateTime            @default(now())
-  updatedAt        DateTime            @updatedAt
-
-  lineItems POLineItem[]
-
-  @@index([tenantId])
-  @@index([partnerId])
-  @@index([eventId])
-  @@index([status])
-  @@map("purchase_orders")
-}
-
-model POLineItem {
-  id              String        @id @default(uuid())
-  purchaseOrderId String
-  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id])
-  description     String
-  qty             Float         @default(1)
-  unitCost        Float
-  total           Float
-
-  @@index([purchaseOrderId])
-  @@map("po_line_items")
-}
-
 // === INVENTORY ===
-
-enum StockMovementType {
-  RECEIVED
-  SHIPPED
-  TRANSFER
-  ADJUSTMENT
-}
-
-model InventoryLocation {
-  id               String              @id @default(uuid())
-  tenantId         String              @map("tenant_id")
-  name             String
-  type             String              @default("Warehouse") // Warehouse | Zone | Vehicle | EventSite
-  description      String?
-  active           Boolean             @default(true)
-  parentLocationId String?
-  parentLocation   InventoryLocation?  @relation("LocationHierarchy", fields: [parentLocationId], references: [id])
-  childLocations   InventoryLocation[] @relation("LocationHierarchy")
-  createdAt        DateTime            @default(now())
-
-  itemsAtLocation InventoryItem[] @relation("ItemLocation")
-  movementsFrom   StockMovement[] @relation("MovementFrom")
-  movementsTo     StockMovement[] @relation("MovementTo")
-
-  @@index([tenantId])
-  @@map("inventory_locations")
-}
-
-model InventoryItem {
-  id                  String             @id @default(uuid())
-  tenantId            String             @map("tenant_id")
-  name                String
-  category            String?
-  sku                 String?
-  size                String?
-  quantity            Float              @default(0)
-  minStock            Float              @default(0)
-  unit                String?
-  locationId          String?
-  location            InventoryLocation? @relation("ItemLocation", fields: [locationId], references: [id])
-  barcode             String?
-  supplierInfo        String?
-  purchaseHistory     String?
-  deploymentCondition String?
-  photoUrl            String?
-  createdAt           DateTime           @default(now())
-  updatedAt           DateTime           @updatedAt
-
-  movements   StockMovement[]
-  allocations InventoryAllocation[]
-
-  @@index([tenantId])
-  @@index([locationId])
-  @@map("inventory_items")
-}
-
-model StockMovement {
-  id             String             @id @default(uuid())
-  tenantId       String             @map("tenant_id")
-  itemId         String
-  item           InventoryItem      @relation(fields: [itemId], references: [id])
-  type           StockMovementType
-  qty            Float
-  fromLocationId String?
-  fromLocation   InventoryLocation? @relation("MovementFrom", fields: [fromLocationId], references: [id])
-  toLocationId   String?
-  toLocation     InventoryLocation? @relation("MovementTo", fields: [toLocationId], references: [id])
-  refNotes       String?
-  date           DateTime           @default(now())
-
-  @@index([tenantId])
-  @@index([itemId])
-  @@map("stock_movements")
-}
 
 // === TEAM / HR ===
 
@@ -4022,8 +2203,6 @@ model TimesheetEntry {
   tenantId  String   @map("tenant_id")
   userId    String
   user      User     @relation(fields: [userId], references: [id])
-  eventId   String
-  event     Event    @relation(fields: [eventId], references: [id])
   role      String?
   date      DateTime
   hours     Float
@@ -4033,7 +2212,6 @@ model TimesheetEntry {
 
   @@index([tenantId])
   @@index([userId])
-  @@index([eventId])
   @@map("timesheet_entries")
 }
 
@@ -4126,22 +2304,6 @@ model PublicProfile {
   updatedAt       DateTime @updatedAt
 
   @@map("public_profiles")
-}
-
-model InventoryAllocation {
-  id           String        @id @default(uuid())
-  tenantId     String        @map("tenant_id")
-  eventId      String
-  event        Event         @relation(fields: [eventId], references: [id])
-  itemId       String
-  item         InventoryItem @relation(fields: [itemId], references: [id])
-  qtyAllocated Float
-  createdAt    DateTime      @default(now())
-
-  @@index([tenantId])
-  @@index([eventId])
-  @@index([itemId])
-  @@map("inventory_allocations")
 }
 
 // === PEAK MIKEY — P5 FEDERATED AGGREGATOR ===
@@ -4277,439 +2439,39 @@ model MikeyAutonomousAction {
 // response reference (spec 48.10 / 55.4 invariant 7: an unverified document
 // is never displayed as verified).
 
-enum BuyerDocumentType {
-  PAN
-  AADHAAR_OFFLINE_XML
-  ADDRESS_PROOF
-  PHOTO
-  SALARY_PROOF
-  BANK_STATEMENT
-  LOAN_SANCTION_LETTER
-  BOOKING_FORM
-  ALLOTMENT_LETTER
-  AGREEMENT_DRAFT
-  SIGNED_AGREEMENT
-  NOC
-  POSSESSION_LETTER
-  OTHER
-
-  @@map("buyer_document_type")
-}
-
-enum BuyerDocumentStatus {
-  NOT_REQUESTED
-  REQUESTED
-  UPLOADED
-  PROCESSING
-  VERIFIED
-  REJECTED
-  EXPIRED
-  WAIVED
-
-  @@map("buyer_document_status")
-}
-
-model BuyerDocument {
-  id                   String              @id @default(uuid())
-  tenantId             String              @map("tenant_id")
-  tenant               Tenant              @relation(fields: [tenantId], references: [id])
-  leadId               String
-  lead                 Lead                @relation(fields: [leadId], references: [id])
-  bookingId            String?
-  booking              Booking?            @relation(fields: [bookingId], references: [id])
-  type                 BuyerDocumentType
-  status               BuyerDocumentStatus @default(NOT_REQUESTED)
-  mediaFileId          String?
-  mediaFile            MediaFile?          @relation(fields: [mediaFileId], references: [id])
-  documentNumberMasked String?
-  source               String? // buyer_upload | staff_upload | digilocker
-  issuedAt             DateTime?
-  expiresAt            DateTime?
-  requestedById        String?
-  requestedBy          User?               @relation("BuyerDocumentRequestedBy", fields: [requestedById], references: [id])
-  verifiedById         String?
-  verifiedBy           User?               @relation("BuyerDocumentVerifiedBy", fields: [verifiedById], references: [id])
-  verifiedAt           DateTime?
-  rejectionReason      String?
-  metadata             Json                @default("{}")
-  createdAt            DateTime            @default(now())
-  updatedAt            DateTime            @updatedAt
-
-  verifications KycVerification[]
-
-  @@index([tenantId, status])
-  @@index([leadId])
-  @@index([bookingId])
-  @@map("buyer_documents")
-}
-
-enum KycVerificationType {
-  MANUAL
-  AADHAAR_OFFLINE_EKYC
-  DIGILOCKER
-
-  @@map("kyc_verification_type")
-}
-
-enum KycVerificationStatus {
-  PENDING
-  VERIFIED
-  REJECTED
-  EXPIRED
-
-  @@map("kyc_verification_status")
-}
-
 /// A single consented verification event against a BuyerDocument. Holds only
 /// the verification outcome and a provider reference — never the underlying
 /// XML/ZIP/share code, which per spec 48.10 must be discarded immediately
 /// after a short-lived worker validates it.
-model KycVerification {
-  id                  String                @id @default(uuid())
-  tenantId            String                @map("tenant_id")
-  tenant              Tenant                @relation(fields: [tenantId], references: [id])
-  buyerDocumentId     String
-  buyerDocument       BuyerDocument         @relation(fields: [buyerDocumentId], references: [id], onDelete: Cascade)
-  leadId              String
-  lead                Lead                  @relation(fields: [leadId], references: [id])
-  type                KycVerificationType
-  status              KycVerificationStatus @default(PENDING)
-  providerResponseRef String?
-  consentAt           DateTime?
-  consentIp           String?
-  verifiedById        String?
-  verifiedBy          User?                 @relation(fields: [verifiedById], references: [id])
-  verifiedAt          DateTime?
-  metadata            Json                  @default("{}")
-  createdAt           DateTime              @default(now())
-
-  @@index([tenantId, status])
-  @@index([buyerDocumentId])
-  @@index([leadId])
-  @@map("kyc_verifications")
-}
-
-enum DocumentTemplateStatus {
-  DRAFT
-  APPROVED
-  RETIRED
-
-  @@map("document_template_status")
-}
 
 /// A legal/finance-approved template for a generated document (agreement,
 /// demand letter, NOC, ...). Generation always snapshots the template
 /// version used so an issued document never silently changes (spec 69.1).
-model DocumentTemplate {
-  id           String                 @id @default(uuid())
-  tenantId     String                 @map("tenant_id")
-  tenant       Tenant                 @relation(fields: [tenantId], references: [id])
-  name         String
-  documentType String
-  version      Int                    @default(1)
-  status       DocumentTemplateStatus @default(DRAFT)
-  bodyTemplate String
-  variables    Json                   @default("[]")
-  approvedById String?
-  approvedBy   User?                  @relation(fields: [approvedById], references: [id])
-  createdAt    DateTime               @default(now())
-  updatedAt    DateTime               @updatedAt
-
-  generatedDocuments GeneratedDocument[]
-
-  @@index([tenantId, documentType, status])
-  @@map("document_templates")
-}
-
-model GeneratedDocument {
-  id            String           @id @default(uuid())
-  tenantId      String           @map("tenant_id")
-  tenant        Tenant           @relation(fields: [tenantId], references: [id])
-  templateId    String
-  template      DocumentTemplate @relation(fields: [templateId], references: [id])
-  leadId        String
-  lead          Lead             @relation(fields: [leadId], references: [id])
-  bookingId     String?
-  booking       Booking?         @relation(fields: [bookingId], references: [id])
-  generatedById String?
-  generatedBy   User?            @relation(fields: [generatedById], references: [id])
-  snapshot      Json             @default("{}")
-  mediaFileId   String?
-  mediaFile     MediaFile?       @relation(fields: [mediaFileId], references: [id])
-  createdAt     DateTime         @default(now())
-
-  esignRequests ESignRequest[]
-
-  @@index([tenantId])
-  @@index([leadId])
-  @@index([bookingId])
-  @@map("generated_documents")
-}
-
-enum ESignStatus {
-  CREATED
-  SENT
-  SIGNED
-  EXPIRED
-  REJECTED
-
-  @@map("esign_status")
-}
-
-model ESignRequest {
-  id                  String            @id @default(uuid())
-  tenantId            String            @map("tenant_id")
-  tenant              Tenant            @relation(fields: [tenantId], references: [id])
-  generatedDocumentId String
-  generatedDocument   GeneratedDocument @relation(fields: [generatedDocumentId], references: [id])
-  provider            String
-  envelopeId          String?
-  status              ESignStatus       @default(CREATED)
-  signerName          String?
-  signerEmail         String?
-  signerPhone         String?
-  sentAt              DateTime?
-  completedAt         DateTime?
-  metadata            Json              @default("{}")
-  createdAt           DateTime          @default(now())
-  updatedAt           DateTime          @updatedAt
-
-  @@index([tenantId, status])
-  @@index([generatedDocumentId])
-  @@map("esign_requests")
-}
 
 // === COLLECTIONS: RECEIPTS + LEDGER ===
-
-enum PaymentReceiptStatus {
-  PENDING_RECONCILIATION
-  CONFIRMED
-  REVERSED
-  FAILED
-
-  @@map("payment_receipt_status")
-}
 
 /// A recorded payment against one or more PaymentSchedule milestones. Never
 /// mutated after CONFIRMED — a correction creates a REVERSED status plus a
 /// new LedgerEntry, preserving a full audit trail (spec 48.11).
-model PaymentReceipt {
-  id                String               @id @default(uuid())
-  tenantId          String               @map("tenant_id")
-  tenant            Tenant               @relation(fields: [tenantId], references: [id])
-  leadId            String
-  lead              Lead                 @relation(fields: [leadId], references: [id])
-  bookingId         String?
-  booking           Booking?             @relation(fields: [bookingId], references: [id])
-  externalRef       String? // UTR / cheque / DD / gateway reference
-  amountPaise       BigInt
-  mode              String // UPI | NEFT | CHEQUE | CARD | CASH | GATEWAY
-  receivedAt        DateTime             @default(now())
-  status            PaymentReceiptStatus @default(PENDING_RECONCILIATION)
-  attachmentMediaId String?
-  attachmentMedia   MediaFile?           @relation(fields: [attachmentMediaId], references: [id])
-  confirmedById     String?
-  confirmedBy       User?                @relation("PaymentReceiptConfirmedBy", fields: [confirmedById], references: [id])
-  confirmedAt       DateTime?
-  reversedAt        DateTime?
-  reversalReason    String?
-  metadata          Json                 @default("{}")
-  createdAt         DateTime             @default(now())
-  updatedAt         DateTime             @updatedAt
-
-  allocations   PaymentAllocation[]
-  ledgerEntries LedgerEntry[]
-
-  @@index([tenantId, status])
-  @@index([leadId])
-  @@index([bookingId])
-  @@map("payment_receipts")
-}
 
 /// One payment can allocate across multiple milestones (spec 48.11) — this is
 /// the join between a receipt and the PaymentSchedule rows it settles.
-model PaymentAllocation {
-  id                String          @id @default(uuid())
-  paymentReceiptId  String
-  paymentReceipt    PaymentReceipt  @relation(fields: [paymentReceiptId], references: [id], onDelete: Cascade)
-  paymentScheduleId String
-  paymentSchedule   PaymentSchedule @relation(fields: [paymentScheduleId], references: [id])
-  amountPaise       BigInt
-  createdAt         DateTime        @default(now())
-
-  @@index([paymentReceiptId])
-  @@index([paymentScheduleId])
-  @@map("payment_allocations")
-}
-
-enum LedgerEntryType {
-  DEBIT
-  CREDIT
-  PAYMENT
-  WAIVER
-  REVERSAL
-  REFUND
-
-  @@map("ledger_entry_type")
-}
 
 /// Append-only buyer ledger (spec 48.11) — current balance is always computed
 /// from these rows, never hand-typed. Nothing here is ever updated in place.
-model LedgerEntry {
-  id               String          @id @default(uuid())
-  tenantId         String          @map("tenant_id")
-  tenant           Tenant          @relation(fields: [tenantId], references: [id])
-  leadId           String
-  lead             Lead            @relation(fields: [leadId], references: [id])
-  bookingId        String?
-  booking          Booking?        @relation(fields: [bookingId], references: [id])
-  type             LedgerEntryType
-  amountPaise      BigInt
-  relatedReceiptId String?
-  relatedReceipt   PaymentReceipt? @relation(fields: [relatedReceiptId], references: [id])
-  description      String?
-  createdById      String?
-  createdBy        User?           @relation(fields: [createdById], references: [id])
-  createdAt        DateTime        @default(now())
-
-  @@index([tenantId, leadId])
-  @@index([bookingId])
-  @@map("ledger_entries")
-}
 
 // === CHANNEL PARTNER PORTAL ===
 
 /// Separate auth/session scope from the internal User table (spec 48.12) — a
 /// partner logging in must never inherit internal tenant-staff permissions.
-model PartnerPortalUser {
-  id               String         @id @default(uuid())
-  tenantId         String         @map("tenant_id")
-  tenant           Tenant         @relation(fields: [tenantId], references: [id])
-  channelPartnerId String
-  channelPartner   ChannelPartner @relation(fields: [channelPartnerId], references: [id])
-  email            String         @unique
-  passwordHash     String
-  active           Boolean        @default(true)
-  lastLoginAt      DateTime?
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
-
-  @@index([tenantId, channelPartnerId])
-  @@map("partner_portal_users")
-}
-
-enum PartnerLeadClaimStatus {
-  REGISTERED
-  ALREADY_REGISTERED
-  NEEDS_REVIEW
-  REJECTED
-
-  @@map("partner_lead_claim_status")
-}
 
 /// A partner's lead registration attempt. The response to the partner must
 /// stay neutral (spec 48.12) — never leak another partner's name — while an
 /// internal manager resolves disputes with an immutable decision record.
-model PartnerLeadClaim {
-  id               String                 @id @default(uuid())
-  tenantId         String                 @map("tenant_id")
-  tenant           Tenant                 @relation(fields: [tenantId], references: [id])
-  channelPartnerId String
-  channelPartner   ChannelPartner         @relation(fields: [channelPartnerId], references: [id])
-  leadId           String?
-  lead             Lead?                  @relation(fields: [leadId], references: [id])
-  phone            String
-  status           PartnerLeadClaimStatus @default(REGISTERED)
-  lockUntil        DateTime?
-  decidedById      String?
-  decidedBy        User?                  @relation(fields: [decidedById], references: [id])
-  decidedAt        DateTime?
-  decisionReason   String?
-  createdAt        DateTime               @default(now())
-
-  @@index([tenantId, channelPartnerId])
-  @@index([phone])
-  @@index([leadId])
-  @@map("partner_lead_claims")
-}
 
 /// A versioned commission rule. Every accrual snapshots the plan that
 /// produced it (spec 48.12 / 70.2) so a later plan change never rewrites
 /// history.
-model CommissionPlan {
-  id               String          @id @default(uuid())
-  tenantId         String          @map("tenant_id")
-  tenant           Tenant          @relation(fields: [tenantId], references: [id])
-  channelPartnerId String?
-  channelPartner   ChannelPartner? @relation(fields: [channelPartnerId], references: [id])
-  name             String
-  triggerEvent     String // BOOKING | COLLECTION
-  rateType         String // FLAT | PERCENT
-  ratePaise        BigInt?
-  ratePercent      Float?
-  active           Boolean         @default(true)
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
-
-  accruals CommissionAccrual[]
-
-  @@index([tenantId, channelPartnerId, active])
-  @@map("commission_plans")
-}
-
-enum CommissionAccrualStatus {
-  PENDING
-  APPROVED
-  PAID
-  CLAWED_BACK
-
-  @@map("commission_accrual_status")
-}
-
-model CommissionAccrual {
-  id               String                  @id @default(uuid())
-  tenantId         String                  @map("tenant_id")
-  tenant           Tenant                  @relation(fields: [tenantId], references: [id])
-  channelPartnerId String
-  channelPartner   ChannelPartner          @relation(fields: [channelPartnerId], references: [id])
-  bookingId        String?
-  booking          Booking?                @relation(fields: [bookingId], references: [id])
-  planId           String?
-  plan             CommissionPlan?         @relation(fields: [planId], references: [id])
-  amountPaise      BigInt
-  status           CommissionAccrualStatus @default(PENDING)
-  policySnapshot   Json                    @default("{}")
-  payoutId         String?
-  payout           CommissionPayout?       @relation(fields: [payoutId], references: [id])
-  approvedById     String?
-  approvedBy       User?                   @relation(fields: [approvedById], references: [id])
-  approvedAt       DateTime?
-  createdAt        DateTime                @default(now())
-
-  @@index([tenantId, channelPartnerId, status])
-  @@index([bookingId])
-  @@index([payoutId])
-  @@map("commission_accruals")
-}
-
-model CommissionPayout {
-  id               String         @id @default(uuid())
-  tenantId         String         @map("tenant_id")
-  tenant           Tenant         @relation(fields: [tenantId], references: [id])
-  channelPartnerId String
-  channelPartner   ChannelPartner @relation(fields: [channelPartnerId], references: [id])
-  amountPaise      BigInt
-  reference        String?
-  paidAt           DateTime?
-  approvedById     String?
-  approvedBy       User?          @relation(fields: [approvedById], references: [id])
-  createdAt        DateTime       @default(now())
-
-  accruals CommissionAccrual[]
-
-  @@index([tenantId, channelPartnerId])
-  @@map("commission_payouts")
-}
 
 // === CROSS-CUTTING: INTEGRATION EVENTS, SLA BREACHES, APPROVAL REQUESTS ===
 
@@ -4729,14 +2491,12 @@ model IntegrationEvent {
   tenantId    String?                @map("tenant_id")
   tenant      Tenant?                @relation(fields: [tenantId], references: [id])
   provider    String
-  eventId     String
   status      IntegrationEventStatus @default(RECEIVED)
   payload     Json                   @default("{}")
   error       String?
   processedAt DateTime?
   createdAt   DateTime               @default(now())
 
-  @@unique([provider, eventId])
   @@index([tenantId, status])
   @@map("integration_events")
 }
@@ -4744,27 +2504,6 @@ model IntegrationEvent {
 /// First-class SLA breach record (spec 46.2 / 6): a scan writes one row per
 /// missed target so "8 hot leads are untouched" is a real, queryable, auditable
 /// fact instead of a transient in-memory finding.
-model SlaBreach {
-  id            String    @id @default(uuid())
-  tenantId      String    @map("tenant_id")
-  tenant        Tenant    @relation(fields: [tenantId], references: [id])
-  slaRuleId     String?
-  slaRule       SlaRule?  @relation(fields: [slaRuleId], references: [id])
-  leadId        String?
-  lead          Lead?     @relation(fields: [leadId], references: [id])
-  entityType    String
-  entityId      String
-  breachType    String
-  detectedAt    DateTime  @default(now())
-  resolvedAt    DateTime?
-  escalatedToId String?
-  escalatedTo   User?     @relation(fields: [escalatedToId], references: [id])
-  metadata      Json      @default("{}")
-
-  @@index([tenantId, resolvedAt])
-  @@index([leadId])
-  @@map("sla_breaches")
-}
 
 enum ApprovalRequestStatus {
   PENDING
@@ -4825,35 +2564,8 @@ model ApprovalPolicy {
 /// Single-purpose, hashed, short-lived magic link for buyer portal login
 /// (spec 54.1). Never store the raw token — only its hash — and a token can
 /// only ever be used once.
-model BuyerPortalToken {
-  id        String    @id @default(uuid())
-  tenantId  String    @map("tenant_id")
-  tenant    Tenant    @relation(fields: [tenantId], references: [id])
-  bookingId String
-  booking   Booking   @relation(fields: [bookingId], references: [id])
-  contactId String?
-  contact   Contact?  @relation(fields: [contactId], references: [id])
-  tokenHash String    @unique
-  expiresAt DateTime
-  usedAt    DateTime?
-  revokedAt DateTime?
-  createdAt DateTime  @default(now())
-
-  @@index([tenantId, bookingId])
-  @@map("buyer_portal_tokens")
-}
 
 // === PAYMENT PLAN TEMPLATES ===
-
-enum PaymentPlanType {
-  CONSTRUCTION_LINKED
-  TIME_LINKED
-  DOWN_PAYMENT
-  SUBVENTION
-  CUSTOM
-
-  @@map("payment_plan_type")
-}
 
 /// A reusable milestone breakdown (spec 16/54.5) — `milestones` is an ordered
 /// JSON array of `{ label, percentage, dueOffsetDays?, triggerNote? }`.
@@ -4861,471 +2573,63 @@ enum PaymentPlanType {
 /// construction-linked milestones instead carry a triggerNote and get their
 /// due date set manually once that construction stage is actually reached —
 /// this app has no way to know real-world construction progress on its own.
-model PaymentPlanTemplate {
-  id         String          @id @default(uuid())
-  tenantId   String          @map("tenant_id")
-  tenant     Tenant          @relation(fields: [tenantId], references: [id])
-  name       String
-  planType   PaymentPlanType
-  milestones Json            @default("[]")
-  active     Boolean         @default(true)
-  createdAt  DateTime        @default(now())
-  updatedAt  DateTime        @updatedAt
-
-  @@index([tenantId, planType, active])
-  @@map("payment_plan_templates")
-}
 
 // === MODULE 4.1: MARKETING JOURNEY BUILDER ===
-
-enum JourneyStatus {
-  DRAFT
-  ACTIVE
-  PAUSED
-  ARCHIVED
-
-  @@map("journey_status")
-}
-
-enum JourneyStepType {
-  WAIT
-  SEND_TEMPLATE
-  CREATE_TASK
-  WEBHOOK
-  EXIT_CONDITION
-
-  @@map("journey_step_type")
-}
-
-enum JourneyEnrollmentStatus {
-  ACTIVE
-  COMPLETED
-  EXITED
-
-  @@map("journey_enrollment_status")
-}
 
 /// A configurable multi-step drip campaign (nurture sequence) for automating
 /// lead follow-up over time. Separate from the simpler Campaign model because
 /// this one encodes ordered steps with conditions, version snapshots, and
 /// per-lead enrollment progress — a full automation journey, not a one-off send.
-model MarketingJourney {
-  id              String        @id @default(uuid())
-  tenantId        String        @map("tenant_id")
-  tenant          Tenant        @relation(fields: [tenantId], references: [id])
-  name            String
-  status          JourneyStatus @default(DRAFT)
-  entryEventType  String // e.g. "lead.created", "site_visit.no_show"
-  entryConditions Json          @default("{}")
-  version         Int           @default(1)
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-
-  steps       MarketingJourneyStep[]
-  enrollments MarketingJourneyEnrollment[]
-
-  @@index([tenantId, status])
-  @@map("marketing_journeys")
-}
 
 /// An ordered step within a MarketingJourney. The step's config JSON holds
 /// step-type-specific fields (e.g. waitHours for WAIT, templateId for SEND_TEMPLATE).
-model MarketingJourneyStep {
-  id        String           @id @default(uuid())
-  journeyId String
-  journey   MarketingJourney @relation(fields: [journeyId], references: [id], onDelete: Cascade)
-  order     Int
-  stepType  JourneyStepType
-  config    Json             @default("{}")
-  createdAt DateTime         @default(now())
-
-  @@index([journeyId])
-  @@map("marketing_journey_steps")
-}
 
 /// A lead enrolled in a MarketingJourney. Snapshots the journey version/steps
 /// at enrollment time so retroactive changes never alter an enrolled lead's path.
-model MarketingJourneyEnrollment {
-  id               String                  @id @default(uuid())
-  tenantId         String                  @map("tenant_id")
-  tenant           Tenant                  @relation(fields: [tenantId], references: [id])
-  journeyId        String
-  journey          MarketingJourney        @relation(fields: [journeyId], references: [id])
-  leadId           String
-  lead             Lead                    @relation(fields: [leadId], references: [id])
-  currentStepOrder Int                     @default(0)
-  status           JourneyEnrollmentStatus @default(ACTIVE)
-  journeySnapshot  Json                    @default("{}") // snapshot of steps at enrollment time
-  enrolledAt       DateTime                @default(now())
-  completedAt      DateTime?
-
-  @@unique([journeyId, leadId])
-  @@index([tenantId, status])
-  @@map("marketing_journey_enrollments")
-}
 
 // === MODULE 4.2: EVENTS / LAUNCHES ===
-
-enum MarketingEventType {
-  OPEN_HOUSE
-  BROKER_MEET
-  LAUNCH
-  WEBINAR
-  SITE_VISIT_DRIVE
-
-  @@map("marketing_event_type")
-}
-
-enum MarketingEventStatus {
-  DRAFT
-  PUBLISHED
-  COMPLETED
-  CANCELLED
-
-  @@map("marketing_event_status")
-}
-
-enum RsvpStatus {
-  INVITED
-  CONFIRMED
-  DECLINED
-  ATTENDED
-  NO_SHOW
-
-  @@map("rsvp_status")
-}
-
-/// A marketing/broker event (open house, project launch, broker meet, webinar)
-/// with RSVP tracking and QR check-in. Separate from the existing Event model
-/// (events_ops table) which is for internal event operations/management.
-model MarketingEvent {
-  id          String               @id @default(uuid())
-  tenantId    String               @map("tenant_id")
-  tenant      Tenant               @relation(fields: [tenantId], references: [id])
-  projectId   String?
-  project     Project?             @relation(fields: [projectId], references: [id])
-  name        String
-  eventType   MarketingEventType
-  startAt     DateTime
-  endAt       DateTime?
-  location    String?
-  description String?
-  capacity    Int?
-  status      MarketingEventStatus @default(DRAFT)
-  createdById String?
-  createdAt   DateTime             @default(now())
-  updatedAt   DateTime             @updatedAt
-
-  invitees MarketingEventInvitee[]
-
-  @@index([tenantId, status])
-  @@index([projectId])
-  @@map("marketing_events")
-}
-
-/// An invitee (lead or channel partner) to a marketing event, tracking RSVP
-/// and QR-based check-in. qrCheckInToken is a short random string for
-/// unauthenticated check-in at the venue.
-model MarketingEventInvitee {
-  id               String          @id @default(uuid())
-  eventId          String
-  event            MarketingEvent  @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  leadId           String?
-  lead             Lead?           @relation(fields: [leadId], references: [id])
-  channelPartnerId String?
-  channelPartner   ChannelPartner? @relation(fields: [channelPartnerId], references: [id])
-  name             String?
-  phone            String?
-  email            String?
-  rsvpStatus       RsvpStatus      @default(INVITED)
-  qrCheckInToken   String?         @unique
-  checkedInAt      DateTime?
-  createdAt        DateTime        @default(now())
-
-  @@index([eventId])
-  @@index([leadId])
-  @@index([channelPartnerId])
-  @@map("marketing_event_invitees")
-}
-
-// === MODULE 4.4: PROJECT CASH-FLOW FORECASTING ===
-
-enum CashFlowEntryType {
-  EXPECTED_COLLECTION
-  EXPECTED_COMMISSION_PAYOUT
-  EXPECTED_REFUND
-  PLANNED_EXPENSE
-
-  @@map("cash_flow_entry_type")
-}
 
 /// A single forecast entry for a project's projected cash position. Entries
 /// can be auto-derived (from PaymentSchedule, CommissionAccrual) or manually
 /// entered for planned expenses. Label clearly as forecast, not accounting.
-model CashFlowForecastEntry {
-  id           String            @id @default(uuid())
-  tenantId     String            @map("tenant_id")
-  tenant       Tenant            @relation(fields: [tenantId], references: [id])
-  projectId    String
-  project      Project           @relation(fields: [projectId], references: [id])
-  entryType    CashFlowEntryType
-  amountPaise  BigInt
-  expectedDate DateTime
-  sourceType   String // e.g. "PaymentSchedule", "CommissionAccrual", "manual"
-  sourceId     String? // id of originating record if auto-derived
-  notes        String?
-  createdById  String?
-  createdAt    DateTime          @default(now())
-
-  @@index([tenantId, projectId])
-  @@index([projectId, expectedDate])
-  @@map("cash_flow_forecast_entries")
-}
 
 // === MODULE 4.5: LANDOWNER / CO-PROMOTER REVENUE-SHARE ALLOCATION ===
-
-enum RevenueSharePartyType {
-  LANDOWNER
-  CO_PROMOTER
-
-  @@map("revenue_share_party_type")
-}
-
-enum RevenueShareAllocationStatus {
-  PENDING
-  CONFIRMED
-  SETTLED
-
-  @@map("revenue_share_allocation_status")
-}
 
 /// A landowner or co-promoter entitled to a share of booking revenue from a
 /// project. Separate from ChannelPartner commissions since these are ownership
 /// entitlements, not referral fees.
-model RevenueShareParty {
-  id           String                @id @default(uuid())
-  tenantId     String                @map("tenant_id")
-  tenant       Tenant                @relation(fields: [tenantId], references: [id])
-  projectId    String
-  project      Project               @relation(fields: [projectId], references: [id])
-  partyName    String
-  partyType    RevenueSharePartyType
-  sharePercent Float // 0-100
-  contactEmail String?
-  contactPhone String?
-  createdAt    DateTime              @default(now())
-  updatedAt    DateTime              @updatedAt
-
-  allocations RevenueShareAllocation[]
-
-  @@index([tenantId, projectId])
-  @@map("revenue_share_parties")
-}
 
 /// An allocation of revenue (unit or booking-based) to a RevenueShareParty.
 /// At least one of unitId/bookingId must be set.
-model RevenueShareAllocation {
-  id                   String                       @id @default(uuid())
-  tenantId             String                       @map("tenant_id")
-  tenant               Tenant                       @relation(fields: [tenantId], references: [id])
-  partyId              String
-  party                RevenueShareParty            @relation(fields: [partyId], references: [id])
-  unitId               String?
-  unit                 Unit?                        @relation(fields: [unitId], references: [id])
-  bookingId            String?
-  booking              Booking?                     @relation(fields: [bookingId], references: [id])
-  allocatedAmountPaise BigInt?
-  status               RevenueShareAllocationStatus @default(PENDING)
-  createdAt            DateTime                     @default(now())
-  updatedAt            DateTime                     @updatedAt
-
-  @@index([tenantId, partyId])
-  @@index([unitId])
-  @@index([bookingId])
-  @@map("revenue_share_allocations")
-}
 
 // === MODULE 4.6: RESALE / RENTAL LISTING INVENTORY ===
-
-enum ResaleListingType {
-  RESALE
-  RENTAL
-
-  @@map("resale_listing_type")
-}
-
-enum ResaleListingStatus {
-  AVAILABLE
-  UNDER_NEGOTIATION
-  CLOSED
-
-  @@map("resale_listing_status")
-}
 
 /// Secondary-market resale and rental listings handled by the builder/broker.
 /// Separate from new-developer Unit inventory (the builder's own project units)
 /// and from Property (which is a generic broker listing — this one is explicitly
 /// for resale/rental secondary market with its own lifecycle).
-model ResaleListing {
-  id                String              @id @default(uuid())
-  tenantId          String              @map("tenant_id")
-  tenant            Tenant              @relation(fields: [tenantId], references: [id])
-  listingType       ResaleListingType
-  unitId            String?
-  unit              Unit?               @relation(fields: [unitId], references: [id])
-  externalOwnerName String? // seller/landlord name if not a tracked buyer
-  askingPriceRupees Float? // kept as Float to match Property.price convention
-  rentAmountRupees  Float? // for rentals
-  location          String?
-  bedrooms          Int?
-  areaSqft          Float?
-  status            ResaleListingStatus @default(AVAILABLE)
-  images            Json                @default("[]")
-  createdById       String?
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
-
-  @@index([tenantId, status, listingType])
-  @@index([location])
-  @@map("resale_listings")
-}
 
 // === MODULE 4.7: REFERRAL / LOYALTY PROGRAM ===
 
-enum ReferralRewardType {
-  FLAT
-  PERCENT_OF_BOOKING
-
-  @@map("referral_reward_type")
-}
-
-enum ReferralStatus {
-  SUBMITTED
-  LEAD_CREATED
-  BOOKED
-  REWARD_APPROVED
-  REWARD_PAID
-  REJECTED
-
-  @@map("referral_status")
-}
-
 /// A referral program configuration that existing buyers can use to refer new
 /// leads. Rewards are never auto-paid — approval is always required.
-model ReferralProgram {
-  id                String             @id @default(uuid())
-  tenantId          String             @map("tenant_id")
-  tenant            Tenant             @relation(fields: [tenantId], references: [id])
-  name              String
-  rewardType        ReferralRewardType
-  rewardAmountPaise BigInt?
-  rewardPercent     Float?
-  active            Boolean            @default(true)
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
-
-  referrals Referral[]
-
-  @@index([tenantId, active])
-  @@map("referral_programs")
-}
 
 /// An individual referral submitted by an existing buyer (referrer) pointing to
 /// a new prospect (referredPhone). Status tracks the referral from submission
 /// through reward lifecycle. Self-referral and duplicate-referrer are blocked.
-model Referral {
-  id                String          @id @default(uuid())
-  tenantId          String          @map("tenant_id")
-  tenant            Tenant          @relation(fields: [tenantId], references: [id])
-  programId         String
-  program           ReferralProgram @relation(fields: [programId], references: [id])
-  referrerContactId String
-  referrerContact   Contact         @relation("ReferrerContact", fields: [referrerContactId], references: [id])
-  referredLeadId    String?
-  referredLead      Lead?           @relation("ReferredLead", fields: [referredLeadId], references: [id])
-  referredPhone     String
-  status            ReferralStatus  @default(SUBMITTED)
-  rewardAmountPaise BigInt?
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
-
-  @@index([tenantId, status])
-  @@index([referrerContactId])
-  @@index([referredLeadId])
-  @@index([referredPhone])
-  @@map("referrals")
-}
 
 // === MODULE 4.8: NRI / INTERNATIONAL BUYER WORKFLOW ===
 
 /// Overseas buyer profile attached to a Lead. Adds timezone-aware scheduling
 /// and document-type hints. One profile per lead (unique constraint on leadId).
-model NriBuyerProfile {
-  id                         String   @id @default(uuid())
-  tenantId                   String   @map("tenant_id")
-  tenant                     Tenant   @relation(fields: [tenantId], references: [id])
-  leadId                     String   @unique
-  lead                       Lead     @relation(fields: [leadId], references: [id])
-  countryOfResidence         String
-  timezone                   String // e.g. "America/New_York"
-  preferredContactHoursLocal String? // e.g. "18:00-21:00"
-  passportNumberMasked       String?
-  overseasAddress            Json?    @default("{}")
-  remotePaymentMethodNote    String?
-  createdAt                  DateTime @default(now())
-  updatedAt                  DateTime @updatedAt
-
-  @@index([tenantId])
-  @@map("nri_buyer_profiles")
-}
 
 // === MODULE 4.9: VENDOR / CONSTRUCTION ERP INTEGRATION (STUB ADAPTER) ===
 
 /// A per-project ERP connection configuration. Status defaults to NOT_CONFIGURED
 /// since no real ERP credentials ship with the system.
-model ConstructionErpConnection {
-  id         String    @id @default(uuid())
-  tenantId   String    @map("tenant_id")
-  tenant     Tenant    @relation(fields: [tenantId], references: [id])
-  projectId  String
-  project    Project   @relation(fields: [projectId], references: [id])
-  provider   String // "manual", "procore", "buildertrend" — free text
-  status     String    @default("NOT_CONFIGURED") // NOT_CONFIGURED | CONNECTED | ERROR
-  lastSyncAt DateTime?
-  config     Json      @default("{}") // placeholder for future real credentials
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-
-  @@unique([tenantId, projectId])
-  @@index([tenantId, projectId])
-  @@map("construction_erp_connections")
-}
 
 /// A manually-recorded or ERP-synced construction progress milestone update.
 /// This is what feeds the "construction update" feed shown to buyers.
-model ConstructionMilestoneUpdate {
-  id                     String    @id @default(uuid())
-  tenantId               String    @map("tenant_id")
-  tenant                 Tenant    @relation(fields: [tenantId], references: [id])
-  projectId              String
-  project                Project   @relation(fields: [projectId], references: [id])
-  towerId                String?
-  tower                  Tower?    @relation(fields: [towerId], references: [id])
-  milestoneName          String // e.g. "Foundation complete"
-  percentComplete        Int // 0-100
-  sourceType             String // MANUAL | ERP_SYNC
-  reportedById           String?
-  reportedAt             DateTime  @default(now())
-  createdAt              DateTime  @default(now())
-  // Buyer-facing gate (spec 68.1): raw site upload vs approved customer message are separate steps.
-  customerVisibleMessage String?
-  approvedForBuyersAt    DateTime?
-  approvedForBuyersById  String?
-
-  @@index([tenantId, projectId])
-  @@index([projectId, reportedAt])
-  @@map("construction_milestone_updates")
-}
 
 // === MODULE 4.10: SEARCHABLE PERMISSION-AWARE FILE CABINET ===
 
@@ -5334,416 +2638,63 @@ model ConstructionMilestoneUpdate {
 /// results; this index table exists only if live queries prove too slow.
 /// Populated by a periodic rebuildIndex method, not by hooks into other
 /// modules' services (to avoid editing files outside this module's scope).
-model DocumentSearchIndex {
-  id             String   @id @default(uuid())
-  tenantId       String   @map("tenant_id")
-  sourceType     String // MEDIA_FILE | GENERATED_DOCUMENT | BUYER_DOCUMENT
-  sourceId       String
-  searchableText String // filename/type/tags concatenated
-  leadId         String?
-  projectId      String?
-  unitId         String?
-  updatedAt      DateTime @updatedAt
-
-  @@index([tenantId, sourceType])
-  @@index([tenantId, leadId])
-  @@index([tenantId, projectId])
-  @@index([tenantId, unitId])
-  @@map("document_search_index")
-}
 
 // === MODULE 4.11: PHYSICAL DOCUMENT CUSTODY TRACKING ===
 
 /// Tracks physical paper originals (signed agreements, registered documents)
 /// kept in a filing cabinet — who checked them out, when they're due back,
 /// and whether they've been returned. Independent of digital GeneratedDocument.
-model PhysicalDocumentCustody {
-  id                  String     @id @default(uuid())
-  tenantId            String     @map("tenant_id")
-  tenant              Tenant     @relation(fields: [tenantId], references: [id])
-  fileNumber          String // physical folder/file label
-  bookingId           String?
-  booking             Booking?   @relation(fields: [bookingId], references: [id])
-  leadId              String?
-  lead                Lead?      @relation("PhysicalDocumentLead", fields: [leadId], references: [id])
-  documentDescription String
-  location            String // e.g. "Head Office Cabinet 3, Shelf B"
-  checkedOutById      String?
-  checkedOutBy        User?      @relation("PhysicalDocumentCheckedOutBy", fields: [checkedOutById], references: [id])
-  checkedOutAt        DateTime?
-  dueBackAt           DateTime?
-  returnedAt          DateTime?
-  scanLinkMediaFileId String?
-  scanLinkMediaFile   MediaFile? @relation("PhysicalDocumentScanMedia", fields: [scanLinkMediaFileId], references: [id])
-  createdAt           DateTime   @default(now())
-  updatedAt           DateTime   @updatedAt
-
-  @@index([tenantId, fileNumber])
-  @@index([tenantId, leadId])
-  @@index([tenantId, bookingId])
-  @@index([tenantId, returnedAt])
-  @@map("physical_document_custodies")
-}
 
 /// A tenant-configured overdue-interest rule (spec 67.4) — rate/grace period
 /// are the builder's own policy, never hardcoded here. computeOverdueCharge
 /// snapshots the policy version used on the resulting LedgerEntry so a later
 /// rate change never rewrites an already-charged milestone.
-model InterestPolicy {
-  id                  String   @id @default(uuid())
-  tenantId            String   @map("tenant_id")
-  tenant              Tenant   @relation(fields: [tenantId], references: [id])
-  name                String
-  ratePercentPerMonth Float
-  graceDays           Int      @default(0)
-  active              Boolean  @default(true)
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
-
-  @@index([tenantId, active])
-  @@map("interest_policies")
-}
-
-enum CreditNoteType {
-  WAIVER
-  CORRECTION
-
-  @@map("credit_note_type")
-}
 
 /// An explicit, audited reduction to what a buyer owes — a waiver or a
 /// correction — so a discount never just vanishes as an unexplained ledger
 /// edit (spec 67.4).
-model CreditNote {
-  id           String         @id @default(uuid())
-  tenantId     String         @map("tenant_id")
-  tenant       Tenant         @relation(fields: [tenantId], references: [id])
-  bookingId    String
-  booking      Booking        @relation(fields: [bookingId], references: [id])
-  type         CreditNoteType
-  amountPaise  BigInt
-  reason       String
-  approvedById String?
-  approvedBy   User?          @relation(fields: [approvedById], references: [id])
-  createdAt    DateTime       @default(now())
-
-  @@index([tenantId, bookingId])
-  @@map("credit_notes")
-}
-
-enum LoanSanctionStatus {
-  NOT_APPLIED
-  APPLIED
-  SANCTIONED
-  REJECTED
-
-  @@map("loan_sanction_status")
-}
-
-enum LoanDisbursementStatus {
-  NOT_REQUESTED
-  REQUESTED
-  PARTIAL
-  COMPLETE
-
-  @@map("loan_disbursement_status")
-}
-
-enum NocStatus {
-  NOT_REQUESTED
-  REQUESTED
-  RECEIVED
-
-  @@map("noc_status")
-}
 
 /// Loan and registration coordination (spec 67.2) — this app tracks staff-
 /// confirmed status, it never performs bank underwriting or government
 /// registration itself.
-model LoanRegistrationCase {
-  id                        String                 @id @default(uuid())
-  tenantId                  String                 @map("tenant_id")
-  tenant                    Tenant                 @relation(fields: [tenantId], references: [id])
-  bookingId                 String                 @unique
-  booking                   Booking                @relation(fields: [bookingId], references: [id])
-  lenderName                String?
-  loanAmountPaise           BigInt?
-  sanctionStatus            LoanSanctionStatus     @default(NOT_APPLIED)
-  sanctionDate              DateTime?
-  disbursementStatus        LoanDisbursementStatus @default(NOT_REQUESTED)
-  disbursedAmountPaise      BigInt?
-  registrationAppointmentAt DateTime?
-  registrationChargesPaise  BigInt?
-  registrationReceiptNumber String?
-  registeredAt              DateTime?
-  bankNocStatus             NocStatus              @default(NOT_REQUESTED)
-  notes                     String?
-  createdAt                 DateTime               @default(now())
-  updatedAt                 DateTime               @updatedAt
-
-  @@index([tenantId])
-  @@map("loan_registration_cases")
-}
 
 /// A public browsing session for the buyer-facing digital sales room — not an
 /// authenticated staff user (spec 62.4).
-model BuyerSession {
-  id          String   @id @default(uuid())
-  tenantId    String   @map("tenant_id")
-  tenant      Tenant   @relation(fields: [tenantId], references: [id])
-  projectId   String?
-  project     Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
-  leadId      String?
-  lead        Lead?    @relation(fields: [leadId], references: [id], onDelete: SetNull)
-  phone       String?
-  email       String?
-  name        String?
-  utmSource   String?
-  utmMedium   String?
-  utmCampaign String?
-  lastSeenAt  DateTime @default(now())
-  createdAt   DateTime @default(now())
-
-  shortlist        UnitShortlist[]
-  checkoutHolds    CheckoutHold[]
-  checkoutAttempts CheckoutAttempt[]
-  events           DigitalSalesEvent[]
-
-  @@index([tenantId])
-  @@index([leadId])
-  @@map("buyer_sessions")
-}
 
 /// Buyer's saved units in the digital sales room (spec 62.2 "saved shortlist/cart").
-model UnitShortlist {
-  id             String       @id @default(uuid())
-  tenantId       String       @map("tenant_id")
-  tenant         Tenant       @relation(fields: [tenantId], references: [id])
-  buyerSessionId String
-  buyerSession   BuyerSession @relation(fields: [buyerSessionId], references: [id], onDelete: Cascade)
-  unitId         String
-  unit           Unit         @relation(fields: [unitId], references: [id], onDelete: Cascade)
-  createdAt      DateTime     @default(now())
-
-  @@unique([buyerSessionId, unitId])
-  @@index([tenantId])
-  @@map("unit_shortlists")
-}
-
-enum CheckoutHoldStatus {
-  ACTIVE
-  CONSUMED
-  EXPIRED
-  RELEASED
-
-  @@map("checkout_hold_status")
-}
 
 /// A public buyer's short-lived (10-20 min) reservation on a unit during
 /// online checkout — separate from the salesperson UnitHold, never manually
 /// extended, auto-released unless a verified payment/booking transition lands
 /// first (spec 62.3).
-model CheckoutHold {
-  id             String             @id @default(uuid())
-  tenantId       String             @map("tenant_id")
-  tenant         Tenant             @relation(fields: [tenantId], references: [id])
-  unitId         String
-  unit           Unit               @relation(fields: [unitId], references: [id], onDelete: Cascade)
-  buyerSessionId String
-  buyerSession   BuyerSession       @relation(fields: [buyerSessionId], references: [id], onDelete: Cascade)
-  status         CheckoutHoldStatus @default(ACTIVE)
-  expiresAt      DateTime
-  releasedAt     DateTime?
-  createdAt      DateTime           @default(now())
-
-  paymentIntents PaymentIntent[]
-
-  @@index([tenantId, status])
-  @@index([unitId, status])
-  @@index([expiresAt])
-  @@map("checkout_holds")
-}
-
-enum CheckoutAttemptStatus {
-  STARTED
-  PAYMENT_PENDING
-  PAYMENT_CONFIRMED
-  ABANDONED
-  FAILED
-
-  @@map("checkout_attempt_status")
-}
 
 /// One buyer's attempt to complete online checkout for one unit — the
 /// server-side record of the "checkout wizard" (spec 62.2), independent of
 /// PaymentIntent so an abandoned checkout is still visible for follow-up.
-model CheckoutAttempt {
-  id             String                @id @default(uuid())
-  tenantId       String                @map("tenant_id")
-  tenant         Tenant                @relation(fields: [tenantId], references: [id])
-  buyerSessionId String
-  buyerSession   BuyerSession          @relation(fields: [buyerSessionId], references: [id], onDelete: Cascade)
-  unitId         String
-  unit           Unit                  @relation(fields: [unitId], references: [id], onDelete: Cascade)
-  status         CheckoutAttemptStatus @default(STARTED)
-  bookingId      String?
-  booking        Booking?              @relation(fields: [bookingId], references: [id], onDelete: SetNull)
-  createdAt      DateTime              @default(now())
-  updatedAt      DateTime              @updatedAt
-
-  @@index([tenantId, status])
-  @@index([buyerSessionId])
-  @@map("checkout_attempts")
-}
-
-enum PaymentIntentStatus {
-  CREATED
-  PENDING
-  CONFIRMED
-  FAILED
-  CANCELLED
-
-  @@map("payment_intent_status")
-}
 
 /// A token/booking-amount payment attempt through a real payment gateway.
 /// Never trust the browser redirect — only a verified signed webhook may move
 /// this to CONFIRMED (spec 62.3). `provider` stays null and status stays
 /// CREATED forever if no gateway is configured for the tenant; the checkout
 /// UI must show "payments not configured" rather than fake success.
-model PaymentIntent {
-  id             String              @id @default(uuid())
-  tenantId       String              @map("tenant_id")
-  tenant         Tenant              @relation(fields: [tenantId], references: [id])
-  checkoutHoldId String?
-  checkoutHold   CheckoutHold?       @relation(fields: [checkoutHoldId], references: [id], onDelete: SetNull)
-  provider       String?
-  providerRef    String?
-  amountPaise    BigInt
-  status         PaymentIntentStatus @default(CREATED)
-  webhookEventId String?             @unique
-  confirmedAt    DateTime?
-  createdAt      DateTime            @default(now())
-  updatedAt      DateTime            @updatedAt
-
-  @@index([tenantId, status])
-  @@index([checkoutHoldId])
-  @@map("payment_intents")
-}
 
 /// Immutable behavioural events for the digital sales room funnel report
 /// (spec 62.4/66.3) — unit.viewed, unit.shortlisted, checkout.started, etc.
-model DigitalSalesEvent {
-  id             String       @id @default(uuid())
-  tenantId       String       @map("tenant_id")
-  tenant         Tenant       @relation(fields: [tenantId], references: [id])
-  buyerSessionId String
-  buyerSession   BuyerSession @relation(fields: [buyerSessionId], references: [id], onDelete: Cascade)
-  eventType      String
-  unitId         String?
-  metadata       Json         @default("{}")
-  createdAt      DateTime     @default(now())
-
-  @@index([tenantId, eventType])
-  @@index([buyerSessionId])
-  @@map("digital_sales_events")
-}
-
-enum LandingPageStatus {
-  DRAFT
-  PUBLISHED
-  ARCHIVED
-
-  @@map("landing_page_status")
-}
 
 /// A published marketing landing page built from approved components (spec
 /// 66.1) — content only, no arbitrary script injection; forms on it create
 /// leads through the normal lead-ingestion path.
-model LandingPage {
-  id          String            @id @default(uuid())
-  tenantId    String            @map("tenant_id")
-  tenant      Tenant            @relation(fields: [tenantId], references: [id])
-  projectId   String?
-  project     Project?          @relation(fields: [projectId], references: [id], onDelete: SetNull)
-  slug        String
-  title       String
-  content     Json              @default("{}")
-  status      LandingPageStatus @default(DRAFT)
-  utmDefaults Json              @default("{}")
-  publishedAt DateTime?
-  createdById String?
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
-
-  @@unique([tenantId, slug])
-  @@index([tenantId, status])
-  @@map("landing_pages")
-}
 
 /// A saved, reusable lead filter used by campaigns/journeys (spec 66.1) — a
 /// definition, not a frozen snapshot, so it stays live as leads change.
-model AudienceSegment {
-  id          String   @id @default(uuid())
-  tenantId    String   @map("tenant_id")
-  tenant      Tenant   @relation(fields: [tenantId], references: [id])
-  name        String
-  filters     Json     @default("{}")
-  createdById String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@index([tenantId])
-  @@map("audience_segments")
-}
-
-enum SuppressionChannel {
-  WHATSAPP
-  SMS
-  EMAIL
-  CALL
-
-  @@map("suppression_channel")
-}
 
 /// An opt-out record — an opted-out contact never receives a non-essential
 /// send on that channel again (spec 51/66.1). Checked before every bulk
 /// send, not just campaign sends.
-model SuppressionEntry {
-  id         String             @id @default(uuid())
-  tenantId   String             @map("tenant_id")
-  tenant     Tenant             @relation(fields: [tenantId], references: [id])
-  channel    SuppressionChannel
-  contactRef String
-  reason     String?
-  createdAt  DateTime           @default(now())
-
-  @@unique([tenantId, channel, contactRef])
-  @@index([tenantId])
-  @@map("suppression_entries")
-}
 
 /// An imported ad-spend batch, kept separate from leads so "cost per booking"
 /// reports can join spend to leads by project/campaign/date without
 /// conflating the two data sources (spec 66.1/25).
-model AdSpendImport {
-  id          String   @id @default(uuid())
-  tenantId    String   @map("tenant_id")
-  tenant      Tenant   @relation(fields: [tenantId], references: [id])
-  projectId   String?
-  project     Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
-  source      String
-  campaign    String?
-  spendDate   DateTime
-  amountPaise BigInt
-  currency    String   @default("INR")
-  createdById String?
-  createdAt   DateTime @default(now())
-
-  @@index([tenantId])
-  @@index([projectId, spendDate])
-  @@map("ad_spend_imports")
-}
 
 /// Tracks per-tenant onboarding-wizard progress with an explicit validator
 /// per step, not a vague "setup complete" flag (spec 54.2).
@@ -5789,6 +2740,7 @@ model VoiceEmployee {
   ambientSound   String? @map("ambient_sound")
   ambientVolume  Float   @default(0) @map("ambient_volume")
   maxCallDurationS Int   @default(600) @map("max_call_duration_s")
+  callTimeoutMessage String? @map("call_timeout_message") @db.Text
 
   status String @default("inactive") // inactive | active | paused
 
@@ -6006,6 +2958,10 @@ model VoiceCall {
   disposition String? // qualified | no_answer | busy | failed | cancelled | blocked_dnc | voicemail
   outcome     Json?   // structured captured variables
 
+  talkRatio      Json? @map("talk_ratio") // { agent: number, caller: number }
+  sentiment      String? // positive | neutral | negative
+  recommendedNextStep String? @map("recommended_next_step") @db.Text
+
   qualityScore Int? @map("quality_score") // from call-quality.ts linter, computed at read or backfilled here
 
   dograhRunId String? @map("dograh_run_id")
@@ -6139,7 +3095,6 @@ model LeadEscalation {
   @@index([leadId])
   @@map("lead_escalations")
 }
-
 
 /// Phase 7 (Rail D). One coaching record per call, for every call at every
 /// stage — not just the negotiation call. The rep sees their own row; only an

@@ -460,7 +460,7 @@ export default function VoiceAgentSettingsPage() {
             value={form.persona}
             onChange={e => setForm(p => ({ ...p, persona: e.target.value }))}
             className="w-full h-36 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20"
-            placeholder="You are Riya, a warm and professional real estate lead qualifier..."
+            placeholder="You are Riya, a warm and professional lead qualifier..."
           />
           <p className="text-[11px] text-[var(--muted-foreground)] mt-1">Applied to every step of the call.</p>
         </div>

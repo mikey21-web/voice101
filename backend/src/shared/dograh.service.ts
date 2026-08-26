@@ -26,12 +26,12 @@ const DEFAULT_TELEPHONY_CONFIG_ID = process.env.DOGRAH_TELEPHONY_CONFIG_ID || '1
  * raise smart_turn_stop_secs if the agent starts talking over people, lower it if it feels slow.
  */
 const TURN_TAKING = {
-  smart_turn_stop_secs: 0.4,
+  smart_turn_stop_secs: 0.3,
   max_user_idle_timeout: 8,
   turn_start_strategy: 'default',
   turn_stop_strategy: 'transcription',
   context_compaction_enabled: true,
-  max_call_duration: 600,
+  max_call_duration: 300,
 };
 
 export interface VoiceAgentSettings {

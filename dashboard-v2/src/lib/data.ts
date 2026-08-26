@@ -329,6 +329,7 @@ export async function updateVoiceEmployee(id: string, data: Partial<VoiceEmploye
   return api(`/voice-employees/${id}`, { method: 'PATCH', body: JSON.stringify(data) }) as Promise<VoiceEmployee>;
 }
 export async function deleteVoiceEmployee(id: string) { return api(`/voice-employees/${id}`, { method: 'DELETE' }); }
+export async function duplicateVoiceEmployee(id: string) { return api(`/voice-employees/${id}/duplicate`, { method: 'POST' }) as Promise<VoiceEmployee>; }
 export async function publishVoiceEmployee(id: string) { return api(`/voice-employees/${id}/publish`, { method: 'POST' }) as Promise<VoiceEmployee>; }
 export async function activateVoiceEmployee(id: string) { return api(`/voice-employees/${id}/activate`, { method: 'POST' }) as Promise<VoiceEmployee>; }
 export async function deactivateVoiceEmployee(id: string) { return api(`/voice-employees/${id}/deactivate`, { method: 'POST' }) as Promise<VoiceEmployee>; }

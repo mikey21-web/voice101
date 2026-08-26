@@ -9,7 +9,7 @@ import { LeadOrchestratorService } from '../voice-agent/lead-orchestrator.servic
 const DEAD_STATUSES: LeadStatus[] = ['LOST', 'COLD', 'SPAM'];
 /** A lead that bought. Re-enquiring after one of these is an EXISTING_CUSTOMER. */
 const PURCHASED_STATUSES: LeadStatus[] = [
-  'CONVERTED', 'BOOKED', 'AGREEMENT', 'LOAN_PROCESSING', 'REGISTERED', 'POSSESSION',
+  'CONVERTED',
 ];
 /** How much a repeat enquiry is worth. Someone who comes back twice is serious. */
 const RETURNING_SCORE_BUMP = 15;

@@ -96,7 +96,7 @@ export class AdvancedFeaturesController {
       headers.forEach((h, i) => { row[h] = vals[i] || ''; });
       return row;
     });
-    const allowedEntities = ['contact', 'lead', 'property', 'project', 'channelPartner'] as const;
+    const allowedEntities = ['contact', 'lead'] as const;
     const resolvedEntity = allowedEntities.includes(entity as any) ? (entity as typeof allowedEntities[number]) : 'contact';
     return this.svc.processImport(logId, rows, resolvedEntity);
   }

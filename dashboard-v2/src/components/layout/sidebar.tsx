@@ -16,7 +16,7 @@ import { isFeatureEnabled, getLabel, getBusinessName, getNicheLogo, onConfigChan
 const featureMap: Record<string, string> = {
   "/": "overview", "/queue": "overview", "/builder-desk": "overview", "/leads": "leads", "/smart-lists": "leads", "/pipeline": "pipeline", "/contacts": "contacts",
   "/campaigns": "campaigns", "/forms": "forms", "/qr-codes": "qrCodes",
-  "/voice-agent": "voiceAgent", "/voice-employees": "voiceAgent", "/voice-agent-settings": "voiceAgent", "/voice-campaigns": "voiceAgent", "/voice-call-logs": "voiceAgent", "/voice-knowledge-base": "voiceAgent", "/voice-post-call-workflows": "voiceAgent",
+  "/voice-agent": "voiceAgent", "/voice-employees": "voiceAgent", "/voice-agent-settings": "voiceAgent", "/voice-campaigns": "voiceAgent", "/voice-call-logs": "voiceAgent", "/voice-knowledge-base": "voiceAgent", "/voice-post-call-workflows": "voiceAgent", "/talk-to-build": "voiceAgent",
   "/voice-dashboard": "voiceAgent", "/voice-instant-leads": "voiceAgent", "/voice-inbound-calls": "voiceAgent", "/voice-all-conversations": "voiceAgent", "/voice-leads-results": "voiceAgent", "/voice-phone-numbers": "voiceAgent", "/voice-performance": "voiceAgent",
   "/conversations": "messages", "/templates": "templates", "/media": "media",
   "/scoring": "scoring", "/rules": "routing",
@@ -34,26 +34,7 @@ const featureMap: Record<string, string> = {
   "/tickets": "tickets", "/knowledge-base": "knowledgeBase",
   "/analytics": "analytics", "/reports": "reports", "/studio": "studio",
   "/settings": "settings", "/import": "import", "/ads": "adIntegrations",
-  "/website-crawler": "websiteCrawler", "/public-profile": "publicProfile",   "/properties": "properties", "/shipments": "shipments",
-  "/channel-partners": "channelPartners", "/payment-schedules": "paymentSchedules",
-  "/projects": "projects",
-  "/marketing-journeys": "marketingJourneys",
-  "/marketing-events": "marketingEvents",
-  "/portfolio": "portfolio",
-  "/cash-flow-forecast": "cashFlowForecast",
-  "/revenue-share": "revenueShare",
-  "/resale-listings": "resaleListings",
-  "/referrals": "referrals",
-  "/nri-profiles": "nriProfiles",
-  "/construction-erp": "constructionErp",
-  "/document-search": "documentSearch",
-  "/physical-documents": "physicalDocuments",
-  "/allied-inventory": "alliedInventory",
-  "/sales-targets": "salesTargets",
-  "/digital-sales-room": "digitalSalesRoom",
-  "/advanced-marketing": "advancedMarketing",
-  "/onboarding-progress": "onboardingProgress",
-  "/launch-control": "launchControl",
+  "/website-crawler": "websiteCrawler", "/public-profile": "publicProfile",
 };
 
 const labelMap: Record<string, "contact" | "conversion"> = {
@@ -63,208 +44,33 @@ const labelMap: Record<string, "contact" | "conversion"> = {
 
 const rawNavGroups = [
   {
-    label: "Overview",
-    items: [
-      { label: "Today", icon: LayoutDashboard, path: "/" },
-      { label: "My Queue", icon: CheckSquare, path: "/queue" },
-      { label: "Builder Desk", icon: Building2, path: "/builder-desk" },
-    ],
-  },
-  {
-    label: "Leads",
-    items: [
-      { label: "Leads", icon: Users, path: "/leads" },
-      { label: "Smart Lists", icon: Layers, path: "/smart-lists" },
-      { label: "Pipeline", icon: Columns3, path: "/pipeline" },
-      { label: "Contacts", icon: UserCircle, path: "/contacts" },
-      { label: "Campaigns", icon: Megaphone, path: "/campaigns" },
-      { label: "Forms", icon: FormInput, path: "/forms" },
-      { label: "QR Codes", icon: QrCode, path: "/qr-codes" },
-    ],
-  },
-  {
-    label: "Outreach",
-    items: [
-      { label: "Message Log", icon: MessageSquare, path: "/conversations" },
-      { label: "Templates", icon: FileText, path: "/templates" },
-      { label: "Media", icon: Layers, path: "/media" },
-    ],
-  },
-  {
-    label: "AI Voice Agents",
+    label: "OVERVIEW",
     items: [
       { label: "Dashboard", icon: LayoutDashboard, path: "/voice-dashboard" },
       { label: "My Employees", icon: Users, path: "/voice-employees" },
+      { label: "New employee", icon: Sparkles, path: "/talk-to-build" },
+      { label: "Talk to an employee", icon: Headset, path: "/talk-to-employee" },
     ],
   },
   {
-    label: "Voice · Calling",
+    label: "CALLING",
     items: [
-      { label: "Call Logs", icon: Phone, path: "/voice-call-logs" },
       { label: "Instant Leads", icon: Phone, path: "/voice-instant-leads" },
       { label: "Bulk Campaigns", icon: Megaphone, path: "/voice-campaigns" },
       { label: "Inbound Calls", icon: PhoneCall, path: "/voice-inbound-calls" },
     ],
   },
   {
-    label: "Voice · Results & Setup",
+    label: "RESULTS & SETUP",
     items: [
       { label: "Leads & Results", icon: BarChart3, path: "/voice-leads-results" },
       { label: "All Conversations", icon: MessageSquare, path: "/voice-all-conversations" },
       { label: "Train Employees", icon: BookOpen, path: "/voice-knowledge-base" },
       { label: "Phone Numbers", icon: Settings, path: "/voice-phone-numbers" },
-      { label: "Performance", icon: Activity, path: "/voice-performance" },
-    ],
-  },
-  {
-    label: "Marketing",
-    items: [
-      { label: "Journeys", icon: GitBranch, path: "/marketing-journeys" },
-      { label: "Events", icon: Calendar, path: "/marketing-events" },
-      { label: "Referrals", icon: Gift, path: "/referrals" },
-      { label: "Advanced Marketing", icon: Megaphone, path: "/advanced-marketing" },
-      { label: "Digital Sales Room", icon: ShoppingCart, path: "/digital-sales-room" },
-    ],
-  },
-  {
-    label: "Automation",
-    items: [
-
-      { label: "Scoring", icon: BarChart3, path: "/scoring" },
-      { label: "Rules", icon: Target, path: "/rules" },
-      { label: "AI Campaigns", icon: Sparkles, path: "/ai-campaigns" },
-      { label: "AI Agent", icon: Bot, path: "/ai-agent" },
-      { label: "Workflows", icon: GitBranch, path: "/workflows" },
-      { label: "Flow Builder", icon: GitBranch, path: "/flows" },
-      { label: "Mikey", icon: MessageCircle, path: "/copilot" },
-    ],
-  },
-  {
-    label: "Channels",
-    items: [
-      { label: "Webhooks", icon: Webhook, path: "/webhooks" },
-      { label: "SMS", icon: Smartphone, path: "/sms" },
-      { label: "Chat Widget", icon: Globe, path: "/widget" },
-      { label: "Calls", icon: Phone, path: "/calls" },
-      { label: "Sync Logs", icon: Activity, path: "/sync-logs" },
-      { label: "Social Media", icon: MessageCircle, path: "/integrations" },
-      { label: "Lead Source Health", icon: Activity, path: "/source-health" },
-    ],
-  },
-  {
-    label: "Pipeline",
-    items: [
-      { label: "Conversions", icon: ShoppingCart, path: "/conversions" },
-      { label: "Tasks", icon: CheckSquare, path: "/tasks" },
-    ],
-  },
-  {
-    label: "Listings",
-    items: [
-      { label: "Projects", icon: Package, path: "/projects" },
-      { label: "Properties", icon: Building2, path: "/properties" },
-      { label: "Site Visits", icon: CalendarClock, path: "/site-visits" },
-      { label: "Cost Sheets", icon: FileText, path: "/cost-sheets" },
-      { label: "Resale/Rental", icon: Building2, path: "/resale-listings" },
-      { label: "Allied Inventory", icon: Package, path: "/allied-inventory" },
-      { label: "KYC & Documents", icon: FileText, path: "/kyc" },
-      { label: "Document Search", icon: FileSearch, path: "/document-search" },
-      { label: "Physical Docs", icon: BookCopy, path: "/physical-documents" },
-      { label: "Agents", icon: Truck, path: "/channel-partners" },
-      { label: "Partner Claims", icon: Truck, path: "/partner-claims" },
-      { label: "Approvals", icon: CheckSquare, path: "/approvals" },
-      { label: "Needs a Person", icon: CheckSquare, path: "/escalations" },
-      { label: "Sales Coach", icon: BarChart3, path: "/coach" },
-      { label: "Payments & Collections", icon: ClipboardList, path: "/payment-schedules" },
-      { label: "Collections Ledger", icon: ClipboardList, path: "/collections" },
-      { label: "Portfolio", icon: BarChart3, path: "/portfolio" },
-      { label: "Launch Control", icon: Activity, path: "/launch-control" },
-      { label: "Onboarding", icon: CheckSquare, path: "/onboarding-progress" },
-      { label: "NRI Buyers", icon: Globe, path: "/nri-profiles" },
-      { label: "Construction ERP", icon: HardDrive, path: "/construction-erp" },
-      { label: "Cash Flow Forecast", icon: BarChart3, path: "/cash-flow-forecast" },
-      { label: "Revenue Share", icon: DollarSign, path: "/revenue-share" },
-      { label: "Sales Targets", icon: Target, path: "/sales-targets" },
-      { label: "Vezraa Apartments", icon: ExternalLink, path: "/webverse" },
-      { label: "Vezraa Villas", icon: ExternalLink, path: "/villa-webverse" },
-    ],
-  },
-  {
-    label: "Shipments",
-    items: [
-      { label: "Shipments", icon: Truck, path: "/shipments" },
-    ],
-  },
-  {
-    label: "Operations",
-    items: [
-      { label: "Events", icon: Calendar, path: "/events" },
-      { label: "Calendar", icon: Calendar, path: "/calendar" },
-    ],
-  },
-  {
-    label: "Finance",
-    items: [
-      { label: "Financial Overview", icon: BarChart3, path: "/accounting" },
-      { label: "My Expenses", icon: ClipboardList, path: "/my-expenses" },
-      { label: "Quotes & Estimates", icon: FileText, path: "/quotations" },
-      { label: "Sale Agreements", icon: FileText, path: "/contracts" },
-      { label: "Invoices", icon: FileText, path: "/invoices" },
-      { label: "Finance Reports", icon: BarChart3, path: "/finance-reports" },
-    ],
-  },
-  {
-    label: "Procurement",
-    items: [
-      { label: "Partners", icon: Truck, path: "/partners" },
-      { label: "Vendor Bookings", icon: ClipboardList, path: "/vendor-bookings" },
-      { label: "Purchase Orders", icon: Package, path: "/purchase-orders" },
-    ],
-  },
-  {
-    label: "Assets",
-    items: [
-      { label: "Inventory", icon: Box, path: "/inventory" },
-      { label: "Stock Movements", icon: Layers, path: "/stock-movements" },
-      { label: "Locations", icon: MapPin, path: "/locations" },
-    ],
-  },
-  {
-    label: "Team",
-    items: [
-      { label: "Team Members", icon: Users, path: "/team" },
-      { label: "Leave Log", icon: Calendar, path: "/leave-log" },
-      { label: "Salaries", icon: BarChart3, path: "/salaries" },
-      { label: "Timesheet", icon: CheckSquare, path: "/timesheet" },
-    ],
-  },
-  {
-    label: "Integrations",
-    items: [
-      { label: "Integrations", icon: Link, path: "/integrations" },
-      { label: "CRM", icon: ShoppingCart, path: "/crm" },
-      { label: "Booking", icon: Calendar, path: "/booking" },
-    ],
-  },
-  {
-    label: "Support",
-    items: [
-      { label: "Tickets", icon: LifeBuoy, path: "/tickets" },
-      { label: "Knowledge Base", icon: BookOpen, path: "/knowledge-base" },
-    ],
-  },
-  {
-    label: "Admin",
-    items: [
-      { label: "Analytics", icon: BarChart3, path: "/analytics" },
-      { label: "Manager Dashboard", icon: Shield, path: "/manager-dashboard" },
-      { label: "Reports", icon: BarChart3, path: "/reports" },
-      { label: "Studio", icon: Puzzle, path: "/studio" },
-      { label: "Settings", icon: Settings, path: "/settings" },
-      { label: "Import Data", icon: Download, path: "/import" },
-      { label: "Ad Integrations", icon: BarChart3, path: "/ads" },
-      { label: "Website Crawler", icon: Globe, path: "/website-crawler" },
-      { label: "Public Profile", icon: Building2, path: "/public-profile" },
+      { label: "Performance", icon: BarChart3, path: "/voice-performance" },
+      { label: "Store / Hire", icon: Sparkles, path: "/store" },
+      { label: "Billing", icon: FileText, path: "/voice-billing" },
+      { label: "Settings", icon: Settings, path: "/voice-agent-settings" },
     ],
   },
 ];
@@ -277,7 +83,9 @@ function getNavGroups() {
       label: g.label === "Leads" ? nicheLabel : g.label,
       items: g.items.filter((item) => {
         const feature = featureMap[item.path];
-        return !feature || isFeatureEnabled(feature as any);
+        if (!feature) return true;
+        if (item.path.startsWith("/voice-") || item.path.startsWith("/talk-to-")) return true;
+        return isFeatureEnabled(feature as any);
       }).map((item) => {
         const labelKey = labelMap[item.path];
         if (labelKey) return { ...item, label: getLabel(labelKey) };
@@ -305,8 +113,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: { co
   };
 
   const [openGroups, setOpenGroups] = useState<Set<string>>(() => {
-    const active = findActiveGroupLabel();
-    return new Set(active ? [active] : []);
+    return new Set(["OVERVIEW", "CALLING", "RESULTS & SETUP"]);
   });
   const [activeHash, setActiveHash] = useState(() => window.location.hash);
 
@@ -363,8 +170,9 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: { co
       >
         <div className="flex h-14 items-center justify-between border-b border-[var(--sidebar-border)] px-4">
           {!collapsed && (
-            <div className="flex min-w-0 items-center gap-2.5">
-              <span className="truncate text-sm font-bold text-[var(--sidebar-fg)]">{companyName}</span>
+            <div className="flex min-w-0 flex-col">
+              <span className="text-sm font-bold tracking-tight text-[var(--sidebar-fg)]">OUTPERO</span>
+              <span className="text-[10px] font-semibold tracking-widest text-[var(--sidebar-muted)]">AI PHONE CALLING</span>
             </div>
           )}
           <button onClick={onToggle} className="hidden rounded-md p-1.5 text-[var(--sidebar-muted)] transition-all duration-150 hover:bg-[var(--sidebar-hover)] hover:scale-105 lg:block">

@@ -14,7 +14,7 @@ export interface CoachAnalysis {
   method: 'llm' | 'rules' | 'none';
 }
 
-/** The four things a real estate call has to establish. Everything else can wait. */
+/** Core qualification questions for a sales call. */
 const CORE_QUESTIONS = [
   { key: 'budget', label: 'budget', probe: /\b(budget|price range|afford|lakh|crore|how much)\b/i },
   { key: 'location', label: 'preferred location', probe: /\b(location|area|where|locality|near)\b/i },
@@ -43,7 +43,7 @@ const BUYING_SIGNAL_PATTERNS: Array<[string, RegExp]> = [
  * The rubric the model scores against. Written as instructions to a sales
  * manager rather than a prompt, because that is the judgement being copied.
  */
-const RUBRIC = `You are the best sales manager at an Indian real estate developer, reviewing one call by one of your salespeople. You are coaching them, not grading them.
+const RUBRIC = `You are an experienced sales manager reviewing one call by one of your salespeople. You are coaching them, not grading them.
 
 Score out of 100 on these weights:
 - 40  Did they establish the four things that decide a deal: budget, preferred location, timeline, and loan or cash? Credit them if the buyer volunteered it. Do not credit a question that was asked but never answered.

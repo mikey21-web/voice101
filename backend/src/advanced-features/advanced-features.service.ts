@@ -230,7 +230,7 @@ export class AdvancedFeaturesService {
     return this.prisma.importExportLog.create({ data: { type: 'import', userId, totalRows, status: 'processing' } });
   }
 
-  async processImport(logId: string, rows: Record<string, string>[], entity: 'contact' | 'lead' | 'property' | 'project' | 'channelPartner') {
+  async processImport(logId: string, rows: Record<string, string>[], entity: 'contact' | 'lead') {
     const log = await this.prisma.importExportLog.findUnique({ where: { id: logId } });
     if (!log) throw new NotFoundException('Import log not found');
 
@@ -290,67 +290,6 @@ export class AdvancedFeaturesService {
             contactId,
             metadata: { _bulkImport: true },
           });
-        } else if (entity === 'property') {
-          if (!row.title) throw new Error('Row has no title');
-          const propertyTypes = ['APARTMENT', 'VILLA', 'PLOT', 'COMMERCIAL', 'PENTHOUSE', 'DUPLEX', 'STUDIO'];
-          const propertyStatuses = ['AVAILABLE', 'SOLD', 'UNDER_OFFER', 'ON_HOLD', 'RENTED', 'DRAFT'];
-          const propertyType = propertyTypes.includes((row.propertyType || '').toUpperCase()) ? row.propertyType.toUpperCase() : 'APARTMENT';
-          const status = propertyStatuses.includes((row.status || '').toUpperCase()) ? row.status.toUpperCase() : 'AVAILABLE';
-          await this.prisma.property.create({
-            data: {
-              title: row.title,
-              description: row.description || null,
-              propertyType: propertyType as any,
-              status: status as any,
-              price: row.price ? Number(row.price) : null,
-              bedrooms: row.bedrooms ? parseInt(row.bedrooms, 10) : null,
-              bathrooms: row.bathrooms ? parseInt(row.bathrooms, 10) : null,
-              areaSqft: row.areaSqft ? Number(row.areaSqft) : null,
-              location: row.location || null,
-              address: row.address || null,
-              tenantId: 'default-tenant',
-            },
-          });
-        } else if (entity === 'project') {
-          if (!row.name) throw new Error('Row has no name');
-          const projectStatuses = ['PLANNING', 'UNDER_CONSTRUCTION', 'READY_TO_MOVE', 'COMPLETED'];
-          const status = projectStatuses.includes((row.status || '').toUpperCase()) ? row.status.toUpperCase() : 'UNDER_CONSTRUCTION';
-          await this.prisma.project.create({
-            data: {
-              name: row.name,
-              description: row.description || null,
-              location: row.location || null,
-              address: row.address || null,
-              reraId: row.reraId || null,
-              status: status as any,
-              possessionDate: row.possessionDate ? new Date(row.possessionDate) : null,
-              tenantId: 'default-tenant',
-            },
-          });
-        } else if (entity === 'channelPartner') {
-          if (!row.name) throw new Error('Row has no name');
-          const existing = row.email ? await this.prisma.channelPartner.findFirst({ where: { email: row.email } }) : null;
-          if (existing) {
-            await this.prisma.channelPartner.update({
-              where: { id: existing.id },
-              data: {
-                name: row.name || existing.name,
-                phone: row.phone || existing.phone,
-                company: row.company || existing.company,
-              },
-            });
-          } else {
-            await this.prisma.channelPartner.create({
-              data: {
-                name: row.name,
-                email: row.email || null,
-                phone: row.phone || null,
-                company: row.company || null,
-                commissionRate: row.commissionRate ? Number(row.commissionRate) : null,
-                tenantId: 'default-tenant',
-              },
-            });
-          }
         }
         processed++;
       } catch (e: any) {
@@ -480,52 +419,9 @@ export class AdvancedFeaturesService {
     const twoHoursAgo = new Date(now.getTime() - 2 * 3600000);
     const count2 = await this.prisma.lead.count({ where: { tenantId, segment: 'HOT', deletedAt: null, updatedAt: { lt: twoHoursAgo } } });
 
-    const portalSources: any[] = ['MAGICBRICKS', 'HOUSING_COM', 'NINETY_NINE_ACRES'];
-    const count3 = await this.prisma.lead.count({ where: { tenantId, status: 'NEW', source: { in: portalSources }, deletedAt: null, conversations: { none: { direction: 'OUTBOUND' } } } });
-
-    const count4 = await this.prisma.siteVisit.count({ where: { tenantId, startAt: { gte: todayStart, lt: todayEnd }, status: { in: ['SCHEDULED', 'CONFIRMED'] } } });
-
-    const count5 = await this.prisma.siteVisit.count({ where: { tenantId, status: 'NO_SHOW', startAt: { lt: todayEnd } } });
-
-    const count6 = await this.prisma.lead.count({
-      where: {
-        tenantId, deletedAt: null,
-        costSheets: { some: { status: 'SENT' } },
-        conversations: { none: { direction: 'OUTBOUND', createdAt: { gte: new Date(now.getTime() - 86400000 * 3) } } },
-      },
-    });
-
-    const next24h = new Date(now.getTime() + 86400000);
-    const count7 = await this.prisma.unitHold.count({ where: { tenantId, status: 'ACTIVE', expiresAt: { lt: next24h, gt: now } } });
-
-    const count9 = await this.prisma.paymentSchedule.count({ where: { tenantId, status: 'OVERDUE' } });
-
-    const brokerDuplicateLeads = await this.prisma.lead.findMany({
-      where: { tenantId, deletedAt: null, channelPartnerId: { not: null } },
-      select: { contactId: true, id: true },
-    });
-    const contactLeadCounts = new Map<string, number>();
-    for (const l of brokerDuplicateLeads) {
-      contactLeadCounts.set(l.contactId, (contactLeadCounts.get(l.contactId) || 0) + 1);
-    }
-    const duplicateContactIds = new Set(
-      [...contactLeadCounts.entries()].filter(([_, c]) => c > 1).map(([id]) => id)
-    );
-    const count10Actual = await this.prisma.lead.count({
-      where: { tenantId, deletedAt: null, channelPartnerId: { not: null }, contactId: { in: [...duplicateContactIds] } },
-    });
-
     return [
       { id: 1, name: 'New Leads Not Contacted', description: 'Leads in NEW status with no outbound messages sent', icon: 'UserPlus', count: count1, filters: { status: 'NEW', hasNoOutbound: 'true' } },
       { id: 2, name: 'Hot Leads Untouched', description: 'Hot segment leads untouched for over 2 hours', icon: 'Flame', count: count2, filters: { segment: 'HOT', untouched: '2h' } },
-      { id: 3, name: 'Portal Leads Leaking', description: 'Portal leads (MagicBricks, Housing, 99Acres) in NEW status, not contacted', icon: 'Globe', count: count3, filters: { source: 'MAGICBRICKS,HOUSING_COM,NINETY_NINE_ACRES', status: 'NEW', hasNoOutbound: 'true' } },
-      { id: 4, name: 'Site Visit Today', description: 'Leads with scheduled site visits today', icon: 'CalendarClock', count: count4, filters: { smartList: 'site-visit-today' } },
-      { id: 5, name: 'Site Visit No-Show', description: 'Leads who did not show up for site visits', icon: 'XCircle', count: count5, filters: { smartList: 'site-visit-noshow' } },
-      { id: 6, name: 'Cost Sheet Sent, No Reply', description: 'Leads who received a cost sheet but no reply in 3 days', icon: 'FileText', count: count6, filters: { smartList: 'cost-sheet-no-reply' } },
-      { id: 7, name: 'Unit Hold Expiring', description: 'Active unit holds expiring within the next 24 hours', icon: 'Timer', count: count7, filters: { smartList: 'hold-expiring' } },
-      { id: 8, name: 'Token Promised Not Paid', description: 'Token amount promised but payment not received', icon: 'DollarSign', count: 0, filters: { smartList: 'token-promised' } },
-      { id: 9, name: 'Payment Overdue', description: 'Leads with overdue payment schedules', icon: 'AlertTriangle', count: count9, filters: { smartList: 'payment-overdue' } },
-      { id: 10, name: 'Broker Duplicate Risk', description: 'Channel partner leads where contact has multiple leads', icon: 'Copy', count: count10Actual, filters: { smartList: 'broker-duplicate' } },
     ];
   }
 

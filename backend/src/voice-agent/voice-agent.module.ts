@@ -25,12 +25,17 @@ import { VoiceAnalyticsController } from './voice-analytics.controller';
 import { CallerMemoryService } from './caller-memory.service';
 import { VoiceTrainingService } from './voice-training.service';
 import { VoiceTrainingController } from './voice-training.controller';
+import { TalkToBuildService } from './talk-to-build.service';
+import { TalkToBuildController } from './talk-to-build.controller';
+import { SwaraService } from './swara.service';
+import { SwaraController } from './swara.controller';
+import { VoiceStoreController } from './voice-store.controller';
 import { SharedModule } from '../shared/shared.module';
 
 @Module({
   imports: [ConversationsModule, ApprovalsModule, TimelineModule, forwardRef(() => MikeyModule), forwardRef(() => LeadsModule), AgentModule, SharedModule],
-  controllers: [VoiceAgentController, VoiceEmployeeController, VoiceCallController, VoiceLeadController, VoiceCampaignController, VoiceNumberController, VoiceBillingController, VoiceWalletController, VoiceAnalyticsController, VoiceTrainingController],
-  providers: [VoiceAgentService, LeadOrchestratorService, ResultListenerService, CallFlowGeneratorService, VoiceEmployeeService, VoiceCallService, VoiceLeadService, VoiceCampaignService, VoiceBillingService, PostCallDispatchService, VoiceAnalyticsService, CallerMemoryService, VoiceTrainingService],
+  controllers: [VoiceAgentController, VoiceEmployeeController, VoiceCallController, VoiceLeadController, VoiceCampaignController, VoiceNumberController, VoiceBillingController, VoiceWalletController, VoiceAnalyticsController, VoiceTrainingController, TalkToBuildController, SwaraController, VoiceStoreController],
+  providers: [VoiceAgentService, LeadOrchestratorService, ResultListenerService, CallFlowGeneratorService, VoiceEmployeeService, VoiceCallService, VoiceLeadService, VoiceCampaignService, VoiceBillingService, PostCallDispatchService, VoiceAnalyticsService, CallerMemoryService, VoiceTrainingService, TalkToBuildService, SwaraService],
   exports: [VoiceAgentService, LeadOrchestratorService, ResultListenerService, VoiceEmployeeService, VoiceCallService, VoiceLeadService, VoiceCampaignService, VoiceBillingService, PostCallDispatchService],
 })
 export class VoiceAgentModule {}

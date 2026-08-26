@@ -32,12 +32,7 @@ export class LeadContextService {
     });
     if (!lead) return;
 
-    const fields = this.extractCustomFields(lead);
-    const budget = this.parseBudget(lead.budget || fields.budget_range);
-
-    const [projectMatches, unitMatches, consent, agentAvailable, history, aiScore] = await Promise.all([
-      this.matchProjects(fields, budget),
-      this.matchUnits(fields, budget),
+    const [consent, agentAvailable, history, aiScore] = await Promise.all([
       this.getConsent(lead.contactId),
       this.checkAgentAvailability(lead),
       this.getHistory(lead.contactId),
@@ -53,8 +48,6 @@ export class LeadContextService {
           _context: {
             campaign: lead.campaign?.name || null,
             campaignType: lead.campaign?.campaignType || null,
-            projectMatches: projectMatches.length,
-            unitMatches: unitMatches.length,
             consent,
             agentAvailable,
             previousContacts: history.count,
@@ -62,10 +55,6 @@ export class LeadContextService {
             aiUrgency: aiScore.urgency,
             aiReasoning: (aiScore.reasoning || '').slice(0, 500),
             enrichedAt: new Date().toISOString(),
-          },
-          _matches: {
-            projects: projectMatches.slice(0, 3).map(p => ({ id: p.id, name: p.name || p.title, price: p.price })),
-            units: unitMatches.slice(0, 3).map(u => ({ id: u.id, project: u.project?.name, price: u.price })),
           },
         },
       },
@@ -97,13 +86,13 @@ export class LeadContextService {
         messages: [
           {
             role: 'system',
-            content: `You are Mikey, a real estate lead scoring AI. Given a lead's message and source, respond with ONLY JSON:
+            content: `You are Mikey, a lead scoring AI. Given a lead's message and source, respond with ONLY JSON:
 {
   "intent": 0-100 (buying intent: 0=junk/spam, 100=ready to buy today),
   "urgency": 0-100 (how soon: 0=not urgent/browsing, 100=needs immediate follow-up),
   "reasoning": "one short sentence explaining the scores"
 }
-Consider: specific requirements (location, budget, BHK), timeline mentions, question quality, source credibility. Return ONLY valid JSON.`,
+Consider: specific requirements, timeline mentions, question quality, source credibility. Return ONLY valid JSON.`,
           },
           {
             role: 'user',
@@ -131,42 +120,6 @@ Consider: specific requirements (location, budget, BHK), timeline mentions, ques
     const hotSources = ['WHATSAPP', 'PHONE_CALL', 'FORM'];
     const intent = hotSources.includes(s) ? 60 : 30;
     return { intent, urgency: 40, reasoning: `Source-based default (${s})` };
-  }
-
-  private extractCustomFields(lead: any): Record<string, string> {
-    const fields: Record<string, string> = {};
-    for (const cf of lead.customFields || []) {
-      fields[cf.definition?.key || ''] = cf.value ?? '';
-    }
-    return fields;
-  }
-
-  private parseBudget(raw: string): number | null {
-    if (!raw) return null;
-    const match = raw.replace(/,/g, '').match(/([\d.]+)\s*(cr|crore|l|lakh)?/i);
-    if (!match) return null;
-    let num = parseFloat(match[1]);
-    if (isNaN(num)) return null;
-    const unit = (match[2] || '').toLowerCase();
-    if (unit.startsWith('cr')) num *= 10000000;
-    else if (unit.startsWith('l')) num *= 100000;
-    return num;
-  }
-
-  private async matchProjects(fields: Record<string, string>, budget: number | null): Promise<any[]> {
-    const where: any = { deletedAt: null, status: 'AVAILABLE' };
-    if (fields.bedrooms) where.bedrooms = parseInt(fields.bedrooms, 10) || undefined;
-    if (fields.location) where.location = { contains: fields.location, mode: 'insensitive' };
-    if (budget) where.price = { lte: budget * 1.15, gte: budget * 0.7 };
-    return this.prisma.property.findMany({ where, take: 5, orderBy: { featured: 'desc' } });
-  }
-
-  private async matchUnits(fields: Record<string, string>, budget: number | null): Promise<any[]> {
-    const where: any = { status: 'AVAILABLE' };
-    if (fields.location) where.project = { location: { contains: fields.location, mode: 'insensitive' } };
-    if (fields.property_type) where.unitType = { contains: fields.property_type, mode: 'insensitive' };
-    if (budget) where.price = { lte: budget * 1.15, gte: budget * 0.7 };
-    return this.prisma.unit.findMany({ where, take: 5, orderBy: { price: 'asc' }, include: { project: { select: { name: true, location: true } } } });
   }
 
   private async getConsent(contactId: string): Promise<{ whatsapp: boolean; email: boolean; sms: boolean }> {
@@ -208,7 +161,7 @@ Consider: specific requirements (location, budget, BHK), timeline mentions, ques
         messages: [
           {
             role: 'system',
-            content: `You are Mikey, a real estate lead scoring AI. Respond with ONLY JSON:
+            content: `You are Mikey, a lead scoring AI. Respond with ONLY JSON:
 {
   "intent": 0-100,
   "urgency": 0-100,

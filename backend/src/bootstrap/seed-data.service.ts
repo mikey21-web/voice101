@@ -6,13 +6,6 @@ import { readFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
 
 const KB_ARTICLES: Record<string, { title: string; body: string; tags: string[] }[]> = {
-  real_estate: [
-    { title: 'About Acme Realty', body: 'Acme Realty has been serving Bangalore for 12+ years. We specialize in residential and commercial properties across all major areas.', tags: ['about', 'company'] },
-    { title: 'Buying Process', body: 'Step 1: Property search and shortlist. Step 2: Site visit. Step 3: Budget verification and loan pre-approval. Step 4: Booking and agreement. Step 5: Registration.', tags: ['services', 'buying'] },
-    { title: 'RERA Explained', body: 'RERA (Real Estate Regulatory Authority) registration ensures project transparency. All our listings include RERA numbers for verification.', tags: ['faq', 'rera'] },
-    { title: 'Home Loan Guidance', body: 'We work with SBI, HDFC, ICICI, and Axis Bank. Typical rates: 8.5%-9.5% p.a. Loan eligibility is 3x annual income. We assist with pre-approval.', tags: ['services', 'finance'] },
-    { title: 'Property Tax & Registration', body: 'Registration charges: 5-6% of property value. Stamp duty: 3-5%. Annual property tax varies by area (typically 0.5-1% of guidance value).', tags: ['faq', 'legal'] },
-  ],
   hospitality: [
     { title: 'About StayWell Hotels', body: 'StayWell Hotels offers premium accommodation in Bangalore. We have Standard, Deluxe, Suite, and Villa categories. Check-in: 2 PM, Check-out: 11 AM.', tags: ['about', 'company'] },
     { title: 'Room Categories', body: 'Standard Room (250 sqft) - ₹3,500/night. Deluxe Room (400 sqft) - ₹5,500/night. Suite (700 sqft) - ₹9,000/night. Villa (1200 sqft) - ₹15,000/night.', tags: ['services', 'rooms'] },
@@ -68,7 +61,6 @@ export class SeedDataService implements OnApplicationBootstrap {
     const admin = await this.prisma.user.findFirst({ where: { tenantId: tenant.id, role: 'OWNER' } });
     if (!admin) { this.logger.warn('No admin user found, skipping seed data'); return; }
 
-    if (industry === 'real_estate') await this.seedProperties(tenant.id);
     await this.seedKnowledgeArticles(tenant.id, admin.id, industry);
     await this.seedMessageTemplates(tenant.id, admin.id);
 
@@ -84,65 +76,6 @@ export class SeedDataService implements OnApplicationBootstrap {
     return null;
   }
 
-  private async seedProperties(tenantId: string) {
-    const count = await this.prisma.property.count({ where: { tenantId } });
-    if (count > 0) { this.logger.log('Properties already seeded'); return; }
-
-    const properties = [
-      {
-        title: '3BHK Premium Apartment, HSR Layout',
-        propertyType: 'APARTMENT' as const, status: 'AVAILABLE' as const, price: 8500000,
-        bedrooms: 3, bathrooms: 2, areaSqft: 1450,
-        location: 'HSR Layout, Bangalore', address: 'Sector 3, HSR Layout, Bangalore 560102',
-        features: ['Gated community', 'Power backup', 'Covered parking', 'Security'],
-        amenities: ['Swimming pool', 'Gym', 'Children park', 'Clubhouse'],
-        reraId: 'PRM/KA/RERA/1251/446/AG/171104/001715',
-        featured: true,
-      },
-      {
-        title: '4BHK Luxury Villa, Whitefield',
-        propertyType: 'VILLA' as const, status: 'AVAILABLE' as const, price: 25000000,
-        bedrooms: 4, bathrooms: 4, areaSqft: 3200,
-        location: 'Whitefield, Bangalore', address: 'Whitefield Main Road, Bangalore 560066',
-        features: ['Private garden', 'Modular kitchen', 'Home automation', 'Rainwater harvesting'],
-        amenities: ['Private pool', 'Landscaped garden', 'Parking for 3 cars', 'Servant quarter'],
-        reraId: 'PRM/KA/RERA/1251/446/AG/171104/002841',
-        featured: true,
-      },
-      {
-        title: '2BHK Budget Apartment, Electronic City',
-        propertyType: 'APARTMENT' as const, status: 'AVAILABLE' as const, price: 4500000,
-        bedrooms: 2, bathrooms: 2, areaSqft: 950,
-        location: 'Electronic City, Bangalore', address: 'Phase 1, Electronic City, Bangalore 560100',
-        features: ['Vaastu compliant', 'Near metro', 'CCTV surveillance'],
-        amenities: ['Community hall', 'Indoor games', 'Garden'],
-      },
-      {
-        title: 'Commercial Office Space, MG Road',
-        propertyType: 'COMMERCIAL' as const, status: 'AVAILABLE' as const, price: 18000000,
-        bedrooms: 0, bathrooms: 2, areaSqft: 1200,
-        location: 'MG Road, Bangalore', address: 'MG Road, Ashok Nagar, Bangalore 560001',
-        features: ['Prime location', 'High footfall', 'Parking', '24hr security'],
-        amenities: ['Elevator', 'Conference room', 'Cafeteria'],
-      },
-      {
-        title: 'Penthouse, UB City',
-        propertyType: 'PENTHOUSE' as const, status: 'AVAILABLE' as const, price: 58000000,
-        bedrooms: 4, bathrooms: 5, areaSqft: 4500,
-        location: 'UB City, Bangalore', address: 'Vittal Mallya Road, Bangalore 560001',
-        features: ['Panoramic view', 'Private terrace', 'Smart home', 'Butler service'],
-        amenities: ['Infinity pool', 'Private gym', 'Wine cellar', 'Spa', 'Valet parking'],
-        featured: true,
-      },
-    ];
-
-    for (const p of properties) {
-      const prop = await this.prisma.property.create({
-        data: { tenantId, ...p, availableFrom: new Date() },
-      });
-      this.logger.log(`Seeded property: ${prop.title}`);
-    }
-  }
 
   private async seedKnowledgeArticles(tenantId: string, authorId: string, industry: string) {
     const articles = KB_ARTICLES[industry] || KB_ARTICLES.agency;

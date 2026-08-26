@@ -62,40 +62,8 @@ export type NicheConfig = {
     import: boolean;
     adIntegrations: boolean;
     websiteCrawler: boolean;
-    properties: boolean;
-    shipments: boolean;
-    channelPartners: boolean;
-    paymentSchedules: boolean;
-    projects: boolean;
     voiceAgent: boolean;
-    portfolio: boolean;
-    resaleListings: boolean;
-    nriProfiles: boolean;
-    constructionErp: boolean;
-    documentSearch: boolean;
-    physicalDocuments: boolean;
-    alliedInventory: boolean;
-    salesTargets: boolean;
-    cashFlowForecast: boolean;
-    revenueShare: boolean;
-    launchControl: boolean;
-    onboardingProgress: boolean;
   };
-};
-
-const realestate: NicheConfig = {
-  businessName: "Acme Realty", primaryColor: "#0B5B7A",
-  sidebarBg: "#f8f8f8", sidebarActiveBg: "#0B5B7A12", sidebarAccent: "#0B5B7A",
-  logo: "",
-  labels: { lead: "Buyer", leads: "Buyers", contact: "Contact", conversion: "Deal" },
-  team: {
-    pageSubtitle: "Manage your sales team.",
-    rolePlaceholder: "Sales Agent",
-    deptPlaceholder: "Pre-Sales",
-    skillsPlaceholder: "Site Visits, Buyer Follow-up, Negotiation",
-    permissionModuleLabels: { DASHBOARD: "Dashboard", EVENTS: "Properties", CRM: "Buyers", VENDORS: "Channel Partners", TEAM: "Team", TIMESHEET: "Site Visits", ACCOUNTING: "Payments & Collections", INVENTORY: "Unit Inventory", PROCUREMENT: "Procurement" },
-  },
-  features: { overview: true, leads: true, pipeline: true, contacts: true, calls: true, syncLogs: false, conversions: true, settings: true, import: true, adIntegrations: false, websiteCrawler: false, nurture: false, scoring: true, routing: true, crm: true, booking: true, tickets: false, knowledgeBase: false, media: true, qrCodes: true, reports: true, campaigns: true, forms: true, messages: true, templates: true, aiCampaigns: true, aiAgent: true, copilot: true, webhooks: true, sms: true, widget: true, tasks: true, integrations: false, analytics: true, studio: true, events: false, finance: true, procurement: false, inventory: false, teamHr: true, publicProfile: true, properties: true, shipments: false, channelPartners: true, paymentSchedules: true, projects: true, voiceAgent: true, portfolio: true, resaleListings: true, nriProfiles: true, constructionErp: true, documentSearch: true, physicalDocuments: true, alliedInventory: true, salesTargets: true, cashFlowForecast: true, revenueShare: true, launchControl: true, onboardingProgress: true },
 };
 
 const hospitality: NicheConfig = {
@@ -108,10 +76,8 @@ const hospitality: NicheConfig = {
     rolePlaceholder: "Front Desk Executive",
     deptPlaceholder: "Guest Services",
     skillsPlaceholder: "Check-in/out, Guest Relations, Housekeeping",
-    permissionModuleLabels: { DASHBOARD: "Dashboard", EVENTS: "Bookings", CRM: "Guests", VENDORS: "Vendors", TEAM: "Team", TIMESHEET: "Shifts", ACCOUNTING: "Accounting", INVENTORY: "Rooms & Inventory", PROCUREMENT: "Procurement" },
-  },
-  features: { overview: true, leads: true, pipeline: true, contacts: true, calls: true, syncLogs: false, conversions: true, settings: true, import: false, adIntegrations: false, websiteCrawler: false, nurture: true, scoring: true, routing: false, crm: true, booking: true, tickets: true, knowledgeBase: false, media: true, qrCodes: false, reports: false, campaigns: false, forms: true, messages: true, templates: true, aiCampaigns: false, aiAgent: true, copilot: true, webhooks: true, sms: true, widget: true, tasks: true, integrations: true, analytics: false, studio: false, events: true, finance: false, procurement: true, inventory: true, teamHr: true, publicProfile: true, properties: false, shipments: false, channelPartners: false, paymentSchedules: false, projects: false, voiceAgent: false, portfolio: false, resaleListings: false, nriProfiles: false, constructionErp: false, documentSearch: false, physicalDocuments: false, alliedInventory: false, salesTargets: false, cashFlowForecast: false, revenueShare: false, launchControl: false, onboardingProgress: false },
-};
+    permissionModuleLabels: { DASHBOARD: "Dashboard", EVENTS: "Bookings", CRM: "Guests", VENDORS: "Vendors", TEAM: "Team", TIMESHEET: "Shifts", ACCOUNTING: "Accounting", INVENTORY: "Rooms & Inventory", PROCUREMENT: "Procurement" } },
+  features: { overview: true, leads: true, pipeline: true, contacts: true, calls: true, syncLogs: false, conversions: true, settings: true, import: false, adIntegrations: false, websiteCrawler: false, nurture: true, scoring: true, routing: false, crm: true, booking: true, tickets: true, knowledgeBase: false, media: true, qrCodes: false, reports: false, campaigns: false, forms: true, messages: true, templates: true, aiCampaigns: false, aiAgent: true, copilot: true, webhooks: true, sms: true, widget: true, tasks: true, integrations: true, analytics: false, studio: false, events: true, finance: false, procurement: true, inventory: true, teamHr: true, publicProfile: true, voiceAgent: false } };
 
 const healthcare: NicheConfig = {
   businessName: "CarePlus Clinic", primaryColor: "#2563EB",
@@ -123,10 +89,8 @@ const healthcare: NicheConfig = {
     rolePlaceholder: "Front Desk Coordinator",
     deptPlaceholder: "Patient Care",
     skillsPlaceholder: "Scheduling, Patient Intake, Insurance Verification",
-    permissionModuleLabels: { DASHBOARD: "Dashboard", EVENTS: "Appointments", CRM: "Patients", VENDORS: "Vendors", TEAM: "Team", TIMESHEET: "Shifts", ACCOUNTING: "Billing", INVENTORY: "Supplies", PROCUREMENT: "Procurement" },
-  },
-  features: { overview: true, leads: true, pipeline: true, contacts: true, calls: true, syncLogs: false, conversions: true, settings: true, import: false, adIntegrations: false, websiteCrawler: false, nurture: true, scoring: true, routing: true, crm: true, booking: true, tickets: true, knowledgeBase: true, media: false, qrCodes: false, reports: true, campaigns: false, forms: true, messages: true, templates: true, aiCampaigns: false, aiAgent: true, copilot: true, webhooks: true, sms: true, widget: true, tasks: true, integrations: true, analytics: false, studio: false, events: true, finance: true, procurement: true, inventory: true, teamHr: true, publicProfile: true, properties: false, shipments: false, channelPartners: false, paymentSchedules: false, projects: false, voiceAgent: false, portfolio: false, resaleListings: false, nriProfiles: false, constructionErp: false, documentSearch: false, physicalDocuments: false, alliedInventory: false, salesTargets: false, cashFlowForecast: false, revenueShare: false, launchControl: false, onboardingProgress: false },
-};
+    permissionModuleLabels: { DASHBOARD: "Dashboard", EVENTS: "Appointments", CRM: "Patients", VENDORS: "Vendors", TEAM: "Team", TIMESHEET: "Shifts", ACCOUNTING: "Billing", INVENTORY: "Supplies", PROCUREMENT: "Procurement" } },
+  features: { overview: true, leads: true, pipeline: true, contacts: true, calls: true, syncLogs: false, conversions: true, settings: true, import: false, adIntegrations: false, websiteCrawler: false, nurture: true, scoring: true, routing: true, crm: true, booking: true, tickets: true, knowledgeBase: true, media: false, qrCodes: false, reports: true, campaigns: false, forms: true, messages: true, templates: true, aiCampaigns: false, aiAgent: true, copilot: true, webhooks: true, sms: true, widget: true, tasks: true, integrations: true, analytics: false, studio: false, events: true, finance: true, procurement: true, inventory: true, teamHr: true, publicProfile: true, voiceAgent: false } };
 
 const agency: NicheConfig = {
   businessName: "GrowthEdge Marketing", primaryColor: "#DB2777",
@@ -138,10 +102,8 @@ const agency: NicheConfig = {
     rolePlaceholder: "Account Manager",
     deptPlaceholder: "Client Services",
     skillsPlaceholder: "Paid Media, SEO, Client Reporting",
-    permissionModuleLabels: { DASHBOARD: "Dashboard", EVENTS: "Campaigns", CRM: "CRM", VENDORS: "Vendors", TEAM: "Team", TIMESHEET: "Timesheet", ACCOUNTING: "Accounting", INVENTORY: "Inventory", PROCUREMENT: "Procurement" },
-  },
-  features: { overview: true, leads: true, pipeline: true, contacts: true, calls: true, syncLogs: false, conversions: true, settings: true, import: true, adIntegrations: true, websiteCrawler: true, nurture: true, scoring: true, routing: true, crm: true, booking: true, tickets: true, knowledgeBase: true, media: true, qrCodes: true, reports: true, campaigns: true, forms: true, messages: true, templates: true, aiCampaigns: true, aiAgent: true, copilot: true, webhooks: true, sms: true, widget: true, tasks: true, integrations: true, analytics: true, studio: true, events: true, finance: true, procurement: false, inventory: false, teamHr: true, publicProfile: true, properties: false, shipments: false, channelPartners: false, paymentSchedules: false, projects: false, voiceAgent: false, portfolio: false, resaleListings: false, nriProfiles: false, constructionErp: false, documentSearch: false, physicalDocuments: false, alliedInventory: false, salesTargets: false, cashFlowForecast: false, revenueShare: false, launchControl: false, onboardingProgress: false },
-};
+    permissionModuleLabels: { DASHBOARD: "Dashboard", EVENTS: "Campaigns", CRM: "CRM", VENDORS: "Vendors", TEAM: "Team", TIMESHEET: "Timesheet", ACCOUNTING: "Accounting", INVENTORY: "Inventory", PROCUREMENT: "Procurement" } },
+  features: { overview: true, leads: true, pipeline: true, contacts: true, calls: true, syncLogs: false, conversions: true, settings: true, import: true, adIntegrations: true, websiteCrawler: true, nurture: true, scoring: true, routing: true, crm: true, booking: true, tickets: true, knowledgeBase: true, media: true, qrCodes: true, reports: true, campaigns: true, forms: true, messages: true, templates: true, aiCampaigns: true, aiAgent: true, copilot: true, webhooks: true, sms: true, widget: true, tasks: true, integrations: true, analytics: true, studio: true, events: true, finance: true, procurement: false, inventory: false, teamHr: true, publicProfile: true, voiceAgent: false } };
 
 const logistics: NicheConfig = {
   businessName: "SwiftFreight Logistics", primaryColor: "#EA580C",
@@ -153,10 +115,8 @@ const logistics: NicheConfig = {
     rolePlaceholder: "Fleet Coordinator",
     deptPlaceholder: "Operations",
     skillsPlaceholder: "Route Planning, Dispatch, Customer Follow-up",
-    permissionModuleLabels: { DASHBOARD: "Dashboard", EVENTS: "Shipments", CRM: "Shippers", VENDORS: "Vendors", TEAM: "Team", TIMESHEET: "Timesheet", ACCOUNTING: "Accounting", INVENTORY: "Inventory", PROCUREMENT: "Procurement" },
-  },
-  features: { overview: true, leads: true, pipeline: true, contacts: true, calls: true, syncLogs: false, conversions: true, settings: true, import: false, adIntegrations: false, websiteCrawler: false, nurture: true, scoring: true, routing: true, crm: true, booking: true, tickets: true, knowledgeBase: false, media: true, qrCodes: true, reports: true, campaigns: false, forms: true, messages: true, templates: true, aiCampaigns: false, aiAgent: true, copilot: true, webhooks: true, sms: true, widget: true, tasks: true, integrations: true, analytics: false, studio: false, events: false, finance: true, procurement: true, inventory: true, teamHr: true, publicProfile: true, properties: false, shipments: true, channelPartners: false, paymentSchedules: false, projects: false, voiceAgent: false, portfolio: false, resaleListings: false, nriProfiles: false, constructionErp: false, documentSearch: false, physicalDocuments: false, alliedInventory: false, salesTargets: false, cashFlowForecast: false, revenueShare: false, launchControl: false, onboardingProgress: false },
-};
+    permissionModuleLabels: { DASHBOARD: "Dashboard", EVENTS: "Shipments", CRM: "Shippers", VENDORS: "Vendors", TEAM: "Team", TIMESHEET: "Timesheet", ACCOUNTING: "Accounting", INVENTORY: "Inventory", PROCUREMENT: "Procurement" } },
+  features: { overview: true, leads: true, pipeline: true, contacts: true, calls: true, syncLogs: false, conversions: true, settings: true, import: false, adIntegrations: false, websiteCrawler: false, nurture: true, scoring: true, routing: true, crm: true, booking: true, tickets: true, knowledgeBase: false, media: true, qrCodes: true, reports: true, campaigns: false, forms: true, messages: true, templates: true, aiCampaigns: false, aiAgent: true, copilot: true, webhooks: true, sms: true, widget: true, tasks: true, integrations: true, analytics: false, studio: false, events: false, finance: true, procurement: true, inventory: true, teamHr: true, publicProfile: true, voiceAgent: false } };
 
 const eventMarketing: NicheConfig = {
   businessName: "EventPro Marketing", primaryColor: "#0E9D6E",
@@ -168,27 +128,21 @@ const eventMarketing: NicheConfig = {
     rolePlaceholder: "Event Manager",
     deptPlaceholder: "Operations",
     skillsPlaceholder: "Event Planning, Vendor Coordination",
-    permissionModuleLabels: { DASHBOARD: "Dashboard", EVENTS: "Events", CRM: "CRM", VENDORS: "Vendors", TEAM: "Team", TIMESHEET: "Timesheet", ACCOUNTING: "Accounting", INVENTORY: "Inventory", PROCUREMENT: "Procurement" },
-  },
-  features: { overview: true, leads: true, pipeline: true, contacts: true, calls: true, syncLogs: false, conversions: true, settings: true, import: false, adIntegrations: false, websiteCrawler: false, nurture: true, scoring: true, routing: true, crm: true, booking: true, tickets: true, knowledgeBase: true, media: true, qrCodes: true, reports: true, campaigns: true, forms: true, messages: true, templates: true, aiCampaigns: true, aiAgent: true, copilot: true, webhooks: true, sms: true, widget: true, tasks: true, integrations: true, analytics: false, studio: false, events: true, finance: true, procurement: true, inventory: true, teamHr: true, publicProfile: true, properties: false, shipments: false, channelPartners: false, paymentSchedules: false, projects: false, voiceAgent: false, portfolio: false, resaleListings: false, nriProfiles: false, constructionErp: false, documentSearch: false, physicalDocuments: false, alliedInventory: false, salesTargets: false, cashFlowForecast: false, revenueShare: false, launchControl: false, onboardingProgress: false },
-};
+    permissionModuleLabels: { DASHBOARD: "Dashboard", EVENTS: "Events", CRM: "CRM", VENDORS: "Vendors", TEAM: "Team", TIMESHEET: "Timesheet", ACCOUNTING: "Accounting", INVENTORY: "Inventory", PROCUREMENT: "Procurement" } },
+  features: { overview: true, leads: true, pipeline: true, contacts: true, calls: true, syncLogs: false, conversions: true, settings: true, import: false, adIntegrations: false, websiteCrawler: false, nurture: true, scoring: true, routing: true, crm: true, booking: true, tickets: true, knowledgeBase: true, media: true, qrCodes: true, reports: true, campaigns: true, forms: true, messages: true, templates: true, aiCampaigns: true, aiAgent: true, copilot: true, webhooks: true, sms: true, widget: true, tasks: true, integrations: true, analytics: false, studio: false, events: true, finance: true, procurement: true, inventory: true, teamHr: true, publicProfile: true, voiceAgent: false } };
 
 const nicheMap: Record<string, NicheConfig> = {
-  realestate,
   hospitality,
   healthcare,
   logistics,
   "event-marketing-agency": eventMarketing,
-  agency,
-};
+  agency };
 
 const subdomainToNiche: Record<string, string> = {
-  realestate: "realestate",
   hospitality: "hospitality",
   healthcare: "healthcare",
   agency: "agency",
-  logistics: "logistics",
-};
+  logistics: "logistics" };
 
 function detectNicheFromHost(): string | null {
   try {
@@ -205,8 +159,6 @@ const envNiche = hostNiche || import.meta.env.VITE_NICHE_NAME || "agency";
 let currentConfig: NicheConfig = nicheMap[envNiche] || agency;
 
 const industryToNiche: Record<string, string> = {
-  "real-estate": "realestate",
-  "real estate": "realestate",
   hospitality: "hospitality",
   hotel: "hospitality",
   healthcare: "healthcare",
@@ -217,8 +169,7 @@ const industryToNiche: Record<string, string> = {
   wedding: "event-marketing-agency",
   "event planning": "event-marketing-agency",
   agency: "agency",
-  marketing: "agency",
-};
+  marketing: "agency" };
 
 let configListeners: Array<() => void> = [];
 

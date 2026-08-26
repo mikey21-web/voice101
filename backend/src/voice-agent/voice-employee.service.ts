@@ -45,6 +45,7 @@ export interface EmployeeInput {
   ambientSound?: string | null;
   ambientVolume?: number;
   maxCallDurationS?: number;
+  callTimeoutMessage?: string | null;
   welcomeMessage?: string;
   agentInformation?: string;
   callEndRules?: string;
@@ -118,6 +119,7 @@ export class VoiceEmployeeService {
         ambientSound: input.ambientSound ?? null,
         ambientVolume: input.ambientVolume ?? 0,
         maxCallDurationS: input.maxCallDurationS ?? 600,
+        callTimeoutMessage: input.callTimeoutMessage,
         welcomeMessage: input.welcomeMessage,
         agentInformation: input.agentInformation,
         callEndRules: input.callEndRules,
@@ -157,6 +159,53 @@ export class VoiceEmployeeService {
   }
   private variableCreateData(v: VariableInput) {
     return { key: v.key, label: v.label, source: v.source || 'capture', required: v.required ?? false, extractHint: v.extractHint ?? null };
+  }
+
+  /** Clones an existing employee into a new draft with "(Copy)" suffix - the same shape, voice,
+   * script, variables and actions, but un-published. Mirrors Outpero's employee list copy action. */
+  async duplicate(tenantId: string, id: string): Promise<any> {
+    const existing = await this.prisma.voiceEmployee.findFirst({
+      where: { id, tenantId },
+      include: { sections: true, variables: true, actions: true },
+    });
+    if (!existing) throw new NotFoundException('Employee not found');
+
+    const baseName = existing.name.replace(/\s*\(Copy\)\s*$/, '');
+    const dupName = `${baseName} (Copy)`;
+    const dup = await this.prisma.voiceEmployee.create({
+      data: {
+        tenantId,
+        name: dupName,
+        role: existing.role,
+        mode: existing.mode,
+        avatarUrl: existing.avatarUrl,
+        voiceProvider: existing.voiceProvider,
+        voiceId: existing.voiceId,
+        voiceName: existing.voiceName,
+        ttsSpeed: existing.ttsSpeed,
+        language: existing.language,
+        extraLanguages: existing.extraLanguages as any,
+        ambientSound: existing.ambientSound,
+        ambientVolume: existing.ambientVolume,
+        maxCallDurationS: existing.maxCallDurationS,
+        callTimeoutMessage: existing.callTimeoutMessage,
+        welcomeMessage: existing.welcomeMessage,
+        agentInformation: existing.agentInformation,
+        callEndRules: existing.callEndRules,
+        scriptAdherence: existing.scriptAdherence,
+        powerPrompting: existing.powerPrompting,
+        stylePackEnabled: existing.stylePackEnabled,
+        aiAcknowledgementEnabled: existing.aiAcknowledgementEnabled,
+        recordingNotice: existing.recordingNotice,
+        hasUnpublishedChanges: true,
+        sections: { create: existing.sections.map((s) => ({ sectionKey: s.sectionKey, label: s.label, prompt: s.prompt, enabled: s.enabled ?? true, order: s.order, nodeType: s.nodeType || 'llm', edges: s.edges || [] })) },
+        variables: { create: existing.variables.map((v) => ({ key: v.key, label: v.label, source: v.source || 'capture', required: v.required ?? false, extractHint: v.extractHint ?? null })) },
+        actions: { create: (existing.actions || []).map((a) => ({ actionKey: a.actionKey, label: a.label, enabled: false, gated: a.gated, gateReason: a.gateReason, config: a.config as any })) },
+      },
+      include: { sections: true, variables: true, actions: true },
+    });
+    this.logger.log(`Employee ${existing.id} duplicated to ${dup.id} ("${dupName}")`);
+    return dup;
   }
 
   /** Replaces identity/voice/prompt fields and, if provided, the whole section/variable set.

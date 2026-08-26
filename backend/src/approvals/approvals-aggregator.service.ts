@@ -20,44 +20,13 @@ export class ApprovalsAggregatorService {
   constructor(private prisma: PrismaService) {}
 
   async findPending(tenantId: string): Promise<PendingApprovalItem[]> {
-    const [offers, costSheets, approvalRequests] = await Promise.all([
-      this.prisma.offer.findMany({
-        where: { tenantId, status: 'PENDING' },
-        include: { costSheet: { select: { unitId: true } } },
-        orderBy: { createdAt: 'desc' },
-      }),
-      this.prisma.costSheet.findMany({
-        where: { tenantId, status: 'PENDING_APPROVAL' },
-        orderBy: { createdAt: 'desc' },
-      }),
-      this.prisma.approvalRequest.findMany({
-        where: { tenantId, status: 'PENDING' },
-        orderBy: { createdAt: 'desc' },
-      }),
-    ]);
+    const approvalRequests = await this.prisma.approvalRequest.findMany({
+      where: { tenantId, status: 'PENDING' },
+      orderBy: { createdAt: 'desc' },
+    });
 
     const items: PendingApprovalItem[] = [];
 
-    for (const o of offers) {
-      items.push({
-        id: `offer:${o.id}`,
-        type: 'DISCOUNT_OFFER',
-        summary: o.discountPaise ? `Discount request: ${o.reason || 'no reason given'}` : 'Discount request',
-        amountPaise: o.discountPaise?.toString(),
-        requestedAt: o.createdAt,
-        link: { module: 'offers', id: o.id },
-      });
-    }
-    for (const c of costSheets) {
-      items.push({
-        id: `cost-sheet:${c.id}`,
-        type: 'COST_SHEET',
-        summary: `Cost sheet awaiting approval (${c.totalPaise.toString()} paise)`,
-        amountPaise: c.totalPaise.toString(),
-        requestedAt: c.createdAt,
-        link: { module: 'cost-sheets', id: c.id },
-      });
-    }
     for (const a of approvalRequests) {
       items.push({
         id: `approval:${a.id}`,

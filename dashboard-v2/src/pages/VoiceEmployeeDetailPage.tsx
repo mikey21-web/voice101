@@ -175,31 +175,43 @@ export default function VoiceEmployeeDetailPage() {
 
   return (
     <div className="animate-fade-in max-w-4xl mx-auto">
-      <div className="flex items-start justify-between mb-8">
-        <div className="flex items-start gap-4">
-          <button onClick={() => { window.location.hash = '/voice-employees'; }} className="h-10 w-10 rounded-lg flex items-center justify-center text-[var(--muted-foreground)] hover:bg-[var(--accent)] transition-colors shrink-0 -ml-2">
-            <ArrowLeft size={16} />
-          </button>
-          <div>
-            <h1 className="text-3xl font-bold text-[var(--foreground)]">{employee.name}</h1>
-            <p className="text-sm text-[var(--muted-foreground)] mt-2">
-              {employee.status} {employee.isPublished && `· rev ${employee.revision}`}
-              {employee.hasUnpublishedChanges && <span className="text-amber-600 dark:text-amber-400"> · unsaved</span>}
-            </p>
+      <div className="rounded-2xl border bg-white p-5 shadow-sm">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-violet-600 text-lg font-bold text-white">{employee.name[0]?.toUpperCase()}</span>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl font-bold text-gray-900">{employee.name}</h1>
+                <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${employee.isPublished ? 'bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200' : 'bg-amber-50 text-amber-600 ring-1 ring-amber-200'}`}>{employee.isPublished ? 'Ready' : 'Draft'}</span>
+                {employee.isPublished && <span className="text-xs text-gray-400">· {employee.mode || 'instant'}</span>}
+              </div>
+              <p className="mt-0.5 text-sm text-gray-500">{employee.role} · Joined {new Date(employee.createdAt).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })} · {employee.sections?.length || 0} steps</p>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <a href="#/talk-to-employee" className="flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"><Mic size={14} /> Talk</a>
+            <button onClick={() => { window.location.hash = `/voice-employees/${employee.id}#chat`; }} className="flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50">💬 Chat</button>
+            <button onClick={handleTestCall} disabled={testingCall || !employee.isPublished} className="flex items-center gap-2 rounded-full bg-amber-100 px-3 py-1.5 text-sm font-semibold text-amber-800 hover:bg-amber-200 disabled:opacity-50">📞 Test call</button>
+            <span className="flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm text-gray-500">Paused <span className="h-4 w-8 rounded-full bg-gray-200" /></span>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <button onClick={handleShowVersions} className="h-10 px-4 rounded-lg text-sm text-[var(--foreground)] hover:bg-[var(--accent)] transition-colors flex items-center gap-2">
-            <History size={16} /> Versions
-          </button>
-          <button onClick={handleSave} disabled={saving} className="h-10 px-4 rounded-lg border border-[var(--border)] text-sm text-[var(--foreground)] hover:bg-[var(--accent)] transition-colors flex items-center gap-2 disabled:opacity-50">
-            {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />} Save
-          </button>
-          <button onClick={handlePublish} disabled={publishing} className="h-10 px-4 rounded-lg bg-[var(--primary)] text-white text-sm font-bold hover:opacity-90 disabled:opacity-50 transition-opacity flex items-center gap-2">
-            {publishing ? <Loader2 size={16} className="animate-spin" /> : <Rocket size={16} />} Publish
-          </button>
+        <div className="mt-4 flex flex-wrap items-center gap-2 border-t pt-4 text-xs">
+          {['Overview','Instant leads','Call script','Training','Actions','Outcomes','Voice','Settings'].map((t) => (
+            <span key={t} className={`rounded-full px-3 py-1 font-medium ${t === 'Call script' ? 'bg-violet-600 text-white' : 'bg-gray-100 text-gray-600'}`}>{t}</span>
+          ))}
         </div>
       </div>
+      {employee.hasUnpublishedChanges && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm">
+          <span className="flex items-center gap-2 text-amber-800">⚠ You changed how {employee.name} works — these edits aren't on live calls yet.</span>
+          <span className="flex items-center gap-2">
+            <button onClick={handlePublish} disabled={publishing} className="flex items-center gap-2 rounded-full bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-700 disabled:opacity-50">
+              {publishing ? <Loader2 size={16} className="animate-spin" /> : '↗'} Apply to live calls
+            </button>
+            <button onClick={load} className="rounded-full border bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">↺ Undo changes</button>
+          </span>
+        </div>
+      )}
 
       <div className="space-y-8">
 

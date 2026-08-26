@@ -197,7 +197,7 @@ export class AgentService {
 
     const name = lead.contact?.name || 'there';
     const interest = lead.interest || 'our projects';
-    const prompt = `Draft a WhatsApp reply for a real estate lead. Name: ${name}. Interest: ${interest}.${context ? ` Context: ${context}` : ''} Keep it under 160 characters, friendly and professional, end with a question.`;
+    const prompt = `Draft a WhatsApp reply for a lead. Name: ${name}. Interest: ${interest}.${context ? ` Context: ${context}` : ''} Keep it under 160 characters, friendly and professional, end with a question.`;
 
     const agentUrl = process.env.AGENT_SERVICE_URL;
     const key = process.env.AGENT_INBOUND_KEY;

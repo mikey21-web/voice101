@@ -21,6 +21,18 @@ export class VoiceNumberController {
     return this.service.addNumber(req.user.tenantId, body.number, body.provider);
   }
 
+  @Post('buy')
+  @Roles('OWNER', 'ADMIN')
+  buy(@Req() req: any, @Body() body: { number: string }) {
+    return this.service.buyNumber(req.user.tenantId, body.number);
+  }
+
+  @Post(':id/release')
+  @Roles('OWNER', 'ADMIN')
+  release(@Req() req: any, @Param('id') id: string) {
+    return this.service.releaseNumber(req.user.tenantId, id);
+  }
+
   @Patch(':id/kyc')
   @Roles('OWNER', 'ADMIN')
   setKyc(@Req() req: any, @Param('id') id: string, @Body() body: { status: 'not_started' | 'pending' | 'verified' }) {
@@ -55,5 +67,17 @@ export class VoiceWalletController {
   @Roles('OWNER', 'ADMIN')
   get(@Req() req: any) {
     return this.service.getWallet(req.user.tenantId);
+  }
+
+  @Post('topup')
+  @Roles('OWNER', 'ADMIN')
+  createTopUp(@Req() req: any, @Body() body: { amount: number }) {
+    return this.service.createTopUp(req.user.tenantId, body.amount);
+  }
+
+  @Post('topup/verify')
+  @Roles('OWNER', 'ADMIN')
+  verifyTopUp(@Req() req: any, @Body() body: { order_id: string; payment_id?: string }) {
+    return this.service.verifyTopUp(req.user.tenantId, body.order_id, body.payment_id);
   }
 }

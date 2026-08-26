@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { randomUUID } from 'node:crypto';
 import {
   KhojQueryOpts, KhojQueryResponse, KhojMemory,
   KhojAgentConfig, KhojAgent, KhojAutomationConfig, KhojAutomation,
@@ -30,9 +31,13 @@ export class KhojClientService {
     const timeout = setTimeout(() => controller.abort(), this.config.timeout);
 
     try {
+      const headers = { ...this.baseHeaders, ...options.headers };
+      if (options.body instanceof FormData) {
+        delete headers['Content-Type'];
+      }
       const response = await fetch(url, {
         ...options,
-        headers: { ...this.baseHeaders, ...options.headers },
+        headers,
         signal: controller.signal,
       });
 
@@ -42,6 +47,10 @@ export class KhojClientService {
       }
 
       if (response.status === 204) return undefined as T;
+      const contentType = response.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        return (await response.text()) as unknown as T;
+      }
       return response.json() as Promise<T>;
     } finally {
       clearTimeout(timeout);
@@ -70,22 +79,32 @@ export class KhojClientService {
   }
 
   async ingest(file: Buffer, filename: string, type: ContentType): Promise<void> {
+    const mime = type === 'markdown' ? 'text/markdown' : 'text/plain';
     const formData = new FormData();
-    const blob = new Blob([file as unknown as BlobPart]);
-    formData.append('file', blob, filename);
+    const blob = new Blob([file as unknown as BlobPart], { type: mime });
+    formData.append('files', blob, filename);
 
-    await this.request(KHOJ_API_PATHS.content, {
-      method: 'POST',
+    await this.request(`${KHOJ_API_PATHS.content}?t=${type}`, {
+      method: 'PUT',
+      body: formData,
+      headers: {}, // Let fetch set Content-Type for FormData
+    });
+  }
+
+  private async uploadText(content: string, filename: string): Promise<void> {
+    const formData = new FormData();
+    formData.append('files', new Blob([content], { type: 'text/markdown' }), filename);
+
+    await this.request(`${KHOJ_API_PATHS.content}?t=markdown`, {
+      method: 'PUT',
       body: formData,
       headers: {}, // Let fetch set Content-Type for FormData
     });
   }
 
   async ingestText(content: string, type: ContentType = 'plaintext'): Promise<void> {
-    await this.request(KHOJ_API_PATHS.content, {
-      method: 'POST',
-      body: JSON.stringify({ content, type }),
-    });
+    const ext = type === 'markdown' ? 'md' : 'txt';
+    await this.uploadText(content, `crm-knowledge-${randomUUID()}.${ext}`);
   }
 
   async getMemories(): Promise<KhojMemory[]> {
@@ -93,10 +112,7 @@ export class KhojClientService {
   }
 
   async saveMemory(raw: string): Promise<void> {
-    await this.request(KHOJ_API_PATHS.memories, {
-      method: 'POST',
-      body: JSON.stringify({ raw }),
-    });
+    await this.uploadText(raw, `memory-${randomUUID()}.md`);
   }
 
   async deleteMemory(memoryId: number): Promise<void> {

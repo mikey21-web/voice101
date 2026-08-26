@@ -30,39 +30,6 @@ Settings ✅ | Import ✅ | Ad Integrations ✅ | Website Crawler ✅ | Public P
 
 ---
 
-## REAL ESTATE
-
-### Modules to hide (22)
-- nurture ⛔ (they follow up manually or via CRM)
-- routing ⛔ (small teams don't need rule-based routing)
-- crm ⛔ (they ARE the CRM)
-- media ⛔ (no campaign asset library needed)
-- events ⛔ | calendar ⛔ | create event ⛔
-- accounting ⛔ (agents don't do books in their CRM)
-- invoices ⛔ | quotations ⛔ | contracts ⛔ | finance reports ⛔
-- partners ⛔ | vendor bookings ⛔ | purchase orders ⛔
-- inventory ⛔ | stock movements ⛔ | locations ⛔
-- timesheet ⛔ | leaves ⛔ | salaries ⛔
-- tickets ⛔ | knowledge base ⛔
-- studio ⛔ | copilot ⛔
-- reports ⛔
-
-### Modules to show (26)
-Overview ✅ | Leads ✅ | Pipeline ✅ | Contacts ✅
-Campaigns ✅ | Forms ✅ | QR Codes ✅
-Conversations ✅ | Templates ✅
-Scoring ✅ | AI Agent ✅ | AI Campaigns ✅
-Webhooks ✅ | SMS ✅ | Widget ✅ | Calls ✅ | Sync Logs ✅
-Tasks ✅ | Conversions ✅
-Team ✅
-Integrations ✅ | Booking ✅
-Analytics ✅ | Settings ✅ | Import ✅ | Ad Integrations ✅ | Website Crawler ✅ | Public Profile ✅
-
-**Label:** Buyer / Buyers / Contact / Deal
-**Sidebar groups:** Overview | Buyers | Outreach | Automation | Channels | Pipeline | Team | Integrations | Admin
-
----
-
 ## HOSPITALITY (Hotel / Resort)
 
 ### Modules to hide (28)
