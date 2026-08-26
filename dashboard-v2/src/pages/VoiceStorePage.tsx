@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Sparkles, Loader2, User } from 'lucide-react';
+import { Sparkles, Loader2, User, Check } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { api } from '../lib/api';
 
@@ -11,10 +11,22 @@ interface CatalogItem {
 export default function VoiceStorePage() {
   const [items, setItems] = useState<CatalogItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hiringKey, setHiringKey] = useState<string | null>(null);
+  const [hiredId, setHiredId] = useState<string | null>(null);
 
   useEffect(() => {
     api('/voice-store/catalog').then(setItems).catch(() => {}).finally(() => setLoading(false));
   }, []);
+
+  const hire = async (it: CatalogItem) => {
+    setHiringKey(it.key);
+    try {
+      const emp: any = await api('/voice-store/hire', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: it.key, language: it.languages[0] }) });
+      setHiredId(emp.id);
+      toast.success(`${it.name} hired — opening for review`);
+    } catch (e: any) { toast.error(e.message || 'Hire failed'); }
+    finally { setHiringKey(null); }
+  };
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-6">
@@ -45,16 +57,17 @@ export default function VoiceStorePage() {
               </div>
               <p className="mt-2 text-[11px] text-gray-400">{it.voice}</p>
               <button
-                onClick={() => {
-                  sessionStorage.setItem('ttb_description', `Hire a ${it.role.toLowerCase()} for a ${it.business.toLowerCase()} business. ${it.description}`);
-                  sessionStorage.setItem('ttb_language', 'te-IN');
-                  sessionStorage.setItem('ttb_mode', 'instant');
-                  sessionStorage.setItem('ttb_biz', it.business);
-                  window.location.hash = '/talk-to-build';
-                }}
-                className="mt-4 flex items-center justify-center gap-2 rounded-lg bg-violet-600 py-2.5 text-sm font-semibold text-white hover:bg-violet-700">
-                <Sparkles className="h-4 w-4" /> Hire for ₹{it.hirePrice}/mo
+                onClick={() => hire(it)}
+                disabled={hiringKey === it.key}
+                className="mt-4 flex items-center justify-center gap-2 rounded-lg bg-violet-600 py-2.5 text-sm font-semibold text-white hover:bg-violet-700 disabled:opacity-50">
+                {hiringKey === it.key ? <Loader2 className="h-4 w-4 animate-spin" /> : hiredId ? <Check className="h-4 w-4" /> : <Sparkles className="h-4 w-4" />}
+                {hiringKey === it.key ? 'Hiring…' : hiredId ? 'Hired — open' : `Hire for ₹${it.hirePrice}/mo`}
               </button>
+              {hiredId && (
+                <a href={`#/voice-employees/${hiredId}`} className="mt-2 block rounded-lg bg-emerald-600 py-2 text-center text-sm font-semibold text-white hover:bg-emerald-700">
+                  Review your new employee →
+                </a>
+              )}
             </div>
           ))}
         </div>
