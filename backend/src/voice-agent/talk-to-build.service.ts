@@ -148,6 +148,14 @@ export class TalkToBuildService {
   private providerBase = '';
 
   async transcribeChunk(audio: Buffer, mimeType: string, language?: string): Promise<{ transcript: string }> {
+    const sonioxKey = this.config.get<string>('SONIOX_API_KEY');
+    if (sonioxKey) {
+      try {
+        return await this.sonioxTranscribe(audio, mimeType, sonioxKey, language);
+      } catch (err: any) {
+        this.logger.warn(`Soniox transcription failed (${err.message}) — falling back to Deepgram`);
+      }
+    }
     const deepgramKey = this.config.get<string>('DEEPGRAM_API_KEY');
     if (!deepgramKey) throw new Error('DEEPGRAM_API_KEY not configured');
     const lang = (language || '').trim() || 'multi';
@@ -168,6 +176,57 @@ export class TalkToBuildService {
     const data = await res.json();
     const transcript = data?.results?.channels?.[0]?.alternatives?.[0]?.transcript || '';
     return { transcript };
+  }
+
+  /** Soniox async STT: upload file -> create transcription -> poll -> return transcript.
+   * Model stt-async-v5 (see soniox /v1/models). Throws if the account has no balance. */
+  private async sonioxTranscribe(audio: Buffer, mimeType: string, apiKey: string, language?: string): Promise<{ transcript: string }> {
+    const ext = mimeType?.includes('wav') ? 'wav' : 'webm';
+    const form = new FormData();
+    form.append('file', new Blob([new Uint8Array(audio)], { type: mimeType || 'audio/wav' }), `note.${ext}`);
+    const up = await fetch('https://api.soniox.com/v1/files', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${apiKey}` },
+      body: form,
+    });
+    if (!up.ok) throw new Error(`Soniox upload failed: ${up.status} ${await up.text()}`);
+    const upj: any = await up.json();
+    const fileId = upj.id || upj.file_id;
+    if (!fileId) throw new Error('Soniox upload returned no file id');
+
+    const body: Record<string, any> = { model: 'stt-async-v5', file_id: fileId };
+    if (language?.trim()) body.language_hints = [language.trim().slice(0, 2)];
+    const tr = await fetch('https://api.soniox.com/v1/transcriptions', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!tr.ok) throw new Error(`Soniox transcription create failed: ${tr.status} ${await tr.text()}`);
+    const trj: any = await tr.json();
+    const tid = trj.id || trj.transcription_id;
+    if (!tid) throw new Error('Soniox created no transcription id');
+
+    for (let i = 0; i < 30; i++) {
+      await new Promise((r) => setTimeout(r, 4000));
+      const g = await fetch(`https://api.soniox.com/v1/transcriptions/${tid}`, {
+        headers: { Authorization: `Bearer ${apiKey}` },
+      });
+      if (g.status !== 200) continue;
+      const gj: any = await g.json();
+      if (gj.status === 'completed') {
+        const t = await fetch(`https://api.soniox.com/v1/transcriptions/${tid}/transcript`, {
+          headers: { Authorization: `Bearer ${apiKey}` },
+        });
+        if (!t.ok) throw new Error(`Soniox transcript fetch failed: ${t.status}`);
+        const tj: any = await t.json();
+        const text = tj.text || tj.transcript || '';
+        return { transcript: text };
+      }
+      if (gj.status === 'error') {
+        throw new Error(`Soniox transcription error: ${gj.error_message || gj.error_type || 'unknown'}`);
+      }
+    }
+    throw new Error('Soniox transcription timed out');
   }
 
   async structurePrompt(transcript: string): Promise<StructuredBriefResult> {
