@@ -36,7 +36,10 @@ import { CoachModule } from './coach/coach.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true, load: [() => ({ khoj: { baseUrl: process.env.KHOJ_BASE_URL || 'http://localhost:42111', timeout: parseInt(process.env.KHOJ_TIMEOUT || '30000', 10) } })] }),
+    ConfigModule.forRoot({ 
+      isGlobal: true, 
+      envFilePath: '.env',
+      load: [() => ({ khoj: { baseUrl: process.env.KHOJ_BASE_URL || 'http://localhost:42111', timeout: parseInt(process.env.KHOJ_TIMEOUT || '30000', 10) } })] }),
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 300 }]),
     JwtModule.registerAsync({
       global: true,
