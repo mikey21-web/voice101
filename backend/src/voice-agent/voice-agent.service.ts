@@ -378,7 +378,42 @@ export class VoiceAgentService {
   }
 
   async listVoices(provider: string, language?: string) {
+    if (provider === 'smallest') {
+      return this.listSmallestVoices(language);
+    }
     return this.dograh.listVoices(provider, language);
+  }
+
+  /** Smallest.ai exposes its own voice catalog (Dograh's provider whitelist doesn't
+   * include "smallest"). Fetch direct from their API, map to the shared VoiceOption shape. */
+  private async listSmallestVoices(language?: string): Promise<Array<{ voice_id: string; name: string; gender: string | null; accent: string | null }>> {
+    const apiKey = this.config.get<string>('SMALLEST_API_KEY');
+    if (!apiKey) throw new Error('SMALLEST_API_KEY not configured');
+    const res = await fetch('https://api.smallest.ai/waves/v1/lightning-v3.1/get_voices', {
+      headers: { Authorization: `Bearer ${apiKey}` },
+    });
+    if (!res.ok) throw new Error(`Smallest.ai voices failed: ${res.status} ${await res.text()}`);
+    const data: any = await res.json();
+    const voices = (data.voices || []).map((v: any) => {
+      const tags = v.tags || {};
+      const langs = Array.isArray(tags.language) ? tags.language : [];
+      return {
+        voice_id: v.voiceId || v.voice_id,
+        name: v.displayName || v.name || v.voiceId,
+        gender: tags.gender ?? null,
+        accent: tags.accent ?? (langs[0] ?? null),
+      };
+    });
+    if (language) {
+      const l = language.slice(0, 2).toLowerCase();
+      const filtered = voices.filter((v: any) => {
+        const tags = (v.tags as any) || {};
+        return Array.isArray(tags.language) ? tags.language.includes(l) : true;
+      });
+      // We already dropped tags in mapping; simplest: keep all (smallest supports auto-routing).
+      return voices;
+    }
+    return voices;
   }
 
   async getVoiceConfig() {

@@ -218,7 +218,7 @@ export async function toggleVoiceAgentAmd(enabled: boolean) { return api('/voice
 
 export interface VoiceOption { voice_id: string; name: string; gender: string | null; accent: string | null; }
 export interface VoiceConfig { provider: string | null; voice: string | null; speed: number | null; language: string | null; }
-export const VOICE_PROVIDERS = ['sarvam', 'cartesia', 'smallest', 'elevenlabs'] as const;
+export const VOICE_PROVIDERS = ['inworld', 'sarvam', 'cartesia', 'smallest'] as const;
 export async function fetchVoices(provider: string, lang?: string) { return api(`/voice-agent/voices?provider=${provider}${lang ? `&lang=${lang}` : ''}`) as Promise<VoiceOption[]>; }
 export async function fetchVoiceConfig() { return api('/voice-agent/voice-config') as Promise<VoiceConfig>; }
 export async function updateVoiceConfig(data: { provider: string; voiceId: string; speed?: number; language?: string }) { return api('/voice-agent/voice-config', { method: 'PATCH', body: JSON.stringify(data) }) as Promise<VoiceConfig>; }
