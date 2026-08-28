@@ -1,15 +1,9 @@
-import { Module, forwardRef } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { VoiceAgentService } from './voice-agent.service';
 import { VoiceAgentController } from './voice-agent.controller';
 import { LeadOrchestratorService } from './lead-orchestrator.service';
 import { PostCallDispatchService } from './post-call-dispatch.service';
-import { ConversationsModule } from '../conversations/conversations.module';
-import { ApprovalsModule } from '../approvals/approvals.module';
-import { TimelineModule } from '../timeline/timeline.module';
-import { MikeyModule } from '../mikey/mikey.module';
 import { ResultListenerService } from './result-listener.service';
-import { LeadsModule } from '../leads/leads.module';
-import { AgentModule } from '../agent/agent.module';
 import { CallFlowGeneratorService } from './call-flow-generator.service';
 import { VoiceEmployeeService } from './voice-employee.service';
 import { VoiceEmployeeController } from './voice-employee.controller';
@@ -33,6 +27,7 @@ import { VoiceStoreController } from './voice-store.controller';
 import { GoogleCalendarService } from './google-calendar.service';
 import { GoogleCalendarController } from './google-calendar.controller';
 import { SharedModule } from '../shared/shared.module';
+import { BillingModule } from '../billing/billing.module';
 import {
   OutperoEmployeesController,
   OutperoCallsController,
@@ -46,11 +41,13 @@ import {
   OutperoAccountsController,
   OutperoScheduledCallsController,
   OutperoCallerMemoryController,
+  OutperoLeadWebhookReceiverController,
+  OutperoAdminController,
 } from './outpero-compat.controller';
 
 @Module({
-  imports: [ConversationsModule, ApprovalsModule, TimelineModule, forwardRef(() => MikeyModule), forwardRef(() => LeadsModule), AgentModule, SharedModule],
-  controllers: [VoiceAgentController, VoiceEmployeeController, VoiceCallController, VoiceLeadController, VoiceCampaignController, VoiceNumberController, VoiceBillingController, VoiceWalletController, VoiceAnalyticsController, VoiceTrainingController, TalkToBuildController, SwaraController, VoiceStoreController, GoogleCalendarController, OutperoEmployeesController, OutperoCallsController, OutperoCampaignsController, OutperoLeadsController, OutperoBillingController, OutperoNumbersController, OutperoVoicesController, OutperoStatsController, OutperoContactListsController, OutperoAccountsController, OutperoScheduledCallsController, OutperoCallerMemoryController],
+  imports: [SharedModule, BillingModule],
+  controllers: [VoiceAgentController, VoiceEmployeeController, VoiceCallController, VoiceLeadController, VoiceCampaignController, VoiceNumberController, VoiceBillingController, VoiceWalletController, VoiceAnalyticsController, VoiceTrainingController, TalkToBuildController, SwaraController, VoiceStoreController, GoogleCalendarController, OutperoEmployeesController, OutperoCallsController, OutperoCampaignsController, OutperoLeadsController, OutperoBillingController, OutperoNumbersController, OutperoVoicesController, OutperoStatsController, OutperoContactListsController, OutperoAccountsController, OutperoScheduledCallsController, OutperoCallerMemoryController, OutperoLeadWebhookReceiverController, OutperoAdminController],
   providers: [VoiceAgentService, LeadOrchestratorService, ResultListenerService, CallFlowGeneratorService, VoiceEmployeeService, VoiceCallService, VoiceLeadService, VoiceCampaignService, VoiceBillingService, PostCallDispatchService, VoiceAnalyticsService, CallerMemoryService, VoiceTrainingService, TalkToBuildService, SwaraService, GoogleCalendarService],
   exports: [VoiceAgentService, LeadOrchestratorService, ResultListenerService, VoiceEmployeeService, VoiceCallService, VoiceLeadService, VoiceCampaignService, VoiceBillingService, PostCallDispatchService],
 })

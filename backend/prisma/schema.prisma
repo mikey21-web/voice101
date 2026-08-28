@@ -81,6 +81,7 @@ model Tenant {
   voiceTrainingExamples        VoiceTrainingExample[]
   leadEscalations              LeadEscalation[]
   callCoachings                CallCoaching[]
+  properties                   Property[]
 
   @@index([slug])
   @@map("tenants")
@@ -2754,6 +2755,11 @@ model VoiceEmployee {
   recordingNotice      Boolean @default(false) @map("recording_notice")
   developerMode        Boolean @default(false) @map("developer_mode")
 
+  webhookSecret  String?  @map("webhook_secret")
+  webhookEnabled Boolean  @default(false) @map("webhook_enabled")
+  preVariables   Json?    @map("pre_variables")
+  dialerSettings Json?    @map("dialer_settings")
+
   numberId String? @map("number_id")
   number   VoicePhoneNumber? @relation(fields: [numberId], references: [id])
 
@@ -2781,6 +2787,7 @@ model VoiceEmployee {
   calls      VoiceCall[]
   campaigns  VoiceCampaign[]
   trainingExamples VoiceTrainingExample[]
+  webhookEvents    VoiceWebhookEvent[]
 
   @@index([tenantId])
   @@map("voice_employees")
@@ -3030,6 +3037,49 @@ model VoiceTrainingExample {
   @@index([employeeId])
   @@index([status])
   @@map("voice_training_examples")
+}
+
+model Property {
+  id           String    @id @default(uuid())
+  tenantId     String    @map("tenant_id")
+  tenant       Tenant    @relation(fields: [tenantId], references: [id])
+
+  title        String
+  propertyType String    @map("property_type")
+  status       String    @default("AVAILABLE")
+  price        Float     @default(0)
+  bedrooms     Int       @default(0)
+  bathrooms    Int       @default(0)
+  areaSqft     Int       @default(0) @map("area_sqft")
+  location     String    @default("")
+  address      String    @default("")
+  features     Json      @default("[]")
+  amenities    Json      @default("[]")
+  reraId       String?   @map("rera_id")
+  featured     Boolean   @default(false)
+  availableFrom DateTime? @map("available_from")
+
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([tenantId])
+  @@map("properties")
+}
+
+model VoiceWebhookEvent {
+  id         String  @id @default(uuid())
+  employeeId String  @map("employee_id")
+  employee   VoiceEmployee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  eventType  String  @map("event_type")
+  payload    Json    @default("{}")
+  status     String  @default("ok")
+  errorMsg   String? @map("error_msg")
+
+  createdAt  DateTime @default(now())
+
+  @@index([employeeId])
+  @@map("voice_webhook_events")
 }
 
 /// A bulk-calling run against a list of contacts. Named VoiceCampaign (not

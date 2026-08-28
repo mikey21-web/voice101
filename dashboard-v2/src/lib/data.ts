@@ -551,3 +551,26 @@ export async function createFlow(data: any) { return api('/flows', { method: 'PO
 export async function updateFlow(id: string, data: any) { return api(`/flows/${id}`, { method: 'PATCH', body: JSON.stringify(data) }); }
 export async function deleteFlow(id: string) { return api(`/flows/${id}`, { method: 'DELETE' }); }
 export async function fetchPublicCollection(slugs: string[]) { return api(`/properties/public/collection?slugs=${slugs.join(',')}`); }
+
+// ─── Lead Webhook ──────────────────────────────────────────────────────────
+export async function fetchEmployeeWebhook(id: string) { return api(`/employees/${id}/lead-webhook`); }
+export async function updateEmployeeWebhook(id: string, enabled: boolean) { return api(`/employees/${id}/lead-webhook`, { method: 'PATCH', body: JSON.stringify({ enabled }) }); }
+export async function rotateWebhookSecret(id: string) { return api(`/employees/${id}/lead-webhook/rotate-secret`, { method: 'POST' }) as Promise<{ secret: string }>; }
+export async function revealWebhookSecret(id: string) { return api(`/employees/${id}/lead-webhook/reveal-secret`, { method: 'POST' }) as Promise<{ secret: string }>; }
+export async function fetchWebhookEvents(id: string) { return api(`/employees/${id}/webhook-events`) as Promise<any[]>; }
+
+// ─── Pre-variables ─────────────────────────────────────────────────────────
+export async function fetchPreVariables(id: string) { return api(`/employees/${id}/pre-variables`) as Promise<any[]>; }
+export async function savePreVariables(id: string, vars: any[]) { return api(`/employees/${id}/pre-variables`, { method: 'PUT', body: JSON.stringify(vars) }); }
+
+// ─── Dialer settings ───────────────────────────────────────────────────────
+export async function fetchDialerSettings(id: string) { return api(`/employees/${id}/dialer-settings`) as Promise<any>; }
+export async function saveDialerSettings(id: string, settings: any) { return api(`/employees/${id}/dialer-settings`, { method: 'PUT', body: JSON.stringify(settings) }); }
+
+// ─── Billing usage / statement ─────────────────────────────────────────────
+export async function fetchBillingUsage(month?: string) { return api(`/billing/usage${month ? `?month=${month}` : ''}`) as Promise<any>; }
+export async function fetchBillingStatement(month?: string) { return api(`/billing/statement${month ? `?month=${month}` : ''}`) as Promise<any>; }
+
+// ─── Admin ─────────────────────────────────────────────────────────────────
+export async function fetchAdminTenants() { return api('/admin/tenants') as Promise<any[]>; }
+export async function fetchAdminStats() { return api('/admin/stats') as Promise<any>; }

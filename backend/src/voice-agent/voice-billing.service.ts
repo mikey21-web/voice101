@@ -222,4 +222,63 @@ export class VoiceBillingService {
     await this.notifyLowCredit(tenantId, wallet.balanceInr);
     return { wallet: this.publicWallet(wallet) };
   }
+
+  // Aliases matching VPS controller's call sites
+  async getTransactions(tenantId: string) { return (await this.getWalletDoc(tenantId)).transactions; }
+  async createTopupOrder(tenantId: string, amountInr: number) { return this.createTopUp(tenantId, amountInr); }
+  async verifyTopup(tenantId: string, orderId: string, paymentId?: string, _sig?: string) { return this.verifyTopUp(tenantId, orderId, paymentId); }
+
+  async deductCallCost(tenantId: string, callId: string, durationS: number) {
+    const minutes = durationS / 60;
+    const costInr = Math.round(this.computeCallCost(minutes) * 100) / 100;
+    if (costInr <= 0) return;
+    const wallet = await this.getWalletDoc(tenantId);
+    wallet.balanceInr = Math.round((wallet.balanceInr - costInr) * 100) / 100;
+    wallet.transactions.unshift({ type: 'call_debit', amount: -costInr, detail: `Call ${callId} — ${Math.ceil(minutes)}min`, createdAt: new Date().toISOString() });
+    await this.saveWalletDoc(tenantId, wallet);
+    await this.notifyLowCredit(tenantId, wallet.balanceInr);
+  }
+
+  async getBillingUsage(tenantId: string, month?: string) {
+    // month = 'YYYY-MM', defaults to current month
+    const now = new Date();
+    const [year, mon] = month ? month.split('-').map(Number) : [now.getFullYear(), now.getMonth() + 1];
+    const from = new Date(year, mon - 1, 1);
+    const to = new Date(year, mon, 1);
+
+    const calls = await this.prisma.voiceCall.findMany({
+      where: { tenantId, createdAt: { gte: from, lt: to } },
+      select: { durationS: true, disposition: true, createdAt: true, employeeId: true },
+    });
+
+    const totalCalls = calls.length;
+    const totalMinutes = calls.reduce((s, c) => s + Math.ceil((c.durationS || 0) / 60), 0);
+    const costInr = Math.round(totalMinutes * 3.5 * 100) / 100; // ₹3.5/min default
+
+    const byEmployee: Record<string, { calls: number; minutes: number }> = {};
+    for (const c of calls) {
+      const key = c.employeeId || 'unknown';
+      if (!byEmployee[key]) byEmployee[key] = { calls: 0, minutes: 0 };
+      byEmployee[key].calls++;
+      byEmployee[key].minutes += Math.ceil((c.durationS || 0) / 60);
+    }
+
+    return { month: `${year}-${String(mon).padStart(2, '0')}`, totalCalls, totalMinutes, costInr, byEmployee };
+  }
+
+  async getBillingStatement(tenantId: string, month?: string) {
+    const usage = await this.getBillingUsage(tenantId, month);
+    const wallet = await this.getWalletDoc(tenantId);
+    const topUps = wallet.transactions.filter((t: any) => t.type === 'top_up' && t.createdAt?.startsWith(usage.month));
+    return {
+      month: usage.month,
+      openingBalance: wallet.balanceInr + usage.costInr,
+      totalCalls: usage.totalCalls,
+      totalMinutes: usage.totalMinutes,
+      usageCharges: usage.costInr,
+      topUps: topUps.reduce((s: number, t: any) => s + (t.amount || 0), 0),
+      closingBalance: wallet.balanceInr,
+      topUpHistory: topUps,
+    };
+  }
 }

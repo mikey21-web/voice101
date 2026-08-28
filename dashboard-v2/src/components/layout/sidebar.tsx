@@ -17,7 +17,7 @@ const featureMap: Record<string, string> = {
   "/": "overview", "/queue": "overview", "/builder-desk": "overview", "/leads": "leads", "/smart-lists": "leads", "/pipeline": "pipeline", "/contacts": "contacts",
   "/campaigns": "campaigns", "/forms": "forms", "/qr-codes": "qrCodes",
   "/voice-agent": "voiceAgent", "/voice-employees": "voiceAgent", "/voice-agent-settings": "voiceAgent", "/voice-campaigns": "voiceAgent", "/voice-call-logs": "voiceAgent", "/voice-knowledge-base": "voiceAgent", "/voice-post-call-workflows": "voiceAgent", "/talk-to-build": "voiceAgent",
-  "/voice-dashboard": "voiceAgent", "/voice-instant-leads": "voiceAgent", "/voice-inbound-calls": "voiceAgent", "/voice-all-conversations": "voiceAgent", "/voice-leads-results": "voiceAgent", "/voice-phone-numbers": "voiceAgent", "/voice-performance": "voiceAgent", "/caller-memory": "voiceAgent",
+  "/voice-dashboard": "voiceAgent", "/voice-instant-leads": "voiceAgent", "/voice-inbound-calls": "voiceAgent", "/voice-all-conversations": "voiceAgent", "/voice-leads-results": "voiceAgent", "/voice-phone-numbers": "voiceAgent", "/voice-performance": "voiceAgent", "/caller-memory": "voiceAgent", "/admin": "voiceAgent",
   "/conversations": "messages", "/templates": "templates", "/media": "media",
   "/scoring": "scoring", "/rules": "routing",
   "/ai-campaigns": "aiCampaigns", "/ai-agent": "aiAgent", "/copilot": "copilot",
@@ -72,6 +72,7 @@ const rawNavGroups = [
       { label: "Store / Hire", icon: Sparkles, path: "/store" },
       { label: "Billing", icon: FileText, path: "/voice-billing" },
       { label: "Settings", icon: Settings, path: "/voice-agent-settings" },
+      { label: "Admin", icon: Shield, path: "/admin" },
     ],
   },
 ];

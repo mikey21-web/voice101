@@ -9,12 +9,14 @@
  * Every handler delegates to the existing Voice* services.
  */
 import {
-  Controller, Get, Post, Patch, Delete, Param, Body, Query,
-  Req, UseGuards, HttpCode,
+  Controller, Get, Post, Put, Patch, Delete, Param, Body, Query,
+  Req, UseGuards, HttpCode, Headers, RawBodyRequest, Request as NestRequest,
 } from '@nestjs/common';
+import * as crypto from 'crypto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
+import { PrismaService } from '../prisma/prisma.service';
 import { VoiceEmployeeService, EmployeeInput } from './voice-employee.service';
 import { VoiceCallService } from './voice-call.service';
 import { VoiceLeadService } from './voice-lead.service';
@@ -86,6 +88,26 @@ export class OutperoEmployeesController {
   testCall(@Req() r: any, @Param('id') id: string, @Body() b: { toNumber: string }) {
     return this.svc.testCall(r.user.tenantId, id, b.toNumber);
   }
+
+  // ── Lead Webhook ────────────────────────────────────────────────────────
+  @Get(':id/lead-webhook')   @Roles(...ADM) getWebhook(@Req() r: any, @Param('id') id: string) { return this.svc.getWebhook(r.user.tenantId, id); }
+  @Patch(':id/lead-webhook') @Roles(...ADM) @HttpCode(200)
+  updateWebhook(@Req() r: any, @Param('id') id: string, @Body() b: { enabled: boolean }) { return this.svc.updateWebhook(r.user.tenantId, id, b.enabled); }
+  @Post(':id/lead-webhook/rotate-secret') @Roles(...ADM) @HttpCode(200)
+  rotateSecret(@Req() r: any, @Param('id') id: string) { return this.svc.rotateWebhookSecret(r.user.tenantId, id); }
+  @Post(':id/lead-webhook/reveal-secret') @Roles(...ADM) @HttpCode(200)
+  revealSecret(@Req() r: any, @Param('id') id: string) { return this.svc.revealWebhookSecret(r.user.tenantId, id); }
+  @Get(':id/webhook-events') @Roles(...ADM) webhookEvents(@Req() r: any, @Param('id') id: string) { return this.svc.listWebhookEvents(r.user.tenantId, id); }
+
+  // ── Pre-variables ────────────────────────────────────────────────────────
+  @Get(':id/pre-variables')  @Roles(...ALL) getPreVars(@Req() r: any, @Param('id') id: string) { return this.svc.getPreVariables(r.user.tenantId, id); }
+  @Put(':id/pre-variables')  @Roles(...ADM) @HttpCode(200)
+  setPreVars(@Req() r: any, @Param('id') id: string, @Body() b: any[]) { return this.svc.setPreVariables(r.user.tenantId, id, b); }
+
+  // ── Dialer settings ──────────────────────────────────────────────────────
+  @Get(':id/dialer-settings') @Roles(...ALL) getDialer(@Req() r: any, @Param('id') id: string) { return this.svc.getDialerSettings(r.user.tenantId, id); }
+  @Put(':id/dialer-settings') @Roles(...ADM) @HttpCode(200)
+  setDialer(@Req() r: any, @Param('id') id: string, @Body() b: any) { return this.svc.setDialerSettings(r.user.tenantId, id, b); }
 
   @Get(':id/stats')
   @Roles(...ALL)
@@ -211,9 +233,9 @@ export class OutperoLeadsController {
 export class OutperoBillingController {
   constructor(private svc: VoiceBillingService) {}
 
-  @Get()
-  @Roles(...ALL)
-  get(@Req() r: any) { return this.svc.getBilling(r.user.tenantId); }
+  @Get()       @Roles(...ALL) get(@Req() r: any) { return this.svc.getBilling(r.user.tenantId); }
+  @Get('usage') @Roles(...ALL) usage(@Req() r: any, @Query('month') month?: string) { return this.svc.getBillingUsage(r.user.tenantId, month); }
+  @Get('statement') @Roles(...ALL) statement(@Req() r: any, @Query('month') month?: string) { return this.svc.getBillingStatement(r.user.tenantId, month); }
 }
 
 // ─── /numbers (stub) ─────────────────────────────────────────────────────────
@@ -311,6 +333,52 @@ export class OutperoScheduledCallsController {
   @Get() @Roles(...ALL) list() { return []; }
 }
 
+// ─── Public: /employees/:id/incoming-lead ────────────────────────────────────
+// No auth — receives form submissions and triggers a call. Verifies HMAC if secret is set.
+@Controller('employees')
+export class OutperoLeadWebhookReceiverController {
+  constructor(
+    private svc: VoiceEmployeeService,
+    private agent: VoiceAgentService,
+    private prisma: PrismaService,
+  ) {}
+
+  @Post(':id/incoming-lead')
+  @HttpCode(200)
+  async receive(
+    @Param('id') id: string,
+    @Body() body: Record<string, any>,
+    @Headers('x-outpero-signature') sig?: string,
+  ) {
+    const emp = await this.prisma.voiceEmployee.findUnique({ where: { id } });
+    if (!emp || !(emp as any).webhookEnabled) return { accepted: false, reason: 'webhook_disabled' };
+
+    const secret = (emp as any).webhookSecret as string | null;
+    if (secret && sig) {
+      const expected = 'sha256=' + crypto.createHmac('sha256', secret).update(JSON.stringify(body)).digest('hex');
+      if (!crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) {
+        await this.prisma.voiceWebhookEvent.create({ data: { employeeId: id, eventType: 'lead_received', payload: body, status: 'error', errorMsg: 'signature_mismatch' } });
+        return { accepted: false, reason: 'signature_mismatch' };
+      }
+    }
+
+    const phone = body.phone || body.mobile || body.contact || body.number;
+    if (!phone) {
+      await this.prisma.voiceWebhookEvent.create({ data: { employeeId: id, eventType: 'lead_received', payload: body, status: 'error', errorMsg: 'no_phone' } });
+      return { accepted: false, reason: 'phone_required' };
+    }
+
+    await this.prisma.voiceWebhookEvent.create({ data: { employeeId: id, eventType: 'lead_received', payload: body, status: 'ok' } });
+
+    if (emp.dograhWorkflowUuid) {
+      const context = { first_name: body.name || body.first_name || 'there', ...body };
+      this.svc.testCall(emp.tenantId, id, String(phone), context).catch(() => null);
+    }
+
+    return { accepted: true };
+  }
+}
+
 // ─── /callers (caller memory) ────────────────────────────────────────────────
 @Controller('callers')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -332,5 +400,34 @@ export class OutperoCallerMemoryController {
   @HttpCode(200)
   clearFacts(@Req() r: any, @Param('phone') phone: string) {
     return this.mem.clearFacts(r.user.tenantId, decodeURIComponent(phone)).then(() => ({ cleared: true }));
+  }
+}
+
+// ─── /admin ──────────────────────────────────────────────────────────────────
+@Controller('admin')
+@UseGuards(JwtAuthGuard, RolesGuard)
+export class OutperoAdminController {
+  constructor(private prisma: PrismaService, private analytics: VoiceAnalyticsService) {}
+
+  @Get('tenants')
+  @Roles('OWNER')
+  async tenants() {
+    return this.prisma.tenant.findMany({
+      select: { id: true, name: true, slug: true, plan: true, active: true, createdAt: true,
+        _count: { select: { voiceEmployees: true, voiceCalls: true } } },
+      orderBy: { createdAt: 'desc' },
+      take: 200,
+    });
+  }
+
+  @Get('stats')
+  @Roles('OWNER')
+  async stats() {
+    const [tenants, employees, calls] = await Promise.all([
+      this.prisma.tenant.count(),
+      this.prisma.voiceEmployee.count({ where: { deletedAt: null } }),
+      this.prisma.voiceCall.count(),
+    ]);
+    return { tenants, employees, calls };
   }
 }

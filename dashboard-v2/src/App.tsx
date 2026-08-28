@@ -40,6 +40,7 @@ const PageComponents: Record<string, React.LazyExoticComponent<React.ComponentTy
   VoiceBilling: lazy(() => import("./pages/VoiceBillingPage")),
   VoiceStore: lazy(() => import("./pages/VoiceStorePage")),
   CallerMemory: lazy(() => import("./pages/CallerMemoryPage")),
+  Admin: lazy(() => import("./pages/AdminPage")),
 };
 
 function PageFallback() {
@@ -75,6 +76,7 @@ function getPageKey(raw: string): string {
   if (path.startsWith("/voice-performance")) return "VoicePerformance";
   if (path.startsWith("/voice-billing")) return "VoiceBilling";
   if (path.startsWith("/caller-memory")) return "CallerMemory";
+  if (path.startsWith("/admin")) return "Admin";
   if (path.startsWith("/voice-employees")) return "VoiceEmployees";
   if (path.startsWith("/talk-to-build")) return "TalkToBuild";
   if (path.startsWith("/talk-to-employee")) return "TalkToEmployee";

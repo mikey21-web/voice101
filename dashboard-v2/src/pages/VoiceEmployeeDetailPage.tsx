@@ -3,9 +3,11 @@ import {
   fetchVoiceEmployee, updateVoiceEmployee, publishVoiceEmployee, fetchVoiceEmployeeVersions,
   restoreVoiceEmployeeVersion, testCallVoiceEmployee, fetchVoiceTrainingExamples, fetchVoices,
   editVoiceEmployeeFlow,
+  fetchEmployeeWebhook, updateEmployeeWebhook, rotateWebhookSecret, revealWebhookSecret, fetchWebhookEvents,
+  fetchPreVariables, savePreVariables, fetchDialerSettings, saveDialerSettings,
   VoiceEmployee, VoiceEmployeeSection, VoiceEmployeeVariable, VoiceEmployeeVersion, VoiceOption, VOICE_PROVIDERS,
 } from '../lib/data';
-import { ArrowLeft, Plus, Trash2, Rocket, Loader2, Save, History, PhoneCall, GripVertical, ToggleLeft, ToggleRight, Mic, BookOpen, Users, Check, Sparkles } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Rocket, Loader2, Save, History, PhoneCall, GripVertical, ToggleLeft, ToggleRight, Mic, BookOpen, Users, Check, Sparkles, Link, Eye, EyeOff, RefreshCw, Clock, List } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 function getEmployeeIdFromHash(): string | null {
@@ -47,6 +49,20 @@ export default function VoiceEmployeeDetailPage() {
   const [swaraInput, setSwaraInput] = useState('');
   const [swaraLoading, setSwaraLoading] = useState(false);
 
+  // Webhook
+  const [webhook, setWebhook] = useState<any>(null);
+  const [webhookSecret, setWebhookSecret] = useState('');
+  const [showSecret, setShowSecret] = useState(false);
+  const [webhookEvents, setWebhookEvents] = useState<any[]>([]);
+
+  // Pre-variables
+  const [preVars, setPreVars] = useState<any[]>([]);
+  const [preVarsSaving, setPreVarsSaving] = useState(false);
+
+  // Dialer settings
+  const [dialer, setDialer] = useState<any>(null);
+  const [dialerSaving, setDialerSaving] = useState(false);
+
   const [voiceProvider, setVoiceProvider] = useState('smallest');
   const [voiceId, setVoiceId] = useState('');
   const [voiceName, setVoiceName] = useState('');
@@ -79,6 +95,10 @@ export default function VoiceEmployeeDetailPage() {
       setRecordingNotice(e.recordingNotice ?? false);
       setDeveloperMode((e as any).developerMode ?? false);
       fetchVoiceTrainingExamples(id).then(setTrainingExamples).catch(() => {});
+      fetchEmployeeWebhook(id).then(setWebhook).catch(() => {});
+      fetchWebhookEvents(id).then(setWebhookEvents).catch(() => {});
+      fetchPreVariables(id).then(setPreVars).catch(() => {});
+      fetchDialerSettings(id).then(setDialer).catch(() => {});
     }).catch((err) => toast.error(err.message)).finally(() => setLoading(false));
   };
   useEffect(() => { load(); }, [id]);
@@ -541,6 +561,114 @@ export default function VoiceEmployeeDetailPage() {
             </div>
           ))}
         </div>
+      </section>
+
+      {/* ─── Lead Webhook ──────────────────────────────────────────────── */}
+      <section className="border-t border-[var(--border)] pt-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-bold text-[var(--foreground)]">Lead Webhook</h2>
+            <p className="text-sm text-[var(--muted-foreground)] mt-0.5">Paste this URL into your form or CRM — any hit triggers an outbound call.</p>
+          </div>
+          <button
+            onClick={async () => { if (!id) return; const r = await updateEmployeeWebhook(id, !webhook?.enabled); setWebhook(r); }}
+            className={`rounded-full px-4 py-1.5 text-xs font-semibold transition-colors ${webhook?.enabled ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+          >{webhook?.enabled ? 'Enabled' : 'Disabled'}</button>
+        </div>
+        {webhook?.url && (
+          <div className="flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2">
+            <Link size={13} className="text-[var(--muted-foreground)] shrink-0" />
+            <code className="flex-1 truncate text-xs text-[var(--foreground)]">{webhook.url}</code>
+            <button onClick={() => navigator.clipboard.writeText(webhook.url)} className="text-xs text-violet-600 hover:underline">Copy</button>
+          </div>
+        )}
+        <div className="flex gap-2 flex-wrap">
+          <button onClick={async () => { if (!id) return; const r = await revealWebhookSecret(id); setWebhookSecret(r.secret); setShowSecret(true); }}
+            className="flex items-center gap-1.5 rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-[var(--foreground)] hover:bg-[var(--hover)]">
+            <Eye size={12} /> Reveal secret
+          </button>
+          <button onClick={async () => { if (!id) return; const r = await rotateWebhookSecret(id); setWebhookSecret(r.secret); setShowSecret(true); toast.success('Secret rotated'); }}
+            className="flex items-center gap-1.5 rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-[var(--foreground)] hover:bg-[var(--hover)]">
+            <RefreshCw size={12} /> Rotate secret
+          </button>
+        </div>
+        {showSecret && webhookSecret && (
+          <div className="flex items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-3 py-2">
+            <code className="flex-1 text-xs text-violet-800 break-all">{webhookSecret}</code>
+            <button onClick={() => setShowSecret(false)} className="shrink-0"><EyeOff size={12} /></button>
+          </div>
+        )}
+        {webhookEvents.length > 0 && (
+          <details className="text-xs">
+            <summary className="cursor-pointer text-[var(--muted-foreground)] hover:text-[var(--foreground)]">Recent events ({webhookEvents.length})</summary>
+            <div className="mt-2 space-y-1 max-h-40 overflow-y-auto">
+              {webhookEvents.slice(0, 10).map((ev, i) => (
+                <div key={i} className={`flex items-center gap-2 rounded px-2 py-1 ${ev.status === 'ok' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'}`}>
+                  <span className="font-medium">{ev.eventType}</span>
+                  <span className="text-[10px] opacity-70">{new Date(ev.createdAt).toLocaleString()}</span>
+                  {ev.errorMsg && <span className="ml-auto">{ev.errorMsg}</span>}
+                </div>
+              ))}
+            </div>
+          </details>
+        )}
+      </section>
+
+      {/* ─── Pre-variables ─────────────────────────────────────────────── */}
+      <section className="border-t border-[var(--border)] pt-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-bold text-[var(--foreground)]">Pre-call variables</h2>
+            <p className="text-sm text-[var(--muted-foreground)] mt-0.5">Values injected into the call context before dialling — use <code className="text-xs bg-gray-100 px-1 rounded">{"{{key}}"}</code> in your script.</p>
+          </div>
+          <button onClick={() => setPreVars((p) => [...p, { key: '', value: '', label: '' }])}
+            className="flex items-center gap-1 rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-medium hover:bg-[var(--hover)]">
+            <Plus size={12} /> Add
+          </button>
+        </div>
+        {preVars.map((v, i) => (
+          <div key={i} className="grid grid-cols-3 gap-2 items-center">
+            <input value={v.key} onChange={(e) => setPreVars((p) => p.map((x, j) => j === i ? { ...x, key: e.target.value } : x))}
+              placeholder="key (e.g. lead_source)" className="h-8 rounded-lg border border-[var(--border)] bg-[var(--background)] px-2 text-xs" />
+            <input value={v.value} onChange={(e) => setPreVars((p) => p.map((x, j) => j === i ? { ...x, value: e.target.value } : x))}
+              placeholder="default value" className="h-8 rounded-lg border border-[var(--border)] bg-[var(--background)] px-2 text-xs" />
+            <button onClick={() => setPreVars((p) => p.filter((_, j) => j !== i))} className="h-8 w-8 flex items-center justify-center text-red-400 hover:text-red-600"><Trash2 size={13} /></button>
+          </div>
+        ))}
+        {preVars.length === 0 && <p className="text-xs text-[var(--muted-foreground)]">No pre-variables set.</p>}
+        <button disabled={preVarsSaving} onClick={async () => { if (!id) return; setPreVarsSaving(true); try { await savePreVariables(id, preVars); toast.success('Saved'); } catch { toast.error('Save failed'); } finally { setPreVarsSaving(false); } }}
+          className="flex items-center gap-1.5 rounded-lg bg-[var(--primary)] px-4 py-2 text-xs font-semibold text-white hover:opacity-90 disabled:opacity-50">
+          {preVarsSaving ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />} Save variables
+        </button>
+      </section>
+
+      {/* ─── Dialer settings ───────────────────────────────────────────── */}
+      <section className="border-t border-[var(--border)] pt-6 space-y-4">
+        <h2 className="text-lg font-bold text-[var(--foreground)]">Dialer settings</h2>
+        {dialer && (
+          <div className="grid grid-cols-2 gap-4">
+            {[
+              { key: 'maxAttempts', label: 'Max attempts', type: 'number', min: 1, max: 10 },
+              { key: 'retryDelayMinutes', label: 'Retry delay (minutes)', type: 'number', min: 5 },
+              { key: 'callWindowStart', label: 'Call window start', type: 'time' },
+              { key: 'callWindowEnd', label: 'Call window end', type: 'time' },
+            ].map(({ key, label, type, min, max }) => (
+              <div key={key}>
+                <label className="block text-xs font-medium text-[var(--muted-foreground)] mb-1">{label}</label>
+                <input type={type} min={min} max={max} value={dialer[key] ?? ''} onChange={(e) => setDialer((d: any) => ({ ...d, [key]: type === 'number' ? Number(e.target.value) : e.target.value }))}
+                  className="w-full h-9 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)]" />
+              </div>
+            ))}
+            <div className="col-span-2 flex items-center gap-3">
+              <input type="checkbox" id="skipWeekends" checked={dialer.skipWeekends ?? false} onChange={(e) => setDialer((d: any) => ({ ...d, skipWeekends: e.target.checked }))} className="h-4 w-4 rounded" />
+              <label htmlFor="skipWeekends" className="text-sm text-[var(--foreground)]">Skip weekends</label>
+            </div>
+          </div>
+        )}
+        <button disabled={dialerSaving} onClick={async () => { if (!id || !dialer) return; setDialerSaving(true); try { await saveDialerSettings(id, dialer); toast.success('Saved'); } catch { toast.error('Save failed'); } finally { setDialerSaving(false); } }}
+          className="flex items-center gap-1.5 rounded-lg bg-[var(--primary)] px-4 py-2 text-xs font-semibold text-white hover:opacity-90 disabled:opacity-50">
+          {dialerSaving ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />} Save dialer settings
+        </button>
       </section>
 
       <section className="border-t border-[var(--border)] pt-6">

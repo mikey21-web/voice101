@@ -1,0 +1,29 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 160.250.204.162
+          username: root
+          key: ${{ secrets.VPS_KEY }}
+          script: |
+            cd /opt/lead-automation-demo
+            git fetch origin main
+            git checkout main
+            git reset --hard origin/main
+            psql "$DATABASE_URL" -f backend/prisma/migrations/add_developer_mode.sql 2>/dev/null || true
+            docker compose -p virtual-assistant build --no-cache backend 2>&1 | tail -20
+            docker compose -p virtual-assistant up -d backend
+            sleep 12
+            docker compose -p virtual-assistant build --no-cache dashboard 2>&1 | tail -20
+            docker compose -p virtual-assistant up -d dashboard
+            caddy reload --config /etc/caddy/Caddyfile 2>/dev/null || true
+            docker ps --format "{{.Names}}: {{.Status}}" | grep lead-automation

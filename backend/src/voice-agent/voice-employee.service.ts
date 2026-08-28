@@ -4,6 +4,7 @@ import { DograhService } from '../shared/dograh.service';
 import { ConfigService } from '@nestjs/config';
 import { composeGlobalPrompt } from './style-pack';
 import { CallFlowGeneratorService } from './call-flow-generator.service';
+import * as crypto from 'crypto';
 
 /** Spoken verbatim by the TTS, so it has to be written in the employee's own language.
  * Falls back to English for any language we have not written an opener for. */
@@ -392,5 +393,84 @@ export class VoiceEmployeeService {
         order: s.order, nodeType: s.nodeType, edges: s.edges as any,
       })),
     );
+  }
+
+  // ─── Lead Webhook ─────────────────────────────────────────────────────────
+
+  async getWebhook(tenantId: string, id: string) {
+    const emp = await this.get(tenantId, id);
+    const publicUrl = this.config.get<string>('PUBLIC_URL', 'http://localhost:3001');
+    return {
+      url: `${publicUrl}/employees/${id}/incoming-lead`,
+      secret: null, // never returned; use reveal-secret
+      enabled: (emp as any).webhookEnabled ?? false,
+    };
+  }
+
+  async updateWebhook(tenantId: string, id: string, enabled: boolean) {
+    await this.get(tenantId, id);
+    const emp = await this.prisma.voiceEmployee.update({ where: { id }, data: { webhookEnabled: enabled } });
+    const publicUrl = this.config.get<string>('PUBLIC_URL', 'http://localhost:3001');
+    return { url: `${publicUrl}/employees/${id}/incoming-lead`, enabled: (emp as any).webhookEnabled };
+  }
+
+  async rotateWebhookSecret(tenantId: string, id: string) {
+    await this.get(tenantId, id);
+    const secret = crypto.randomBytes(24).toString('hex');
+    await this.prisma.voiceEmployee.update({ where: { id }, data: { webhookSecret: secret } });
+    return { secret };
+  }
+
+  async revealWebhookSecret(tenantId: string, id: string) {
+    const emp = await this.get(tenantId, id);
+    const secret = (emp as any).webhookSecret;
+    if (!secret) {
+      const newSecret = crypto.randomBytes(24).toString('hex');
+      await this.prisma.voiceEmployee.update({ where: { id }, data: { webhookSecret: newSecret } });
+      return { secret: newSecret };
+    }
+    return { secret };
+  }
+
+  async listWebhookEvents(tenantId: string, id: string) {
+    await this.get(tenantId, id);
+    return this.prisma.voiceWebhookEvent.findMany({
+      where: { employeeId: id },
+      orderBy: { createdAt: 'desc' },
+      take: 100,
+    });
+  }
+
+  // ─── Pre-variables ────────────────────────────────────────────────────────
+
+  async getPreVariables(tenantId: string, id: string) {
+    const emp = await this.get(tenantId, id);
+    return (emp as any).preVariables ?? [];
+  }
+
+  async setPreVariables(tenantId: string, id: string, vars: any[]) {
+    await this.get(tenantId, id);
+    await this.prisma.voiceEmployee.update({ where: { id }, data: { preVariables: vars } });
+    return vars;
+  }
+
+  // ─── Dialer settings ─────────────────────────────────────────────────────
+
+  async getDialerSettings(tenantId: string, id: string) {
+    const emp = await this.get(tenantId, id);
+    return (emp as any).dialerSettings ?? {
+      maxAttempts: 3,
+      retryDelayMinutes: 60,
+      callWindowStart: '09:00',
+      callWindowEnd: '20:00',
+      timezone: 'Asia/Kolkata',
+      skipWeekends: false,
+    };
+  }
+
+  async setDialerSettings(tenantId: string, id: string, settings: any) {
+    await this.get(tenantId, id);
+    await this.prisma.voiceEmployee.update({ where: { id }, data: { dialerSettings: settings } });
+    return settings;
   }
 }
