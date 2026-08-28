@@ -45,11 +45,12 @@ import {
   OutperoContactListsController,
   OutperoAccountsController,
   OutperoScheduledCallsController,
+  OutperoCallerMemoryController,
 } from './outpero-compat.controller';
 
 @Module({
   imports: [ConversationsModule, ApprovalsModule, TimelineModule, forwardRef(() => MikeyModule), forwardRef(() => LeadsModule), AgentModule, SharedModule],
-  controllers: [VoiceAgentController, VoiceEmployeeController, VoiceCallController, VoiceLeadController, VoiceCampaignController, VoiceNumberController, VoiceBillingController, VoiceWalletController, VoiceAnalyticsController, VoiceTrainingController, TalkToBuildController, SwaraController, VoiceStoreController, GoogleCalendarController, OutperoEmployeesController, OutperoCallsController, OutperoCampaignsController, OutperoLeadsController, OutperoBillingController, OutperoNumbersController, OutperoVoicesController, OutperoStatsController, OutperoContactListsController, OutperoAccountsController, OutperoScheduledCallsController],
+  controllers: [VoiceAgentController, VoiceEmployeeController, VoiceCallController, VoiceLeadController, VoiceCampaignController, VoiceNumberController, VoiceBillingController, VoiceWalletController, VoiceAnalyticsController, VoiceTrainingController, TalkToBuildController, SwaraController, VoiceStoreController, GoogleCalendarController, OutperoEmployeesController, OutperoCallsController, OutperoCampaignsController, OutperoLeadsController, OutperoBillingController, OutperoNumbersController, OutperoVoicesController, OutperoStatsController, OutperoContactListsController, OutperoAccountsController, OutperoScheduledCallsController, OutperoCallerMemoryController],
   providers: [VoiceAgentService, LeadOrchestratorService, ResultListenerService, CallFlowGeneratorService, VoiceEmployeeService, VoiceCallService, VoiceLeadService, VoiceCampaignService, VoiceBillingService, PostCallDispatchService, VoiceAnalyticsService, CallerMemoryService, VoiceTrainingService, TalkToBuildService, SwaraService, GoogleCalendarService],
   exports: [VoiceAgentService, LeadOrchestratorService, ResultListenerService, VoiceEmployeeService, VoiceCallService, VoiceLeadService, VoiceCampaignService, VoiceBillingService, PostCallDispatchService],
 })

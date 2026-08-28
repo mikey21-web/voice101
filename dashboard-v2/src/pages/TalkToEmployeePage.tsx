@@ -64,10 +64,10 @@ export default function TalkToEmployeePage() {
           <div className="relative flex h-40 w-40 items-center justify-center">
             <div className="absolute inset-0 rounded-full bg-gradient-to-br from-violet-400 to-fuchsia-500 opacity-30 blur-xl" />
             <div className="relative flex h-32 w-32 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-violet-700 shadow-[0_0_50px_rgba(139,92,246,0.6)]">
-              <span className="text-4xl font-bold tracking-tighter">OUT</span>
+              <Mic className="h-12 w-12 text-white" />
             </div>
           </div>
-          <p className="mt-3 text-[10px] font-bold tracking-[0.3em] text-amber-300/60">OUTPERO</p>
+          <p className="mt-3 text-[10px] font-bold tracking-[0.3em] text-amber-300/60">VEZRAA</p>
           <h1 className="mt-3 text-3xl font-bold">Talk to {selected?.name}</h1>
           <p className="mt-1 max-w-md text-sm text-violet-300">A real call on your credits — same script, same voice, narrowed to phone-line audio just like a live one.</p>
           <p className="mt-1 text-xs text-violet-400/70">₹7/min from your balance · {selected?.isPublished ? 'ready' : 'publish to enable calls'}</p>
@@ -77,7 +77,8 @@ export default function TalkToEmployeePage() {
               onClick={() => {
                 if (!selected?.isPublished) return toast.error('Publish this employee first');
                 if (selected.dograhWorkflowId) {
-                  setWebCallUrl(`http://localhost:3010/workflow/${selected.dograhWorkflowId}/run`);
+                  const base = import.meta.env.VITE_DOGRAH_URL ?? 'http://localhost:3010';
+                  setWebCallUrl(`${base}/workflow/${selected.dograhWorkflowId}/run`);
                 } else {
                   toast.error('No published workflow on this employee');
                 }

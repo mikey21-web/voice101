@@ -22,4 +22,12 @@ export class VoiceLeadService {
     if (!lead) throw new NotFoundException('Lead not found');
     return lead;
   }
+
+  async reschedule(tenantId: string, id: string, callbackAt: string) {
+    await this.get(tenantId, id);
+    return this.prisma.voiceLead.update({
+      where: { id },
+      data: { callbackAt: new Date(callbackAt), attempt: { increment: 1 } },
+    });
+  }
 }

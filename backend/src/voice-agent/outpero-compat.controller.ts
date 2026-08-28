@@ -22,6 +22,7 @@ import { VoiceCampaignService, CampaignContact } from './voice-campaign.service'
 import { VoiceBillingService } from './voice-billing.service';
 import { VoiceAgentService } from './voice-agent.service';
 import { VoiceAnalyticsService } from './voice-analytics.service';
+import { CallerMemoryService } from './caller-memory.service';
 
 // ─── Voice catalog (Outpero /voices) ────────────────────────────────────────
 // Sarvam (Value ₹3.5/min) + Cartesia (Premium ₹7/min).
@@ -308,4 +309,28 @@ export class OutperoAccountsController {
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class OutperoScheduledCallsController {
   @Get() @Roles(...ALL) list() { return []; }
+}
+
+// ─── /callers (caller memory) ────────────────────────────────────────────────
+@Controller('callers')
+@UseGuards(JwtAuthGuard, RolesGuard)
+export class OutperoCallerMemoryController {
+  constructor(private mem: CallerMemoryService) {}
+
+  @Get()
+  @Roles(...MGT)
+  list(@Req() r: any) { return this.mem.listCallers(r.user.tenantId); }
+
+  @Get(':phone')
+  @Roles(...MGT)
+  getFacts(@Req() r: any, @Param('phone') phone: string) {
+    return this.mem.getCallerFacts(r.user.tenantId, decodeURIComponent(phone));
+  }
+
+  @Delete(':phone/facts')
+  @Roles(...ADM)
+  @HttpCode(200)
+  clearFacts(@Req() r: any, @Param('phone') phone: string) {
+    return this.mem.clearFacts(r.user.tenantId, decodeURIComponent(phone)).then(() => ({ cleared: true }));
+  }
 }

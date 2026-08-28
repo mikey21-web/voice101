@@ -54,6 +54,7 @@ export interface EmployeeInput {
   stylePackEnabled?: boolean;
   aiAcknowledgementEnabled?: boolean;
   recordingNotice?: boolean;
+  developerMode?: boolean;
   sections?: SectionInput[];
   variables?: VariableInput[];
 }
@@ -128,6 +129,7 @@ export class VoiceEmployeeService {
         stylePackEnabled: input.stylePackEnabled ?? true,
         aiAcknowledgementEnabled: input.aiAcknowledgementEnabled ?? true,
         recordingNotice: input.recordingNotice ?? false,
+        developerMode: input.developerMode ?? false,
         hasUnpublishedChanges: true,
         sections: input.sections?.length
           ? { create: input.sections.map((s) => this.sectionCreateData(s)) }

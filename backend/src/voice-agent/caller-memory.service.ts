@@ -39,6 +39,14 @@ export class CallerMemoryService {
     return merged;
   }
 
+  async listCallers(tenantId: string) {
+    return this.prisma.voiceCaller.findMany({
+      where: { tenantId },
+      orderBy: { updatedAt: 'desc' },
+      take: 200,
+    });
+  }
+
   async clearFacts(tenantId: string, phoneNumber: string): Promise<void> {
     await this.prisma.voiceCaller.updateMany({
       where: { tenantId, phoneNumber },

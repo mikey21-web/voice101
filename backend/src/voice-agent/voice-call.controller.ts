@@ -92,4 +92,10 @@ export class VoiceLeadController {
   get(@Req() req: any, @Param('id') id: string) {
     return this.leads.get(req.user.tenantId, id);
   }
+
+  @Post(':id/reschedule')
+  @Roles('OWNER', 'ADMIN', 'MANAGER')
+  reschedule(@Req() req: any, @Param('id') id: string, @Body() body: { callbackAt: string }) {
+    return this.leads.reschedule(req.user.tenantId, id, body.callbackAt);
+  }
 }

@@ -2752,6 +2752,7 @@ model VoiceEmployee {
   stylePackEnabled     Boolean @default(true) @map("style_pack_enabled")
   aiAcknowledgementEnabled Boolean @default(true) @map("ai_acknowledgement_enabled")
   recordingNotice      Boolean @default(false) @map("recording_notice")
+  developerMode        Boolean @default(false) @map("developer_mode")
 
   numberId String? @map("number_id")
   number   VoicePhoneNumber? @relation(fields: [numberId], references: [id])

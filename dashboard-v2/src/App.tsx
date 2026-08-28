@@ -39,6 +39,7 @@ const PageComponents: Record<string, React.LazyExoticComponent<React.ComponentTy
   VoicePerformance: lazy(() => import("./pages/VoicePerformancePage")),
   VoiceBilling: lazy(() => import("./pages/VoiceBillingPage")),
   VoiceStore: lazy(() => import("./pages/VoiceStorePage")),
+  CallerMemory: lazy(() => import("./pages/CallerMemoryPage")),
 };
 
 function PageFallback() {
@@ -73,6 +74,7 @@ function getPageKey(raw: string): string {
   if (path.startsWith("/voice-phone-numbers")) return "VoicePhoneNumbers";
   if (path.startsWith("/voice-performance")) return "VoicePerformance";
   if (path.startsWith("/voice-billing")) return "VoiceBilling";
+  if (path.startsWith("/caller-memory")) return "CallerMemory";
   if (path.startsWith("/voice-employees")) return "VoiceEmployees";
   if (path.startsWith("/talk-to-build")) return "TalkToBuild";
   if (path.startsWith("/talk-to-employee")) return "TalkToEmployee";
@@ -82,12 +84,43 @@ function getPageKey(raw: string): string {
   return "VoiceDashboard";
 }
 
+const TERMS_KEY = 'vezraa_terms_accepted_v1';
+
+function TermsModal({ onAccept }: { onAccept: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+      <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-2xl">
+        <h2 className="text-xl font-bold text-gray-900">Welcome to Vezraa</h2>
+        <p className="mt-2 text-sm text-gray-500">Before you start, please review and accept our terms.</p>
+        <div className="mt-4 max-h-48 overflow-y-auto rounded-lg bg-gray-50 p-4 text-xs text-gray-600 leading-relaxed">
+          <p className="font-semibold">Terms of Service</p>
+          <p className="mt-2">Vezraa is an AI voice automation platform. By using it you agree to:</p>
+          <ul className="mt-2 list-disc pl-4 space-y-1">
+            <li>Use AI calling only for lawful business purposes.</li>
+            <li>Comply with TRAI, DND registry, and applicable telecom regulations.</li>
+            <li>Not use the platform for spam, fraud, or harassment.</li>
+            <li>Disclose AI usage to callers when required by law.</li>
+            <li>Accept that call costs are non-refundable once a call connects.</li>
+          </ul>
+          <p className="mt-3 font-semibold">Privacy</p>
+          <p className="mt-1">Call recordings and transcripts are stored securely and used only to improve your AI employees. We do not sell your data.</p>
+        </div>
+        <button onClick={onAccept}
+          className="mt-6 w-full rounded-xl bg-violet-600 py-3 text-sm font-bold text-white hover:bg-violet-700">
+          I agree — Let me in
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const { user, fetchProfile, isLoggedIn } = useAuth();
   const [page, setPage] = useState("VoiceDashboard");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [publicRoute, setPublicRoute] = useState(() => window.location.hash.replace("#", "") || "/");
+  const [termsAccepted, setTermsAccepted] = useState(() => !!localStorage.getItem(TERMS_KEY));
 
   useEffect(() => {
     initNicheConfig();
@@ -158,6 +191,9 @@ export default function App() {
     <BrandingProvider>
     <AppProvider>
     <SocketProvider>
+      {isLoggedIn && !termsAccepted && (
+        <TermsModal onAccept={() => { localStorage.setItem(TERMS_KEY, '1'); setTermsAccepted(true); }} />
+      )}
       <div className="flex min-h-dvh bg-[var(--background)] text-[var(--foreground)] overflow-hidden">
         <Sidebar
           collapsed={sidebarCollapsed}

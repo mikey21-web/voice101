@@ -42,6 +42,7 @@ export default function VoiceEmployeeDetailPage() {
   const [maxCallDurationS, setMaxCallDurationS] = useState(300);
   const [callTimeoutMessage, setCallTimeoutMessage] = useState('');
   const [recordingNotice, setRecordingNotice] = useState(false);
+  const [developerMode, setDeveloperMode] = useState(false);
   const [trainingExamples, setTrainingExamples] = useState<any[]>([]);
   const [swaraInput, setSwaraInput] = useState('');
   const [swaraLoading, setSwaraLoading] = useState(false);
@@ -76,6 +77,7 @@ export default function VoiceEmployeeDetailPage() {
       setMaxCallDurationS(e.maxCallDurationS ?? 300);
       setCallTimeoutMessage(e.callTimeoutMessage || '');
       setRecordingNotice(e.recordingNotice ?? false);
+      setDeveloperMode((e as any).developerMode ?? false);
       fetchVoiceTrainingExamples(id).then(setTrainingExamples).catch(() => {});
     }).catch((err) => toast.error(err.message)).finally(() => setLoading(false));
   };
@@ -97,7 +99,7 @@ export default function VoiceEmployeeDetailPage() {
         name, role, welcomeMessage, agentInformation, callEndRules,
         stylePackEnabled, aiAcknowledgementEnabled,
         voiceProvider, voiceId, voiceName, ttsSpeed,
-        maxCallDurationS, callTimeoutMessage, recordingNotice,
+        maxCallDurationS, callTimeoutMessage, recordingNotice, developerMode,
         sections: sections.map((s, i) => ({ ...s, order: i + 1 })),
         variables,
       });
@@ -440,6 +442,10 @@ export default function VoiceEmployeeDetailPage() {
         <label className="flex items-center gap-3 cursor-pointer">
           <input type="checkbox" checked={recordingNotice} onChange={(e) => setRecordingNotice(e.target.checked)} className="accent-[var(--primary)] h-4 w-4" />
           <span className="text-sm text-[var(--foreground)]">Inform the caller they are being recorded</span>
+        </label>
+        <label className="flex items-center gap-3 cursor-pointer">
+          <input type="checkbox" checked={developerMode} onChange={(e) => setDeveloperMode(e.target.checked)} className="accent-[var(--primary)] h-4 w-4" />
+          <span className="text-sm text-[var(--foreground)]">Developer mode — log full prompts and LLM outputs to console</span>
         </label>
       </section>
 

@@ -419,6 +419,13 @@ export async function fetchVoiceEngineBilling() { return api('/voice-billing') a
 export async function fetchVoiceEngineWallet() { return api('/voice-wallet') as Promise<{ balanceInr: number }>; }
 export async function fetchVoiceCallsLive() { return api('/calls/live') as Promise<any[]>; }
 
+export interface VoiceCaller { id: string; phoneNumber: string; facts: Record<string, any>; updatedAt: string; }
+export async function fetchVoiceCallers() { return api('/callers') as Promise<VoiceCaller[]>; }
+export async function fetchVoiceCallerFacts(phone: string) { return api(`/callers/${encodeURIComponent(phone)}`) as Promise<Record<string, any>>; }
+export async function clearVoiceCallerFacts(phone: string) { return api(`/callers/${encodeURIComponent(phone)}/facts`, { method: 'DELETE' }); }
+export async function rescheduleVoiceLead(id: string, callbackAt: string) { return api(`/voice-leads/${id}/reschedule`, { method: 'POST', body: JSON.stringify({ callbackAt }) }); }
+export async function toggleEmployeeDeveloperMode(id: string, enabled: boolean) { return api(`/voice-employees/${id}`, { method: 'PATCH', body: JSON.stringify({ developerMode: enabled }) }); }
+
 export interface VoiceEngineNumber { id: string; number: string; provider: string; dltRegistered: boolean; kycStatus: string; status: string; }
 export async function fetchVoiceEngineNumbers() { return api('/voice-numbers') as Promise<VoiceEngineNumber[]>; }
 export async function addVoiceEngineNumber(number: string, provider = 'twilio') {
