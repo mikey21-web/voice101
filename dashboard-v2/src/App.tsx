@@ -4,6 +4,7 @@ import { HashRouter, Routes, Route } from "react-router-dom";
 import { useAuth } from "./lib/useAuth";
 import { getToken } from "./lib/api";
 import { capture, identify } from "./lib/posthog";
+import { fetchVoiceCallsLive } from "./lib/data";
 import { AppProvider } from "./context/AppContext";
 import { BrandingProvider } from "./lib/useBranding";
 import { ErrorBoundary } from "./components/ErrorBoundary";
@@ -117,6 +118,16 @@ export default function App() {
   useEffect(() => {
     applyNicheTheme();
   }, []);
+
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    const update = () => fetchVoiceCallsLive().then(calls => {
+      document.title = calls.length > 0 ? `(${calls.length} live) Vezraa` : 'Vezraa';
+    }).catch(() => {});
+    update();
+    const id = setInterval(update, 10000);
+    return () => clearInterval(id);
+  }, [isLoggedIn]);
 
   const navigate = (path: string) => {
     window.location.hash = path;

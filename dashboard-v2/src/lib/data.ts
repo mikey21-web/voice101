@@ -410,12 +410,14 @@ export async function fetchVoiceEngineCampaignProgress(id: string) { return api(
 
 export interface VoiceEngineBilling {
   credits: number;
+  first_hire_bonus_eligible?: boolean;
   employees: Array<{ id: string; name: string; role: string; status: string; voiceProvider: string; minutesUsed: number; costInr: number }>;
   rates: { sarvamPerMin: number; cartesiaPerMin: number; openaiRealtimePerMin: number; hireFee: number; hireIncludedCredits: number; hireActiveDays: number; gstRatePct: number };
   lifetime: { spentInr: number; minutesUsedTotal: number };
 }
 export async function fetchVoiceEngineBilling() { return api('/voice-billing') as Promise<VoiceEngineBilling>; }
 export async function fetchVoiceEngineWallet() { return api('/voice-wallet') as Promise<{ balanceInr: number }>; }
+export async function fetchVoiceCallsLive() { return api('/calls/live') as Promise<any[]>; }
 
 export interface VoiceEngineNumber { id: string; number: string; provider: string; dltRegistered: boolean; kycStatus: string; status: string; }
 export async function fetchVoiceEngineNumbers() { return api('/voice-numbers') as Promise<VoiceEngineNumber[]>; }
